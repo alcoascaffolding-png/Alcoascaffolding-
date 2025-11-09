@@ -1,0 +1,37 @@
+# Render deployment configuration
+services:
+  - type: web
+    name: alcoa-scaffolding-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: RESEND_API_KEY
+        value: re_CvdzT36t_7KHxdymvBesH1qdDRJ2a4yzm
+      - key: RESEND_FROM_EMAIL
+        value: Sales@alcoascaffolding.com
+      - key: COMPANY_EMAIL
+        value: sales@alcoascaffolding.com
+      - key: SUPPORT_EMAIL
+        value: sales@alcoascaffolding.com
+      - key: SECONDARY_EMAIL
+        value: sales@alcoascaffolding.com
+      - key: FRONTEND_URL
+        value: https://your-frontend-domain.com
+      - key: COMPANY_NAME
+        value: Alcoa Aluminium Scaffolding
+      - key: COMPANY_ADDRESS
+        value: Musaffah, Abu Dhabi, UAE
+      - key: EMERGENCY_HOTLINE
+        value: +971 58 137 5601
+      - key: RESPONSE_TIME
+        value: 2 hours
+      - key: LOG_LEVEL
+        value: info
+      - key: TIMEZONE
+        value: Asia/Dubai

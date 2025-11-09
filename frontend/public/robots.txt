@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://alcoascaffolding.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10
+
