@@ -17,6 +17,7 @@ import stockAdjustmentReducer from './slices/stockAdjustmentSlice';
 import bankAccountReducer from './slices/bankAccountSlice';
 import receiptReducer from './slices/receiptSlice';
 import paymentReducer from './slices/paymentSlice';
+import contactMessageReducer from './slices/contactMessageSlice';
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
     bankAccounts: bankAccountReducer,
     receipts: receiptReducer,
     payments: paymentReducer,
+    contactMessages: contactMessageReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

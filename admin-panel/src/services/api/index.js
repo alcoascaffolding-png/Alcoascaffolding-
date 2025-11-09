@@ -6,6 +6,7 @@
 export { default as customerService } from './customerService';
 export { default as dashboardService } from './dashboardService';
 export { default as quoteService } from './quoteService';
+export { default as contactMessageService } from './contactMessageService';
 
 export {
   salesOrderService,

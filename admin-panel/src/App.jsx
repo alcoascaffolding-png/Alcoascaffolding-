@@ -28,6 +28,7 @@ import StockAdjustments from './pages/inventory/StockAdjustments';
 import BankAccounts from './pages/accounts/BankAccounts';
 import Receipts from './pages/accounts/Receipts';
 import Payments from './pages/accounts/Payments';
+import ContactMessages from './pages/contactMessages/ContactMessages';
 
 function App() {
   return (
@@ -65,6 +66,9 @@ function App() {
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
+            
+            {/* Contact Messages */}
+            <Route path="contact-messages" element={<ContactMessages />} />
             
             {/* Customer Relations */}
             <Route path="customers" element={<Customers />} />

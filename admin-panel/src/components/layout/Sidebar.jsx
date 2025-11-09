@@ -16,6 +16,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       path: '/',
     },
     {
+      title: 'Contact Messages',
+      icon: Icons.Messages,
+      path: '/contact-messages',
+    },
+    {
       title: 'Customer Relations',
       icon: Icons.Customers,
       submenu: [

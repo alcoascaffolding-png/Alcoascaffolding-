@@ -5,17 +5,24 @@
 
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import ENV_CONFIG from '../config/env';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-// Create axios instance
+// Create axios instance with environment configuration
 const axiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 30000,
+  baseURL: ENV_CONFIG.apiUrl,
+  timeout: ENV_CONFIG.apiTimeout,
   headers: {
     'Content-Type': 'application/json'
   }
 });
+
+// Log API configuration in development
+if (ENV_CONFIG.isDevelopment) {
+  console.log('🌐 Axios configured with:', {
+    baseURL: ENV_CONFIG.apiUrl,
+    timeout: ENV_CONFIG.apiTimeout
+  });
+}
 
 // Request interceptor
 axiosInstance.interceptors.request.use(

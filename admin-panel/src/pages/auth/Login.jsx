@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import ENV_CONFIG from '../../config/env';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -40,28 +41,51 @@ const Login = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // For dummy data, accept any email/password
-      // Later: Replace with actual authentication
+    try {
+      // Call REAL login API - Use environment configuration
+      console.log('🔐 Attempting login to:', `${ENV_CONFIG.apiUrl}/auth/login`);
       
-      const dummyUser = {
-        id: '1',
-        name: 'Super Admin',
-        email: formData.email,
-        role: 'super_admin',
-        department: 'management',
-      };
+      const response = await fetch(`${ENV_CONFIG.apiUrl}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-      // Store in localStorage for dummy auth
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('user', JSON.stringify(dummyUser));
-      localStorage.setItem('token', 'dummy-token-' + Date.now());
+      const data = await response.json();
+      console.log('📊 Login response:', data);
 
+      if (response.ok && data.success) {
+        // Store REAL token and user data
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        localStorage.setItem('token', data.data.token);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+
+        console.log('✅ Login successful! Token:', data.data.token.substring(0, 20) + '...');
+        
+        setLoading(false);
+        toast.success(`Welcome back, ${data.data.user.name}!`);
+        navigate('/');
+      } else {
+        setLoading(false);
+        toast.error(data.message || 'Login failed. Please check your credentials.');
+        console.error('❌ Login failed:', data);
+      }
+    } catch (error) {
       setLoading(false);
-      toast.success('Login successful! Welcome to Alcoa Admin Panel');
-      navigate('/');
-    }, 800);
+      console.error('❌ Login error:', error);
+      
+      if (error.message === 'Failed to fetch') {
+        toast.error('Cannot connect to server. Please make sure backend is running on port 5000.');
+      } else {
+        toast.error('Login failed. Please try again.');
+      }
+    }
   };
 
   return (
