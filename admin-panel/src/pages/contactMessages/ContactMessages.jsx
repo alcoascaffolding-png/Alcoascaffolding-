@@ -3,7 +3,7 @@
  * Displays and manages all contact form submissions from website
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   fetchContactMessages, 
@@ -30,33 +30,88 @@ const ContactMessages = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  
+  // Refs
+  const intervalRef = useRef(null);
+
+  // API Methods - DECLARE FIRST before using in useEffect
+  const loadMessages = useCallback((silent = false) => {
+    const params = { page: 1, limit: 100 };
+    if (statusFilter) params.status = statusFilter;
+    if (typeFilter) params.type = typeFilter;
+    if (searchTerm) params.search = searchTerm;
+    
+    if (!silent) {
+      console.log('📥 Loading messages...');
+    }
+    
+    setLastUpdated(new Date()); // Update timestamp
+    return dispatch(fetchContactMessages(params));
+  }, [dispatch, statusFilter, typeFilter, searchTerm]);
+
+  const loadStats = useCallback(() => {
+    return dispatch(fetchContactMessageStats());
+  }, [dispatch]);
 
   // Initial data load
   useEffect(() => {
     loadMessages();
     loadStats();
-  }, [dispatch]);
+  }, [loadMessages, loadStats]);
 
   // Reload when filters change
   useEffect(() => {
     if (searchTerm || statusFilter || typeFilter) {
       loadMessages();
     }
-  }, [statusFilter, typeFilter, searchTerm]);
+  }, [statusFilter, typeFilter, searchTerm, loadMessages]);
 
-  // API Methods
-  const loadMessages = () => {
-    const params = { page: 1, limit: 100 };
-    if (statusFilter) params.status = statusFilter;
-    if (typeFilter) params.type = typeFilter;
-    if (searchTerm) params.search = searchTerm;
+  // Automatic real-time updates - checks every 10 seconds
+  useEffect(() => {
+    console.log('🔴 LIVE: Auto-refresh enabled - checking every 10 seconds');
     
-    dispatch(fetchContactMessages(params));
-  };
+    // Set up automatic polling
+    intervalRef.current = setInterval(() => {
+      console.log('🔄 Checking for new messages...');
+      loadMessages(true); // Silent refresh - no toast
+      loadStats();
+    }, 10000); // Check every 10 seconds
 
-  const loadStats = () => {
-    dispatch(fetchContactMessageStats());
-  };
+    // Cleanup on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        console.log('🛑 Auto-refresh stopped');
+      }
+    };
+  }, [loadMessages, loadStats]);
+
+  // Detect and notify about new messages
+  useEffect(() => {
+    if (messages && messages.length > lastMessageCount && lastMessageCount > 0) {
+      const newCount = messages.length - lastMessageCount;
+      
+      // Play notification sound (optional)
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE=');
+      audio.volume = 0.3;
+      audio.play().catch(() => {}); // Ignore if autoplay blocked
+      
+      // Show toast notification
+      toast.success(`📬 ${newCount} new message${newCount > 1 ? 's' : ''} received!`, {
+        duration: 5000,
+        position: 'top-right',
+        style: {
+          background: '#10b981',
+          color: 'white',
+          fontWeight: 'bold',
+        },
+      });
+    }
+    setLastMessageCount(messages?.length || 0);
+  }, [messages, lastMessageCount]);
+
 
   // Event Handlers
   const handleView = (message) => {
@@ -145,26 +200,23 @@ const ContactMessages = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
+      {/* Header with Live Indicator */}
+      <div>
+        <div className="flex items-center gap-3 mb-2">
           <h1 className="text-3xl font-bold text-gray-900">Contact Messages</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage all contact form submissions and quote requests from your website
-          </p>
+          {/* Live indicator - subtle pulsing dot */}
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+            LIVE
+          </span>
         </div>
-        <button
-          onClick={() => {
-            loadMessages();
-            loadStats();
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium inline-flex items-center"
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Refresh
-        </button>
+        <div className="flex items-center gap-4 text-sm text-gray-500">
+          <span>🔄 Auto-updates every 10 seconds</span>
+          <span>•</span>
+          <span>{messages?.length || 0} total messages</span>
+          <span>•</span>
+          <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+        </div>
       </div>
 
       {/* Statistics */}
