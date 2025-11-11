@@ -45,11 +45,9 @@ const Footer = () => {
     products: {
       title: 'Products',
       links: [
-        { name: 'Standard Scaffolding', path: '/products/standard' },
-        { name: 'Mobile Towers', path: '/products/mobile-towers' },
-        { name: 'Suspended Platforms', path: '/products/suspended' },
-        { name: 'Temporary Roofing', path: '/products/roofing' },
-        { name: 'Safety Equipment', path: '/products/safety' },
+        { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
+        { name: 'Ladders', path: '/products/ladders' },
+        { name: 'Steel Cuplock Scaffolding', path: '/products/steel-cuplock-scaffolding' },
       ]
     },
     resources: {

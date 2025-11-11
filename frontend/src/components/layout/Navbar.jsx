@@ -47,10 +47,9 @@ const Navbar = () => {
       path: '/products', 
       hasDropdown: true,
       dropdownItems: [
-        { name: 'Standard Scaffolding', path: '/products/standard' },
-        { name: 'Mobile Towers', path: '/products/mobile-towers' },
-        { name: 'Suspended Platforms', path: '/products/suspended' },
-        { name: 'Temporary Roofing', path: '/products/roofing' },
+        { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
+        { name: 'Ladders', path: '/products/ladders' },
+        { name: 'Steel Cuplock Scaffolding', path: '/products/steel-cuplock-scaffolding' },
       ]
     },
     { 
@@ -60,7 +59,6 @@ const Navbar = () => {
       dropdownItems: [
         { name: 'Scaffolding Delivery', path: '/services/scaffolding-delivery' },
         { name: 'Aluminium Scaffolding', path: '/services/aluminium-scaffolding' },
-        { name: 'Warehouse Ladder', path: '/services/warehouse-ladder' },
         { name: 'Fiberglass Ladder', path: '/services/fiberglass-ladder' },
         { name: 'A Type Ladder', path: '/services/a-type-ladder' },
         { name: 'Ladder Manufacturers', path: '/services/ladder-manufacturers' },

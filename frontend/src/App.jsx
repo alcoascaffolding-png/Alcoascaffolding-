@@ -23,11 +23,8 @@ import ProjectDetails from './pages/ProjectDetails';
 import SafetyStandards from './pages/SafetyStandards';
 import Branches from './pages/Branches';
 
-// Product Pages
-import StandardScaffolding from './pages/products/StandardScaffolding';
-import MobileTowers from './pages/products/MobileTowers';
-import SuspendedPlatforms from './pages/products/SuspendedPlatforms';
-import TemporaryRoofing from './pages/products/TemporaryRoofing';
+// Product Pages - Dynamic Component
+import ProductDetail from './pages/products/ProductDetail';
 
 // Service Detail Pages - Dynamic Component
 import ServiceDetail from './pages/services/ServiceDetail';
@@ -48,10 +45,8 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
-                <Route path="/products/standard" element={<StandardScaffolding />} />
-                <Route path="/products/mobile-towers" element={<MobileTowers />} />
-                <Route path="/products/suspended" element={<SuspendedPlatforms />} />
-                <Route path="/products/roofing" element={<TemporaryRoofing />} />
+                {/* Dynamic route for all product detail pages */}
+                <Route path="/products/:productId" element={<ProductDetail />} />
                 <Route path="/services" element={<Services />} />
                 {/* Dynamic route for all service detail pages */}
                 <Route path="/services/:serviceId" element={<ServiceDetail />} />

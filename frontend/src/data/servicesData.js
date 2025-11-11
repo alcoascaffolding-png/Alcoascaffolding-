@@ -2,8 +2,6 @@
 import singleWidthScaffolding from '../assets/73-121-1659x2048.png';
 import doubleWidthScaffolding from '../assets/double-width-scaled-e1582796620310-ols0stmu1sfa9psr6uka5r5bi.jpg';
 import stairwayScaffolding from '../assets/STAIRWAY-681x1024.jpg';
-import warehouseLadderScaffolding from '../assets/WARE-HOUSE-LADDER.png';
-import podiumTower from '../assets/PODIUM.png';
 import foldingTower from '../assets/FOLDING-TOWER.png';
 import combinationScaffolding from '../assets/COMBINED-SCAFFOLDING.png';
 import bridgeScaffolding from '../assets/BRIDGE-SCAFFOLDING.png';
@@ -24,9 +22,6 @@ import fiberglassATypeTwoWay from '../assets/fiberglassA-200x300.jpg';
 import steelStandard from '../assets/STANDARD-1-scaled-e1582964173534-270x300.jpg';
 import steelLedger from '../assets/LEDGER-scaled-e1582976847712-768x511.jpg';
 import intermediateTransom from '../assets/DIAGONAL-BRACES-DW3-243x300.jpg';
-import cantileverSet from '../assets/cantilever1.png';
-import deckingBeam from '../assets/DECKING-BEAM-scaled.jpg';
-import infillBeam from '../assets/INFILL-BEAM-scaled.jpg';
 import baseJacks from '../assets/jacks-1.jpg';
 import propJacks from '../assets/propjack.png';
 import steelPlanks from '../assets/planks-2.jpg';
@@ -122,46 +117,6 @@ export const servicesData = {
       'Material': 'Aluminium Alloy',
       'Access': 'Internal Stairway',
       'Options': 'Rent / Buy'
-    }
-  },
-  'warehouse-ladder': {
-    title: 'Warehouse Ladder',
-    category: 'Aluminium Scaffolding',
-    description: 'Mobile ladder unit with steps, platform, and guardrails designed for safe warehouse operations.',
-    image: warehouseLadderScaffolding,
-    highlights: [
-      'Safety guardrails on steps and platform',
-      'Flat stable working platform',
-      'Mobile with easy-roll wheels',
-      'Anti-slip steps for safety',
-      'Compact storage design',
-      'Industrial-grade construction'
-    ],
-    quickDetails: {
-      'Type': 'Mobile Platform Ladder',
-      'Material': 'Aluminium',
-      'Platform': 'Wide & Stable',
-      'Mobility': 'Wheeled'
-    }
-  },
-  'podium-tower': {
-    title: 'Podium Tower',
-    category: 'Aluminium Scaffolding',
-    description: 'Compact mobile scaffolding for lower-height access with multiple platform levels.',
-    image: podiumTower,
-    highlights: [
-      'Multiple platform levels for flexibility',
-      'Compact design for easy storage',
-      'Easy mobility with castors',
-      'Quick setup and folding',
-      'Ideal for maintenance work',
-      'Lightweight yet sturdy'
-    ],
-    quickDetails: {
-      'Type': 'Compact Mobile Tower',
-      'Height': 'Low to Medium',
-      'Setup Time': 'Minutes',
-      'Storage': 'Foldable'
     }
   },
   'folding-tower': {
@@ -486,66 +441,6 @@ export const servicesData = {
       'Material': 'Steel',
       'Purpose': 'Support & Stability',
       'Installation': 'Quick'
-    }
-  },
-  'cantilever-set': {
-    title: 'Cantilever Set',
-    category: 'Steel Cuplock Scaffolding',
-    description: 'Cantilever scaffolding sets for extended working platforms beyond the main structure.',
-    image: cantileverSet,
-    highlights: [
-      'Extended reach capability',
-      'Secure anchoring system',
-      'Adjustable configuration',
-      'Heavy-duty construction',
-      'Safe extended platforms',
-      'Professional applications'
-    ],
-    quickDetails: {
-      'Type': 'Cantilever System',
-      'Material': 'Steel',
-      'Application': 'Extended Reach',
-      'Configuration': 'Adjustable'
-    }
-  },
-  'decking-beam': {
-    title: 'Decking Beam',
-    category: 'Steel Cuplock Scaffolding',
-    description: 'Heavy-duty decking beams with reinforced support for platform installation.',
-    image: deckingBeam,
-    highlights: [
-      'High load capacity',
-      'Integrated support structure',
-      'Platform compatible',
-      'Reinforced construction',
-      'Easy installation',
-      'Long-span capability'
-    ],
-    quickDetails: {
-      'Type': 'Support Beam',
-      'Material': 'Steel',
-      'Purpose': 'Platform Support',
-      'Load': 'Heavy-Duty'
-    }
-  },
-  'infill-beam': {
-    title: 'Infill Beam',
-    category: 'Steel Cuplock Scaffolding',
-    description: 'Infill beams for creating intermediate support levels in scaffolding structures.',
-    image: infillBeam,
-    highlights: [
-      'Lightweight construction',
-      'Easy installation',
-      'Versatile application',
-      'Intermediate support',
-      'Multiple lengths available',
-      'Cost-effective solution'
-    ],
-    quickDetails: {
-      'Type': 'Infill Beam',
-      'Material': 'Steel',
-      'Weight': 'Lightweight',
-      'Use': 'Intermediate Support'
     }
   },
   'base-jacks': {
@@ -1354,26 +1249,6 @@ export const servicesData = {
     }
   },
   // Ladder aliases for navbar links
-  'warehouse-ladder': {
-    title: 'Warehouse Ladder',
-    category: 'Ladders',
-    description: 'Mobile ladder unit with steps, platform, and guardrails for safe warehouse operations.',
-    image: warehouseLadderScaffolding,
-    highlights: [
-      'Safety guardrails',
-      'Flat stable platform',
-      'Mobile with wheels',
-      'Anti-slip steps',
-      'Compact storage',
-      'Industrial-grade'
-    ],
-    quickDetails: {
-      'Type': 'Mobile Platform Ladder',
-      'Material': 'Aluminium',
-      'Platform': 'Wide & Stable',
-      'Mobility': 'Wheeled'
-    }
-  },
   'fiberglass-ladder': {
     title: 'Fiberglass Ladder',
     category: 'Ladders',

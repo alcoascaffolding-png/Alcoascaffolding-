@@ -29,129 +29,105 @@ const Products = () => {
 
   const products = [
     {
-      id: 'standard-scaffolding',
-      title: 'Standard Scaffolding Systems',
-      description: 'Versatile aluminum scaffolding suitable for most construction and maintenance projects.',
+      id: 'aluminium-scaffolding',
+      title: 'Aluminium Scaffolding',
+      description: 'Lightweight, durable aluminium scaffolding and mobile tower solutions for construction and maintenance projects.',
       icon: FiTool,
-      image: 'standard-scaffolding',
+      image: 'aluminium-scaffolding',
       features: [
-        'Lightweight aluminum construction',
-        'Easy assembly and disassembly',
-        'Multiple height configurations',
-        'Weather-resistant materials',
-        'Load capacity up to 250kg/m²'
+        'Lightweight high-strength frames',
+        'Quick assembly systems',
+        'Multiple height options',
+        'Safety guardrails and platforms',
+        'Compliant with safety standards',
+        'Rental and purchase options'
       ],
       specifications: {
-        'Material': 'High-grade aluminum alloy',
-        'Load Capacity': '250kg/m² (live load)',
-        'Heights Available': '2m to 20m',
-        'Bay Widths': '1.2m, 1.5m, 2.0m',
-        'Standards Compliance': 'AS/NZS 1576.1'
+        'Material': 'High-grade Aluminium Alloy',
+        'Types': 'Single/Double Width, Stairway, Folding Towers',
+        'Heights Available': '2m to 12m',
+        'Load Capacity': '150-250kg per platform',
+        'Standards Compliance': 'AS/NZS 1576.1, EN 1004'
       },
       applications: [
-        'Building maintenance',
-        'Construction projects',
-        'Painting and decorating',
-        'Window cleaning access'
-      ],
-      price: 'From $45/day',
-      category: 'scaffolding'
-    },
-    {
-      id: 'mobile-towers',
-      title: 'Mobile Access Towers',
-      description: 'Portable aluminum towers perfect for quick access and maintenance work.',
-      icon: FiTruck,
-      image: 'mobile-towers',
-      features: [
-        'Quick setup in minutes',
-        'Wheels for easy repositioning',
-        'Lightweight and portable',
-        'Adjustable height platform',
-        'Non-slip platform surfaces'
-      ],
-      specifications: {
-        'Material': 'Aluminum alloy with steel wheels',
-        'Platform Height': '2.5m to 8.0m',
-        'Platform Size': '1.35m x 1.8m',
-        'Load Capacity': '150kg per platform',
-        'Mobility': '4 swivel wheels with brakes'
-      },
-      applications: [
-        'Indoor maintenance',
+        'Building construction',
+        'Maintenance work',
+        'Indoor and outdoor projects',
         'Warehouse operations',
-        'Event setup',
-        'Light construction work'
+        'Event setup'
       ],
-      price: 'From $65/day',
-      category: 'mobile'
+      price: 'From AED 150/day',
+      category: 'aluminium'
     },
     {
-      id: 'suspended-platforms',
-      title: 'Suspended Platforms',
-      description: 'Specialized suspended access solutions for building facade work and maintenance.',
+      id: 'ladders',
+      title: 'Ladders',
+      description: 'Professional-grade aluminium and fiberglass ladders for industrial and commercial use.',
       icon: FiLayers,
-      image: 'suspended-platforms',
+      image: 'ladders',
       features: [
-        'Motorized lifting system',
-        'Safety harness integration',
-        'Weather protection canopy',
-        'Remote control operation',
-        'Emergency descent system'
+        'Aluminium & fiberglass options',
+        'A-type, straight, and extension ladders',
+        'Multi-purpose configurations',
+        'Non-slip steps and feet',
+        'Electrical safety rated (fiberglass)',
+        'Various heights available'
       ],
       specifications: {
-        'Material': 'Steel frame with aluminum platform',
-        'Platform Length': '4m, 6m, 8m options',
-        'Load Capacity': '500kg working load',
-        'Lifting Speed': '6-8 meters per minute',
-        'Safety Features': 'Dual safety locks, emergency stop'
+        'Materials': 'Aluminium Alloy, Fiberglass',
+        'Types': 'A-Type, Straight, Extension, Multi-Purpose',
+        'Heights': '6ft to 24ft',
+        'Load Capacity': '120-150kg',
+        'Safety Rating': 'Non-conductive (fiberglass)'
       },
       applications: [
-        'High-rise building maintenance',
-        'Facade cleaning and repairs',
-        'Window installation',
-        'External building inspections'
+        'Electrical work',
+        'Painting and maintenance',
+        'Warehouse operations',
+        'Industrial facilities',
+        'Commercial buildings'
       ],
-      price: 'From $185/day',
-      category: 'specialized'
+      price: 'From AED 50/day',
+      category: 'ladders'
     },
     {
-      id: 'temporary-roofing',
-      title: 'Temporary Roofing Systems',
-      description: 'Weather protection systems to keep your project running in all conditions.',
+      id: 'steel-cuplock-scaffolding',
+      title: 'Steel Cuplock Scaffolding',
+      description: 'Heavy-duty steel cuplock scaffolding systems and components for large-scale construction projects.',
       icon: FiShield,
-      image: 'temporary-roofing',
+      image: 'steel-cuplock',
       features: [
-        'Waterproof membrane covering',
-        'Wind-resistant design',
-        'Modular system for any size',
-        'Quick installation process',
-        'Integrated lighting options'
+        'High load capacity',
+        'Quick assembly with cup lock system',
+        'Versatile configurations',
+        'Heavy-duty steel construction',
+        'Standards compliant',
+        'Complete component range'
       ],
       specifications: {
-        'Material': 'Aluminum frame with PVC membrane',
-        'Wind Rating': 'Up to 120km/h wind speed',
-        'Coverage': 'Custom sizes available',
-        'Waterproofing': 'Welded seam construction',
-        'Accessories': 'Lighting, ventilation, access'
+        'Material': 'Galvanized Steel',
+        'System': 'Cup Lock Connection',
+        'Load Capacity': 'Up to 600kg per bay',
+        'Heights Available': 'Up to 40m',
+        'Standards': 'AS/NZS 1576.1, BS EN 12811'
       },
       applications: [
-        'Construction site protection',
-        'Event coverage',
-        'Emergency repairs',
-        'Equipment protection'
+        'High-rise construction',
+        'Bridge works',
+        'Industrial projects',
+        'Heavy-duty applications',
+        'Large-scale renovations'
       ],
       price: 'Quote on request',
-      category: 'protection'
+      category: 'steel'
     }
   ];
 
   const categories = [
     { id: 'all', name: 'All Products', icon: FiTool },
-    { id: 'scaffolding', name: 'Scaffolding', icon: FiTool },
-    { id: 'mobile', name: 'Mobile Access', icon: FiTruck },
-    { id: 'specialized', name: 'Specialized', icon: FiLayers },
-    { id: 'protection', name: 'Protection', icon: FiShield }
+    { id: 'aluminium', name: 'Aluminium Scaffolding', icon: FiTool },
+    { id: 'ladders', name: 'Ladders', icon: FiLayers },
+    { id: 'steel', name: 'Steel Cuplock', icon: FiShield }
   ];
 
   const [activeCategory, setActiveCategory] = React.useState('all');

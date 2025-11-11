@@ -78,29 +78,6 @@ const ServicesPage = () => {
       duration: 'Flexible terms'
     },
     {
-      id: 'warehouse-ladder',
-      title: 'Warehouse Ladder',
-      description: 'Industrial warehouse ladders for safe picking and access with stable platforms and guardrails.',
-      icon: FiTool,
-      image: 'warehouse-ladder',
-      features: [
-        'Stable platform designs',
-        'Anti-slip steps',
-        'Guardrails and handrails',
-        'Heavy-duty wheels',
-        'Custom heights available'
-      ],
-      process: [
-        'Use-case assessment',
-        'Model selection',
-        'Delivery and instructions',
-        'Periodic maintenance options',
-        'Support and parts'
-      ],
-      pricing: 'Model-based pricing',
-      duration: 'Stock or made-to-order'
-    },
-    {
       id: 'fiberglass-ladder',
       title: 'Fiberglass Ladder',
       description: 'Non-conductive fiberglass ladders ideal for electrical environments and outdoor use.',

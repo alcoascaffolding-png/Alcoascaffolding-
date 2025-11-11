@@ -15,7 +15,8 @@ import {
   StatsCards, 
   MessageCard, 
   MessageDetailsModal, 
-  MessageFilters 
+  MessageFilters,
+  Pagination 
 } from '../../components/contactMessages';
 import toast from 'react-hot-toast';
 import ENV_CONFIG from '../../config/env';
@@ -33,26 +34,39 @@ const ContactMessages = () => {
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [pollingInterval, setPollingInterval] = useState(30000); // Smart interval
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   
   // Refs
   const intervalRef = useRef(null);
   const lastFetchTime = useRef(Date.now());
   const noChangeCount = useRef(0);
+  
+  // Get pagination from Redux
+  const pagination = useSelector(state => state.contactMessages.pagination) || {
+    page: 1,
+    limit: 25,
+    total: 0,
+    pages: 1
+  };
 
   // API Methods - DECLARE FIRST before using in useEffect
   const loadMessages = useCallback((silent = false) => {
-    const params = { page: 1, limit: 100 };
+    const params = { 
+      page: currentPage, 
+      limit: itemsPerPage 
+    };
     if (statusFilter) params.status = statusFilter;
     if (typeFilter) params.type = typeFilter;
     if (searchTerm) params.search = searchTerm;
     
     if (!silent) {
-      console.log('📥 Loading messages...');
+      console.log('📥 Loading messages...', params);
     }
     
     setLastUpdated(new Date()); // Update timestamp
     return dispatch(fetchContactMessages(params));
-  }, [dispatch, statusFilter, typeFilter, searchTerm]);
+  }, [dispatch, currentPage, itemsPerPage, statusFilter, typeFilter, searchTerm]);
 
   const loadStats = useCallback(() => {
     return dispatch(fetchContactMessageStats());
@@ -350,6 +364,21 @@ const ContactMessages = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {messages && messages.length > 0 && (
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.pages}
+          totalItems={pagination.total}
+          itemsPerPage={itemsPerPage}
+          onPageChange={(page) => setCurrentPage(page)}
+          onLimitChange={(limit) => {
+            setItemsPerPage(limit);
+            setCurrentPage(1); // Reset to first page when changing limit
+          }}
+        />
+      )}
 
       {/* Message Details Modal */}
       {selectedMessage && (

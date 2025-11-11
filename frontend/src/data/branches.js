@@ -30,7 +30,6 @@ export const branchesData = [
       'Training',
       'Scaffolding Delivery',
       'Aluminium Scaffolding',
-      'Warehouse Ladder',
       'Fiberglass Ladder',
       'A Type Ladder',
       'Ladder Manufacturers'

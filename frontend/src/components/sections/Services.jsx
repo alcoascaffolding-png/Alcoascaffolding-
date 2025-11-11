@@ -11,8 +11,6 @@ import {
 import singleWidthScaffolding from '../../assets/73-121-1659x2048.png';
 import doubleWidthScaffolding from '../../assets/double-width-scaled-e1582796620310-ols0stmu1sfa9psr6uka5r5bi.jpg';
 import stairwayScaffolding from '../../assets/STAIRWAY-681x1024.jpg';
-import warehouseLadderScaffolding from '../../assets/WARE-HOUSE-LADDER.png';
-import podiumTower from '../../assets/PODIUM.png';
 import foldingTower from '../../assets/FOLDING-TOWER.png';
 import combinationScaffolding from '../../assets/COMBINED-SCAFFOLDING.png';
 import bridgeScaffolding from '../../assets/BRIDGE-SCAFFOLDING.png';
@@ -33,9 +31,6 @@ import fiberglassATypeTwoWay from '../../assets/fiberglassA-200x300.jpg';
 import steelStandard from '../../assets/STANDARD-1-scaled-e1582964173534-270x300.jpg';
 import steelLedger from '../../assets/LEDGER-scaled-e1582976847712-768x511.jpg';
 import intermediateTransom from '../../assets/DIAGONAL-BRACES-DW3-243x300.jpg';
-import cantileverSet from '../../assets/cantilever1.png';
-import deckingBeam from '../../assets/DECKING-BEAM-scaled.jpg';
-import infillBeam from '../../assets/INFILL-BEAM-scaled.jpg';
 import baseJacks from '../../assets/jacks-1.jpg';
 import propJacks from '../../assets/propjack.png';
 import steelPlanks from '../../assets/planks-2.jpg';
@@ -90,20 +85,6 @@ const Services = () => {
           features: ['Internal stairway', 'Enhanced safety', 'Easy platform access'],
           image: stairwayScaffolding,
           link: '/services/stairway-scaffolding'
-        },
-        {
-          title: 'Warehouse Ladder',
-          description: 'Mobile ladder unit with steps, platform, and guardrails for safe warehouse operations.',
-          features: ['Safety guardrails', 'Flat platform', 'Mobile with wheels'],
-          image: warehouseLadderScaffolding,
-          link: '/services/warehouse-ladder'
-        },
-        {
-          title: 'Podium Tower',
-          description: 'Compact mobile scaffolding for lower-height access with multiple platform levels.',
-          features: ['Multiple platform levels', 'Compact design', 'Easy mobility'],
-          image: podiumTower,
-          link: '/services/podium-tower'
         },
         {
           title: 'Folding Tower',
@@ -230,27 +211,6 @@ const Services = () => {
           features: ['Enhanced stability', 'Quick installation', 'Load distribution'],
           image: intermediateTransom,
           link: '/services/intermediate-transom'
-        },
-        {
-          title: 'Cantilever Set',
-          description: 'Cantilever scaffolding sets for extended working platforms beyond the main structure.',
-          features: ['Extended reach', 'Secure anchoring', 'Adjustable configuration'],
-          image: cantileverSet,
-          link: '/services/cantilever-set'
-        },
-        {
-          title: 'Decking Beam',
-          description: 'Heavy-duty decking beams with reinforced support for platform installation.',
-          features: ['High load capacity', 'Integrated support structure', 'Platform compatible'],
-          image: deckingBeam,
-          link: '/services/decking-beam'
-        },
-        {
-          title: 'Infill Beam',
-          description: 'Infill beams for creating intermediate support levels in scaffolding structures.',
-          features: ['Lightweight construction', 'Easy installation', 'Versatile application'],
-          image: infillBeam,
-          link: '/services/infill-beam'
         },
         {
           title: 'Base Jacks',
