@@ -1,6 +1,6 @@
 /**
- * Contact Message Routes
- * Routes for managing contact form submissions
+ * Contact Message Routes - OPTIMIZED VERSION
+ * Added: Change detection endpoint, ETag support
  */
 
 const express = require('express');
@@ -14,21 +14,22 @@ router.use(authenticate);
 
 /**
  * @route   GET /api/contact-messages/check-new
- * @desc    Lightweight check for new messages (OPTIMIZED)
+ * @desc    Lightweight endpoint to check if new messages exist
  * @access  Private
+ * @returns {hasNew: boolean, newCount: number} - Minimal response
  */
 router.get('/check-new', asyncHandler(contactMessageController.checkForNew.bind(contactMessageController)));
 
 /**
  * @route   GET /api/contact-messages/stats
- * @desc    Get contact message statistics
+ * @desc    Get contact message statistics (cached)
  * @access  Private
  */
 router.get('/stats', asyncHandler(contactMessageController.getStats.bind(contactMessageController)));
 
 /**
  * @route   GET /api/contact-messages
- * @desc    Get all contact messages with filtering
+ * @desc    Get all contact messages (with ETag support)
  * @access  Private
  */
 router.get('/', asyncHandler(contactMessageController.getAllMessages.bind(contactMessageController)));

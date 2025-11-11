@@ -22,6 +22,7 @@ import {
   resetContactForm,
   selectContactForm 
 } from '../redux/slices/formSlice';
+import ENV_CONFIG from '../config/env';
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
@@ -251,11 +252,11 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
     });
     
     try {
-      // Local development:
-      // const response = await fetch('http://localhost:5000/api/email/send-quote', {
+      // Use environment-based API URL (auto-switches between dev/prod)
+      const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-quote`;
+      console.log(`💰 Sending quote request to: ${ENV_CONFIG.env} backend`);
       
-      // Production:
-      const response = await fetch('https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api/email/send-quote', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -684,11 +685,11 @@ const ContactUs = () => {
     });
     
     try {
-      // Local development:
-      // const response = await fetch('http://localhost:5000/api/email/send-contact', {
+      // Use environment-based API URL (auto-switches between dev/prod)
+      const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-contact`;
+      console.log(`📤 Sending contact form to: ${ENV_CONFIG.env} backend`);
       
-      // Production:
-      const response = await fetch('https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api/email/send-contact', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

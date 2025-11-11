@@ -1,0 +1,20 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "dev:local": "vite --mode development",
+    "dev:prod": "vite --mode production",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
+    "preview": "vite preview",
+    "lint": "eslint ."
+  }
+}
+
+// Add these scripts to your package.json "scripts" section
+
+// Then you can run:
+// npm run dev:local    → Connect to localhost:5000
+// npm run dev:prod     → Connect to Render.com backend
+// npm run build:prod   → Build for production deployment
+

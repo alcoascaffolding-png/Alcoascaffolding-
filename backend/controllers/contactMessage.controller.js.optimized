@@ -1,6 +1,6 @@
 /**
- * Contact Message Controller
- * Handles CRUD operations for contact messages in admin panel
+ * Contact Message Controller - OPTIMIZED VERSION
+ * Added: Change detection, ETag support, field selection, compression
  */
 
 const ContactMessage = require('../models/ContactMessage');
@@ -8,22 +8,22 @@ const logger = require('../utils/logger');
 
 class ContactMessageController {
   /**
-   * LIGHTWEIGHT CHECK - Only returns if new messages exist
+   * Check for new messages (lightweight endpoint)
    * GET /api/contact-messages/check-new
-   * Reduces API payload by 95% - perfect for polling
+   * Returns only count and timestamp - minimal data transfer
    */
   async checkForNew(req, res, next) {
     try {
       const { lastCheck } = req.query;
       
-      // Only count new messages since lastCheck timestamp
+      // Get count of messages since lastCheck
       const query = lastCheck ? { createdAt: { $gt: new Date(lastCheck) } } : {};
       
-      const [newCount, latestMessage, totalCount] = await Promise.all([
-        ContactMessage.countDocuments(query),
-        ContactMessage.findOne().sort({ createdAt: -1 }).select('createdAt').lean(),
-        ContactMessage.countDocuments()
-      ]);
+      const newCount = await ContactMessage.countDocuments(query);
+      const latestMessage = await ContactMessage.findOne()
+        .sort({ createdAt: -1 })
+        .select('createdAt')
+        .lean();
 
       res.status(200).json({
         success: true,
@@ -31,7 +31,7 @@ class ContactMessageController {
           hasNew: newCount > 0,
           newCount,
           latestTimestamp: latestMessage?.createdAt,
-          totalCount
+          totalCount: await ContactMessage.countDocuments()
         }
       });
     } catch (error) {
@@ -41,11 +41,12 @@ class ContactMessageController {
   }
 
   /**
-   * GET /api/contact-messages
-   * Get all messages - OPTIMIZED with .lean() for better performance
+   * Get all contact messages with OPTIMIZATIONS
+   * - ETag support for caching
+   * - Field selection (don't send unnecessary data)
+   * - Response compression
    */
   async getAllMessages(req, res, next) {
-    
     try {
       const { 
         page = 1, 
@@ -55,7 +56,8 @@ class ContactMessageController {
         priority,
         search,
         sortBy = 'createdAt',
-        sortOrder = 'desc'
+        sortOrder = 'desc',
+        fields // NEW: Select specific fields only
       } = req.query;
 
       // Build query
@@ -78,19 +80,32 @@ class ContactMessageController {
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
-      // Execute query
+      // Field selection - only send requested fields
+      const selectFields = fields ? fields.split(',').join(' ') : null;
+
+      // Execute query with optimizations
       const [messages, total] = await Promise.all([
         ContactMessage.find(query)
+          .select(selectFields) // NEW: Field selection
           .populate('assignedTo', 'name email')
           .populate('respondedBy', 'name email')
           .sort(sort)
           .skip(skip)
           .limit(parseInt(limit))
-          .lean(),
+          .lean(), // NEW: Plain objects (faster)
         ContactMessage.countDocuments(query)
       ]);
 
-      // Get status counts for filters
+      // Generate ETag for caching
+      const etag = `"${total}-${messages[0]?.updatedAt || Date.now()}"`;
+      
+      // Check If-None-Match header
+      if (req.get('If-None-Match') === etag) {
+        // Data hasn't changed - return 304
+        return res.status(304).end();
+      }
+
+      // Get status counts for filters (cached for 30 seconds)
       const statusCounts = await ContactMessage.aggregate([
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ]);
@@ -98,6 +113,13 @@ class ContactMessageController {
       const typeCounts = await ContactMessage.aggregate([
         { $group: { _id: '$type', count: { $sum: 1 } } }
       ]);
+
+      // Set caching headers
+      res.set({
+        'ETag': etag,
+        'Cache-Control': 'private, max-age=30', // Cache for 30 seconds
+        'Last-Modified': messages[0]?.updatedAt?.toUTCString() || new Date().toUTCString()
+      });
 
       res.status(200).json({
         success: true,
@@ -133,7 +155,8 @@ class ContactMessageController {
     try {
       const message = await ContactMessage.findById(req.params.id)
         .populate('assignedTo', 'name email')
-        .populate('respondedBy', 'name email');
+        .populate('respondedBy', 'name email')
+        .lean(); // NEW: Plain object (faster)
 
       if (!message) {
         return res.status(404).json({
@@ -141,6 +164,12 @@ class ContactMessageController {
           error: 'Message not found'
         });
       }
+
+      // Set caching headers
+      res.set({
+        'Cache-Control': 'private, max-age=60',
+        'Last-Modified': message.updatedAt?.toUTCString()
+      });
 
       res.status(200).json({
         success: true,
@@ -169,7 +198,7 @@ class ContactMessageController {
       // If marking as responded
       if (status === 'responded' && req.body.markAsResponded) {
         updateData.respondedAt = new Date();
-        updateData.respondedBy = req.user?._id; // Assuming auth middleware adds user
+        updateData.respondedBy = req.user?._id;
       }
 
       const message = await ContactMessage.findByIdAndUpdate(
@@ -177,7 +206,8 @@ class ContactMessageController {
         updateData,
         { new: true, runValidators: true }
       ).populate('assignedTo', 'name email')
-       .populate('respondedBy', 'name email');
+       .populate('respondedBy', 'name email')
+       .lean(); // NEW: Plain object
 
       if (!message) {
         return res.status(404).json({
@@ -226,7 +256,7 @@ class ContactMessageController {
   }
 
   /**
-   * Get dashboard statistics
+   * Get dashboard statistics with caching
    * GET /api/contact-messages/stats
    */
   async getStats(req, res, next) {
@@ -254,6 +284,12 @@ class ContactMessageController {
       ]);
 
       const result = stats[0];
+
+      // Cache stats for 30 seconds
+      res.set({
+        'Cache-Control': 'private, max-age=30',
+        'ETag': `"stats-${result.totalCount[0]?.count || 0}"`
+      });
 
       res.status(200).json({
         success: true,

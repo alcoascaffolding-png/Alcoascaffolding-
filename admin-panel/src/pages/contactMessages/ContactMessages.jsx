@@ -32,9 +32,12 @@ const ContactMessages = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [lastMessageCount, setLastMessageCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [pollingInterval, setPollingInterval] = useState(30000); // Smart interval
   
   // Refs
   const intervalRef = useRef(null);
+  const lastFetchTime = useRef(Date.now());
+  const noChangeCount = useRef(0);
 
   // API Methods - DECLARE FIRST before using in useEffect
   const loadMessages = useCallback((silent = false) => {
@@ -68,16 +71,53 @@ const ContactMessages = () => {
     }
   }, [statusFilter, typeFilter, searchTerm, loadMessages]);
 
-  // Automatic real-time updates - checks every 10 seconds
+  // ULTRA-EFFICIENT POLLING - Uses lightweight check endpoint
   useEffect(() => {
-    console.log('🔴 LIVE: Auto-refresh enabled - checking every 10 seconds');
+    console.log(`🔴 LIVE: Optimized polling - checking every ${pollingInterval/1000}s`);
     
-    // Set up automatic polling
-    intervalRef.current = setInterval(() => {
-      console.log('🔄 Checking for new messages...');
-      loadMessages(true); // Silent refresh - no toast
-      loadStats();
-    }, 10000); // Check every 10 seconds
+    // Set up lightweight polling
+    intervalRef.current = setInterval(async () => {
+      try {
+        // STEP 1: Lightweight check (< 1KB response)
+        const lastCheck = lastUpdated.toISOString();
+        const response = await fetch(`${ENV_CONFIG.apiUrl}/contact-messages/check-new?lastCheck=${lastCheck}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) throw new Error('Check failed');
+        
+        const result = await response.json();
+        console.log(`🔍 Lightweight check: ${result.data.hasNew ? `${result.data.newCount} new!` : 'No changes'}`);
+        
+        // STEP 2: Only fetch full data if changes detected
+        if (result.data.hasNew || result.data.totalCount !== (messages?.length || 0)) {
+          console.log('⚡ Changes detected! Fetching full data...');
+          loadMessages(true);
+          loadStats();
+          
+          // Speed up polling
+          noChangeCount.current = 0;
+          if (pollingInterval > 30000) {
+            setPollingInterval(30000);
+          }
+        } else {
+          // No changes - slow down polling
+          noChangeCount.current += 1;
+          
+          if (noChangeCount.current >= 3 && pollingInterval < 60000) {
+            const newInterval = Math.min(pollingInterval + 10000, 60000);
+            setPollingInterval(newInterval);
+            console.log(`⏱️ No changes. Slowing to ${newInterval/1000}s`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Check error:', error);
+        // Fallback to full fetch on error
+        loadMessages(true);
+      }
+    }, pollingInterval);
 
     // Cleanup on unmount
     return () => {
@@ -86,7 +126,7 @@ const ContactMessages = () => {
         console.log('🛑 Auto-refresh stopped');
       }
     };
-  }, [loadMessages, loadStats]);
+  }, [pollingInterval, loadMessages, loadStats, messages, lastUpdated]);
 
   // Detect and notify about new messages
   useEffect(() => {
@@ -125,13 +165,19 @@ const ContactMessages = () => {
 
   const handleStatusChange = async (messageId, newStatus) => {
     try {
-      await dispatch(updateContactMessage({ 
+      const updatedMessage = await dispatch(updateContactMessage({ 
         id: messageId, 
         data: { status: newStatus, markAsResponded: newStatus === 'responded' } 
       })).unwrap();
       
+      // Update the selected message in modal if it's open
+      if (selectedMessage && selectedMessage._id === messageId) {
+        setSelectedMessage(updatedMessage.data);
+      }
+      
       toast.success('Status updated successfully!');
       loadStats(); // Refresh stats
+      loadMessages(true); // Refresh message list
     } catch (error) {
       toast.error(error || 'Failed to update status');
     }
@@ -210,12 +256,38 @@ const ContactMessages = () => {
             LIVE
           </span>
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <span>🔄 Auto-updates every 10 seconds</span>
-          <span>•</span>
-          <span>{messages?.length || 0} total messages</span>
-          <span>•</span>
-          <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <span>🔄 Smart refresh every {pollingInterval/1000}s</span>
+            <span>•</span>
+            <span>{messages?.length || 0} total</span>
+            <span>•</span>
+            <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
+            {noChangeCount.current > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-xs text-blue-600">
+                  Optimized ({noChangeCount.current} unchanged)
+                </span>
+              </>
+            )}
+          </div>
+          {/* Manual refresh button */}
+          <button
+            onClick={() => {
+              loadMessages();
+              loadStats();
+              noChangeCount.current = 0;
+              setPollingInterval(30000); // Reset to fast
+            }}
+            className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium inline-flex items-center border border-blue-200"
+            title="Force refresh now"
+          >
+            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
         </div>
       </div>
 

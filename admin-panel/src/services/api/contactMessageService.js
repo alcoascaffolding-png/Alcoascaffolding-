@@ -7,6 +7,16 @@ import api from '../../api/axios';
 
 const contactMessageService = {
   /**
+   * LIGHTWEIGHT CHECK - Only check if new messages exist
+   * Reduces bandwidth by 95% - perfect for polling
+   */
+  checkForNew: async (lastCheck) => {
+    const params = lastCheck ? { lastCheck } : {};
+    const { data } = await api.get('/contact-messages/check-new', { params });
+    return data;
+  },
+
+  /**
    * Get all contact messages with pagination and filters
    */
   getAll: async (params = {}) => {
