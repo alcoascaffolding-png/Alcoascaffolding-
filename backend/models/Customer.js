@@ -1,35 +1,18 @@
 /**
  * Customer Model
- * Master customer/client information
+ * Stores customer/company information for scaffolding business
+ * Supports B2B relationships with construction companies and contractors
  */
 
 const mongoose = require('mongoose');
 
-const customerSchema = new mongoose.Schema({
-  // Basic Information
-  customerCode: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
-  companyName: {
+const contactPersonSchema = new mongoose.Schema({
+  name: {
     type: String,
     required: true,
     trim: true
   },
-  displayName: {
-    type: String,
-    trim: true
-  },
-  customerType: {
-    type: String,
-    enum: ['individual', 'business', 'government', 'contractor'],
-    default: 'business'
-  },
-  
-  // Contact Information
-  contactPerson: {
+  designation: {
     type: String,
     trim: true
   },
@@ -40,9 +23,101 @@ const customerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
+    required: true,
     trim: true
   },
-  mobile: {
+  whatsapp: {
+    type: String,
+    trim: true
+  },
+  isPrimary: {
+    type: Boolean,
+    default: false
+  },
+  role: {
+    type: String,
+    enum: ['primary', 'site', 'accounts', 'other'],
+    default: 'other'
+  }
+}, { _id: true });
+
+const addressSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ['office', 'billing', 'site', 'other'],
+    default: 'other'
+  },
+  addressLine1: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  addressLine2: {
+    type: String,
+    trim: true
+  },
+  area: {
+    type: String,
+    trim: true
+  },
+  city: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  emirate: {
+    type: String,
+    enum: ['Abu Dhabi', 'Dubai', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'],
+    required: true
+  },
+  country: {
+    type: String,
+    default: 'UAE',
+    trim: true
+  },
+  poBox: {
+    type: String,
+    trim: true
+  },
+  landmark: {
+    type: String,
+    trim: true
+  },
+  isPrimary: {
+    type: Boolean,
+    default: false
+  }
+}, { _id: true });
+
+const customerSchema = new mongoose.Schema({
+  // Company Information
+  companyName: {
+    type: String,
+    required: [true, 'Company name is required'],
+    trim: true,
+    index: true
+  },
+  displayName: {
+    type: String,
+    trim: true
+  },
+  tradeLicenseNumber: {
+    type: String,
+    trim: true,
+    sparse: true,
+    index: true
+  },
+  vatRegistrationNumber: {
+    type: String,
+    trim: true,
+    sparse: true
+  },
+  businessType: {
+    type: String,
+    enum: ['Construction Company', 'Contractor', 'Facility Management', 'Government', 'Individual', 'Other'],
+    default: 'Construction Company'
+  },
+  industry: {
     type: String,
     trim: true
   },
@@ -50,43 +125,81 @@ const customerSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  
-  // Address
-  billingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    country: { type: String, default: 'UAE' },
-    postalCode: String
+
+  // Contact Information
+  contactPersons: [contactPersonSchema],
+  addresses: [addressSchema],
+
+  // Primary Contact (Quick Access)
+  primaryEmail: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    index: true
   },
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    country: { type: String, default: 'UAE' },
-    postalCode: String
+  primaryPhone: {
+    type: String,
+    trim: true,
+    index: true
   },
-  
-  // Tax Information
-  taxNumber: {
+  primaryWhatsApp: {
     type: String,
     trim: true
   },
-  taxRegistered: {
-    type: Boolean,
-    default: false
-  },
-  
+
   // Financial Information
+  paymentTerms: {
+    type: String,
+    enum: ['Cash', '7 Days', '15 Days', '30 Days', '45 Days', '60 Days', 'Custom'],
+    default: 'Cash'
+  },
   creditLimit: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  currentBalance: {
     type: Number,
     default: 0
   },
-  creditDays: {
-    type: Number,
-    default: 30
+  currency: {
+    type: String,
+    default: 'AED'
   },
-  currentBalance: {
+
+  // Status & Classification
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'blocked', 'prospect'],
+    default: 'prospect',
+    index: true
+  },
+  customerType: {
+    type: String,
+    enum: ['rental', 'sales', 'both'],
+    default: 'both'
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: 3
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high', 'vip'],
+    default: 'medium'
+  },
+
+  // Business Relationship
+  customerSince: {
+    type: Date,
+    default: Date.now
+  },
+  lastOrderDate: {
+    type: Date
+  },
+  totalOrders: {
     type: Number,
     default: 0
   },
@@ -94,48 +207,161 @@ const customerSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  
-  // Business Details
+
+  // Additional Information
   notes: {
-    type: String
-  },
-  tags: [String],
-  status: {
     type: String,
-    enum: ['active', 'inactive', 'suspended'],
-    default: 'active'
+    trim: true
   },
-  
-  // Metadata
+  internalNotes: {
+    type: String,
+    trim: true
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+
+  // Reference & Source
+  referredBy: {
+    type: String,
+    trim: true
+  },
+  source: {
+    type: String,
+    enum: ['Website', 'Phone Call', 'Walk-in', 'Referral', 'Social Media', 'Email', 'Other'],
+    default: 'Website'
+  },
+
+  // Documents (store file paths or URLs)
+  documents: [{
+    type: {
+      type: String,
+      enum: ['Trade License', 'VAT Certificate', 'Emirates ID', 'Contract', 'Other']
+    },
+    fileName: String,
+    fileUrl: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
+  // System Fields
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  updatedBy: {
+  lastModifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Generate customer code automatically
-customerSchema.pre('save', async function(next) {
-  if (!this.customerCode) {
-    const count = await mongoose.model('Customer').countDocuments();
-    this.customerCode = `CUST${String(count + 1).padStart(5, '0')}`;
+// Indexes for better performance
+customerSchema.index({ companyName: 'text', primaryEmail: 'text', primaryPhone: 'text' });
+customerSchema.index({ status: 1, customerType: 1 });
+customerSchema.index({ createdAt: -1 });
+
+// Virtual for credit status
+customerSchema.virtual('creditStatus').get(function() {
+  if (this.creditLimit === 0) return 'No Credit';
+  const usedPercentage = (this.currentBalance / this.creditLimit) * 100;
+  if (usedPercentage >= 100) return 'Credit Limit Reached';
+  if (usedPercentage >= 80) return 'Credit Warning';
+  return 'Good';
+});
+
+// Virtual for full primary address
+customerSchema.virtual('primaryAddress').get(function() {
+  const primary = this.addresses.find(addr => addr.isPrimary);
+  return primary || this.addresses[0];
+});
+
+// Virtual for full primary contact
+customerSchema.virtual('primaryContact').get(function() {
+  const primary = this.contactPersons.find(contact => contact.isPrimary);
+  return primary || this.contactPersons[0];
+});
+
+// Method to update primary contact info
+customerSchema.methods.updatePrimaryContact = function() {
+  const primary = this.contactPersons.find(contact => contact.isPrimary) || this.contactPersons[0];
+  if (primary) {
+    this.primaryEmail = primary.email;
+    this.primaryPhone = primary.phone;
+    this.primaryWhatsApp = primary.whatsapp || primary.phone;
   }
-  
+};
+
+// Pre-save middleware to ensure only one primary contact/address
+customerSchema.pre('save', function(next) {
+  // Ensure only one primary contact
+  let primaryContactFound = false;
+  this.contactPersons.forEach(contact => {
+    if (contact.isPrimary && !primaryContactFound) {
+      primaryContactFound = true;
+    } else if (contact.isPrimary) {
+      contact.isPrimary = false;
+    }
+  });
+
+  // Ensure only one primary address
+  let primaryAddressFound = false;
+  this.addresses.forEach(address => {
+    if (address.isPrimary && !primaryAddressFound) {
+      primaryAddressFound = true;
+    } else if (address.isPrimary) {
+      address.isPrimary = false;
+    }
+  });
+
+  // Update primary contact fields
+  this.updatePrimaryContact();
+
+  // Set display name if not provided
   if (!this.displayName) {
     this.displayName = this.companyName;
   }
-  
+
   next();
 });
 
-// Additional indexes (unique fields already have indexes)
-customerSchema.index({ companyName: 1 });
-customerSchema.index({ status: 1 });
+// Static method to get customer statistics
+customerSchema.statics.getStatistics = async function() {
+  const stats = await this.aggregate([
+    {
+      $facet: {
+        statusCounts: [
+          { $group: { _id: '$status', count: { $sum: 1 } } }
+        ],
+        typeCounts: [
+          { $group: { _id: '$customerType', count: { $sum: 1 } } }
+        ],
+        totals: [
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              activeCustomers: {
+                $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
+              },
+              totalRevenue: { $sum: '$totalRevenue' },
+              totalOrders: { $sum: '$totalOrders' }
+            }
+          }
+        ]
+      }
+    }
+  ]);
 
-module.exports = mongoose.model('Customer', customerSchema);
+  return stats[0];
+};
 
+const Customer = mongoose.model('Customer', customerSchema);
+
+module.exports = Customer;

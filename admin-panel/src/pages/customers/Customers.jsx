@@ -1,370 +1,360 @@
 /**
- * Customers Page - Dynamic with API Integration
+ * Customers Page - Main Container
+ * Manages customer list display with filters, search, and pagination
  */
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Modal, ViewCustomerModal, DeleteConfirmationModal } from '../../components/common';
-import { CustomerForm } from '../../components/forms';
-import { 
-  fetchCustomers, 
-  fetchCustomerStats,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer 
-} from '../../store/slices/customerSlice';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
+import {
+  fetchCustomers,
+  fetchCustomerStats,
+  deleteCustomer,
+  setSelectedCustomer,
+  clearSelectedCustomer
+} from '../../store/slices/customerSlice';
+import {
+  StatsCards,
+  CustomerFilters,
+  CustomerCard,
+  CustomerDetailsModal,
+  AddCustomerModal,
+  Pagination
+} from '../../components/customers';
+import { openWhatsAppChat } from '../../utils/whatsapp';
+import ENV_CONFIG from '../../config/env';
 
 const Customers = () => {
-  // Redux
   const dispatch = useDispatch();
-  const { customers, stats, loading, error } = useSelector(state => state.customer);
+  const { customers, stats, pagination, loading, statsLoading, selectedCustomer } = useSelector(
+    (state) => state.customers
+  );
 
   // Local state
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [businessTypeFilter, setBusinessTypeFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState(null);
-  const [viewingCustomer, setViewingCustomer] = useState(null);
-  const [deletingCustomer, setDeletingCustomer] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  // Load data on mount - only once
-  useEffect(() => {
-    dispatch(fetchCustomers({ page: 1, limit: 100 }));
-    dispatch(fetchCustomerStats());
-  }, []); // Empty dependency array - load only on mount
+  // Real-time updates
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [pollingInterval, setPollingInterval] = useState(30000); // 30s
+  const intervalRef = useRef(null);
+  const noChangeCount = useRef(0);
 
-  // Update filtered customers when data changes
-  useEffect(() => {
-    setFilteredCustomers(customers);
-  }, [customers]);
+  // Load customers
+  const loadCustomers = useCallback((silent = false) => {
+    const params = {
+      page: currentPage,
+      limit: itemsPerPage
+    };
 
-  // Search filter
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = customers.filter(c => 
-        c.customerCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredCustomers(filtered);
-    } else {
-      setFilteredCustomers(customers);
-    }
-  }, [searchTerm, customers]);
+    if (statusFilter) params.status = statusFilter;
+    if (typeFilter) params.customerType = typeFilter;
+    if (businessTypeFilter) params.businessType = businessTypeFilter;
+    if (priorityFilter) params.priority = priorityFilter;
+    if (searchTerm) params.search = searchTerm;
 
-  const handleAdd = () => {
-    setEditingCustomer(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEdit = (customer) => {
-    setEditingCustomer(customer);
-    setIsModalOpen(true);
-  };
-
-  const handleView = (customer) => {
-    setViewingCustomer(customer);
-    setIsViewModalOpen(true);
-  };
-
-  const handleSave = async (customerData) => {
-    try {
-      if (editingCustomer) {
-        await dispatch(updateCustomer({ 
-          id: editingCustomer._id, 
-          data: customerData 
-        })).unwrap();
-        toast.success('Customer updated successfully!');
-      } else {
-        await dispatch(createCustomer(customerData)).unwrap();
-        toast.success('Customer added successfully!');
+    return dispatch(fetchCustomers(params)).then(() => {
+      if (!silent) {
+        setLastUpdated(new Date());
       }
-      setIsModalOpen(false);
-      setEditingCustomer(null);
-      // Refresh stats
-      dispatch(fetchCustomerStats());
-    } catch (error) {
-      toast.error(error || 'Operation failed');
-    }
-  };
+    });
+  }, [dispatch, currentPage, itemsPerPage, statusFilter, typeFilter, businessTypeFilter, priorityFilter, searchTerm]);
 
-  const handleDeleteClick = (customer) => {
-    setDeletingCustomer(customer);
-    setIsDeleteModalOpen(true);
-  };
+  // Load stats
+  const loadStats = useCallback(() => {
+    return dispatch(fetchCustomerStats());
+  }, [dispatch]);
 
-  const handleDeleteConfirm = async () => {
-    if (deletingCustomer) {
+  // Initial load
+  useEffect(() => {
+    loadCustomers();
+    loadStats();
+  }, [loadCustomers, loadStats]);
+
+  // Smart polling for real-time updates
+  useEffect(() => {
+    console.log(`🔴 LIVE: Optimized polling - checking every ${pollingInterval / 1000}s`);
+
+    intervalRef.current = setInterval(async () => {
       try {
-        await dispatch(deleteCustomer(deletingCustomer._id)).unwrap();
-        toast.success('Customer deleted successfully!');
-        setIsDeleteModalOpen(false);
-        setDeletingCustomer(null);
-        // Refresh stats
-        dispatch(fetchCustomerStats());
+        const lastCheck = lastUpdated.toISOString();
+        const response = await fetch(
+          `${ENV_CONFIG.apiUrl}/customers/check-new?lastCheck=${lastCheck}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+
+        if (!response.ok) throw new Error('Check failed');
+
+        const result = await response.json();
+
+        // Check if there are changes
+        if (result.data.hasNew || result.data.totalCount !== (customers?.length || 0)) {
+          console.log('✅ New changes detected, refreshing data...');
+          loadCustomers(true);
+          loadStats();
+          noChangeCount.current = 0;
+
+          // Speed up polling if we have changes
+          if (pollingInterval > 30000) {
+            setPollingInterval(30000);
+          }
+        } else {
+          noChangeCount.current += 1;
+
+          // Slow down polling if no changes
+          if (noChangeCount.current >= 3 && pollingInterval < 60000) {
+            const newInterval = Math.min(pollingInterval + 10000, 60000);
+            console.log(`⏱️ No changes, slowing down to ${newInterval / 1000}s`);
+            setPollingInterval(newInterval);
+          }
+        }
       } catch (error) {
-        toast.error(error || 'Failed to delete customer');
+        console.error('❌ Check error:', error);
+        loadCustomers(true);
       }
+    }, pollingInterval);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [pollingInterval, loadCustomers, loadStats, customers, lastUpdated]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    } else {
+      loadCustomers();
+    }
+  }, [statusFilter, typeFilter, businessTypeFilter, priorityFilter, searchTerm]);
+
+  // Handle view customer
+  const handleView = (customer) => {
+    dispatch(setSelectedCustomer(customer));
+    setShowDetailsModal(true);
+  };
+
+  // Handle delete customer
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to deactivate this customer?')) {
+      dispatch(deleteCustomer({ id, hard: false })).then(() => {
+        loadCustomers();
+        loadStats();
+      });
     }
   };
 
-  const handleExportPDF = () => {
-    toast.success('Exporting to PDF...');
+  // Handle close details modal
+  const handleCloseDetails = () => {
+    setShowDetailsModal(false);
+    setTimeout(() => {
+      dispatch(clearSelectedCustomer());
+    }, 300);
   };
 
-  const handleExportExcel = () => {
-    toast.success('Exporting to Excel...');
+  // Handle add customer success
+  const handleAddSuccess = () => {
+    loadCustomers();
+    loadStats();
+    setShowAddModal(false);
   };
 
-  const totalCustomers = stats?.totalCustomers || 0;
-  const activeCustomers = stats?.activeCustomers || 0;
-  const totalCreditLimit = stats?.totalCreditLimit || 0;
-  const totalOutstanding = stats?.totalOutstanding || 0;
+  // Handle update success
+  const handleUpdateSuccess = () => {
+    loadCustomers();
+    loadStats();
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Search Bar & Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                Customers
+              </h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Manage your construction company clients and contractors
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Customer
+            </button>
           </div>
-          <input
-            type="text"
-            placeholder="Search customers"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleExportPDF}
-            className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 inline-flex items-center space-x-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Export PDF</span>
-          </button>
-          <button
-            onClick={handleExportExcel}
-            className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 inline-flex items-center space-x-2"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Export Excel</span>
-          </button>
-          <button onClick={handleAdd} className="px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 inline-flex items-center space-x-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Add Customer</span>
-          </button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-blue-600 text-white rounded-lg p-5 shadow-sm">
-          <p className="text-sm font-medium opacity-90">Total</p>
-          <p className="text-3xl font-bold mt-2">{totalCustomers}</p>
-        </div>
-        <div className="bg-green-600 text-white rounded-lg p-5 shadow-sm">
-          <p className="text-sm font-medium opacity-90">Active</p>
-          <p className="text-3xl font-bold mt-2">{activeCustomers}</p>
-        </div>
-        <div className="bg-orange-600 text-white rounded-lg p-5 shadow-sm">
-          <p className="text-sm font-medium opacity-90">Credit Limit</p>
-          <p className="text-2xl font-bold mt-2">AED {totalCreditLimit.toLocaleString()}</p>
-        </div>
-        <div className="bg-purple-600 text-white rounded-lg p-5 shadow-sm">
-          <p className="text-sm font-medium opacity-90">Outstanding</p>
-          <p className="text-2xl font-bold mt-2">AED {totalOutstanding.toLocaleString()}</p>
-        </div>
-      </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics Cards */}
+        <StatsCards stats={stats} loading={statsLoading} />
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">{error}</p>
-          <button 
-            onClick={() => dispatch(fetchCustomers({ page: 1, limit: 100 }))}
-            className="mt-2 text-red-600 hover:text-red-800 font-medium"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {/* Table */}
-      {!loading && !error && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Company</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Credit Limit</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Balance</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCustomers.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      {searchTerm ? 'No customers found matching your search' : 'No customers yet. Add your first customer!'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredCustomers.map((customer) => (
-                    <tr key={customer._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleView(customer)}
-                          className="text-blue-600 hover:text-blue-800 font-mono font-semibold text-sm"
-                        >
-                          {customer.customerCode}
-                        </button>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">{customer.companyName}</p>
-                          <p className="text-xs text-gray-500">{customer.contactPerson}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="text-sm text-gray-900">{customer.email}</p>
-                          <p className="text-xs text-gray-500">{customer.phone}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-green-600">
-                          AED {customer.creditLimit?.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-semibold ${
-                          customer.balance > 0 ? 'text-red-600' : 'text-green-600'
-                        }`}>
-                          AED {customer.balance?.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                          customer.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {customer.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-2">
-                          {/* View */}
-                          <button
-                            onClick={() => handleView(customer)}
-                            className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
-                            title="View Details"
-                          >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </button>
-                          {/* Edit */}
-                          <button
-                            onClick={() => handleEdit(customer)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="Edit"
-                          >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          {/* Delete */}
-                          <button
-                            onClick={() => handleDeleteClick(customer)}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
-                          >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingCustomer(null);
-        }} 
-        title={editingCustomer ? 'Edit Customer' : 'Add New Customer'} 
-        subtitle="Enter customer information"
-        size="lg"
-      >
-        <CustomerForm
-          customer={editingCustomer}
-          onSave={handleSave}
-          onCancel={() => {
-            setIsModalOpen(false);
-            setEditingCustomer(null);
-          }}
+        {/* Filters */}
+        <CustomerFilters
+          statusFilter={statusFilter}
+          typeFilter={typeFilter}
+          businessTypeFilter={businessTypeFilter}
+          priorityFilter={priorityFilter}
+          searchTerm={searchTerm}
+          onStatusChange={setStatusFilter}
+          onTypeChange={setTypeFilter}
+          onBusinessTypeChange={setBusinessTypeFilter}
+          onPriorityChange={setPriorityFilter}
+          onSearchChange={setSearchTerm}
         />
-      </Modal>
 
-      {/* View Modal */}
-      <ViewCustomerModal
-        isOpen={isViewModalOpen}
-        onClose={() => {
-          setIsViewModalOpen(false);
-          setViewingCustomer(null);
-        }}
-        customer={viewingCustomer}
-      />
+        {/* Customer List */}
+        <div className="mt-6">
+          {loading && customers.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading customers...</p>
+            </div>
+          ) : customers && customers.length > 0 ? (
+            <>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Company
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Contact
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Orders
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {customers.map((customer) => (
+                        <CustomerCard
+                          key={customer._id}
+                          customer={customer}
+                          onView={handleView}
+                          onDelete={handleDelete}
+                          onWhatsApp={(phone, name) =>
+                            openWhatsAppChat(
+                              phone,
+                              name,
+                              `Hello ${name}, This is Alcoa Scaffolding. How can we help you today?`
+                            )
+                          }
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setDeletingCustomer(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Customer"
-        message="Are you sure you want to delete this customer?"
-        entityName={deletingCustomer?.companyName}
-        warningText="This action cannot be undone."
-      />
+              {/* Pagination */}
+              {customers.length > 0 && (
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.pages}
+                  totalItems={pagination.total}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={(page) => setCurrentPage(page)}
+                  onLimitChange={(limit) => {
+                    setItemsPerPage(limit);
+                    setCurrentPage(1);
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+                No customers found
+              </h3>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {searchTerm || statusFilter || typeFilter || businessTypeFilter || priorityFilter
+                  ? 'Try adjusting your filters'
+                  : 'Get started by adding your first customer'}
+              </p>
+              {!searchTerm && !statusFilter && !typeFilter && !businessTypeFilter && !priorityFilter && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add First Customer
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showDetailsModal && selectedCustomer && (
+        <CustomerDetailsModal
+          customer={selectedCustomer}
+          onClose={handleCloseDetails}
+          onUpdate={handleUpdateSuccess}
+        />
+      )}
+
+      {showAddModal && (
+        <AddCustomerModal onClose={() => setShowAddModal(false)} onSuccess={handleAddSuccess} />
+      )}
     </div>
   );
 };

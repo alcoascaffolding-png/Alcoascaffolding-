@@ -1,11 +1,13 @@
 /**
- * Customer Redux Slice with API Integration
+ * Customer Redux Slice
+ * Manages customer state in the admin panel
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { customerService } from '../../services/api';
+import customerService from '../../services/api/customerService';
+import toast from 'react-hot-toast';
 
-// Async thunks for API calls
+// Async thunks
 export const fetchCustomers = createAsyncThunk(
   'customers/fetchAll',
   async (params, { rejectWithValue }) => {
@@ -23,7 +25,7 @@ export const fetchCustomerById = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const response = await customerService.getById(id);
-      return response;
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer');
     }
@@ -35,9 +37,9 @@ export const fetchCustomerStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await customerService.getStats();
-      return response;
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch customer stats');
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch statistics');
     }
   }
 );
@@ -47,9 +49,12 @@ export const createCustomer = createAsyncThunk(
   async (customerData, { rejectWithValue }) => {
     try {
       const response = await customerService.create(customerData);
-      return response;
+      toast.success('Customer created successfully!');
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create customer');
+      const message = error.response?.data?.message || 'Failed to create customer';
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
@@ -59,21 +64,117 @@ export const updateCustomer = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await customerService.update(id, data);
-      return response;
+      toast.success('Customer updated successfully!');
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update customer');
+      const message = error.response?.data?.message || 'Failed to update customer';
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
 
 export const deleteCustomer = createAsyncThunk(
   'customers/delete',
-  async (id, { rejectWithValue }) => {
+  async ({ id, hard = false }, { rejectWithValue }) => {
     try {
-      const response = await customerService.delete(id);
-      return { id, ...response };
+      await customerService.delete(id, hard);
+      toast.success(hard ? 'Customer deleted permanently!' : 'Customer deactivated!');
+      return id;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete customer');
+      const message = error.response?.data?.message || 'Failed to delete customer';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const addContactPerson = createAsyncThunk(
+  'customers/addContact',
+  async ({ customerId, contactData }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.addContact(customerId, contactData);
+      toast.success('Contact person added!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to add contact';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const updateContactPerson = createAsyncThunk(
+  'customers/updateContact',
+  async ({ customerId, contactId, contactData }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.updateContact(customerId, contactId, contactData);
+      toast.success('Contact person updated!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to update contact';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const deleteContactPerson = createAsyncThunk(
+  'customers/deleteContact',
+  async ({ customerId, contactId }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.deleteContact(customerId, contactId);
+      toast.success('Contact person deleted!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete contact';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const addAddress = createAsyncThunk(
+  'customers/addAddress',
+  async ({ customerId, addressData }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.addAddress(customerId, addressData);
+      toast.success('Address added!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to add address';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const updateAddress = createAsyncThunk(
+  'customers/updateAddress',
+  async ({ customerId, addressId, addressData }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.updateAddress(customerId, addressId, addressData);
+      toast.success('Address updated!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to update address';
+      toast.error(message);
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const deleteAddress = createAsyncThunk(
+  'customers/deleteAddress',
+  async ({ customerId, addressId }, { rejectWithValue }) => {
+    try {
+      const response = await customerService.deleteAddress(customerId, addressId);
+      toast.success('Address deleted!');
+      return response.data;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to delete address';
+      toast.error(message);
+      return rejectWithValue(message);
     }
   }
 );
@@ -81,39 +182,57 @@ export const deleteCustomer = createAsyncThunk(
 // Initial state
 const initialState = {
   customers: [],
-  currentCustomer: null,
+  selectedCustomer: null,
   stats: {
-    totalCustomers: 0,
-    activeCustomers: 0,
-    inactiveCustomers: 0,
-    totalCreditLimit: 0,
-    totalOutstanding: 0
+    total: 0,
+    active: 0,
+    totalRevenue: 0,
+    totalOrders: 0,
+    byStatus: {},
+    byType: {}
   },
   pagination: {
     page: 1,
-    limit: 10,
+    limit: 25,
     total: 0,
-    pages: 0
+    pages: 1
   },
   loading: false,
-  error: null
+  statsLoading: false,
+  error: null,
+  filters: {
+    status: '',
+    customerType: '',
+    businessType: '',
+    priority: '',
+    search: ''
+  }
 };
 
-// Customer slice
+// Slice
 const customerSlice = createSlice({
   name: 'customers',
   initialState,
   reducers: {
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearFilters: (state) => {
+      state.filters = initialState.filters;
+    },
+    setSelectedCustomer: (state, action) => {
+      state.selectedCustomer = action.payload;
+    },
+    clearSelectedCustomer: (state) => {
+      state.selectedCustomer = null;
+    },
     clearError: (state) => {
       state.error = null;
-    },
-    clearCurrentCustomer: (state) => {
-      state.currentCustomer = null;
     }
   },
   extraReducers: (builder) => {
+    // Fetch customers
     builder
-      // Fetch all customers
       .addCase(fetchCustomers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -126,83 +245,161 @@ const customerSlice = createSlice({
       .addCase(fetchCustomers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
+      });
 
-      // Fetch customer by ID
+    // Fetch customer by ID
+    builder
       .addCase(fetchCustomerById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCustomerById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentCustomer = action.payload.data;
+        state.selectedCustomer = action.payload;
       })
       .addCase(fetchCustomerById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
+      });
 
-      // Fetch customer stats
+    // Fetch statistics
+    builder
       .addCase(fetchCustomerStats.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.statsLoading = true;
       })
       .addCase(fetchCustomerStats.fulfilled, (state, action) => {
-        state.loading = false;
-        state.stats = action.payload.data;
+        state.statsLoading = false;
+        state.stats = action.payload;
       })
       .addCase(fetchCustomerStats.rejected, (state, action) => {
-        state.loading = false;
+        state.statsLoading = false;
         state.error = action.payload;
-      })
+      });
 
-      // Create customer
+    // Create customer
+    builder
       .addCase(createCustomer.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(createCustomer.fulfilled, (state, action) => {
         state.loading = false;
-        state.customers.unshift(action.payload.data);
+        state.customers.unshift(action.payload);
+        state.pagination.total += 1;
       })
       .addCase(createCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
+      });
 
-      // Update customer
+    // Update customer
+    builder
       .addCase(updateCustomer.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(updateCustomer.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.customers.findIndex(c => c._id === action.payload.data._id);
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
         if (index !== -1) {
-          state.customers[index] = action.payload.data;
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
         }
       })
       .addCase(updateCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
+      });
 
-      // Delete customer
+    // Delete customer
+    builder
       .addCase(deleteCustomer.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(deleteCustomer.fulfilled, (state, action) => {
         state.loading = false;
-        state.customers = state.customers.filter(c => c._id !== action.payload.id);
+        state.customers = state.customers.filter(c => c._id !== action.payload);
+        state.pagination.total -= 1;
+        if (state.selectedCustomer?._id === action.payload) {
+          state.selectedCustomer = null;
+        }
       })
       .addCase(deleteCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
+
+    // Add/Update/Delete Contact Person
+    builder
+      .addCase(addContactPerson.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      })
+      .addCase(updateContactPerson.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      })
+      .addCase(deleteContactPerson.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      });
+
+    // Add/Update/Delete Address
+    builder
+      .addCase(addAddress.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      })
+      .addCase(updateAddress.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      })
+      .addCase(deleteAddress.fulfilled, (state, action) => {
+        const index = state.customers.findIndex(c => c._id === action.payload._id);
+        if (index !== -1) {
+          state.customers[index] = action.payload;
+        }
+        if (state.selectedCustomer?._id === action.payload._id) {
+          state.selectedCustomer = action.payload;
+        }
+      });
   }
 });
 
-export const { clearError, clearCurrentCustomer } = customerSlice.actions;
+export const {
+  setFilters,
+  clearFilters,
+  setSelectedCustomer,
+  clearSelectedCustomer,
+  clearError
+} = customerSlice.actions;
 
 export default customerSlice.reducer;

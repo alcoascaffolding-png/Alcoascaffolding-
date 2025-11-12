@@ -1,369 +1,513 @@
 /**
- * Customer Controller - Business Logic
+ * Customer Controller
+ * Handles all customer-related operations
  */
 
 const Customer = require('../models/Customer');
-const { generateCustomerCode } = require('../utils/codeGenerator');
+const logger = require('../utils/logger');
 
-/**
- * @desc    Get all customers with pagination and filtering
- * @route   GET /api/customers
- * @access  Private
- */
-exports.getAllCustomers = async (req, res) => {
-  try {
-    const {
-      page = 1,
-      limit = 10,
-      search = '',
-      status = '',
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
-    } = req.query;
+class CustomerController {
+  /**
+   * Get all customers with pagination, filtering, and search
+   */
+  async getAllCustomers(req, res, next) {
+    try {
+      const {
+        page = 1,
+        limit = 25,
+        status,
+        customerType,
+        businessType,
+        priority,
+        search,
+        sortBy = 'createdAt',
+        sortOrder = 'desc'
+      } = req.query;
 
-    // Build query
-    const query = {};
-    
-    // Search across multiple fields
-    if (search) {
-      query.$or = [
-        { customerCode: { $regex: search, $options: 'i' } },
-        { companyName: { $regex: search, $options: 'i' } },
-        { contactPerson: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
+      // Build query
+      const query = {};
 
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
+      // Filters
+      if (status) query.status = status;
+      if (customerType) query.customerType = customerType;
+      if (businessType) query.businessType = businessType;
+      if (priority) query.priority = priority;
 
-    // Calculate pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    // Execute query with pagination
-    const customers = await Customer.find(query)
-      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .lean();
-
-    // Get total count
-    const total = await Customer.countDocuments(query);
-
-    res.status(200).json({
-      success: true,
-      data: customers,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit))
+      // Search
+      if (search) {
+        query.$or = [
+          { companyName: { $regex: search, $options: 'i' } },
+          { displayName: { $regex: search, $options: 'i' } },
+          { primaryEmail: { $regex: search, $options: 'i' } },
+          { primaryPhone: { $regex: search, $options: 'i' } },
+          { tradeLicenseNumber: { $regex: search, $options: 'i' } }
+        ];
       }
-    });
-  } catch (error) {
-    console.error('Get customers error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching customers',
-      error: error.message
-    });
-  }
-};
 
-/**
- * @desc    Get customer by ID
- * @route   GET /api/customers/:id
- * @access  Private
- */
-exports.getCustomerById = async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id).lean();
+      // Pagination
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Customer not found'
-      });
-    }
+      // Execute query
+      const [customers, total] = await Promise.all([
+        Customer.find(query)
+          .sort(sort)
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        Customer.countDocuments(query)
+      ]);
 
-    res.status(200).json({
-      success: true,
-      data: customer
-    });
-  } catch (error) {
-    console.error('Get customer error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching customer',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @desc    Get customer statistics
- * @route   GET /api/customers/stats
- * @access  Private
- */
-exports.getCustomerStats = async (req, res) => {
-  try {
-    const stats = await Customer.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalCustomers: { $sum: 1 },
-          activeCustomers: {
-            $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] }
-          },
-          inactiveCustomers: {
-            $sum: { $cond: [{ $eq: ['$status', 'inactive'] }, 1, 0] }
-          },
-          totalCreditLimit: { $sum: '$creditLimit' },
-          totalOutstanding: { $sum: '$balance' }
+      res.status(200).json({
+        success: true,
+        data: customers,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
         }
-      }
-    ]);
-
-    const result = stats[0] || {
-      totalCustomers: 0,
-      activeCustomers: 0,
-      inactiveCustomers: 0,
-      totalCreditLimit: 0,
-      totalOutstanding: 0
-    };
-
-    res.status(200).json({
-      success: true,
-      data: result
-    });
-  } catch (error) {
-    console.error('Get customer stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching customer statistics',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @desc    Get total outstanding amount
- * @route   GET /api/customers/outstanding
- * @access  Private
- */
-exports.getOutstanding = async (req, res) => {
-  try {
-    const result = await Customer.aggregate([
-      {
-        $match: { status: 'active' }
-      },
-      {
-        $group: {
-          _id: null,
-          totalOutstanding: { $sum: '$balance' }
-        }
-      }
-    ]);
-
-    const outstanding = result[0]?.totalOutstanding || 0;
-
-    res.status(200).json({
-      success: true,
-      data: { outstanding }
-    });
-  } catch (error) {
-    console.error('Get outstanding error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching outstanding amount',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @desc    Create new customer
- * @route   POST /api/customers
- * @access  Private (Admin, Sales)
- */
-exports.createCustomer = async (req, res) => {
-  try {
-    const {
-      companyName,
-      contactPerson,
-      email,
-      phone,
-      mobile,
-      city,
-      address,
-      taxRegistrationNumber,
-      creditLimit,
-      paymentTerms,
-      status
-    } = req.body;
-
-    // Validate required fields
-    if (!companyName || !contactPerson || !email || !phone) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide all required fields'
       });
+
+      logger.info('Customers fetched successfully', { count: customers.length });
+    } catch (error) {
+      logger.error('Error fetching customers', error);
+      next(error);
     }
-
-    // Check if email already exists
-    const existingCustomer = await Customer.findOne({ email });
-    if (existingCustomer) {
-      return res.status(400).json({
-        success: false,
-        message: 'Customer with this email already exists'
-      });
-    }
-
-    // Generate customer code
-    const customerCode = await generateCustomerCode();
-
-    // Create customer
-    const customer = await Customer.create({
-      customerCode,
-      companyName,
-      contactPerson,
-      email,
-      phone,
-      mobile,
-      city,
-      address,
-      taxRegistrationNumber,
-      creditLimit: creditLimit || 0,
-      balance: 0, // Always starts at 0
-      paymentTerms: paymentTerms || 30,
-      status: status || 'active'
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Customer created successfully',
-      data: customer
-    });
-  } catch (error) {
-    console.error('Create customer error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error creating customer',
-      error: error.message
-    });
   }
-};
 
-/**
- * @desc    Update customer
- * @route   PUT /api/customers/:id
- * @access  Private (Admin, Sales)
- */
-exports.updateCustomer = async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
+  /**
+   * Get customer by ID
+   */
+  async getCustomerById(req, res, next) {
+    try {
+      const { id } = req.params;
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Customer not found'
-      });
-    }
+      const customer = await Customer.findById(id);
 
-    // Check if email is being changed and if it's already taken
-    if (req.body.email && req.body.email !== customer.email) {
-      const existingCustomer = await Customer.findOne({ email: req.body.email });
-      if (existingCustomer) {
-        return res.status(400).json({
+      if (!customer) {
+        return res.status(404).json({
           success: false,
-          message: 'Email already in use by another customer'
+          message: 'Customer not found'
         });
       }
+
+      res.status(200).json({
+        success: true,
+        data: customer
+      });
+
+      logger.info('Customer fetched', { id });
+    } catch (error) {
+      logger.error('Error fetching customer', error);
+      next(error);
     }
+  }
 
-    // Update fields
-    const allowedUpdates = [
-      'companyName',
-      'contactPerson',
-      'email',
-      'phone',
-      'mobile',
-      'city',
-      'address',
-      'taxRegistrationNumber',
-      'creditLimit',
-      'paymentTerms',
-      'status'
-    ];
+  /**
+   * Create new customer
+   */
+  async createCustomer(req, res, next) {
+    try {
+      const customerData = {
+        ...req.body,
+        createdBy: req.user?.id,
+        lastModifiedBy: req.user?.id
+      };
 
-    allowedUpdates.forEach(field => {
-      if (req.body[field] !== undefined) {
-        customer[field] = req.body[field];
+      const customer = new Customer(customerData);
+      await customer.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'Customer created successfully',
+        data: customer
+      });
+
+      logger.info('Customer created', { id: customer._id, company: customer.companyName });
+    } catch (error) {
+      if (error.code === 11000) {
+        // Duplicate key error
+        const field = Object.keys(error.keyPattern)[0];
+        return res.status(400).json({
+          success: false,
+          message: `${field} already exists`
+        });
       }
-    });
 
-    await customer.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Customer updated successfully',
-      data: customer
-    });
-  } catch (error) {
-    console.error('Update customer error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating customer',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @desc    Delete customer
- * @route   DELETE /api/customers/:id
- * @access  Private (Admin only)
- */
-exports.deleteCustomer = async (req, res) => {
-  try {
-    const customer = await Customer.findById(req.params.id);
-
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Customer not found'
-      });
+      logger.error('Error creating customer', error);
+      next(error);
     }
-
-    // Check if customer has outstanding balance
-    if (customer.balance > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot delete customer with outstanding balance. Please clear balance first.'
-      });
-    }
-
-    // Soft delete (mark as inactive) instead of hard delete
-    customer.status = 'inactive';
-    customer.deletedAt = new Date();
-    await customer.save();
-
-    // OR hard delete if you prefer
-    // await Customer.findByIdAndDelete(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: 'Customer deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete customer error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting customer',
-      error: error.message
-    });
   }
-};
 
+  /**
+   * Update customer
+   */
+  async updateCustomer(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updateData = {
+        ...req.body,
+        lastModifiedBy: req.user?.id
+      };
+
+      // Don't allow updating certain system fields
+      delete updateData.createdBy;
+      delete updateData.createdAt;
+      delete updateData.totalOrders;
+      delete updateData.totalRevenue;
+
+      const customer = await Customer.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true, runValidators: true }
+      );
+
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Customer updated successfully',
+        data: customer
+      });
+
+      logger.info('Customer updated', { id, company: customer.companyName });
+    } catch (error) {
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0];
+        return res.status(400).json({
+          success: false,
+          message: `${field} already exists`
+        });
+      }
+
+      logger.error('Error updating customer', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Delete customer (soft delete by setting status to inactive)
+   */
+  async deleteCustomer(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { hard = false } = req.query;
+
+      if (hard === 'true') {
+        // Hard delete (permanent)
+        const customer = await Customer.findByIdAndDelete(id);
+
+        if (!customer) {
+          return res.status(404).json({
+            success: false,
+            message: 'Customer not found'
+          });
+        }
+
+        logger.warn('Customer permanently deleted', { id, company: customer.companyName });
+      } else {
+        // Soft delete (set to inactive)
+        const customer = await Customer.findByIdAndUpdate(
+          id,
+          { status: 'inactive', lastModifiedBy: req.user?.id },
+          { new: true }
+        );
+
+        if (!customer) {
+          return res.status(404).json({
+            success: false,
+            message: 'Customer not found'
+          });
+        }
+
+        logger.info('Customer deactivated', { id, company: customer.companyName });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: hard === 'true' ? 'Customer deleted permanently' : 'Customer deactivated'
+      });
+    } catch (error) {
+      logger.error('Error deleting customer', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Get customer statistics
+   */
+  async getStatistics(req, res, next) {
+    try {
+      const stats = await Customer.getStatistics();
+
+      // Format the response
+      const formattedStats = {
+        total: stats.totals[0]?.total || 0,
+        active: stats.totals[0]?.activeCustomers || 0,
+        totalRevenue: stats.totals[0]?.totalRevenue || 0,
+        totalOrders: stats.totals[0]?.totalOrders || 0,
+        byStatus: stats.statusCounts.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {}),
+        byType: stats.typeCounts.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {})
+      };
+
+      res.status(200).json({
+        success: true,
+        data: formattedStats
+      });
+
+      logger.info('Customer statistics fetched');
+    } catch (error) {
+      logger.error('Error fetching statistics', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Add contact person to customer
+   */
+  async addContactPerson(req, res, next) {
+    try {
+      const { id } = req.params;
+      const contactData = req.body;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      customer.contactPersons.push(contactData);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Contact person added successfully',
+        data: customer
+      });
+
+      logger.info('Contact person added', { customerId: id });
+    } catch (error) {
+      logger.error('Error adding contact person', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Update contact person
+   */
+  async updateContactPerson(req, res, next) {
+    try {
+      const { id, contactId } = req.params;
+      const updateData = req.body;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      const contact = customer.contactPersons.id(contactId);
+      if (!contact) {
+        return res.status(404).json({
+          success: false,
+          message: 'Contact person not found'
+        });
+      }
+
+      Object.assign(contact, updateData);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Contact person updated successfully',
+        data: customer
+      });
+
+      logger.info('Contact person updated', { customerId: id, contactId });
+    } catch (error) {
+      logger.error('Error updating contact person', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Delete contact person
+   */
+  async deleteContactPerson(req, res, next) {
+    try {
+      const { id, contactId } = req.params;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      customer.contactPersons.pull(contactId);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Contact person deleted successfully',
+        data: customer
+      });
+
+      logger.info('Contact person deleted', { customerId: id, contactId });
+    } catch (error) {
+      logger.error('Error deleting contact person', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Add address to customer
+   */
+  async addAddress(req, res, next) {
+    try {
+      const { id } = req.params;
+      const addressData = req.body;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      customer.addresses.push(addressData);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Address added successfully',
+        data: customer
+      });
+
+      logger.info('Address added', { customerId: id });
+    } catch (error) {
+      logger.error('Error adding address', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Update address
+   */
+  async updateAddress(req, res, next) {
+    try {
+      const { id, addressId } = req.params;
+      const updateData = req.body;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      const address = customer.addresses.id(addressId);
+      if (!address) {
+        return res.status(404).json({
+          success: false,
+          message: 'Address not found'
+        });
+      }
+
+      Object.assign(address, updateData);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Address updated successfully',
+        data: customer
+      });
+
+      logger.info('Address updated', { customerId: id, addressId });
+    } catch (error) {
+      logger.error('Error updating address', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Delete address
+   */
+  async deleteAddress(req, res, next) {
+    try {
+      const { id, addressId } = req.params;
+
+      const customer = await Customer.findById(id);
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          message: 'Customer not found'
+        });
+      }
+
+      customer.addresses.pull(addressId);
+      await customer.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Address deleted successfully',
+        data: customer
+      });
+
+      logger.info('Address deleted', { customerId: id, addressId });
+    } catch (error) {
+      logger.error('Error deleting address', error);
+      next(error);
+    }
+  }
+
+  /**
+   * Check for new customers (lightweight endpoint for polling)
+   */
+  async checkForNew(req, res, next) {
+    try {
+      const { lastCheck } = req.query;
+      const query = lastCheck ? { createdAt: { $gt: new Date(lastCheck) } } : {};
+
+      const [newCount, latestCustomer, totalCount] = await Promise.all([
+        Customer.countDocuments(query),
+        Customer.findOne().sort({ createdAt: -1 }).select('createdAt').lean(),
+        Customer.countDocuments()
+      ]);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          hasNew: newCount > 0,
+          newCount,
+          latestTimestamp: latestCustomer?.createdAt,
+          totalCount
+        }
+      });
+    } catch (error) {
+      logger.error('Error checking for new customers', error);
+      next(error);
+    }
+  }
+}
+
+module.exports = new CustomerController();

@@ -32,6 +32,7 @@ const bankAccountRoutes = require('./routes/bankAccount.routes');
 const receiptRoutes = require('./routes/receipt.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const contactMessageRoutes = require('./routes/contactMessage.routes');
+const setupRoutes = require('./routes/setup.routes');
 
 const app = express();
 const PORT = config.server.port;
@@ -63,6 +64,9 @@ app.use(sanitizeRequest);
 app.use(detectSuspiciousActivity);
 
 // Routes (moved before rate limiter for better control)
+// Setup routes (no auth required - for initial setup only!)
+app.use('/api/setup', setupRoutes);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 

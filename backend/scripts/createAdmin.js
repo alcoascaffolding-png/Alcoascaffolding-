@@ -1,98 +1,58 @@
 /**
  * Create Admin User Script
- * Run: node scripts/createAdmin.js
+ * Run this to create a default admin user for first-time login
  */
 
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const logger = require('../utils/logger');
 
-// Define User schema inline to avoid dependency issues
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    enum: ['super_admin', 'admin', 'manager', 'accountant', 'sales', 'inventory', 'viewer'],
-    default: 'viewer',
-  },
-  permissions: [String],
-  department: {
-    type: String,
-    default: 'operations',
-  },
-  phone: String,
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-}, {
-  timestamps: true,
-});
-
-const User = mongoose.model('User', userSchema);
-
-async function createAdmin() {
+const createAdminUser = async () => {
   try {
-    console.log('Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI);
+    // Connect to MongoDB
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/alcoa-scaffolding';
+    await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB');
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: 'admin@alcoa.com' });
     if (existingAdmin) {
-      console.log('⚠️  Admin user already exists!');
-      console.log('Email: admin@alcoa.com');
-      console.log('If you forgot the password, please reset it manually in the database.');
+      console.log('ℹ️  Admin user already exists!');
+      console.log('📧 Email:', existingAdmin.email);
+      console.log('👤 Name:', existingAdmin.name);
+      console.log('🔑 Role:', existingAdmin.role);
       process.exit(0);
     }
 
-    // Hash password
-    console.log('Creating admin user...');
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-
-    // Create admin
-    const admin = await User.create({
-      name: 'Super Admin',
+    // Create admin user
+    const adminUser = new User({
+      name: 'Admin',
       email: 'admin@alcoa.com',
-      password: hashedPassword,
-      role: 'super_admin',
-      permissions: [],
-      department: 'management',
-      phone: '',
+      password: 'admin123', // Will be hashed by pre-save middleware
+      role: 'admin',
       isActive: true,
+      permissions: ['all']
     });
 
-    console.log('\n✅ Admin user created successfully!\n');
-    console.log('═══════════════════════════════════════');
-    console.log('  Default Login Credentials:');
-    console.log('═══════════════════════════════════════');
-    console.log('  Email:    admin@alcoa.com');
-    console.log('  Password: admin123');
-    console.log('═══════════════════════════════════════\n');
-    console.log('⚠️  IMPORTANT: Please change the password after first login!\n');
+    await adminUser.save();
 
-    await mongoose.disconnect();
-    console.log('✅ Database connection closed');
+    console.log('');
+    console.log('🎉 Admin user created successfully!');
+    console.log('');
+    console.log('📧 Email: admin@alcoa.com');
+    console.log('🔑 Password: admin123');
+    console.log('👤 Role: admin');
+    console.log('');
+    console.log('⚠️  IMPORTANT: Change this password after first login!');
+    console.log('');
+
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error creating admin user:', error.message);
+    console.error('❌ Error creating admin user:', error);
     process.exit(1);
   }
-}
+};
 
-// Run the function
-createAdmin();
-
+// Run the script
+createAdminUser();

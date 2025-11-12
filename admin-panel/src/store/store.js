@@ -22,7 +22,7 @@ import contactMessageReducer from './slices/contactMessageSlice';
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    customer: customerReducer,
+    customers: customerReducer,
     dashboard: dashboardReducer,
     quotes: quoteReducer,
     salesOrders: salesOrderReducer,
