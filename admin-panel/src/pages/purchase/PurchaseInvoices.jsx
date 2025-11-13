@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { PageWrapper } from '../../components/common';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,6 +13,9 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const PurchaseInvoices = () => {
+  // ⭐ TOGGLE: Set to false to show working page to client ⭐
+  const [isUnderConstruction] = useState(true);
+  
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,23 +65,32 @@ const PurchaseInvoices = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Purchase Invoices" description="Vendor invoices" action={<button onClick={handleAdd} className="btn btn-primary">+ New Invoice</button>} />
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Purchase Invoices",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      {/* ACTUAL WORKING PAGE (Hidden when isUnderConstruction = true) */}
+      <div className="space-y-6">
+        <PageHeader title="Purchase Invoices" description="Vendor invoices" action={<button onClick={handleAdd} className="btn btn-primary">+ New Invoice</button>} />
 
-      <div className="card p-0">
-        <Table columns={columns} data={invoices} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        <div className="card p-0">
+          <Table columns={columns} data={invoices} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        </div>
+
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => { setIsModalOpen(false); setEditingInvoice(null); }} 
+          title={editingInvoice ? 'Edit Purchase Invoice' : 'New Purchase Invoice'} 
+          subtitle="Create a new purchase invoice with line items"
+          size="full"
+        >
+          <InvoiceForm invoice={editingInvoice} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingInvoice(null); }} type="purchase" />
+        </Modal>
       </div>
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); setEditingInvoice(null); }} 
-        title={editingInvoice ? 'Edit Purchase Invoice' : 'New Purchase Invoice'} 
-        subtitle="Create a new purchase invoice with line items"
-        size="full"
-      >
-        <InvoiceForm invoice={editingInvoice} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingInvoice(null); }} type="purchase" />
-      </Modal>
-    </div>
+    </PageWrapper>
   );
 };
 

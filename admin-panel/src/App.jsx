@@ -17,6 +17,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 // Pages
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/customers/Customers';
+import Quotations from './pages/quotations/Quotations';
 import Vendors from './pages/vendors/Vendors';
 import Products from './pages/products/Products';
 import Quotes from './pages/sales/Quotes';
@@ -72,7 +73,7 @@ function App() {
             
             {/* Customer Relations */}
             <Route path="customers" element={<Customers />} />
-            <Route path="quotes" element={<Quotes />} />
+            <Route path="quotes" element={<Quotations />} />
             <Route path="sales-orders" element={<SalesOrders />} />
             <Route path="sales-invoices" element={<SalesInvoices />} />
             

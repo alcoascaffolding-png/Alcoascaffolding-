@@ -37,7 +37,7 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
 
     // Validation
     if (!formData.companyName) {
-      toast.error('Company Name is required');
+      toast.error('Customer Name / Company Name is required');
       return;
     }
     if (!formData.contactPerson) {
@@ -74,11 +74,11 @@ const CustomerForm = ({ customer, onSave, onCancel }) => {
         <div className="space-y-4">
           <div>
             <Input
-              label="Company Name"
+              label="Customer Name / Company Name"
               name="companyName"
               value={formData.companyName}
               onChange={handleChange}
-              placeholder="e.g., Dubai Construction LLC"
+              placeholder="Enter customer name or company name"
               required
             />
           </div>

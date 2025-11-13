@@ -11,13 +11,12 @@ import {
   fetchDashboardStats,
   fetchSalesOverview,
   fetchRecentActivities,
-  fetchTopCustomers,
-  fetchPendingInvoices
+  fetchTopCustomers
 } from '../store/slices/dashboardSlice';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { stats, salesOverview, recentActivities, topCustomers, pendingInvoices, loading, error } = useSelector(
+  const { stats, salesOverview, recentActivities, topCustomers, loading, error } = useSelector(
     state => state.dashboard
   );
 
@@ -27,7 +26,6 @@ const Dashboard = () => {
     dispatch(fetchSalesOverview('6months'));
     dispatch(fetchRecentActivities(10));
     dispatch(fetchTopCustomers(5));
-    dispatch(fetchPendingInvoices(10));
   }, []); // Empty dependency array - load only on mount
 
   const revenueChartOptions = {
@@ -293,55 +291,6 @@ const Dashboard = () => {
           </div>
         </Card>
       </div>
-
-      {/* Pending Invoices */}
-      <Card>
-        <div className="p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Pending Invoices</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Invoice #</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Customer</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Total</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Paid</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Balance</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Due Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {pendingInvoices?.length > 0 ? (
-                  pendingInvoices.map((invoice) => (
-                    <tr key={invoice._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-mono text-blue-600">{invoice.invoiceNumber}</td>
-                      <td className="px-4 py-3 text-sm text-gray-900">{invoice.customerName}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-gray-900">AED {invoice.total?.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm text-green-600">AED {invoice.paidAmount?.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm font-semibold text-red-600">AED {invoice.balance?.toLocaleString()}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{format(new Date(invoice.dueDate), 'MMM dd, yyyy')}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          invoice.paymentStatus === 'partially_paid' ? 'bg-yellow-100 text-yellow-700' :
-                          invoice.paymentStatus === 'overdue' ? 'bg-red-100 text-red-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {invoice.paymentStatus?.replace('_', ' ')}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-gray-500">No pending invoices</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };

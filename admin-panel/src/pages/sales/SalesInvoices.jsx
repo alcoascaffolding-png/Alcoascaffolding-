@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { PageWrapper } from '../../components/common';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,6 +13,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const SalesInvoices = () => {
+  const [isUnderConstruction] = useState(true);
+  
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,42 +81,50 @@ const SalesInvoices = () => {
   const paidAmount = invoices.reduce((sum, inv) => sum + inv.paidAmount, 0);
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Sales Invoices" description="Customer invoices" action={<button onClick={handleAdd} className="btn btn-primary">+ New Invoice</button>} />
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Sales Invoices",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      <div className="space-y-6">
+        <PageHeader title="Sales Invoices" description="Customer invoices" action={<button onClick={handleAdd} className="btn btn-primary">+ New Invoice</button>} />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 bg-blue-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Total Invoices</p>
-          <p className="text-3xl font-bold mt-1">{invoices.length}</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-blue-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Total Invoices</p>
+            <p className="text-3xl font-bold mt-1">{invoices.length}</p>
+          </div>
+          <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Paid</p>
+            <p className="text-2xl font-bold mt-1">AED {paidAmount.toLocaleString()}</p>
+          </div>
+          <div className="p-4 bg-yellow-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Pending</p>
+            <p className="text-2xl font-bold mt-1">AED {(totalAmount - paidAmount).toLocaleString()}</p>
+          </div>
+          <div className="p-4 bg-red-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Overdue</p>
+            <p className="text-3xl font-bold mt-1">{invoices.filter(i => i.paymentStatus === 'overdue').length}</p>
+          </div>
         </div>
-        <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Paid</p>
-          <p className="text-2xl font-bold mt-1">AED {paidAmount.toLocaleString()}</p>
+
+        <div className="card p-0">
+          <Table columns={columns} data={invoices} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
         </div>
-        <div className="p-4 bg-yellow-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Pending</p>
-          <p className="text-2xl font-bold mt-1">AED {(totalAmount - paidAmount).toLocaleString()}</p>
-        </div>
-        <div className="p-4 bg-red-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Overdue</p>
-          <p className="text-3xl font-bold mt-1">{invoices.filter(i => i.paymentStatus === 'overdue').length}</p>
-        </div>
+
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => { setIsModalOpen(false); setEditingInvoice(null); }} 
+          title={editingInvoice ? 'Edit Invoice' : 'New Sales Invoice'} 
+          subtitle="Create a new sales invoice with line items"
+          size="full"
+        >
+          <InvoiceForm invoice={editingInvoice} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingInvoice(null); }} type="sales" />
+        </Modal>
       </div>
-
-      <div className="card p-0">
-        <Table columns={columns} data={invoices} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
-      </div>
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); setEditingInvoice(null); }} 
-        title={editingInvoice ? 'Edit Invoice' : 'New Sales Invoice'} 
-        subtitle="Create a new sales invoice with line items"
-        size="full"
-      >
-        <InvoiceForm invoice={editingInvoice} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingInvoice(null); }} type="sales" />
-      </Modal>
-    </div>
+    </PageWrapper>
   );
 };
 

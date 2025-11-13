@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { PageWrapper } from '../../components/common';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,6 +13,8 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const StockAdjustments = () => {
+  const [isUnderConstruction] = useState(true);
+  
   const [adjustments, setAdjustments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,17 +129,25 @@ const StockAdjustments = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Stock Adjustments" description="Inventory corrections" action={<button onClick={handleAdd} className="btn btn-primary">+ New Adjustment</button>} />
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Stock Adjustments",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      <div className="space-y-6">
+        <PageHeader title="Stock Adjustments" description="Inventory corrections" action={<button onClick={handleAdd} className="btn btn-primary">+ New Adjustment</button>} />
 
-      <div className="card p-0">
-        <Table columns={columns} data={adjustments} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        <div className="card p-0">
+          <Table columns={columns} data={adjustments} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
+        </div>
+
+        <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingAdjustment(null); }} title={editingAdjustment ? 'Edit Adjustment' : 'New Stock Adjustment'} size="lg">
+          <StockAdjustmentForm adjustment={editingAdjustment} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingAdjustment(null); }} />
+        </Modal>
       </div>
-
-      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingAdjustment(null); }} title={editingAdjustment ? 'Edit Adjustment' : 'New Stock Adjustment'} size="lg">
-        <StockAdjustmentForm adjustment={editingAdjustment} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingAdjustment(null); }} />
-      </Modal>
-    </div>
+    </PageWrapper>
   );
 };
 

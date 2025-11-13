@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { PageWrapper } from '../../components/common';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -13,6 +14,8 @@ import { mockProducts } from '../../data/mockData';
 import toast from 'react-hot-toast';
 
 const Products = () => {
+  const [isUnderConstruction] = useState(true);
+  
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,72 +125,80 @@ const Products = () => {
   const lowStock = products.filter(p => p.currentStock > 0 && p.currentStock <= p.reorderLevel).length;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Products"
-        description="Manage product inventory"
-        action={
-          <button onClick={handleAdd} className="btn btn-primary">
-            + Add Product
-          </button>
-        }
-      />
-
-      <SearchBar
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search products..."
-        onExport={<ExportButtons data={filteredProducts} columns={columns} title="Products" />}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-4 bg-indigo-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Total Products</p>
-          <p className="text-3xl font-bold mt-1">{products.length}</p>
-        </div>
-        <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">In Stock</p>
-          <p className="text-3xl font-bold mt-1">{products.filter(p => p.currentStock > p.reorderLevel).length}</p>
-        </div>
-        <div className="p-4 bg-yellow-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Low Stock</p>
-          <p className="text-3xl font-bold mt-1">{lowStock}</p>
-        </div>
-        <div className="p-4 bg-red-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Out of Stock</p>
-          <p className="text-3xl font-bold mt-1">{outOfStock}</p>
-        </div>
-      </div>
-
-      <div className="card p-0">
-        <Table
-          columns={columns}
-          data={filteredProducts}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Products",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      <div className="space-y-6">
+        <PageHeader
+          title="Products"
+          description="Manage product inventory"
+          action={
+            <button onClick={handleAdd} className="btn btn-primary">
+              + Add Product
+            </button>
+          }
         />
-      </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingProduct(null);
-        }} 
-        title={editingProduct ? 'Edit Product' : 'Add New Product'} 
-        size="xl"
-      >
-        <ProductForm
-          product={editingProduct}
-          onSave={handleSave}
-          onCancel={() => {
+        <SearchBar
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search products..."
+          onExport={<ExportButtons data={filteredProducts} columns={columns} title="Products" />}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="p-4 bg-indigo-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Total Products</p>
+            <p className="text-3xl font-bold mt-1">{products.length}</p>
+          </div>
+          <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">In Stock</p>
+            <p className="text-3xl font-bold mt-1">{products.filter(p => p.currentStock > p.reorderLevel).length}</p>
+          </div>
+          <div className="p-4 bg-yellow-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Low Stock</p>
+            <p className="text-3xl font-bold mt-1">{lowStock}</p>
+          </div>
+          <div className="p-4 bg-red-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Out of Stock</p>
+            <p className="text-3xl font-bold mt-1">{outOfStock}</p>
+          </div>
+        </div>
+
+        <div className="card p-0">
+          <Table
+            columns={columns}
+            data={filteredProducts}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </div>
+
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => {
             setIsModalOpen(false);
             setEditingProduct(null);
-          }}
-        />
-      </Modal>
-    </div>
+          }} 
+          title={editingProduct ? 'Edit Product' : 'Add New Product'} 
+          size="xl"
+        >
+          <ProductForm
+            product={editingProduct}
+            onSave={handleSave}
+            onCancel={() => {
+              setIsModalOpen(false);
+              setEditingProduct(null);
+            }}
+          />
+        </Modal>
+      </div>
+    </PageWrapper>
   );
 };
 

@@ -80,7 +80,7 @@ const AddCustomerModal = ({ onClose, onSuccess }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Company Name *
+                    Customer Name / Company Name *
                   </label>
                   <input
                     type="text"
@@ -89,7 +89,7 @@ const AddCustomerModal = ({ onClose, onSuccess }) => {
                     onChange={handleChange}
                     required
                     className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter company name"
+                    placeholder="Enter customer name or company name"
                   />
                 </div>
 

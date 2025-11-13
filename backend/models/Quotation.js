@@ -19,10 +19,32 @@ const quotationItemSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Additional specifications
+  specifications: {
+    type: String,
+    trim: true
+  },
+  size: {
+    type: String,
+    trim: true
+  },
+  weight: {
+    type: Number,
+    min: 0
+  },
+  cbm: {
+    type: Number,
+    min: 0
+  },
   quantity: {
     type: Number,
     required: true,
     min: 1
+  },
+  unit: {
+    type: String,
+    default: 'Nos',
+    trim: true
   },
   rentalDuration: {
     value: Number,
@@ -37,10 +59,28 @@ const quotationItemSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  taxableAmount: {
+    type: Number,
+    min: 0
+  },
+  vatPercentage: {
+    type: Number,
+    default: 5,
+    min: 0
+  },
+  vatAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   subtotal: {
     type: Number,
     required: true,
     min: 0
+  },
+  itemImage: {
+    type: String,
+    trim: true
   }
 }, { _id: true });
 
@@ -66,11 +106,35 @@ const quotationSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  customerAddress: {
+    type: String,
+    trim: true
+  },
   customerEmail: {
     type: String,
     trim: true
   },
   customerPhone: {
+    type: String,
+    trim: true
+  },
+  customerTRN: {
+    type: String,
+    trim: true
+  },
+  contactPersonName: {
+    type: String,
+    trim: true
+  },
+  contactPersonDesignation: {
+    type: String,
+    trim: true
+  },
+  contactPersonEmail: {
+    type: String,
+    trim: true
+  },
+  contactPersonPhone: {
     type: String,
     trim: true
   },
@@ -97,6 +161,42 @@ const quotationSchema = new mongoose.Schema({
     enum: ['draft', 'sent', 'viewed', 'approved', 'rejected', 'expired', 'converted'],
     default: 'draft',
     index: true
+  },
+  
+  // Professional Details
+  subject: {
+    type: String,
+    trim: true
+  },
+  salesExecutive: {
+    type: String,
+    trim: true
+  },
+  preparedBy: {
+    type: String,
+    trim: true
+  },
+  customerPONumber: {
+    type: String,
+    trim: true
+  },
+  referenceNumber: {
+    type: String,
+    trim: true
+  },
+  paymentTerms: {
+    type: String,
+    default: 'Cash/CDC',
+    trim: true
+  },
+  deliveryTerms: {
+    type: String,
+    default: '7-10 days from date of order',
+    trim: true
+  },
+  projectDuration: {
+    type: String,
+    trim: true
   },
   
   // Items

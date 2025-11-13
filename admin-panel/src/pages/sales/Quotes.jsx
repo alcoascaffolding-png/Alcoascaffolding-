@@ -4,13 +4,15 @@
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Modal, ViewQuoteModal, DeleteConfirmationModal } from '../../components/common';
+import { PageWrapper, Modal, ViewQuoteModal, DeleteConfirmationModal } from '../../components/common';
 import { QuoteForm } from '../../components/forms';
 import { fetchQuotes, fetchQuoteStats, createQuote, updateQuote, deleteQuote } from '../../store/slices/quoteSlice';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const Quotes = () => {
+  const [isUnderConstruction] = useState(true);
+  
   const dispatch = useDispatch();
   const { items: quotes, stats, loading, error } = useSelector(state => state.quotes);
 
@@ -111,7 +113,14 @@ const Quotes = () => {
   const totalValue = stats?.totalValue || 0;
 
   return (
-    <div className="space-y-6">
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Sales Quotes",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Quotations</h1>
         <p className="text-sm text-gray-500 mt-1">Create and manage customer quotations</p>
@@ -290,7 +299,8 @@ const Quotes = () => {
         entityName={deletingQuote?.quoteNumber}
         warningText="This action cannot be undone. All associated transactions will be archived."
       />
-    </div>
+      </div>
+    </PageWrapper>
   );
 };
 

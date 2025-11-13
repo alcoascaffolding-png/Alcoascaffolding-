@@ -7,6 +7,7 @@ import authReducer from './slices/authSlice';
 import customerReducer from './slices/customerSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import quoteReducer from './slices/quoteSlice';
+import quotationReducer from './slices/quotationSlice';
 import salesOrderReducer from './slices/salesOrderSlice';
 import salesInvoiceReducer from './slices/salesInvoiceSlice';
 import vendorReducer from './slices/vendorSlice';
@@ -25,6 +26,7 @@ export const store = configureStore({
     customers: customerReducer,
     dashboard: dashboardReducer,
     quotes: quoteReducer,
+    quotations: quotationReducer,
     salesOrders: salesOrderReducer,
     salesInvoices: salesInvoiceReducer,
     vendors: vendorReducer,

@@ -279,6 +279,69 @@ class QuotationController {
       next(error);
     }
   }
+
+  /**
+   * Send quotation via email
+   */
+  async sendQuotationEmail(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { recipientEmail, ccEmails = [], message } = req.body;
+
+      const quotation = await Quotation.findById(id)
+        .populate('customer', 'companyName primaryEmail primaryPhone');
+
+      if (!quotation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Quotation not found'
+        });
+      }
+
+      const emailToSend = recipientEmail || quotation.customerEmail;
+
+      if (!emailToSend) {
+        return res.status(400).json({
+          success: false,
+          message: 'Customer email not available. Please add email address to customer.'
+        });
+      }
+
+      // Import email service
+      const emailService = require('../services/resend.service');
+
+      // Send actual email using Resend
+      await emailService.sendQuotationEmail(quotation);
+
+      // Update quotation status and history
+      quotation.status = 'sent';
+      quotation.sentDate = new Date();
+      quotation.emailsSent.push({
+        sentAt: new Date(),
+        sentTo: emailToSend,
+        subject: `Quotation ${quotation.quoteNumber} from Alcoa Scaffolding`,
+        status: 'sent'
+      });
+      await quotation.save();
+
+      logger.info('Quotation email sent successfully', { id, quoteNumber: quotation.quoteNumber, sentTo: emailToSend });
+
+      res.status(200).json({
+        success: true,
+        message: 'Quotation sent successfully',
+        data: quotation
+      });
+    } catch (error) {
+      logger.error('Error sending quotation email', error);
+      
+      // Return specific error message
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to send quotation email',
+        details: error.toString()
+      });
+    }
+  }
 }
 
 module.exports = new QuotationController();

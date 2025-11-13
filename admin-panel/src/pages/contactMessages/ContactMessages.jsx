@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { PageWrapper } from '../../components/common';
 import { 
   fetchContactMessages, 
   fetchContactMessageStats,
@@ -22,6 +23,9 @@ import toast from 'react-hot-toast';
 import ENV_CONFIG from '../../config/env';
 
 const ContactMessages = () => {
+  // Toggle this to show/hide construction page
+  const [isUnderConstruction] = useState(true);
+  
   // Redux state
   const dispatch = useDispatch();
   const { messages, stats, loading, error } = useSelector(state => state.contactMessages);
@@ -219,11 +223,29 @@ const ContactMessages = () => {
   // Loading State
   if (loading && !messages.length) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading contact messages...</p>
-          <p className="text-sm text-gray-500 mt-2">Connected to: {ENV_CONFIG.env}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Contact Messages</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+            <div className="px-6 py-20 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400 font-medium">Loading contact messages...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -232,25 +254,48 @@ const ContactMessages = () => {
   // Error State
   if (error) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Contact Messages</h1>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <div className="flex items-start">
-            <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div className="flex-1">
-              <h3 className="text-red-900 font-semibold mb-2">Error Loading Messages</h3>
-              <p className="text-red-700 mb-4">{error}</p>
-              <button
-                onClick={() => {
-                  loadMessages();
-                  loadStats();
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-              >
-                Retry
-              </button>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Contact Messages</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Error loading data</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-2xl p-8 shadow-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4 flex-1">
+                <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Failed to Load Messages</h3>
+                <p className="text-sm text-red-700 dark:text-red-300 mb-4">{error}</p>
+                <button
+                  onClick={() => {
+                    loadMessages();
+                    loadStats();
+                  }}
+                  className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Try Again
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -259,136 +304,156 @@ const ContactMessages = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Live Indicator */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">Contact Messages</h1>
-          {/* Live indicator - subtle pulsing dot */}
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-            LIVE
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>🔄 Smart refresh every {pollingInterval/1000}s</span>
-            <span>•</span>
-            <span>{messages?.length || 0} total</span>
-            <span>•</span>
-            <span>Updated: {lastUpdated.toLocaleTimeString()}</span>
-            {noChangeCount.current > 0 && (
-              <>
-                <span>•</span>
-                <span className="text-xs text-blue-600">
-                  Optimized ({noChangeCount.current} unchanged)
-                </span>
-              </>
-            )}
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Contact Messages",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+        {/* Modern Header with Gradient */}
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                    Contact Messages
+                  </h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400 border border-green-200 dark:border-green-800">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
+                      LIVE
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Auto-refresh: {pollingInterval/1000}s • Last: {lastUpdated.toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 ml-14">
+                Real-time monitoring of customer inquiries and quote requests
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                loadMessages();
+                loadStats();
+                noChangeCount.current = 0;
+                setPollingInterval(30000);
+              }}
+              className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh Now
+            </button>
           </div>
-          {/* Manual refresh button */}
-          <button
-            onClick={() => {
-              loadMessages();
-              loadStats();
-              noChangeCount.current = 0;
-              setPollingInterval(30000); // Reset to fast
-            }}
-            className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 font-medium inline-flex items-center border border-blue-200"
-            title="Force refresh now"
-          >
-            <svg className="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
-          </button>
         </div>
       </div>
 
-      {/* Statistics */}
-      <StatsCards stats={stats} />
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Statistics Cards */}
+        <StatsCards stats={stats} />
 
-      {/* Filters */}
-      <MessageFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        typeFilter={typeFilter}
-        onTypeChange={setTypeFilter}
-      />
+        {/* Filters Section - Enhanced */}
+        <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-6">
+          <MessageFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            typeFilter={typeFilter}
+            onTypeChange={setTypeFilter}
+          />
+        </div>
 
-      {/* Messages Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Message</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {messages && messages.length > 0 ? (
-                messages.map((message) => (
-                  <MessageCard
-                    key={message._id}
-                    message={message}
-                    onView={handleView}
-                    onDelete={handleDelete}
-                    onStatusChange={handleStatusChange}
-                  />
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-500">
-                      <svg className="w-20 h-20 mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <p className="text-xl font-medium text-gray-900 mb-2">No messages yet</p>
-                      <p className="text-sm text-gray-500 max-w-sm">
-                        Contact form submissions and quote requests from your website will appear here.
-                      </p>
-                    </div>
-                  </td>
+        {/* Messages Table - Premium Design */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 dark:from-gray-900 dark:to-gray-800/50">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Message</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700/50">
+                {messages && messages.length > 0 ? (
+                  messages.map((message) => (
+                    <MessageCard
+                      key={message._id}
+                      message={message}
+                      onView={handleView}
+                      onDelete={handleDelete}
+                      onStatusChange={handleStatusChange}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="px-6 py-20">
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center mb-4">
+                          <svg className="w-10 h-10 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">No messages found</h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {searchTerm || statusFilter || typeFilter
+                            ? 'Try adjusting your search or filter criteria'
+                            : 'New messages will appear here automatically'}
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* Pagination */}
+        {messages && messages.length > 0 && (
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.pages}
+            totalItems={pagination.total}
+            itemsPerPage={itemsPerPage}
+            onPageChange={(page) => setCurrentPage(page)}
+            onLimitChange={(limit) => {
+              setItemsPerPage(limit);
+              setCurrentPage(1);
+            }}
+          />
+        )}
       </div>
 
-      {/* Pagination */}
-      {messages && messages.length > 0 && (
-        <Pagination
-          currentPage={pagination.page}
-          totalPages={pagination.pages}
-          totalItems={pagination.total}
-          itemsPerPage={itemsPerPage}
-          onPageChange={(page) => setCurrentPage(page)}
-          onLimitChange={(limit) => {
-            setItemsPerPage(limit);
-            setCurrentPage(1); // Reset to first page when changing limit
-          }}
-        />
-      )}
-
-      {/* Message Details Modal */}
-      {selectedMessage && (
-        <MessageDetailsModal
-          message={selectedMessage}
-          onClose={handleCloseModal}
-          onStatusChange={handleStatusChange}
-        />
-      )}
-    </div>
+        {/* Message Details Modal */}
+        {selectedMessage && (
+          <MessageDetailsModal
+            message={selectedMessage}
+            onClose={handleCloseModal}
+            onStatusChange={handleStatusChange}
+          />
+        )}
+      </div>
+    </PageWrapper>
   );
 };
 

@@ -1,44 +1,32 @@
 /**
- * Quote Routes - Full CRUD Operations
+ * Quotation Routes
+ * API endpoints for quotation management
  */
 
 const express = require('express');
 const router = express.Router();
-const controllerFactory = require('../utils/controllerFactory');
-const Quote = require('../models/Quote');
-const optionalAuth = require('../middleware/optionalAuth');
-const transformQuoteData = require('../middleware/quoteTransform');
+const quotationController = require('../controllers/quotation.controller');
+const { authenticate } = require('../middleware/auth');
+const asyncHandler = require('../utils/asyncHandler');
 
-// Apply optional authentication
-router.use(optionalAuth);
+// All routes require authentication
+router.use(authenticate);
 
-// Use controller factory to generate all routes
-const quoteController = controllerFactory(Quote);
+// Check for new quotations (lightweight polling)
+router.get('/check-new', asyncHandler(quotationController.checkForNew.bind(quotationController)));
 
-// Standard CRUD routes
-router.get('/', quoteController.getAll);
-router.get('/stats', async (req, res) => {
-  try {
-    const stats = await Quote.aggregate([
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          accepted: { $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] } },
-          pending: { $sum: { $cond: [{ $in: ['$status', ['draft', 'sent']] }, 1, 0] } },
-          totalValue: { $sum: '$total' }
-        }
-      }
-    ]);
-    res.json({ success: true, data: stats[0] || { total: 0, accepted: 0, pending: 0, totalValue: 0 } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-router.get('/:id', quoteController.getById);
-router.post('/', transformQuoteData, quoteController.create);
-router.put('/:id', transformQuoteData, quoteController.update);
-router.delete('/:id', quoteController.delete);
+// Get statistics
+router.get('/stats', asyncHandler(quotationController.getStatistics.bind(quotationController)));
+
+// CRUD operations
+router.get('/', asyncHandler(quotationController.getAllQuotations.bind(quotationController)));
+router.get('/:id', asyncHandler(quotationController.getQuotationById.bind(quotationController)));
+router.post('/', asyncHandler(quotationController.createQuotation.bind(quotationController)));
+router.patch('/:id', asyncHandler(quotationController.updateQuotation.bind(quotationController)));
+router.delete('/:id', asyncHandler(quotationController.deleteQuotation.bind(quotationController)));
+
+// Send quotation via email
+router.post('/:id/send-email', asyncHandler(quotationController.sendQuotationEmail.bind(quotationController)));
 
 module.exports = router;
 

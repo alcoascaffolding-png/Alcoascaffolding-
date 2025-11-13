@@ -47,15 +47,15 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { title: 'Stock Adjustments', path: '/stock-adjustments', icon: Icons.Inventory },
       ],
     },
-    {
-      title: 'Accounts',
-      icon: Icons.BankAccount,
-      submenu: [
-        { title: 'Bank Accounts', path: '/bank-accounts', icon: Icons.BankAccount },
-        { title: 'Receipts', path: '/receipts', icon: Icons.Receipt },
-        { title: 'Payments', path: '/payments', icon: Icons.Payment },
-      ],
-    },
+    // {
+    //   title: 'Accounts',
+    //   icon: Icons.BankAccount,
+    //   submenu: [
+    //     { title: 'Bank Accounts', path: '/bank-accounts', icon: Icons.BankAccount },
+    //     { title: 'Receipts', path: '/receipts', icon: Icons.Receipt },
+    //     { title: 'Payments', path: '/payments', icon: Icons.Payment },
+    //   ],
+    // },
   ];
 
   const toggleSection = (title) => {

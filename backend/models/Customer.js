@@ -278,18 +278,21 @@ customerSchema.virtual('creditStatus').get(function() {
 
 // Virtual for full primary address
 customerSchema.virtual('primaryAddress').get(function() {
+  if (!this.addresses || this.addresses.length === 0) return null;
   const primary = this.addresses.find(addr => addr.isPrimary);
   return primary || this.addresses[0];
 });
 
 // Virtual for full primary contact
 customerSchema.virtual('primaryContact').get(function() {
+  if (!this.contactPersons || this.contactPersons.length === 0) return null;
   const primary = this.contactPersons.find(contact => contact.isPrimary);
   return primary || this.contactPersons[0];
 });
 
 // Method to update primary contact info
 customerSchema.methods.updatePrimaryContact = function() {
+  if (!this.contactPersons || this.contactPersons.length === 0) return;
   const primary = this.contactPersons.find(contact => contact.isPrimary) || this.contactPersons[0];
   if (primary) {
     this.primaryEmail = primary.email;
@@ -301,24 +304,28 @@ customerSchema.methods.updatePrimaryContact = function() {
 // Pre-save middleware to ensure only one primary contact/address
 customerSchema.pre('save', function(next) {
   // Ensure only one primary contact
-  let primaryContactFound = false;
-  this.contactPersons.forEach(contact => {
-    if (contact.isPrimary && !primaryContactFound) {
-      primaryContactFound = true;
-    } else if (contact.isPrimary) {
-      contact.isPrimary = false;
-    }
-  });
+  if (this.contactPersons && this.contactPersons.length > 0) {
+    let primaryContactFound = false;
+    this.contactPersons.forEach(contact => {
+      if (contact.isPrimary && !primaryContactFound) {
+        primaryContactFound = true;
+      } else if (contact.isPrimary) {
+        contact.isPrimary = false;
+      }
+    });
+  }
 
   // Ensure only one primary address
-  let primaryAddressFound = false;
-  this.addresses.forEach(address => {
-    if (address.isPrimary && !primaryAddressFound) {
-      primaryAddressFound = true;
-    } else if (address.isPrimary) {
-      address.isPrimary = false;
-    }
-  });
+  if (this.addresses && this.addresses.length > 0) {
+    let primaryAddressFound = false;
+    this.addresses.forEach(address => {
+      if (address.isPrimary && !primaryAddressFound) {
+        primaryAddressFound = true;
+      } else if (address.isPrimary) {
+        address.isPrimary = false;
+      }
+    });
+  }
 
   // Update primary contact fields
   this.updatePrimaryContact();

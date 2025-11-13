@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { PageWrapper } from '../../components/common';
 import Table from '../../components/common/Table';
 import Modal from '../../components/common/Modal';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,6 +13,9 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const PurchaseOrders = () => {
+  // ⭐ TOGGLE: Set to false to show working page to client ⭐
+  const [isUnderConstruction] = useState(true);
+  
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,38 +58,47 @@ const PurchaseOrders = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Purchase Orders" description="Vendor purchase orders" action={<button onClick={handleAdd} className="btn btn-primary">+ New PO</button>} />
+    <PageWrapper
+      isUnderConstruction={isUnderConstruction}
+      constructionProps={{
+        title: "Purchase Orders",
+        subtitle: "This module is currently under development and will be available soon."
+      }}
+    >
+      {/* ACTUAL WORKING PAGE (Hidden when isUnderConstruction = true) */}
+      <div className="space-y-6">
+        <PageHeader title="Purchase Orders" description="Vendor purchase orders" action={<button onClick={handleAdd} className="btn btn-primary">+ New PO</button>} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-purple-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Total POs</p>
-          <p className="text-3xl font-bold mt-1">{orders.length}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-purple-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Total POs</p>
+            <p className="text-3xl font-bold mt-1">{orders.length}</p>
+          </div>
+          <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Received</p>
+            <p className="text-3xl font-bold mt-1">{orders.filter(o => o.status === 'received').length}</p>
+          </div>
+          <div className="p-4 bg-orange-600 text-white rounded-lg shadow-sm">
+            <p className="text-sm font-medium opacity-90">Total Value</p>
+            <p className="text-2xl font-bold mt-1">AED {orders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}</p>
+          </div>
         </div>
-        <div className="p-4 bg-green-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Received</p>
-          <p className="text-3xl font-bold mt-1">{orders.filter(o => o.status === 'received').length}</p>
+
+        <div className="card p-0">
+          <Table columns={columns} data={orders} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
         </div>
-        <div className="p-4 bg-orange-600 text-white rounded-lg shadow-sm">
-          <p className="text-sm font-medium opacity-90">Total Value</p>
-          <p className="text-2xl font-bold mt-1">AED {orders.reduce((sum, o) => sum + o.total, 0).toLocaleString()}</p>
-        </div>
+
+        <Modal 
+          isOpen={isModalOpen} 
+          onClose={() => { setIsModalOpen(false); setEditingOrder(null); }} 
+          title={editingOrder ? 'Edit Purchase Order' : 'New Purchase Order'} 
+          subtitle="Create a new purchase order with line items"
+          size="full"
+        >
+          <SalesOrderForm order={editingOrder} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingOrder(null); }} />
+        </Modal>
       </div>
-
-      <div className="card p-0">
-        <Table columns={columns} data={orders} loading={loading} onEdit={handleEdit} onDelete={handleDelete} />
-      </div>
-
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => { setIsModalOpen(false); setEditingOrder(null); }} 
-        title={editingOrder ? 'Edit Purchase Order' : 'New Purchase Order'} 
-        subtitle="Create a new purchase order with line items"
-        size="full"
-      >
-        <SalesOrderForm order={editingOrder} onSave={handleSave} onCancel={() => { setIsModalOpen(false); setEditingOrder(null); }} />
-      </Modal>
-    </div>
+    </PageWrapper>
   );
 };
 

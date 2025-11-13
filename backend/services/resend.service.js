@@ -267,6 +267,62 @@ class ResendEmailService {
       };
     }
   }
+
+  /**
+   * Send quotation email to customer with PDF attachment
+   * @param {Object} quotation - Quotation object with customer details
+   * @returns {Promise<Object>} - Result of email sending
+   */
+  async sendQuotationEmail(quotation) {
+    try {
+      const { quotationEmailTemplate } = require('../utils/quotationEmailTemplate');
+      const { generateQuotationPDFBuffer } = require('../utils/quotationPDFGenerator');
+      
+      logger.info('📋 Generating PDF for quotation email', { 
+        quoteNumber: quotation.quoteNumber
+      });
+
+      // Generate PDF as buffer
+      const pdfBuffer = await generateQuotationPDFBuffer(quotation);
+      
+      logger.info('📧 Sending quotation email via Resend with PDF attachment', { 
+        quoteNumber: quotation.quoteNumber,
+        customerEmail: quotation.customerEmail,
+        pdfSize: `${(pdfBuffer.length / 1024).toFixed(2)} KB`
+      });
+
+      const emailOptions = {
+        from: this.fromEmail,
+        to: quotation.customerEmail,
+        subject: `Quotation ${quotation.quoteNumber} - Alcoa Scaffolding`,
+        html: quotationEmailTemplate(quotation),
+        attachments: [
+          {
+            filename: `Quotation_${quotation.quoteNumber}.pdf`,
+            content: pdfBuffer
+          }
+        ]
+      };
+
+      const result = await this.sendEmail(emailOptions);
+
+      logger.success('✅ Quotation email sent successfully with PDF attachment', {
+        quoteNumber: quotation.quoteNumber,
+        emailId: result.messageId,
+        sentTo: quotation.customerEmail,
+        pdfSize: `${(pdfBuffer.length / 1024).toFixed(2)} KB`
+      });
+
+      return {
+        success: true,
+        message: 'Quotation email sent successfully with PDF attachment',
+        emailId: result.messageId
+      };
+    } catch (error) {
+      logger.error('❌ Failed to send quotation email', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new ResendEmailService();
