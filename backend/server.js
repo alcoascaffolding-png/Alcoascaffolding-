@@ -54,6 +54,20 @@ app.use(handleCORS);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files for quotation PDFs with proper headers
+const path = require('path');
+app.use('/quotation-pdfs', express.static(path.join(__dirname, 'public/quotation-pdfs'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="quotation.pdf"');
+      // Allow CORS for Twilio to fetch the file
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    }
+  }
+}));
+
 // Request logging
 if (config.server.env === 'development') {
   app.use(requestLogger);

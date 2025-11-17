@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { updateQuotation } from '../../store/slices/quotationSlice';
 import quotationService from '../../services/api/quotationService';
-import { downloadProfessionalPDF, shareQuotationViaWhatsApp } from '../../utils/professionalQuotationPDF';
+import { shareQuotationViaWhatsApp } from '../../utils/professionalQuotationPDF';
 import toast from 'react-hot-toast';
 
 const QuotationDetailsModal = ({ quotation, onClose, onUpdate, onEdit, onConvert }) => {
@@ -51,15 +51,15 @@ const QuotationDetailsModal = ({ quotation, onClose, onUpdate, onEdit, onConvert
     }
   };
 
-  // Download PDF
+  // Download PDF using backend Playwright generator
   const handleDownloadPDF = async () => {
     try {
-      toast.loading('Generating PDF with images...', { id: 'pdf-loading' });
-      await downloadProfessionalPDF(quotation);
-      toast.success('Professional PDF downloaded successfully!', { id: 'pdf-loading' });
+      toast.loading('Generating PDF...', { id: 'pdf-loading' });
+      await quotationService.downloadPDF(quotation._id);
+      toast.success('PDF downloaded successfully!', { id: 'pdf-loading' });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF', { id: 'pdf-loading' });
+      toast.error(error.response?.data?.message || 'Failed to generate PDF', { id: 'pdf-loading' });
     }
   };
 

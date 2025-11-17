@@ -299,6 +299,15 @@ const quotationSchema = new mongoose.Schema({
       enum: ['sent', 'failed', 'bounced']
     }
   }],
+  whatsappSent: [{
+    sentAt: Date,
+    sentTo: String,
+    messageSid: String,
+    status: {
+      type: String,
+      enum: ['sent', 'failed', 'delivered', 'read']
+    }
+  }],
   
   // Follow-up
   followUpDate: {

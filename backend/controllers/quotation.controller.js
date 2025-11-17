@@ -6,6 +6,7 @@
 const Quotation = require('../models/Quotation');
 const Customer = require('../models/Customer');
 const logger = require('../utils/logger');
+const { generateQuotationPDFBuffer } = require('../utils/playwrightPDFGenerator');
 
 class QuotationController {
   /**
@@ -339,6 +340,166 @@ class QuotationController {
         success: false,
         message: error.message || 'Failed to send quotation email',
         details: error.toString()
+      });
+    }
+  }
+
+  /**
+   * Send quotation via WhatsApp
+   */
+  async sendQuotationWhatsApp(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { recipientPhone, pdfUrl, message } = req.body;
+
+      const quotation = await Quotation.findById(id)
+        .populate('customer', 'companyName primaryEmail primaryPhone primaryWhatsApp');
+
+      if (!quotation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Quotation not found'
+        });
+      }
+
+      const phoneToSend = recipientPhone || quotation.customerPhone || quotation.primaryPhone || quotation.primaryWhatsApp;
+
+      if (!phoneToSend) {
+        return res.status(400).json({
+          success: false,
+          message: 'Customer phone number not available. Please add phone number to customer.'
+        });
+      }
+
+      // Import WhatsApp service
+      const whatsappService = require('../services/whatsapp.service');
+
+      // Generate PDF and get URL
+      let finalPdfUrl = pdfUrl;
+      
+      if (!finalPdfUrl) {
+        // Generate PDF buffer
+        const { generateQuotationPDFBuffer } = require('../utils/playwrightPDFGenerator');
+        const pdfBuffer = await generateQuotationPDFBuffer(quotation);
+        
+        // Upload PDF to temporary storage or use a file service
+        // For now, we'll require PDF URL or implement file upload
+        // You can integrate with S3, Cloudinary, or similar service here
+        
+        // Temporary solution: Save to public folder and serve via URL
+        // In production, use cloud storage
+        const fs = require('fs');
+        const path = require('path');
+        const publicDir = path.join(__dirname, '../public/quotation-pdfs');
+        
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(publicDir)) {
+          fs.mkdirSync(publicDir, { recursive: true });
+        }
+        
+        const filename = `Quotation_${quotation.quoteNumber}_${Date.now()}.pdf`;
+        const filePath = path.join(publicDir, filename);
+        fs.writeFileSync(filePath, pdfBuffer);
+        
+        // Generate public URL (adjust based on your server setup)
+        const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+        finalPdfUrl = `${baseUrl}/quotation-pdfs/${filename}`;
+      }
+
+      // Send WhatsApp message with PDF
+      const result = await whatsappService.sendQuotationWhatsApp(quotation, finalPdfUrl);
+
+      // Update quotation status and history
+      quotation.status = 'sent';
+      if (!quotation.sentDate) {
+        quotation.sentDate = new Date();
+      }
+      
+      // Track WhatsApp sending
+      if (!quotation.whatsappSent) {
+        quotation.whatsappSent = [];
+      }
+      quotation.whatsappSent.push({
+        sentAt: new Date(),
+        sentTo: phoneToSend,
+        messageSid: result.messageSid,
+        status: result.status
+      });
+      
+      await quotation.save();
+
+      logger.info('Quotation sent via WhatsApp successfully', { 
+        id, 
+        quoteNumber: quotation.quoteNumber, 
+        sentTo: phoneToSend,
+        messageSid: result.messageSid
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Quotation sent via WhatsApp successfully',
+        data: {
+          quotation,
+          whatsapp: {
+            messageSid: result.messageSid,
+            status: result.status,
+            sentTo: phoneToSend
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Error sending quotation via WhatsApp', error);
+      
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to send quotation via WhatsApp',
+        details: error.toString()
+      });
+    }
+  }
+
+  /**
+   * Generate PDF for quotation
+   */
+  async generatePDF(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const quotation = await Quotation.findById(id)
+        .populate('customer', 'companyName primaryEmail primaryPhone businessType');
+
+      if (!quotation) {
+        return res.status(404).json({
+          success: false,
+          message: 'Quotation not found'
+        });
+      }
+
+      // Convert to plain object and ensure items array exists
+      const quotationData = quotation.toObject ? quotation.toObject() : quotation;
+      if (!quotationData.items || !Array.isArray(quotationData.items)) {
+        quotationData.items = [];
+      }
+
+      // Generate PDF buffer
+      const pdfBuffer = await generateQuotationPDFBuffer(quotationData);
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="Quotation_${quotation.quoteNumber}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+
+      // Send PDF
+      res.send(pdfBuffer);
+
+      logger.info('Quotation PDF generated', { id, quoteNumber: quotation.quoteNumber });
+    } catch (error) {
+      logger.error('Error generating quotation PDF', error);
+      
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to generate PDF',
+        details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
       });
     }
   }

@@ -28,5 +28,11 @@ router.delete('/:id', asyncHandler(quotationController.deleteQuotation.bind(quot
 // Send quotation via email
 router.post('/:id/send-email', asyncHandler(quotationController.sendQuotationEmail.bind(quotationController)));
 
+// Send quotation via WhatsApp
+router.post('/:id/send-whatsapp', asyncHandler(quotationController.sendQuotationWhatsApp.bind(quotationController)));
+
+// Generate PDF
+router.get('/:id/pdf', asyncHandler(quotationController.generatePDF.bind(quotationController)));
+
 module.exports = router;
 
