@@ -5,8 +5,96 @@
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { processBilingualText } from './arabicTextHelper';
 
-export const generateProfessionalQuotationPDF = (quotation) => {
+/**
+ * Load image from URL and convert to base64
+ */
+const loadImageAsBase64 = (url) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try {
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        resolve(base64);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
+/**
+ * Generate text as image for proper Arabic rendering
+ */
+const textToImage = (text, fontSize = 16, fontWeight = 'bold', color = '#0066cc') => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set font
+    ctx.font = `${fontWeight} ${fontSize}px Arial, Helvetica, sans-serif`;
+    
+    // Measure text
+    const metrics = ctx.measureText(text);
+    const textWidth = metrics.width;
+    const textHeight = fontSize * 1.5;
+    
+    // Set canvas size
+    canvas.width = textWidth + 20;
+    canvas.height = textHeight;
+    
+    // Re-set font after canvas resize (canvas resets context)
+    ctx.font = `${fontWeight} ${fontSize}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Fill background (transparent)
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw text
+    ctx.fillStyle = color;
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    
+    // Convert to base64
+    const base64 = canvas.toDataURL('image/png');
+    resolve({ base64, width: textWidth, height: textHeight });
+  });
+};
+
+export const generateProfessionalQuotationPDF = async (quotation) => {
+  // Pre-load images for items that have itemImage URLs
+  const imagePromises = quotation.items.map(async (item, index) => {
+    if (item.itemImage && (item.itemImage.startsWith('http://') || item.itemImage.startsWith('https://'))) {
+      try {
+        const base64 = await loadImageAsBase64(item.itemImage);
+        return { index, base64 };
+      } catch (err) {
+        console.log(`Failed to load image for item ${index}:`, err);
+        return { index, base64: null };
+      }
+    }
+    return { index, base64: item.itemImage?.startsWith('data:image') ? item.itemImage : null };
+  });
+  
+  const loadedImages = await Promise.all(imagePromises);
+  const imageMap = {};
+  loadedImages.forEach(({ index, base64 }) => {
+    if (base64) imageMap[index] = base64;
+  });
+  
+  // Generate header text as image for proper Arabic rendering
+  const headerImage = await textToImage('ALCOA ALUMINIUM SCAFFOLDING  |  الكوا سقالات ألمنيوم', 28, 'bold', '#0066cc');
+  
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -16,147 +104,181 @@ export const generateProfessionalQuotationPDF = (quotation) => {
   const darkGray = [60, 60, 60];
   const lightGray = [240, 240, 240];
 
-  let yPos = 15;
+  let yPos = 5; // Minimized top margin
 
   // ==================== HEADER ====================
   
-  // Company Name (English)
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryBlue);
-  doc.text('ALCOA ALUMINIUM SCAFFOLDING', pageWidth / 2, yPos, { align: 'center' });
+  // Company Name (English and Arabic rendered as image for proper display)
+  if (headerImage && headerImage.base64) {
+    const imgWidth = (headerImage.width * 0.264583) / 1.5; // Convert px to mm and scale appropriately
+    const imgHeight = (headerImage.height * 0.264583) / 1.5;
+    const imgX = (pageWidth - imgWidth) / 2;
+    
+    try {
+      doc.addImage(headerImage.base64, 'PNG', imgX, yPos, imgWidth, imgHeight);
+      yPos += imgHeight + 2; // Minimal spacing
+    } catch (err) {
+      // Fallback to text if image fails
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...primaryBlue);
+      doc.text('ALCOA ALUMINIUM SCAFFOLDING', pageWidth / 2, yPos, { align: 'center' });
+      yPos += 4;
+    }
+  } else {
+    // Fallback to text
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryBlue);
+    doc.text('ALCOA ALUMINIUM SCAFFOLDING', pageWidth / 2, yPos, { align: 'center' });
+    yPos += 4;
+  }
   
-  // Tagline
-  yPos += 7;
+  // Tagline - positioned closer to header
+  yPos += 2.5; // Minimal spacing
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(...darkGray);
   doc.text('Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding', pageWidth / 2, yPos, { align: 'center' });
   
   // Services line
-  yPos += 4;
+  yPos += 3; // Minimal spacing
   doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
   doc.text('Sale | Hire | Installation | Maintenance | Safety Inspections | Training', pageWidth / 2, yPos, { align: 'center' });
   
   // Horizontal line
-  yPos += 3;
+  yPos += 2.5; // Minimal spacing
   doc.setDrawColor(200, 200, 200);
   doc.line(15, yPos, pageWidth - 15, yPos);
   
-  // Document Title - QUOTATION
-  yPos += 8;
-  doc.setFontSize(26);
+  // Document Title - QUOTATION (below the line with proper spacing)
+  yPos += 6; // Increased spacing to ensure no overlap
+  doc.setFontSize(18); // Reduced size
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(220, 53, 69); // Red
   doc.text('QUOTATION', pageWidth / 2, yPos, { align: 'center' });
   
-  // TRN
-  yPos += 6;
+  // TRN (close to QUOTATION)
+  yPos += 4; // Close spacing
   doc.setFontSize(9);
   doc.setTextColor(...darkGray);
   doc.text('TRN: 100123456700003', pageWidth / 2, yPos, { align: 'center' });
   
-  yPos += 10;
+  yPos += 5; // Minimal spacing
   
   // ==================== CUSTOMER & QUOTE INFO ====================
   
-  // Customer Details Box (Left)
-  doc.setFillColor(...lightGray);
-  doc.rect(15, yPos, 95, 40, 'F');
-  
-  const labelX = 18;
-  let leftY = yPos + 6;
+  // Customer Details Table (Left) - Labels and values close together
+  const leftLabelX = 15;
+  let leftY = yPos + 5.5;
   
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   
-  // CUSTOMER NAME (inline - same line)
-  const label1 = 'CUSTOMER NAME: ';
-  doc.text(label1, labelX, leftY);
-  doc.setFont('helvetica', 'normal');
-  doc.text(quotation.customerName || 'N/A', labelX + doc.getTextWidth(label1), leftY);
-  
-  leftY += 6;
-  // ADDRESS (inline - same line)
+  // CUSTOMER NAME - label and value close together
   doc.setFont('helvetica', 'bold');
-  const label2 = 'ADDRESS: ';
-  doc.text(label2, labelX, leftY);
+  const label1 = 'CUSTOMER NAME:';
+  const label1Width = doc.getTextWidth(label1);
+  doc.text(label1, leftLabelX, leftY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.customerAddress || 'N/A', labelX + doc.getTextWidth(label2), leftY);
+  const value1 = quotation.customerName || 'N/A';
+  doc.text(value1, leftLabelX + label1Width + 1, leftY); // Small space after colon
   
-  leftY += 6;
-  // MOBILE NO (inline - same line)
+  leftY += 5.5;
+  // ADDRESS - label and value close together
   doc.setFont('helvetica', 'bold');
-  const label3 = 'MOBILE NO: ';
-  doc.text(label3, labelX, leftY);
+  const label2 = 'ADDRESS:';
+  const label2Width = doc.getTextWidth(label2);
+  doc.text(label2, leftLabelX, leftY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.customerPhone || 'N/A', labelX + doc.getTextWidth(label3), leftY);
+  const value2 = quotation.customerAddress || 'N/A';
+  doc.text(value2, leftLabelX + label2Width + 1, leftY);
   
-  leftY += 6;
-  // TRN (inline - same line)
+  leftY += 5.5;
+  // MOBILE NO - label and value close together
   doc.setFont('helvetica', 'bold');
-  const label4 = 'TRN: ';
-  doc.text(label4, labelX, leftY);
+  const label3 = 'MOBILE NO:';
+  const label3Width = doc.getTextWidth(label3);
+  doc.text(label3, leftLabelX, leftY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.customerTRN || 'N/A', labelX + doc.getTextWidth(label4), leftY);
+  const value3 = quotation.customerPhone || 'N/A';
+  doc.text(value3, leftLabelX + label3Width + 1, leftY);
   
-  leftY += 6;
-  // CONTACT PERSON (inline - same line)
+  leftY += 5.5;
+  // TRN - label and value close together
   doc.setFont('helvetica', 'bold');
-  const label5 = 'CONTACT PERSON: ';
-  doc.text(label5, labelX, leftY);
+  const label4 = 'TRN:';
+  const label4Width = doc.getTextWidth(label4);
+  doc.text(label4, leftLabelX, leftY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.contactPersonName || 'N/A', labelX + doc.getTextWidth(label5), leftY);
+  const value4 = quotation.customerTRN || 'N/A';
+  doc.text(value4, leftLabelX + label4Width + 1, leftY);
   
-  // Quote Details Box (Right)
-  doc.setFillColor(...lightGray);
-  doc.rect(115, yPos, 80, 40, 'F');
-  
-  const rightLabelX = 118;
-  let rightY = yPos + 6;
-  
-  // Quotation No (inline - same line)
+  leftY += 5.5;
+  // CONTACT PERSON - label and value close together
   doc.setFont('helvetica', 'bold');
-  const rightLabel1 = 'Quotation No: ';
+  const label5 = 'CONTACT PERSON:';
+  const label5Width = doc.getTextWidth(label5);
+  doc.text(label5, leftLabelX, leftY);
+  doc.setFont('helvetica', 'normal');
+  const value5 = quotation.contactPersonName || 'N/A';
+  doc.text(value5, leftLabelX + label5Width + 1, leftY);
+  
+  // Quote Details Table (Right) - Labels and values close together
+  const rightLabelX = 115;
+  let rightY = yPos + 5.5;
+  
+  // Quotation No - label and value close together
+  doc.setFont('helvetica', 'bold');
+  const rightLabel1 = 'Quotation No:';
+  const rightLabel1Width = doc.getTextWidth(rightLabel1);
   doc.text(rightLabel1, rightLabelX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.quoteNumber, rightLabelX + doc.getTextWidth(rightLabel1), rightY);
+  const rightValue1 = quotation.quoteNumber || 'N/A';
+  doc.text(rightValue1, rightLabelX + rightLabel1Width + 1, rightY);
   
-  rightY += 6;
-  // Date (inline - same line)
+  rightY += 5.5;
+  // Date - label and value close together
   doc.setFont('helvetica', 'bold');
-  const rightLabel2 = 'Date: ';
+  const rightLabel2 = 'Date:';
+  const rightLabel2Width = doc.getTextWidth(rightLabel2);
   doc.text(rightLabel2, rightLabelX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(new Date(quotation.quoteDate).toLocaleDateString('en-GB'), rightLabelX + doc.getTextWidth(rightLabel2), rightY);
+  const rightValue2 = new Date(quotation.quoteDate).toLocaleDateString('en-GB');
+  doc.text(rightValue2, rightLabelX + rightLabel2Width + 1, rightY);
   
-  rightY += 6;
-  // Sales Executive (inline - same line)
+  rightY += 5.5;
+  // Sales Executive - label and value close together
   doc.setFont('helvetica', 'bold');
-  const rightLabel3 = 'Sales Executive: ';
+  const rightLabel3 = 'Sales Executive:';
+  const rightLabel3Width = doc.getTextWidth(rightLabel3);
   doc.text(rightLabel3, rightLabelX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.salesExecutive || 'N/A', rightLabelX + doc.getTextWidth(rightLabel3), rightY);
+  const rightValue3 = quotation.salesExecutive || 'N/A';
+  doc.text(rightValue3, rightLabelX + rightLabel3Width + 1, rightY);
   
-  rightY += 6;
-  // PO No (inline - same line)
+  rightY += 5.5;
+  // PO No - label and value close together
   doc.setFont('helvetica', 'bold');
-  const rightLabel4 = 'PO No: ';
+  const rightLabel4 = 'PO No:';
+  const rightLabel4Width = doc.getTextWidth(rightLabel4);
   doc.text(rightLabel4, rightLabelX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.customerPONumber || 'N/A', rightLabelX + doc.getTextWidth(rightLabel4), rightY);
+  const rightValue4 = quotation.customerPONumber || 'N/A';
+  doc.text(rightValue4, rightLabelX + rightLabel4Width + 1, rightY);
   
-  rightY += 6;
-  // Payment Terms (inline - same line)
+  rightY += 5.5;
+  // Payment Terms - label and value close together
   doc.setFont('helvetica', 'bold');
-  const rightLabel5 = 'Payment Terms: ';
+  const rightLabel5 = 'PAYMENT TERMS:';
+  const rightLabel5Width = doc.getTextWidth(rightLabel5);
   doc.text(rightLabel5, rightLabelX, rightY);
   doc.setFont('helvetica', 'normal');
-  doc.text(quotation.paymentTerms || 'Cash/CDC', rightLabelX + doc.getTextWidth(rightLabel5), rightY);
+  const rightValue5 = quotation.paymentTerms || 'Cash/CDC';
+  doc.text(rightValue5, rightLabelX + rightLabel5Width + 1, rightY);
   
-  yPos += 45;
+  yPos += 38; // Spacing after tables
   
   // Subject
   if (quotation.subject) {
@@ -166,13 +288,14 @@ export const generateProfessionalQuotationPDF = (quotation) => {
     doc.setFont('helvetica', 'normal');
     const subjectLines = doc.splitTextToSize(quotation.subject, pageWidth - 40);
     doc.text(subjectLines, 35, yPos);
-    yPos += (subjectLines.length * 4) + 3;
+    yPos += (subjectLines.length * 4) + 1; // Minimal spacing
   }
   
-  yPos += 5;
+  yPos += 3; // Minimal spacing before table
   
   // ==================== ITEMS TABLE ====================
   
+  // Prepare table data - images will be added inside Description column
   const tableData = quotation.items.map((item, index) => {
     const row = [
       index + 1,
@@ -190,13 +313,98 @@ export const generateProfessionalQuotationPDF = (quotation) => {
     return row;
   });
 
+  // Calculate totals for totals row
+  const subtotalBeforeCharges = quotation.items.reduce((sum, item) => {
+    const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
+    return sum + parseFloat(taxable);
+  }, 0);
+  
+  const additionalCharges = (parseFloat(quotation.deliveryCharges) || 0) + 
+                             (parseFloat(quotation.installationCharges) || 0) + 
+                             (parseFloat(quotation.pickupCharges) || 0);
+  
+  let beforeDiscount = subtotalBeforeCharges + additionalCharges;
+  
+  // Apply discount
+  if (quotation.discount > 0) {
+    if (quotation.discountType === 'percentage') {
+      beforeDiscount -= (beforeDiscount * quotation.discount / 100);
+    } else {
+      beforeDiscount -= parseFloat(quotation.discount);
+    }
+  }
+  
+  const vatAmount = beforeDiscount * ((quotation.vatPercentage || 5) / 100);
+  const netTotal = beforeDiscount + vatAmount;
+
+  // Totals row data
+  const totalsRow = [
+    '',
+    'TOTAL',
+    '',
+    '',
+    '',
+    '',
+    subtotalBeforeCharges.toFixed(2),
+    '',
+    vatAmount.toFixed(2),
+    netTotal.toFixed(2)
+  ];
+
+  // Financial summary rows to add to table
+  const summaryRow1 = [
+    '',
+    'Total w/o VAT',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    beforeDiscount.toFixed(2)
+  ];
+
+  const summaryRow2 = [
+    '',
+    `VAT (${quotation.vatPercentage || 5}%)`,
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    vatAmount.toFixed(2)
+  ];
+
+  const summaryRow3 = [
+    '',
+    'Net Total',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    netTotal.toFixed(2)
+  ];
+
+  // Amount in words - will be shown on left side of Net Total row, not as separate row
+  // So we don't add summaryRow4 to the table
+
+  // Table alignment - use consistent left margin
+  const tableLeftMargin = 15; // Consistent left margin matching other content
+
   doc.autoTable({
     startY: yPos,
+    margin: { left: tableLeftMargin, right: tableLeftMargin },
     head: [[
-      'SN',
+      'S N',
       'Description of Goods',
       'Wt\n(KG)',
-      'CBM',
+      'CB M',
       'Qty',
       'Rate\n(AED)',
       'Taxable\nAmount',
@@ -204,7 +412,7 @@ export const generateProfessionalQuotationPDF = (quotation) => {
       'VAT\nAmount',
       'Amount\n(AED)'
     ]],
-    body: tableData,
+    body: [...tableData, totalsRow, summaryRow1, summaryRow2, summaryRow3],
     theme: 'grid',
     headStyles: {
       fillColor: primaryBlue,
@@ -212,126 +420,159 @@ export const generateProfessionalQuotationPDF = (quotation) => {
       fontSize: 8,
       fontStyle: 'bold',
       halign: 'center',
-      valign: 'middle'
+      valign: 'middle',
+      cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      minCellHeight: 8
     },
     styles: {
       fontSize: 8,
-      cellPadding: 2,
-      lineColor: [200, 200, 200],
-      lineWidth: 0.1
+      cellPadding: { top: 3, bottom: 3, left: 2, right: 2 },
+      lineColor: [225, 225, 225],
+      lineWidth: 0.2,
+      textColor: [44, 62, 80], // Professional dark gray
+      font: 'helvetica',
+      overflow: 'linebreak'
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 60 },
-      2: { cellWidth: 12, halign: 'center' },
-      3: { cellWidth: 12, halign: 'center' },
-      4: { cellWidth: 12, halign: 'center' },
-      5: { cellWidth: 18, halign: 'right' },
-      6: { cellWidth: 20, halign: 'right' },
-      7: { cellWidth: 10, halign: 'center' },
-      8: { cellWidth: 18, halign: 'right' },
-      9: { cellWidth: 20, halign: 'right', fontStyle: 'bold' }
+      0: { cellWidth: 8, halign: 'center', fontStyle: 'bold', textColor: [52, 73, 94] },
+      1: { cellWidth: 52, fontStyle: 'bold', textColor: [44, 62, 80], halign: 'left' }, // Description column
+      2: { cellWidth: 12, halign: 'center', textColor: [85, 85, 85] },
+      3: { cellWidth: 12, halign: 'center', textColor: [85, 85, 85] },
+      4: { cellWidth: 10, halign: 'center', fontStyle: 'bold', textColor: [44, 62, 80] },
+      5: { cellWidth: 16, halign: 'right', textColor: [85, 85, 85] },
+      6: { cellWidth: 18, halign: 'right', textColor: [85, 85, 85] },
+      7: { cellWidth: 10, halign: 'center', textColor: [85, 85, 85] },
+      8: { cellWidth: 16, halign: 'right', textColor: [85, 85, 85] },
+      9: { cellWidth: 18, halign: 'right', fontStyle: 'bold', textColor: [44, 62, 80] }
+    },
+    footStyles: {
+      fillColor: [248, 249, 250], // Professional light gray background
+      textColor: [44, 62, 80], // Professional dark gray
+      fontStyle: 'bold',
+      fontSize: 9,
+      cellPadding: 2.5,
+      lineWidth: { top: 1, bottom: 1 },
+      lineColor: [200, 200, 200]
+    },
+    didParseCell: (data) => {
+      const totalsRowIndex = tableData.length;
+      const summaryRow1Index = totalsRowIndex + 1;
+      const summaryRow2Index = totalsRowIndex + 2;
+      const summaryRow3Index = totalsRowIndex + 3;
+      const summaryRow4Index = totalsRowIndex + 4;
+      
+      // Style the totals row
+      if (data.row.index === totalsRowIndex) {
+        // "TOTAL" label - right align in Description column
+        if (data.column.index === 1) {
+          data.cell.styles.halign = 'right';
+          data.cell.styles.fontStyle = 'bold';
+        }
+        // Empty columns
+        if (data.column.index === 0 || data.column.index === 2 || data.column.index === 3 || 
+            data.column.index === 4 || data.column.index === 5 || data.column.index === 7) {
+          data.cell.styles.fontStyle = 'normal';
+        }
+        // Amounts in totals row - right aligned
+        if (data.column.index === 6 || data.column.index === 8 || data.column.index === 9) {
+          data.cell.styles.halign = 'right';
+        }
+        // Net total - blue color in Amount column
+        if (data.column.index === 9) {
+          data.cell.styles.textColor = [0, 102, 204];
+          data.cell.styles.fontStyle = 'bold';
+        }
+        // Don't show images in totals row
+        if (data.column.index === 1) {
+          data.cell.styles.minCellHeight = 0;
+        }
+      }
+      
+      // Style summary rows
+      if (data.row.index === summaryRow1Index || data.row.index === summaryRow2Index) {
+        // Total w/o VAT and VAT rows - left align description, right align amounts
+        if (data.column.index === 1) {
+          data.cell.styles.halign = 'left';
+          data.cell.styles.fontStyle = 'normal';
+        }
+        if (data.column.index === 9) {
+          data.cell.styles.halign = 'right';
+          data.cell.styles.fontStyle = 'normal';
+        }
+      }
+      
+      if (data.row.index === summaryRow3Index) {
+        // Net Total row - white background, professional styling
+        data.cell.styles.fillColor = [255, 255, 255]; // White background
+        data.cell.styles.textColor = [44, 62, 80]; // Professional dark gray
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fontSize = 9;
+        data.cell.styles.minCellHeight = 24; // Taller row to fit amount in words below
+        if (data.column.index === 1) {
+          data.cell.styles.fontSize = 9;
+          data.cell.styles.halign = 'left';
+        }
+        if (data.column.index === 9) {
+          data.cell.styles.halign = 'right';
+          data.cell.styles.textColor = [0, 102, 204]; // Blue for total amount
+          data.cell.styles.fontSize = 10;
+        }
+      }
+    },
+    didDrawCell: (data) => {
+      // Don't draw images in totals row or summary rows
+      if (data.row.index >= tableData.length) {
+        // Add amount in words on left side of Net Total row
+        const summaryRow3Index = tableData.length + 3;
+        if (data.row.index === summaryRow3Index && data.column.index === 1) {
+          // Draw amount in words below "Net Total" text (professional gray text)
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(102, 102, 102); // Professional gray text
+          const amountInWords = numberToWords(Math.floor(netTotal));
+          const amountText = `UAE Dirham ${amountInWords}`;
+          doc.text(amountText, data.cell.x + 3, data.cell.y + data.cell.height / 2 + 4);
+        }
+        return;
+      }
+      
+      // Add images inside Description column (column index 1) - ONLY in body rows, not header
+      if (data.column.index === 1 && data.section === 'body' && data.row.index >= 0) {
+        const itemIndex = data.row.index;
+        const item = quotation.items[itemIndex];
+        const imageBase64 = imageMap[itemIndex];
+        
+        if (item && item.itemImage) {
+          // Position image on the right side of Description column
+          const imgWidth = 10;
+          const imgHeight = 8;
+          const imgX = data.cell.x + data.cell.width - imgWidth - 2; // Right side
+          const imgY = data.cell.y + (data.cell.height - imgHeight) / 2; // Centered vertically
+          
+          if (imageBase64) {
+            try {
+              // Add the loaded image
+              doc.addImage(imageBase64, 'JPEG', imgX, imgY, imgWidth, imgHeight);
+            } catch (err) {
+              // Fallback to placeholder box
+              doc.setDrawColor(200, 200, 200);
+              doc.setFillColor(249, 249, 249);
+              doc.rect(imgX, imgY, imgWidth, imgHeight, 'FD');
+            }
+          } else {
+            // No image loaded - show placeholder box
+            doc.setDrawColor(200, 200, 200);
+            doc.setFillColor(249, 249, 249);
+            doc.rect(imgX, imgY, imgWidth, imgHeight, 'FD');
+          }
+        }
+      }
     },
     didDrawPage: (data) => {
       yPos = data.cursor.y;
     }
   });
 
-  yPos = doc.lastAutoTable.finalY + 10;
-
-  // ==================== FINANCIAL SUMMARY ====================
-  
-  const summaryX = pageWidth - 75;
-  const summaryWidth = 60;
-  
-  doc.setFontSize(9);
-  let summaryY = yPos;
-  
-  // Subtotal
-  doc.setFont('helvetica', 'bold');
-  doc.text('Subtotal:', summaryX, summaryY);
-  doc.text(`AED ${quotation.subtotal.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  
-  // Additional charges
-  if (quotation.deliveryCharges > 0) {
-    summaryY += 5;
-    doc.text('Delivery:', summaryX, summaryY);
-    doc.text(`AED ${quotation.deliveryCharges.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  }
-  
-  if (quotation.installationCharges > 0) {
-    summaryY += 5;
-    doc.text('Installation:', summaryX, summaryY);
-    doc.text(`AED ${quotation.installationCharges.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  }
-  
-  if (quotation.pickupCharges > 0) {
-    summaryY += 5;
-    doc.text('Pickup:', summaryX, summaryY);
-    doc.text(`AED ${quotation.pickupCharges.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  }
-  
-  if (quotation.discount > 0) {
-    summaryY += 5;
-    doc.setTextColor(0, 128, 0);
-    doc.text('Discount:', summaryX, summaryY);
-    doc.text(`-AED ${quotation.discount.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-    doc.setTextColor(0, 0, 0);
-  }
-  
-  // VAT
-  summaryY += 5;
-  doc.text(`VAT (${quotation.vatPercentage}%):`, summaryX, summaryY);
-  doc.text(`AED ${quotation.vatAmount.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  
-  // Total
-  summaryY += 7;
-  doc.setFillColor(...primaryBlue);
-  doc.rect(summaryX - 2, summaryY - 5, summaryWidth + 4, 8, 'F');
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255, 255, 255);
-  doc.text('NET TOTAL:', summaryX, summaryY);
-  doc.text(`AED ${quotation.totalAmount.toLocaleString()}`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  
-  // Amount in words - aligned with summary
-  summaryY += 8;
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  const amountInWords = numberToWords(quotation.totalAmount);
-  doc.text(`(${amountInWords} Dirhams Only)`, summaryX + summaryWidth, summaryY, { align: 'right' });
-  
-  yPos = summaryY + 10;
-  
-  // ==================== TERMS & CONDITIONS ====================
-  // Fixed position at bottom left above footer
-  
-  const termsYPosition = pageHeight - 90;
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(0, 0, 0);
-  doc.text('TERMS & CONDITIONS:', 15, termsYPosition);
-  
-  let termsY = termsYPosition + 6;
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  
-  const terms = [
-    `Delivery: ${quotation.deliveryTerms || '7-10 days from date of order'}`,
-    `Payment: ${quotation.paymentTerms || 'Cash/CDC'}`,
-    'Our products are made of high grade Alloy 6082',
-    'Manufactured as per BS EN 1004 Standard',
-    '5 Years welding warranty on all products',
-    'All equipment is safety certified and compliant with UAE regulations'
-  ];
-  
-  terms.forEach((term, index) => {
-    doc.text(`• ${term}`, 18, termsY);
-    termsY += 4;
-  });
-  
   // ==================== FOOTER ====================
   
   // Position footer at bottom
@@ -390,8 +631,8 @@ const numberToWords = (num) => {
 /**
  * Download quotation as PDF
  */
-export const downloadProfessionalPDF = (quotation) => {
-  const doc = generateProfessionalQuotationPDF(quotation);
+export const downloadProfessionalPDF = async (quotation) => {
+  const doc = await generateProfessionalQuotationPDF(quotation);
   doc.save(`Quotation_${quotation.quoteNumber}.pdf`);
 };
 

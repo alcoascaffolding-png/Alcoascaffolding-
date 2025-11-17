@@ -70,6 +70,50 @@ const quotationService = {
   sendEmail: async (id, emailData) => {
     const response = await api.post(`/quotes/${id}/send-email`, emailData);
     return response.data;
+  },
+
+  /**
+   * Download quotation as PDF using backend Playwright generator
+   */
+  downloadPDF: async (id) => {
+    const response = await api.get(`/quotes/${id}/pdf`, {
+      responseType: 'blob', // Important for binary data
+    });
+    
+    // Create blob URL and trigger download
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Extract filename from Content-Disposition header or use default
+    const contentDisposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
+    let filename = `Quotation_${id}.pdf`;
+    if (contentDisposition) {
+      // Try to extract filename from header (handles both quoted and unquoted)
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '');
+      }
+    }
+    
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return { success: true, filename };
+  },
+
+  /**
+   * Get PDF as blob (for preview or other uses)
+   */
+  getPDFBlob: async (id) => {
+    const response = await api.get(`/quotes/${id}/pdf`, {
+      responseType: 'blob',
+    });
+    return response.data;
   }
 };
 
