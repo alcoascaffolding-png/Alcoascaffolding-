@@ -52,13 +52,14 @@ const QuotationDetailsModal = ({ quotation, onClose, onUpdate, onEdit, onConvert
   };
 
   // Download PDF
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     try {
-      downloadProfessionalPDF(quotation);
-      toast.success('Professional PDF downloaded successfully!');
+      toast.loading('Generating PDF with images...', { id: 'pdf-loading' });
+      await downloadProfessionalPDF(quotation);
+      toast.success('Professional PDF downloaded successfully!', { id: 'pdf-loading' });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
+      toast.error('Failed to generate PDF', { id: 'pdf-loading' });
     }
   };
 

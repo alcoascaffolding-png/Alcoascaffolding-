@@ -58,7 +58,8 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
     unit: 'Nos',
     rentalDuration: { value: 1, unit: 'day' },
     ratePerUnit: 0,
-    subtotal: 0
+    subtotal: 0,
+    itemImage: '' // Image URL or base64
   });
 
   // Load customers on mount
@@ -120,7 +121,8 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
       unit: 'Nos',
       rentalDuration: { value: 1, unit: 'day' },
       ratePerUnit: 0,
-      subtotal: 0
+      subtotal: 0,
+      itemImage: ''
     });
     toast.success('Item added!');
     
@@ -586,6 +588,73 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
                         </div>
                       </div>
 
+                      {/* ROW 1.5: Image Upload */}
+                      <div className="grid grid-cols-12 gap-3 mb-3">
+                        <div className="col-span-12">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Item Image (Optional)
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              name="itemImage"
+                              value={currentItem.itemImage}
+                              onChange={handleItemChange}
+                              placeholder="Paste image URL or upload file below"
+                              className="flex-1 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            />
+                            <label className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded cursor-pointer inline-flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      setCurrentItem({ ...currentItem, itemImage: reader.result });
+                                      toast.success('Image loaded!');
+                                    };
+                                    reader.onerror = () => {
+                                      toast.error('Failed to load image');
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+                            {currentItem.itemImage && (
+                              <button
+                                type="button"
+                                onClick={() => setCurrentItem({ ...currentItem, itemImage: '' })}
+                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded"
+                                title="Remove image"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                          {currentItem.itemImage && (
+                            <div className="mt-2">
+                              <img 
+                                src={currentItem.itemImage} 
+                                alt="Item preview" 
+                                className="h-20 w-20 object-cover border border-gray-300 dark:border-gray-600 rounded"
+                                onError={() => {
+                                  toast.error('Failed to load image. Please check the URL.');
+                                  setCurrentItem({ ...currentItem, itemImage: '' });
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* ROW 2: Quantity, Duration, Rate */}
                       <div className="grid grid-cols-12 gap-3">
                         <div className="col-span-2">
@@ -709,6 +778,7 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
                           <li>• <strong>Description</strong> = Details (e.g., "48.3mm x 2.5M Painted")</li>
                           <li>• <strong>Weight & CBM</strong> = For logistics (optional)</li>
                           <li>• <strong>Size</strong> = Dimensions (e.g., "3m x 2m")</li>
+                          <li>• <strong>Item Image</strong> = Upload image or paste URL (optional, will appear in PDF)</li>
                           <li>• <strong>Quantity</strong> = How many units</li>
                           <li>• <strong>Unit</strong> = Nos/Set/Service/Meter (default: Nos)</li>
                           {formData.quoteType === 'rental' && (
@@ -734,6 +804,7 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
                               <tr>
                                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">SN</th>
                                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Equipment</th>
+                                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Image</th>
                                 <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Qty</th>
                                 {formData.quoteType === 'rental' && (
                                   <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Duration</th>
@@ -754,6 +825,20 @@ const ProfessionalQuotationForm = ({ quotation = null, onClose, onSuccess }) => 
                                     )}
                                     {item.size && (
                                       <div className="text-xs text-blue-600 dark:text-blue-400">Size: {item.size}</div>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    {item.itemImage ? (
+                                      <img 
+                                        src={item.itemImage} 
+                                        alt={item.equipmentType}
+                                        className="h-12 w-12 object-cover border border-gray-300 dark:border-gray-600 rounded mx-auto"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                        }}
+                                      />
+                                    ) : (
+                                      <span className="text-xs text-gray-400">No image</span>
                                     )}
                                   </td>
                                   <td className="px-3 py-2 text-center text-sm">{item.quantity} {item.unit}</td>

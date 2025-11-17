@@ -1,11 +1,14 @@
 /**
  * Quotation PDF Generator (Backend)
- * Generates professional PDFs matching Alcoa invoice format
+ * Professional PDFs inspired by ACE ALUMINIUM design
+ * Customized for ALCOA ALUMINIUM SCAFFOLDING
  */
 
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+const http = require('http');
 
 /**
  * Convert number to words
@@ -40,7 +43,7 @@ const numberToWords = (num) => {
 const generateQuotationPDFBuffer = (quotation) => {
   return new Promise((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const doc = new PDFDocument({ size: 'A4', margin: 0 });
       const buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -50,292 +53,500 @@ const generateQuotationPDFBuffer = (quotation) => {
       });
       doc.on('error', reject);
 
-      // Colors
-      const primaryBlue = '#0066cc';
+      // Colors - RGB values for PDFKit compatibility
+      const primaryBlue = '#0066cc'; // rgb(0, 102, 204) - matches admin panel
       const darkGray = '#3c3c3c';
       const lightGray = '#f0f0f0';
 
-      // Company Header
-      doc.fontSize(22).fillColor(primaryBlue).font('Helvetica-Bold')
-         .text('ALCOA ALUMINIUM SCAFFOLDING', 50, 50, { align: 'center' });
-      
-      doc.fontSize(9).fillColor('#666666')
-         .text('Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding', 50, 75, { align: 'center' });
-      
-      doc.fontSize(7).fillColor('#888888')
-         .text('Sale | Hire | Installation | Maintenance | Safety Inspections | Training', 50, 88, { align: 'center' });
-      
-      // Horizontal line
-      doc.moveTo(50, 98).lineTo(545, 98).stroke('#cccccc');
+      let yPos = 5; // Minimized top margin - matches admin panel
 
-      // Document Title - QUOTATION
-      doc.fontSize(24).fillColor('#dc3545').font('Helvetica-Bold')
-         .text('QUOTATION', 50, 108, { align: 'center' });
+      // ==================== HEADER SECTION ====================
       
-      // TRN
+      // Company Name (English) - Centered, matches admin panel
+      doc.fontSize(12).fillColor(primaryBlue).font('Helvetica-Bold')
+         .text('ALCOA ALUMINIUM SCAFFOLDING', 40, yPos, { width: 515, align: 'center' });
+
+      yPos += 6.5; // Minimal spacing
+
+      // Tagline - positioned closer to header
       doc.fontSize(9).fillColor(darkGray).font('Helvetica')
-         .text('TRN: 100123456700003', 50, 135, { align: 'center' });
+         .text('Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding', 40, yPos, { width: 515, align: 'center' });
 
-      let yPos = 158;
+      yPos += 7.5; // Minimal spacing
 
-      // Customer Details Box (Left)
-      doc.rect(50, yPos, 240, 80).fill(lightGray);
-      
-      const labelX = 55;
-      const valueX = 155;
-      let currentY = yPos + 8;
-      
-      // CUSTOMER NAME (inline - same line)
-      doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold')
-         .text('CUSTOMER NAME: ', labelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.customerName || 'N/A');
-      
-      currentY += 12;
-      // ADDRESS (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('ADDRESS: ', labelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.customerAddress || 'N/A');
-      
-      currentY += 12;
-      // MOBILE NO (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('MOBILE NO: ', labelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.customerPhone || 'N/A');
-      
-      currentY += 12;
-      // TRN (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('TRN: ', labelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.customerTRN || 'N/A');
-      
-      currentY += 12;
-      // CONTACT PERSON (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('CONTACT PERSON: ', labelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.contactPersonName || 'N/A');
+      // Services line
+      doc.fontSize(7).fillColor('#646464').font('Helvetica')
+         .text('Sale | Hire | Installation | Maintenance | Safety Inspections | Training', 40, yPos, { width: 515, align: 'center' });
 
-      // Quote Details Box (Right)
-      doc.rect(295, yPos, 250, 80).fill(lightGray);
-      
-      const rightLabelX = 300;
-      const rightValueX = 395;
-      currentY = yPos + 8;
-      
-      // Quotation No (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('Quotation No: ', rightLabelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.quoteNumber);
-      
-      currentY += 12;
-      // Date (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('Date: ', rightLabelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(new Date(quotation.quoteDate).toLocaleDateString('en-GB'));
-      
-      currentY += 12;
-      // Sales Executive (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('Sales Executive: ', rightLabelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.salesExecutive || 'N/A');
-      
-      currentY += 12;
-      // PO No (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('PO No: ', rightLabelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.customerPONumber || 'N/A');
-      
-      currentY += 12;
-      // Payment Terms (inline - same line)
-      doc.font('Helvetica-Bold')
-         .text('Payment Terms: ', rightLabelX, currentY, { continued: true });
-      doc.font('Helvetica')
-         .text(quotation.paymentTerms || 'Cash/CDC');
+      yPos += 6.5; // Minimal spacing
 
-      yPos += 90;
+      // Horizontal line
+      doc.lineWidth(0.5).strokeColor('#c8c8c8')
+         .moveTo(40, yPos).lineTo(555, yPos).stroke();
 
-      // Subject
+      yPos += 6; // Spacing after line
+
+      // Document Title - QUOTATION (Red, size 18, matches admin panel)
+      doc.fontSize(18).fillColor('#dc3545').font('Helvetica-Bold')
+         .text('QUOTATION', 40, yPos, { width: 515, align: 'center' });
+
+      yPos += 10.5; // Close spacing
+
+      // TRN - Centered
+      doc.fontSize(9).fillColor(darkGray).font('Helvetica')
+         .text('TRN: 100123456700003', 40, yPos, { width: 515, align: 'center' });
+
+      yPos += 13; // Minimal spacing
+
+      // ==================== CUSTOMER & QUOTATION DETAILS ====================
+      // Simple table format - no gray boxes, labels and values close together
+
+      // Customer Details Table (Left) - Labels and values close together
+      const leftLabelX = 40;
+      let leftY = yPos + 15;
+      
+      doc.fontSize(8).fillColor('#000000');
+      
+      // CUSTOMER NAME - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('CUSTOMER NAME:', leftLabelX, leftY);
+      const label1Width = doc.widthOfString('CUSTOMER NAME:');
+      doc.font('Helvetica')
+         .text(quotation.customerName || 'N/A', leftLabelX + label1Width + 2, leftY);
+      
+      leftY += 15;
+      // ADDRESS - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('ADDRESS:', leftLabelX, leftY);
+      const label2Width = doc.widthOfString('ADDRESS:');
+      doc.font('Helvetica')
+         .text(quotation.customerAddress || 'N/A', leftLabelX + label2Width + 2, leftY);
+      
+      leftY += 15;
+      // MOBILE NO - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('MOBILE NO:', leftLabelX, leftY);
+      const label3Width = doc.widthOfString('MOBILE NO:');
+      doc.font('Helvetica')
+         .text(quotation.customerPhone || 'N/A', leftLabelX + label3Width + 2, leftY);
+      
+      leftY += 15;
+      // TRN - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('TRN:', leftLabelX, leftY);
+      const label4Width = doc.widthOfString('TRN:');
+      doc.font('Helvetica')
+         .text(quotation.customerTRN || 'N/A', leftLabelX + label4Width + 2, leftY);
+      
+      leftY += 15;
+      // CONTACT PERSON - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('CONTACT PERSON:', leftLabelX, leftY);
+      const label5Width = doc.widthOfString('CONTACT PERSON:');
+      doc.font('Helvetica')
+         .text(quotation.contactPersonName || 'N/A', leftLabelX + label5Width + 2, leftY);
+
+      // Quote Details Table (Right) - Labels and values close together
+      const rightLabelX = 295;
+      let rightY = yPos + 15;
+      
+      // Quotation No - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('Quotation No:', rightLabelX, rightY);
+      const rightLabel1Width = doc.widthOfString('Quotation No:');
+      doc.font('Helvetica')
+         .text(quotation.quoteNumber || 'N/A', rightLabelX + rightLabel1Width + 2, rightY);
+      
+      rightY += 15;
+      // Date - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('Date:', rightLabelX, rightY);
+      const rightLabel2Width = doc.widthOfString('Date:');
+      doc.font('Helvetica')
+         .text(new Date(quotation.quoteDate).toLocaleDateString('en-GB'), rightLabelX + rightLabel2Width + 2, rightY);
+      
+      rightY += 15;
+      // Sales Executive - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('Sales Executive:', rightLabelX, rightY);
+      const rightLabel3Width = doc.widthOfString('Sales Executive:');
+      doc.font('Helvetica')
+         .text(quotation.salesExecutive || 'N/A', rightLabelX + rightLabel3Width + 2, rightY);
+      
+      rightY += 15;
+      // PO No - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('PO No:', rightLabelX, rightY);
+      const rightLabel4Width = doc.widthOfString('PO No:');
+      doc.font('Helvetica')
+         .text(quotation.customerPONumber || 'N/A', rightLabelX + rightLabel4Width + 2, rightY);
+      
+      rightY += 15;
+      // Payment Terms - label and value close together
+      doc.font('Helvetica-Bold')
+         .text('PAYMENT TERMS:', rightLabelX, rightY);
+      const rightLabel5Width = doc.widthOfString('PAYMENT TERMS:');
+      doc.font('Helvetica')
+         .text(quotation.paymentTerms || 'Cash/CDC', rightLabelX + rightLabel5Width + 2, rightY);
+
+      yPos += 100; // Spacing after tables
+
+      // Subject Line - Simple format, no background
       if (quotation.subject) {
-        doc.fontSize(9).font('Helvetica-Bold')
-           .text('Subject:', 50, yPos);
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000')
+           .text('Subject:', 40, yPos);
         doc.font('Helvetica')
-           .text(quotation.subject, 95, yPos, { width: 450 });
-        yPos += 20;
+           .text(quotation.subject, 60, yPos, { width: 515 - 20 });
+        const subjectLines = doc.heightOfString(quotation.subject, { width: 515 - 20 });
+        yPos += subjectLines + 3;
       }
 
-      yPos += 10;
+      yPos += 8; // Minimal spacing before table
 
-      // Items Table Header
+      // ==================== ITEMS TABLE ====================
+
       const tableTop = yPos;
-      const tableHeaders = ['SN', 'Description of Goods', 'Wt\n(KG)', 'CBM', 'Qty', 'Rate\n(AED)', 'Taxable\nAmount', 'VAT\n%', 'VAT\nAmount', 'Amount\n(AED)'];
-      const colWidths = [25, 180, 40, 35, 30, 45, 50, 30, 40, 50];
-      let xPos = 50;
+      // Column headers - Match admin panel format
+      const tableHeaders = ['S N', 'Description of Goods', 'Wt\n(KG)', 'CB M', 'Qty', 'Rate\n(AED)', 'Taxable\nAmount', 'VAT\n%', 'VAT\nAmount', 'Amount\n(AED)'];
+      // Column widths - Description column wider to accommodate image (170px total: 140px text + 30px image)
+      const colWidths = [25, 170, 35, 30, 30, 40, 50, 25, 40, 50];
+      // Calculate table width and align with customer details box (starts at 40px)
+      const totalTableWidth = colWidths.reduce((sum, width) => sum + width, 0); // Total: 495px
+      const tableStartX = 40; // Align left edge with customer details box
+      let xPos = tableStartX;
 
-      doc.rect(50, tableTop, 495, 20).fill(primaryBlue);
-      doc.fontSize(7).fillColor('#ffffff').font('Helvetica-Bold');
+      // Table Header Background - Professional blue with white text (matches admin panel)
+      const headerHeight = 22;
+      doc.rect(tableStartX, tableTop, totalTableWidth, headerHeight).fill(primaryBlue);
+      doc.fontSize(8).fillColor('#ffffff').font('Helvetica-Bold');
       
       tableHeaders.forEach((header, i) => {
-        const align = i === 1 ? 'left' : 'center';
-        // Handle multi-line headers
+        // All headers centered for professional look
+        const align = 'center';
+        // Handle multi-line headers (replace \n with actual newline)
         const headerText = header.replace(/\\n/g, '\n');
-        doc.text(headerText, xPos + 2, tableTop + 4, { width: colWidths[i], align });
+        doc.text(headerText, xPos + 1, tableTop + 5, { width: colWidths[i] - 2, align });
         xPos += colWidths[i];
       });
 
-      yPos = tableTop + 25;
+      // Draw professional header border lines
+      const tableEndX = tableStartX + totalTableWidth;
+      doc.lineWidth(1);
+      doc.moveTo(tableStartX, tableTop).lineTo(tableEndX, tableTop).stroke('#1a4d8c');
+      doc.moveTo(tableStartX, tableTop + headerHeight).lineTo(tableEndX, tableTop + headerHeight).stroke('#333333');
+
+      yPos = tableTop + headerHeight + 2;
 
       // Items Rows
-      quotation.items.forEach((item, index) => {
-        if (yPos > 700) {
+      const items = quotation.items || [];
+      items.forEach((item, index) => {
+        if (yPos > 680) {
           doc.addPage();
           yPos = 50;
+          // Recalculate tableStartX on new page
+          const newTableStartX = 40;
         }
 
-        doc.fontSize(8).fillColor('#000000').font('Helvetica');
+        const rowHeight = 28; // Professional row height with good spacing
+        const rowY = yPos;
+
+        // Row background - white with subtle alternating for readability
+        const rowBgColor = index % 2 === 0 ? '#ffffff' : '#fafafa';
+        doc.rect(tableStartX, rowY, totalTableWidth, rowHeight).fill(rowBgColor);
+
+        doc.fontSize(8).fillColor('#2c3e50').font('Helvetica');
         
-        xPos = 50;
-        // SN
-        doc.text(index + 1, xPos + 2, yPos, { width: colWidths[0], align: 'center' });
+        xPos = tableStartX;
+        // SN - Professional styling
+        doc.font('Helvetica-Bold').fillColor('#34495e');
+        doc.text((index + 1).toString(), xPos + 1, rowY + 11, { width: colWidths[0] - 2, align: 'center' });
+        doc.font('Helvetica').fillColor('#2c3e50');
         xPos += colWidths[0];
         
-        // Description
+        // Description Column - with image inside
+        const descColumnX = xPos + 3;
+        const descColumnWidth = colWidths[1] - 6; // Total width for description column
+        const imageWidth = 32; // Slightly larger image for better visibility
+        const textWidth = descColumnWidth - imageWidth - 6; // Text width (leave space for image)
+        
+        // Description text (left side of column) - Professional font
+        doc.font('Helvetica-Bold').fillColor('#2c3e50');
         const descText = item.equipmentType + (item.description ? `\n${item.description}` : '');
-        doc.text(descText, xPos + 2, yPos, { width: colWidths[1] - 4 });
+        doc.text(descText, descColumnX, rowY + 9, { width: textWidth });
+        doc.font('Helvetica').fillColor('#555555');
+        
+        // Product Image (right side of Description column)
+        const imageBoxX = descColumnX + textWidth + 4;
+        const imageBoxY = rowY + 4;
+        const imageBoxWidth = imageWidth;
+        const imageBoxHeight = 20;
+        
+        // Professional image box with subtle border
+        doc.save();
+        doc.rect(imageBoxX, imageBoxY, imageBoxWidth, imageBoxHeight)
+           .lineWidth(0.3)
+           .stroke('#d5d5d5')
+           .fill('#ffffff');
+        doc.restore();
+        
+        // Try to load and display image if itemImage URL exists
+        if (item.itemImage && typeof item.itemImage === 'string' && item.itemImage.trim() !== '') {
+          try {
+            // Check if it's a local file path or URL
+            if (item.itemImage.startsWith('http://') || item.itemImage.startsWith('https://')) {
+              // For HTTP/HTTPS URLs, PDFKit supports them directly
+              doc.image(item.itemImage, imageBoxX + 1, imageBoxY + 1, { 
+                width: imageBoxWidth - 2, 
+                height: imageBoxHeight - 2,
+                fit: [imageBoxWidth - 2, imageBoxHeight - 2]
+              });
+            } else {
+              // Local file path
+              const imagePath = path.isAbsolute(item.itemImage) 
+                ? item.itemImage 
+                : path.join(__dirname, '../../', item.itemImage);
+              
+              if (fs.existsSync(imagePath)) {
+                doc.image(imagePath, imageBoxX + 1, imageBoxY + 1, { 
+                  width: imageBoxWidth - 2, 
+                  height: imageBoxHeight - 2,
+                  fit: [imageBoxWidth - 2, imageBoxHeight - 2]
+                });
+              }
+            }
+          } catch (err) {
+            // Image loading failed, keep placeholder box (already drawn)
+          }
+        }
+        
         xPos += colWidths[1];
         
-        // Weight
-        doc.text(item.weight || '-', xPos + 2, yPos, { width: colWidths[2], align: 'center' });
+        // Weight - Professional alignment
+        doc.fillColor('#555555').font('Helvetica');
+        doc.text(item.weight ? parseFloat(item.weight).toFixed(2) : '0.00', xPos + 1, rowY + 11, { width: colWidths[2] - 2, align: 'center' });
         xPos += colWidths[2];
         
         // CBM
-        doc.text(item.cbm || '-', xPos + 2, yPos, { width: colWidths[3], align: 'center' });
+        doc.text(item.cbm ? parseFloat(item.cbm).toFixed(2) : '0.00', xPos + 1, rowY + 11, { width: colWidths[3] - 2, align: 'center' });
         xPos += colWidths[3];
         
-        // Qty
-        doc.text(item.quantity.toString(), xPos + 2, yPos, { width: colWidths[4], align: 'center' });
+        // Qty - Bold for emphasis
+        doc.font('Helvetica-Bold').fillColor('#2c3e50');
+        doc.text(item.quantity.toString(), xPos + 1, rowY + 11, { width: colWidths[4] - 2, align: 'center' });
+        doc.font('Helvetica').fillColor('#555555');
         xPos += colWidths[4];
         
-        // Rate
-        doc.text(item.ratePerUnit.toFixed(2), xPos + 2, yPos, { width: colWidths[5], align: 'right' });
+        // Rate - Right aligned, professional
+        doc.text(item.ratePerUnit.toFixed(2), xPos + 1, rowY + 11, { width: colWidths[5] - 2, align: 'right' });
         xPos += colWidths[5];
         
-        // Taxable
+        // Taxable Amount - Right aligned
         const taxable = item.subtotal || (item.quantity * item.ratePerUnit);
-        doc.text(taxable.toFixed(2), xPos + 2, yPos, { width: colWidths[6], align: 'right' });
+        doc.text(taxable.toFixed(2), xPos + 1, rowY + 11, { width: colWidths[6] - 2, align: 'right' });
         xPos += colWidths[6];
         
-        // VAT%
-        doc.text('5', xPos + 2, yPos, { width: colWidths[7], align: 'center' });
+        // VAT% - Center aligned
+        const vatPercent = item.vatPercentage || 5;
+        doc.text(vatPercent.toString(), xPos + 1, rowY + 11, { width: colWidths[7] - 2, align: 'center' });
         xPos += colWidths[7];
         
-        // VAT Amount
-        const vatAmt = taxable * 0.05;
-        doc.text(vatAmt.toFixed(2), xPos + 2, yPos, { width: colWidths[8], align: 'right' });
+        // VAT Amount - Right aligned
+        const vatAmt = item.vatAmount || (taxable * (vatPercent / 100));
+        doc.text(vatAmt.toFixed(2), xPos + 1, rowY + 11, { width: colWidths[8] - 2, align: 'right' });
         xPos += colWidths[8];
         
-        // Amount
-        doc.font('Helvetica-Bold').text((taxable + vatAmt).toFixed(2), xPos + 2, yPos, { width: colWidths[9], align: 'right' });
+        // Amount (Total) - Bold, right aligned
+        doc.font('Helvetica-Bold').fillColor('#2c3e50');
+        doc.text((taxable + vatAmt).toFixed(2), xPos + 1, rowY + 11, { width: colWidths[9] - 2, align: 'right' });
         
-        yPos += 30;
-        doc.moveTo(50, yPos - 5).lineTo(545, yPos - 5).stroke('#e5e7eb');
+        // Professional row borders - subtle grid lines
+        doc.lineWidth(0.2);
+        doc.moveTo(tableStartX, rowY).lineTo(tableEndX, rowY).stroke('#e5e5e5');
+        doc.moveTo(tableStartX, rowY + rowHeight).lineTo(tableEndX, rowY + rowHeight).stroke('#d0d0d0');
+        
+        // Vertical column separators - subtle
+        let separatorX = tableStartX;
+        for (let i = 0; i <= colWidths.length; i++) {
+          if (i > 0) separatorX += colWidths[i - 1];
+          doc.moveTo(separatorX, rowY).lineTo(separatorX, rowY + rowHeight).stroke('#e8e8e8');
+        }
+        doc.lineWidth(0.5); // Reset line width
+        
+        yPos += rowHeight;
       });
 
-      yPos += 10;
-
-      // Financial Summary
-      const summaryX = 370;
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
-      doc.text('Subtotal:', summaryX, yPos);
-      doc.text(`AED ${quotation.subtotal.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
+      // ==================== TOTALS ROW IN TABLE ====================
+      const totalsRowY = yPos + 2; // Small gap before totals
+      const totalsRowHeight = 22; // Professional height
       
-      yPos += 15;
-      if (quotation.deliveryCharges > 0) {
-        doc.text('Delivery:', summaryX, yPos);
-        doc.text(`AED ${quotation.deliveryCharges.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
-        yPos += 15;
-      }
+      // Calculate totals
+      const subtotalBeforeCharges = items.reduce((sum, item) => {
+        const taxable = item.subtotal || (item.quantity * item.ratePerUnit);
+        return sum + taxable;
+      }, 0);
       
-      if (quotation.installationCharges > 0) {
-        doc.text('Installation:', summaryX, yPos);
-        doc.text(`AED ${quotation.installationCharges.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
-        yPos += 15;
-      }
+      const additionalCharges = (parseFloat(quotation.deliveryCharges) || 0) + 
+                                 (parseFloat(quotation.installationCharges) || 0) + 
+                                 (parseFloat(quotation.pickupCharges) || 0);
       
+      let beforeDiscount = subtotalBeforeCharges + additionalCharges;
+      
+      // Apply discount
       if (quotation.discount > 0) {
-        doc.fillColor('#10b981');
-        doc.text('Discount:', summaryX, yPos);
-        doc.text(`-AED ${quotation.discount.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
-        doc.fillColor('#000000');
-        yPos += 15;
+        if (quotation.discountType === 'percentage') {
+          beforeDiscount -= (beforeDiscount * quotation.discount / 100);
+        } else {
+          beforeDiscount -= parseFloat(quotation.discount);
+        }
       }
       
-      doc.text(`VAT (${quotation.vatPercentage}%):`, summaryX, yPos);
-      doc.text(`AED ${quotation.vatAmount.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
+      const vatAmount = beforeDiscount * ((quotation.vatPercentage || 5) / 100);
+      const netTotal = beforeDiscount + vatAmount;
       
-      yPos += 20;
-      doc.rect(summaryX - 5, yPos - 5, 180, 20).fill(primaryBlue);
-      doc.fontSize(11).fillColor('#ffffff').font('Helvetica-Bold');
-      doc.text('NET TOTAL:', summaryX, yPos);
-      doc.text(`AED ${quotation.totalAmount.toLocaleString()}`, summaryX + 100, yPos, { align: 'right' });
+      // Professional totals row background - light gray with border
+      doc.rect(tableStartX, totalsRowY, totalTableWidth, totalsRowHeight).fill('#f8f9fa');
       
-      yPos += 25;
+      // Draw professional totals row borders
+      doc.lineWidth(1);
+      doc.moveTo(tableStartX, totalsRowY).lineTo(tableEndX, totalsRowY).stroke('#333333');
+      doc.moveTo(tableStartX, totalsRowY + totalsRowHeight).lineTo(tableEndX, totalsRowY + totalsRowHeight).stroke('#333333');
+      
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#2c3e50');
+      let totalsX = tableStartX;
+      
+      // SN column - empty
+      totalsX += colWidths[0];
+      
+      // "TOTAL" label - spans across first 6 columns (SN through Rate), right-aligned
+      const labelSpanWidth = colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5];
+      doc.text('TOTAL', totalsX + 2, totalsRowY + 8, { width: labelSpanWidth - 4, align: 'right' });
+      totalsX += labelSpanWidth;
+      
+      // Taxable Amount column (index 6)
+      doc.text(subtotalBeforeCharges.toFixed(2), totalsX + 2, totalsRowY + 8, { width: colWidths[6], align: 'right' });
+      totalsX += colWidths[6];
+      
+      // VAT % column (index 7) - empty
+      totalsX += colWidths[7];
+      
+      // VAT Amount column (index 8)
+      doc.text(vatAmount.toFixed(2), totalsX + 2, totalsRowY + 8, { width: colWidths[8], align: 'right' });
+      totalsX += colWidths[8];
+      
+      // Amount (AED) column (index 9) - NET TOTAL in bold
+      doc.fillColor('#0066cc'); // Blue for net total
+      doc.fontSize(10);
+      doc.text(netTotal.toFixed(2), totalsX + 2, totalsRowY + 9, { width: colWidths[9] - 4, align: 'right' });
+      doc.fillColor('#2c3e50');
+      doc.fontSize(9);
+      
+      // Vertical lines for totals row
+      doc.lineWidth(0.5);
+      let separatorX = tableStartX;
+      for (let i = 0; i <= colWidths.length; i++) {
+        if (i > 0) separatorX += colWidths[i - 1];
+        if (i === 1 || i === 6 || i === 7 || i === 8 || i === 9) { // Only show key separators
+          doc.moveTo(separatorX, totalsRowY).lineTo(separatorX, totalsRowY + totalsRowHeight).stroke('#333333');
+        }
+      }
+      
+      yPos = totalsRowY + totalsRowHeight;
+      doc.lineWidth(0.5); // Reset
 
-      // Amount in words - aligned with summary
-      doc.fontSize(9).fillColor('#666666').font('Helvetica-Oblique');
-      const amountInWords = numberToWords(Math.floor(quotation.totalAmount));
-      doc.text(`(${amountInWords} Dirhams Only)`, summaryX - 5, yPos, { width: 180, align: 'right' });
+      // ==================== FINANCIAL SUMMARY ROWS IN TABLE ====================
+      const summaryRowHeight = 20; // Professional height
       
-      yPos += 20;
+      // Calculate label span (first 6 columns: SN through Rate)
+      const labelSpan = colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + colWidths[5];
+      
+      // Helper function to draw professional vertical borders for summary rows
+      const drawSummaryRowBorders = (rowY, rowHeight) => {
+        doc.lineWidth(0.5);
+        // Left border
+        doc.moveTo(tableStartX, rowY).lineTo(tableStartX, rowY + rowHeight).stroke('#333333');
+        // Right border
+        doc.moveTo(tableEndX, rowY).lineTo(tableEndX, rowY + rowHeight).stroke('#333333');
+        // Main separator (between label area and value columns)
+        doc.moveTo(tableStartX + labelSpan, rowY).lineTo(tableStartX + labelSpan, rowY + rowHeight).stroke('#333333');
+        // Separator before Amount column
+        const amountStartX = tableStartX + labelSpan + colWidths[6] + colWidths[7] + colWidths[8];
+        doc.moveTo(amountStartX, rowY).lineTo(amountStartX, rowY + rowHeight).stroke('#333333');
+      };
+      
+      // Row 1: Total w/o VAT - Professional styling
+      const row1Y = yPos + 2;
+      doc.rect(tableStartX, row1Y, totalTableWidth, summaryRowHeight).fill('#ffffff');
+      doc.lineWidth(0.5);
+      doc.moveTo(tableStartX, row1Y).lineTo(tableEndX, row1Y).stroke('#d0d0d0');
+      doc.moveTo(tableStartX, row1Y + summaryRowHeight).lineTo(tableEndX, row1Y + summaryRowHeight).stroke('#d0d0d0');
+      
+      doc.fontSize(8).font('Helvetica').fillColor('#555555');
+      doc.text('Total w/o VAT:', tableStartX + 3, row1Y + 7, { width: labelSpan - 6 });
+      
+      // Value in Amount column (right-aligned)
+      const amountStartX = tableStartX + labelSpan + colWidths[6] + colWidths[7] + colWidths[8];
+      doc.font('Helvetica-Bold').fillColor('#2c3e50');
+      doc.text(beforeDiscount.toFixed(2), amountStartX + 2, row1Y + 7, { width: colWidths[9] - 4, align: 'right' });
+      
+      drawSummaryRowBorders(row1Y, summaryRowHeight);
+      yPos = row1Y + summaryRowHeight;
+      
+      // Row 2: VAT - Professional styling
+      const row2Y = yPos;
+      doc.rect(tableStartX, row2Y, totalTableWidth, summaryRowHeight).fill('#ffffff');
+      doc.moveTo(tableStartX, row2Y).lineTo(tableEndX, row2Y).stroke('#d0d0d0');
+      doc.moveTo(tableStartX, row2Y + summaryRowHeight).lineTo(tableEndX, row2Y + summaryRowHeight).stroke('#d0d0d0');
+      
+      doc.font('Helvetica').fillColor('#555555');
+      doc.text(`VAT (${quotation.vatPercentage || 5}%):`, tableStartX + 3, row2Y + 7, { width: labelSpan - 6 });
+      doc.font('Helvetica-Bold').fillColor('#2c3e50');
+      doc.text(vatAmount.toFixed(2), amountStartX + 2, row2Y + 7, { width: colWidths[9] - 4, align: 'right' });
+      
+      drawSummaryRowBorders(row2Y, summaryRowHeight);
+      yPos = row2Y + summaryRowHeight;
+      
+      // Row 3: Net Total - Professional styling with amount in words
+      const netTotalRowHeight = 26;
+      const row3Y = yPos;
+      doc.rect(tableStartX, row3Y, totalTableWidth, netTotalRowHeight).fill('#ffffff');
+      doc.lineWidth(0.8);
+      doc.moveTo(tableStartX, row3Y).lineTo(tableEndX, row3Y).stroke('#333333');
+      doc.moveTo(tableStartX, row3Y + netTotalRowHeight).lineTo(tableEndX, row3Y + netTotalRowHeight).stroke('#333333');
+      
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#2c3e50');
+      doc.text('Net Total:', tableStartX + 3, row3Y + 7, { width: labelSpan - 6 });
+      doc.fontSize(10);
+      doc.fillColor('#0066cc'); // Blue for total amount
+      doc.text(netTotal.toFixed(2), amountStartX + 2, row3Y + 7, { width: colWidths[9] - 4, align: 'right' });
+      
+      // Amount in words on left side, aligned with Net Total row (below the label)
+      doc.fontSize(8).font('Helvetica').fillColor('#666666');
+      const amountInWords = numberToWords(Math.floor(netTotal));
+      const amountText = `UAE Dirham ${amountInWords}`;
+      doc.text(amountText, tableStartX + 3, row3Y + 17, { width: labelSpan - 6 });
+      
+      drawSummaryRowBorders(row3Y, netTotalRowHeight);
+      yPos = row3Y + netTotalRowHeight + 10;
 
-      // Terms & Conditions - Fixed position at bottom left above footer
-      const termsYPosition = 660;
-      doc.fillColor('#000000').fontSize(10).font('Helvetica-Bold');
-      doc.text('TERMS & CONDITIONS:', 50, termsYPosition);
-      
-      let termsY = termsYPosition + 12;
-      doc.fontSize(8).font('Helvetica');
-      const terms = [
-        `Delivery: ${quotation.deliveryTerms || '7-10 days from date of order'}`,
-        `Payment: ${quotation.paymentTerms || 'Cash/CDC'}`,
-        'Our products are made of high grade Alloy 6082',
-        'Manufactured as per BS EN 1004 Standard',
-        '5 Years welding warranty on all products',
-        'All equipment is safety certified and compliant with UAE regulations'
-      ];
-      
-      terms.forEach(term => {
-        doc.text(`• ${term}`, 55, termsY);
-        termsY += 10;
-      });
+      // ==================== FOOTER ====================
+      // Match admin panel footer format
 
-      // Footer - Fixed at bottom
-      yPos = 750;
-      doc.rect(0, yPos, 595, 92).fill(lightGray);
+      const footerY = 800;
+      doc.rect(0, footerY - 5, 595, 30).fill(lightGray);
       
       // Services line
-      doc.fontSize(7).fillColor('#666666').font('Helvetica');
-      doc.text('Sale & Hire of Single & Double Width Mobile Towers • Ladders • Steel Cup Lock Scaffolding • Couplers', 50, yPos + 8, { align: 'center', width: 495 });
+      doc.fontSize(7).fillColor(darkGray).font('Helvetica');
+      const footerServices = 'Sale & Hire of Single & Double Width Mobile Towers • Ladders • Steel Cup Lock Scaffolding • Couplers';
+      doc.text(footerServices, 40, footerY, { width: 515, align: 'center' });
       
-      // Contact details - properly aligned and spaced
-      doc.fontSize(8).fillColor('#333333');
-      const contactY = yPos + 20;
-      
-      // Build contact line with proper spacing
+      // Contact details - Centered format matching admin panel
+      doc.fontSize(8).fillColor(darkGray).font('Helvetica');
       const contactLine = 'Tel: +971 58 137 5601 | +971 50 926 8038  |  Email: Sales@alcoascaffolding.com  |  Web: www.alcoascaffolding.com';
-      doc.font('Helvetica');
-      doc.text(contactLine, 50, contactY, { align: 'center', width: 495 });
+      doc.text(contactLine, 40, footerY + 5, { width: 515, align: 'center' });
       
-      // Address
-      doc.fontSize(7).fillColor('#888888').font('Helvetica');
-      doc.text('Musaffah, Abu Dhabi, UAE', 50, yPos + 32, { align: 'center', width: 495 });
+      // Address - centered
+      doc.fontSize(7).fillColor('#646464');
+      doc.text('Musaffah, Abu Dhabi, UAE', 40, footerY + 10, { width: 515, align: 'center' });
 
       doc.end();
     } catch (error) {
