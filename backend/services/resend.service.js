@@ -276,7 +276,7 @@ class ResendEmailService {
   async sendQuotationEmail(quotation) {
     try {
       const { quotationEmailTemplate } = require('../utils/quotationEmailTemplate');
-      const { generateQuotationPDFBuffer } = require('../utils/quotationPDFGenerator');
+      const { generateQuotationPDFBuffer } = require('../utils/playwrightPDFGenerator');
       
       logger.info('📋 Generating PDF for quotation email', { 
         quoteNumber: quotation.quoteNumber
