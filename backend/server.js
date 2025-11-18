@@ -168,18 +168,38 @@ app.use(notFoundHandler);
 // Global error handler (must be last)
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  logger.serverStarted(PORT, config.server.env);
-});
+// Start server with Playwright browser check
+let server;
+const startServer = async () => {
+  // Check and install Playwright browsers if needed (non-blocking)
+  if (config.server.env === 'production') {
+    const { ensureBrowserInstalled } = require('./utils/playwrightPDFGenerator');
+    ensureBrowserInstalled().catch(err => {
+      console.error('[Startup] Failed to ensure Playwright browsers:', err.message);
+      // Don't block server startup, but log the error
+    });
+  }
+  
+  server = app.listen(PORT, () => {
+    logger.serverStarted(PORT, config.server.env);
+  });
+  
+  return server;
+};
+
+startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    logger.info('HTTP server closed');
+  if (server) {
+    server.close(() => {
+      logger.info('HTTP server closed');
+      process.exit(0);
+    });
+  } else {
     process.exit(0);
-  });
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {

@@ -886,12 +886,87 @@ const verifyBrowserInstallation = async () => {
   try {
     // Try to get the browser executable path
     const executablePath = chromium.executablePath();
+    console.log('[Playwright] Checking browser at:', executablePath);
+    
     if (executablePath && fs.existsSync(executablePath)) {
+      console.log('[Playwright] ✅ Browser found at:', executablePath);
       return true;
     }
+    
+    // Check common Render paths manually
+    const basePaths = [
+      '/opt/render/.cache/ms-playwright',
+      process.env.PLAYWRIGHT_BROWSERS_PATH,
+      path.join(process.env.HOME || '/tmp', '.cache/ms-playwright'),
+      path.join(process.cwd(), '.cache/ms-playwright')
+    ].filter(Boolean);
+    
+    for (const basePath of basePaths) {
+      try {
+        if (!fs.existsSync(basePath)) continue;
+        
+        // Check for chromium directories
+        const dirs = fs.readdirSync(basePath);
+        for (const dir of dirs) {
+          if (dir.startsWith('chromium')) {
+            // Check for chrome-linux directory
+            const chromeLinuxPath = path.join(basePath, dir, 'chrome-linux');
+            if (fs.existsSync(chromeLinuxPath)) {
+              const chromePath = path.join(chromeLinuxPath, 'chrome');
+              const headlessShellPath = path.join(chromeLinuxPath, 'headless_shell');
+              
+              if (fs.existsSync(chromePath) || fs.existsSync(headlessShellPath)) {
+                console.log('[Playwright] ✅ Browser found at alternative path:', chromePath || headlessShellPath);
+                return true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Continue checking other paths
+        console.log('[Playwright] Checked path:', basePath, '- not found');
+      }
+    }
+    
+    console.warn('[Playwright] ⚠️ Browser not found. Expected path:', executablePath);
     return false;
   } catch (error) {
-    console.error('Browser verification error:', error.message);
+    console.error('[Playwright] Verification error:', error.message);
+    return false;
+  }
+};
+
+/**
+ * Install Playwright browsers if not already installed
+ * @returns {Promise<boolean>} - True if installation successful or already installed
+ */
+const ensureBrowserInstalled = async () => {
+  try {
+    const isInstalled = await verifyBrowserInstallation();
+    if (isInstalled) {
+      console.log('[Playwright] ✅ Browsers already installed');
+      return true;
+    }
+    
+    console.log('[Playwright] ⚠️ Browsers not found. Installing...');
+    execSync('npx playwright install chromium', {
+      stdio: 'inherit',
+      timeout: 300000, // 5 minutes timeout
+      env: { ...process.env, PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '0' }
+    });
+    
+    console.log('[Playwright] ✅ Browser installation completed');
+    
+    // Verify installation after install
+    const verified = await verifyBrowserInstallation();
+    if (!verified) {
+      console.error('[Playwright] ❌ Browser installation completed but verification failed');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[Playwright] ❌ Failed to install browsers:', error.message);
     return false;
   }
 };
@@ -905,21 +980,10 @@ const generateQuotationPDFBuffer = async (quotation) => {
   let browser = null;
   
   try {
-    // Verify browser installation first
-    const isInstalled = await verifyBrowserInstallation();
-    if (!isInstalled) {
-      console.error('Playwright browser not found. Attempting to install...');
-      try {
-        // Try to install browser if not found
-        execSync('npx playwright install chromium', { 
-          stdio: 'inherit',
-          timeout: 120000 // 2 minutes timeout
-        });
-        console.log('Browser installation completed');
-      } catch (installError) {
-        console.error('Failed to install browser:', installError.message);
-        throw new Error('Playwright browser not installed. Please run: npx playwright install chromium');
-      }
+    // Ensure browser is installed (will check and install if needed)
+    const isReady = await ensureBrowserInstalled();
+    if (!isReady) {
+      throw new Error('Playwright browser not installed. Please ensure browsers are installed during deployment.');
     }
     
     // Launch browser with production-friendly configuration
@@ -1082,7 +1146,8 @@ const generateQuotationPDFFile = async (quotation) => {
 module.exports = {
   generateQuotationPDFBuffer,
   generateQuotationPDFFile,
-  verifyBrowserInstallation
+  verifyBrowserInstallation,
+  ensureBrowserInstalled
 };
 
 
