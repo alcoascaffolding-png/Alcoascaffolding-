@@ -7,6 +7,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 /**
  * Convert number to words
@@ -878,6 +879,24 @@ const generateQuotationHTML = (quotation) => {
 };
 
 /**
+ * Verify Playwright browser installation
+ * @returns {Promise<boolean>} - True if browser is installed
+ */
+const verifyBrowserInstallation = async () => {
+  try {
+    // Try to get the browser executable path
+    const executablePath = chromium.executablePath();
+    if (executablePath && fs.existsSync(executablePath)) {
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Browser verification error:', error.message);
+    return false;
+  }
+};
+
+/**
  * Generate PDF buffer from quotation data using Playwright
  * @param {Object} quotation - Quotation data
  * @returns {Promise<Buffer>} - PDF buffer
@@ -886,6 +905,23 @@ const generateQuotationPDFBuffer = async (quotation) => {
   let browser = null;
   
   try {
+    // Verify browser installation first
+    const isInstalled = await verifyBrowserInstallation();
+    if (!isInstalled) {
+      console.error('Playwright browser not found. Attempting to install...');
+      try {
+        // Try to install browser if not found
+        execSync('npx playwright install chromium', { 
+          stdio: 'inherit',
+          timeout: 120000 // 2 minutes timeout
+        });
+        console.log('Browser installation completed');
+      } catch (installError) {
+        console.error('Failed to install browser:', installError.message);
+        throw new Error('Playwright browser not installed. Please run: npx playwright install chromium');
+      }
+    }
+    
     // Launch browser with production-friendly configuration
     browser = await chromium.launch({
       headless: true,
@@ -989,14 +1025,32 @@ const generateQuotationPDFBuffer = async (quotation) => {
         await browser.close();
       } catch (closeError) {
         // Ignore browser close errors
+        console.warn('Error closing browser:', closeError.message);
       }
     }
     
+    // Log detailed error information
+    console.error('PDF Generation Error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+    
     // Provide more helpful error messages for common Playwright issues
-    if (error.message && error.message.includes('Executable doesn\'t exist')) {
-      const enhancedError = new Error('Playwright browser not installed. Please run: npx playwright install chromium');
+    if (error.message && (error.message.includes('Executable doesn\'t exist') || 
+        error.message.includes('browserType.launch'))) {
+      const enhancedError = new Error('Playwright browser not installed. The browser executable is missing. Please ensure Playwright browsers are installed during deployment.');
       enhancedError.originalError = error.message;
+      enhancedError.statusCode = 503;
       throw enhancedError;
+    }
+    
+    // Handle timeout errors
+    if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+      const timeoutError = new Error('PDF generation timed out. The service may be overloaded. Please try again.');
+      timeoutError.statusCode = 503;
+      throw timeoutError;
     }
     
     throw error;
@@ -1027,7 +1081,8 @@ const generateQuotationPDFFile = async (quotation) => {
 
 module.exports = {
   generateQuotationPDFBuffer,
-  generateQuotationPDFFile
+  generateQuotationPDFFile,
+  verifyBrowserInstallation
 };
 
 

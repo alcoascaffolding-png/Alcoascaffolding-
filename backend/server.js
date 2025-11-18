@@ -119,8 +119,19 @@ if (config.server.env === 'production') {
 }
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   const emailConfigured = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+  
+  // Check Playwright browser installation
+  let playwrightStatus = 'unknown';
+  try {
+    const { verifyBrowserInstallation } = require('./utils/playwrightPDFGenerator');
+    const isInstalled = await verifyBrowserInstallation();
+    playwrightStatus = isInstalled ? 'installed' : 'not_installed';
+  } catch (error) {
+    playwrightStatus = 'error';
+    console.error('Health check - Playwright verification failed:', error.message);
+  }
   
   res.status(200).json({ 
     status: 'OK', 
@@ -128,6 +139,7 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: config.server.env,
     emailConfigured: emailConfigured,
+    playwright: playwrightStatus,
     version: '1.0.0'
   });
 });
