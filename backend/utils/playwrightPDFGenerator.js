@@ -985,8 +985,20 @@ const generateQuotationPDFBuffer = async (quotation) => {
     return pdfBuffer;
   } catch (error) {
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch (closeError) {
+        // Ignore browser close errors
+      }
     }
+    
+    // Provide more helpful error messages for common Playwright issues
+    if (error.message && error.message.includes('Executable doesn\'t exist')) {
+      const enhancedError = new Error('Playwright browser not installed. Please run: npx playwright install chromium');
+      enhancedError.originalError = error.message;
+      throw enhancedError;
+    }
+    
     throw error;
   }
 };

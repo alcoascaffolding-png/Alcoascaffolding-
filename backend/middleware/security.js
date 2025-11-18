@@ -61,13 +61,20 @@ const detectSuspiciousActivity = (req, res, next) => {
  * CORS preflight handler
  */
 const handleCORS = (req, res, next) => {
+  const origin = req.headers.origin;
+  
   // Allow credentials
   res.header('Access-Control-Allow-Credentials', 'true');
   
+  // Set origin header if present (cors package should handle this, but we ensure it's set)
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
     res.header('Access-Control-Max-Age', '86400'); // 24 hours
     return res.status(200).end();
   }

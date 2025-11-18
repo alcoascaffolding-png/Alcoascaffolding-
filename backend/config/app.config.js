@@ -27,11 +27,13 @@ module.exports = {
         'http://127.0.0.1:5173',
         'http://127.0.0.1:5174',
         'https://alcoascaffolding.com',
+        'http://alcoascaffolding.com',
         // Production URLs
         process.env.FRONTEND_URL,
         // Netlify
         'https://alcoaaluminiumscaffolding.netlify.app',
         'https://alcoa-aluminium-scaffolding.netlify.app',
+        'https://alcoa-adminpanel.netlify.app',
         // Render
         'https://alcoa-scaffolding.onrender.com',
         'https://alco-aluminium-scaffolding.onrender.com',
@@ -39,6 +41,9 @@ module.exports = {
         'https://alcoa-scaffolding.vercel.app',
         'https://alco-aluminium-scaffolding.vercel.app'
       ].filter(Boolean);
+      
+      // In production, be more permissive with subdomains
+      const isProduction = process.env.NODE_ENV === 'production';
       
       // Check if origin matches any allowed origin
       const isAllowed = allowedOrigins.some(allowedOrigin => {
@@ -49,15 +54,23 @@ module.exports = {
         if (origin.endsWith('.vercel.app') || 
             origin.endsWith('.onrender.com') || 
             origin.endsWith('.netlify.app')) return true;
+        // In production, allow any https origin (more permissive)
+        if (isProduction && origin.startsWith('https://')) return true;
         return false;
       });
       
       if (isAllowed) {
         callback(null, true);
       } else {
-        console.warn(`CORS blocked origin: ${origin}`);
-        console.warn(`Allowed origins:`, allowedOrigins);
-        callback(new Error(`Not allowed by CORS: ${origin}`));
+        // Log but don't block in production (for debugging)
+        if (isProduction) {
+          console.warn(`CORS: Unlisted origin ${origin} - allowing in production mode`);
+          callback(null, true);
+        } else {
+          console.warn(`CORS blocked origin: ${origin}`);
+          console.warn(`Allowed origins:`, allowedOrigins);
+          callback(new Error(`Not allowed by CORS: ${origin}`));
+        }
       }
     },
     credentials: true,
