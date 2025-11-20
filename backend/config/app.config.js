@@ -79,7 +79,7 @@ module.exports = {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
   },
 
-  // Rate Limiting Configuration
+// Rate Limiting Configuration
   rateLimit: {
     // General API rate limit
     api: {

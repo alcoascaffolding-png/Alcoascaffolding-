@@ -44,9 +44,46 @@ const formatDate = (date) => {
 };
 
 /**
+ * Get logo as base64 data URI
+ */
+const getLogoBase64 = () => {
+  try {
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, '../backend/assets/Logo.png'),
+      path.join(__dirname, '../../backend/assets/Logo.png'),
+      path.join(__dirname, '../assets/Logo.png')
+    ];
+    
+    let logoPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        logoPath = testPath;
+        break;
+      }
+    }
+    
+    if (logoPath) {
+      const logoBuffer = fs.readFileSync(logoPath);
+      const logoBase64 = logoBuffer.toString('base64');
+      return `data:image/png;base64,${logoBase64}`;
+    } else {
+      console.warn('[PDF Generator] Logo not found. Tried paths:', possiblePaths);
+      return null;
+    }
+  } catch (error) {
+    console.error('[PDF Generator] Error loading logo:', error.message);
+    return null;
+  }
+};
+
+/**
  * Generate Terms & Conditions page HTML
  */
 const generateTermsAndConditionsPageHTML = (quotation) => {
+  // Get logo
+  const logoBase64 = getLogoBase64();
+  
   // Default terms & conditions
   const defaultTerms = [
     'Current Dated Cheque / Cash with confirmation of order',
@@ -135,29 +172,125 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
       break-before: page;
     }
     
-    /* Header Section - Compact */
+    /* Header Section */
     .header {
       text-align: center;
-      margin-bottom: 4mm;
+      margin-bottom: 0.4mm;
+    }
+    
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 0mm;
+    }
+    
+    .header-logo-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 0.1mm;
+      border-bottom: 0.5px solid #000000;
+      line-height: 0.2;
+    }
+    
+    .header-logo {
+      height: 80px;
+      width: auto;
+      max-width: 320px;
+      object-fit: contain;
+    }
+    
+    .company-name {
+      font-size: 28pt;
+      font-weight: bold;
+      color: #0066cc;
+      display: inline-block;
+      line-height: 0.2;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .company-name-text {
+      font-size: 28pt;
+      font-weight: bold;
+      color: #000000;
+      display: inline-block;
+      line-height: 0.2;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .company-name-arabic {
+      font-size: 22pt;
+      font-weight: bold;
+      color: #000000;
+      direction: rtl;
+      font-family: 'Arial', 'Tahoma', sans-serif;
+      margin-left: 10px;
+      line-height: 0.2;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
     }
     
     .tagline {
-      font-size: 8pt;
-      color: #3c3c3c;
-      margin-bottom: 1mm;
+      font-size: 9pt;
+      color: #0066cc;
+      margin-bottom: 0.5mm;
+      text-align: center;
+      padding-bottom: 0.5mm;
+      padding-left: 4mm;
+      padding-right: 4mm;
+      border-bottom: 0.5px solid #0066cc;
+      font-weight: bold;
+      display: inline-block;
+      width: fit-content;
     }
     
-    .divider {
-      border-top: 1px solid #c8c8c8;
-      margin: 2mm 0;
+    .tagline-container {
+      text-align: center;
+      margin-bottom: 0.1mm;
+    }
+    
+    .attributes-line {
+      font-size: 8pt;
+      color: #dc3545;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #dc3545;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .activities-line {
+      font-size: 8pt;
+      color: #0066cc;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #0066cc;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .header-boxes-container {
+      text-align: center;
+      margin: 0.5mm 0;
     }
     
     .document-title {
-      font-size: 16pt;
+      font-size: 18pt;
       font-weight: bold;
       color: #dc3545;
       text-align: center;
-      margin: 2mm 0 1mm;
+      margin: 1mm 0 1mm;
     }
     
     .trn {
@@ -168,6 +301,7 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
     }
     
     .section {
+      margin-top: 12mm;
       margin-bottom: 6mm;
     }
     
@@ -319,18 +453,23 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
   
   <!-- Header -->
   <div class="header">
-    <div>
-      <span style="color: #0066cc; font-size: 16pt; font-weight: bold;">ALCOA</span>
-      <span style="color: #000000; font-size: 16pt; font-weight: bold;"> ALUMINIUM SCAFFOLDING</span>
-      <span style="color: #000000; font-size: 12pt; font-weight: bold; margin-left: 8px; direction: rtl; font-family: 'Arial', 'Tahoma', sans-serif;">الكوا سقالات ألمنيوم</span>
+    <div class="header-logo-container">
+      <div class="header-logo-wrapper">
+        ${logoBase64 ? `<img src="${logoBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING" class="header-logo">` : ''}
+        ${logoBase64 ? '' : '<span class="company-name">ALCOA</span>'}
+        <span class="company-name-text"> ALUMINIUM L.L.C</span>
+        <span class="company-name-arabic">الكوا ألمنيوم ذ.م.م</span>
+      </div>
     </div>
-    <div class="tagline">Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding</div>
-    <div style="font-size: 7pt; color: #666; margin: 1mm 0;">Sale | Hire | Installation | Maintenance | Safety Inspection | Training</div>
-    
-    <div class="divider"></div>
-    
-    <div class="document-title">QUOTATION</div>
-    <div class="trn">TRN: 100123456700003</div>
+    <div class="tagline-container">
+      <div class="tagline">Manufacturers of Aluminium Scaffolding · Ladders · Steel Cuplock Scaffolding</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="attributes-line">Innovative · High Quality · Safe · Reliable</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="activities-line">Sale · Hire · Erection · Certification</div>
+    </div>
   </div>
   
   <!-- Terms & Conditions -->
@@ -404,9 +543,106 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
 };
 
 /**
+ * Generate item row HTML
+ */
+const generateItemRow = (item, serialNumber) => {
+  const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
+  const vatPercent = item.vatPercentage || 5;
+  const vatAmt = item.vatAmount || (taxable * (vatPercent / 100));
+  const total = taxable + vatAmt;
+  const imageSrc = item.itemImage || '';
+  const imageTag = imageSrc ? `<img src="${imageSrc}" alt="Item" class="item-image" onerror="this.style.display='none'">` : '';
+  
+  return `
+        <tr>
+          <td class="col-sn">${serialNumber}</td>
+          <td class="col-desc">
+            <div class="item-description">
+              <div class="item-text">${item.equipmentType}${item.description ? '<br>' + item.description : ''}</div>
+              ${imageTag}
+            </div>
+          </td>
+          <td class="col-wt">${item.weight ? parseFloat(item.weight).toFixed(2) : '0.00'}</td>
+          <td class="col-cbm">${item.cbm ? parseFloat(item.cbm).toFixed(2) : '0.00'}</td>
+          <td class="col-qty">${item.quantity}</td>
+          <td class="col-rate">${item.ratePerUnit.toFixed(2)}</td>
+          <td class="col-taxable">${taxable.toFixed(2)}</td>
+          <td class="col-vat-pct">${vatPercent}</td>
+          <td class="col-vat-amt">${vatAmt.toFixed(2)}</td>
+          <td class="col-amount">${total.toFixed(2)}</td>
+        </tr>
+        `;
+};
+
+/**
+ * Generate continuation page with items table
+ */
+const generateContinuationPage = (quotation, items, startIndex, logoBase64) => {
+  const itemsHTML = items.map((item, idx) => generateItemRow(item, startIndex + idx)).join('');
+  
+  return `
+  <div class="page-break"></div>
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo-container">
+      <div class="header-logo-wrapper">
+        ${logoBase64 ? `<img src="${logoBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING" class="header-logo">` : ''}
+        ${logoBase64 ? '' : '<span class="company-name">ALCOA</span>'}
+        <span class="company-name-text"> ALUMINIUM L.L.C</span>
+        <span class="company-name-arabic">الكوا ألمنيوم ذ.م.م</span>
+      </div>
+    </div>
+    <div class="tagline-container">
+      <div class="tagline">Manufacturers of Aluminium Scaffolding · Ladders · Steel Cuplock Scaffolding</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="attributes-line">Innovative · High Quality · Safe · Reliable</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="activities-line">Sale · Hire · Erection · Certification</div>
+    </div>
+    
+    <div class="document-title">QUOTATION</div>
+    <div class="trn">TRN: 100123456700003</div>
+  </div>
+  
+  <!-- Items Table Continuation -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-sn">SN</th>
+        <th class="col-desc">Description of Goods</th>
+        <th class="col-wt">Wt<br>(KG)</th>
+        <th class="col-cbm">CBM</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-rate">Rate<br>(AED)</th>
+        <th class="col-taxable">Taxable<br>Amount</th>
+        <th class="col-vat-pct">VAT<br>%</th>
+        <th class="col-vat-amt">VAT<br>Amount</th>
+        <th class="col-amount">Amount<br>(AED)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHTML}
+    </tbody>
+  </table>
+  `;
+};
+
+/**
  * Generate HTML template for quotation
  */
 const generateQuotationHTML = (quotation) => {
+  // Get logo
+  const logoBase64 = getLogoBase64();
+  
+  // Split items into pages (8 items per page)
+  const itemsPerPage = 10;
+  const totalItems = quotation.items.length;
+  const firstPageItems = quotation.items.slice(0, itemsPerPage);
+  const remainingItems = quotation.items.slice(itemsPerPage);
+  
   // Calculate totals
   const subtotalBeforeCharges = quotation.items.reduce((sum, item) => {
     const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
@@ -466,38 +702,118 @@ const generateQuotationHTML = (quotation) => {
     /* Header Section */
     .header {
       text-align: center;
-      margin-bottom: 8mm;
+      margin-bottom: 0.4mm;
+    }
+    
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 0mm;
+    }
+    
+    .header-logo-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 0.1mm;
+      border-bottom: 0.5px solid #000000;
+      line-height: 0.2;
+    }
+    
+    .header-logo {
+      height: 80px;
+      width: auto;
+      max-width: 320px;
+      object-fit: contain;
     }
     
     .company-name {
-      font-size: 18pt;
+      font-size: 28pt;
       font-weight: bold;
-      background: linear-gradient(to right, #dc3545 0%, #dc3545 50%, #0066cc 50%, #0066cc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1mm;
+      color: #0066cc;
       display: inline-block;
+      line-height: 1;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .company-name-text {
+      font-size: 28pt;
+      font-weight: bold;
+      color: #000000;
+      display: inline-block;
+      line-height: 0.2;
+      margin: 0;
+      padding: 0;
     }
     
     .company-name-arabic {
-      font-size: 14pt;
+      font-size: 22pt;
       font-weight: bold;
-      color: #0066cc;
+      color: #000000;
       direction: rtl;
       font-family: 'Arial', 'Tahoma', sans-serif;
-      margin-bottom: 2mm;
+      margin-left: 10px;
+      line-height: 0.2;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
     }
     
     .tagline {
       font-size: 9pt;
-      color: #3c3c3c;
-      margin-bottom: 2mm;
+      color: #0066cc;
+      margin-bottom:0.5mm;
+      text-align: center;
+      padding-bottom: 0.5mm;
+      padding-left: 4mm;
+      padding-right: 4mm;
+      border-bottom: 0.5px solid #0066cc;
+      font-weight: bold;
+      display: inline-block;
+      width: fit-content;
     }
     
+    .tagline-container {
+      text-align: center;
+      margin-bottom: 0.1mm;
+    }
+    
+    .attributes-line {
+      font-size: 8pt;
+      color: #dc3545;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #dc3545;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .activities-line {
+      font-size: 8pt;
+      color: #0066cc;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #0066cc;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .header-boxes-container {
+      text-align: center;
+      margin: 0.05mm 0;
+    }
     
     .divider {
-      border-top: 1px solid #c8c8c8;
+      border-top: 1px solid #0066cc;
       margin: 3mm 0;
     }
     
@@ -506,7 +822,7 @@ const generateQuotationHTML = (quotation) => {
       font-weight: bold;
       color: #dc3545;
       text-align: center;
-      margin: 4mm 0 2mm;
+      margin: 1mm 0 1mm;
     }
     
     .trn {
@@ -516,39 +832,119 @@ const generateQuotationHTML = (quotation) => {
       margin-bottom: 5mm;
     }
     
-    /* Customer and Quote Details Table */
-    .details-table {
+    /* Customer and Quote Details Container */
+    .details-container {
+      display: flex;
+      gap: 5mm;
+      margin: 2mm 0;
       width: 100%;
-      border-collapse: collapse;
-      margin: 4mm 0;
-      font-size: 8pt;
+      align-items: stretch;
+    }
+    
+    /* Left Side - Customer Details Box */
+    .customer-details-box {
+      flex: 1 1 0;
       border: 1px solid #d0d0d0;
+      padding: 8px 10px;
+      font-size: 7.5pt;
+      background-color: #ffffff;
+      min-height: 140px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
     
-    .details-table td {
-      padding: 5px 8px;
-      border: 1px solid #e1e1e1;
-      vertical-align: top;
+    .customer-detail-item {
+      margin-bottom: 6px;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
     }
     
-    .details-table .detail-label {
+    .customer-detail-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .customer-detail-label {
       font-weight: bold;
       color: #0066cc;
-      width: 40%;
-      background-color: #f8f9fa;
+      display: inline-block;
+      min-width: 125px;
+      flex-shrink: 0;
+      margin-right: 6px;
+      font-size: 7.5pt;
     }
     
-    .details-table .detail-value {
+    .customer-detail-value {
       color: #2c3e50;
-      width: 60%;
+      flex: 1;
+      word-wrap: break-word;
+      font-size: 7.5pt;
     }
     
-    .details-table tr:nth-child(even) {
+    /* Right Side - Quote Details Container */
+    .quote-details-wrapper {
+      flex: 1 1 0;
+      box-sizing: border-box;
+      display: flex;
+      align-items: stretch;
+    }
+    
+    /* Right Side - Quote Details Table */
+    .quote-details-table {
+      border-collapse: collapse;
+      font-size: 7.5pt;
+      border: 1px solid #d0d0d0;
+      width: 100%;
+      table-layout: fixed;
+      box-sizing: border-box;
+      height: 100%;
+    }
+    
+    .quote-details-table td {
+      padding: 8px 10px;
+      border: 1px solid #e1e1e1;
+      vertical-align: middle;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table .quote-label {
+      font-weight: bold;
+      color: #0066cc;
+      background-color: #f8f9fa;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table .quote-value {
+      color: #2c3e50;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table tr:nth-child(even) {
       background-color: #fafafa;
     }
     
-    .details-table tr:nth-child(odd) {
+    .quote-details-table tr:nth-child(odd) {
       background-color: #ffffff;
+    }
+    
+    /* Subject Section */
+    .subject-section {
+      margin-top: 2mm;
+      margin-bottom: 2mm;
+      font-size: 8pt;
+      width: 100%;
+    }
+    
+    .subject-label {
+      font-weight: bold;
+      color: #2c3e50;
+      display: inline-block;
+    }
+    
+    .subject-value {
+      color: #2c3e50;
     }
     
     /* Table Styles */
@@ -557,11 +953,18 @@ const generateQuotationHTML = (quotation) => {
       border-collapse: collapse;
       margin: 4mm 0;
       font-size: 8pt;
+      page-break-inside: auto;
     }
     
     .items-table thead {
       background-color: #0066cc;
       color: white;
+      display: table-header-group;
+    }
+    
+    .items-table thead tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
     }
     
     .items-table th {
@@ -570,6 +973,15 @@ const generateQuotationHTML = (quotation) => {
       font-weight: bold;
       border: 1px solid #004d99;
       font-size: 7.5pt;
+    }
+    
+    .items-table tbody {
+      display: table-row-group;
+    }
+    
+    .items-table tbody tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
     }
     
     .items-table td {
@@ -586,6 +998,19 @@ const generateQuotationHTML = (quotation) => {
       background-color: #ffffff;
     }
     
+    /* Page break for continuation pages */
+    .table-page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+    
+    /* Ensure totals stay together */
+    .totals-row,
+    .summary-row,
+    .net-total-row {
+      page-break-inside: avoid;
+    }
+    
     .col-sn { width: 3%; text-align: center; font-weight: bold; }
     .col-desc { width: 35%; }
     .col-wt { width: 8%; text-align: center; }
@@ -600,22 +1025,29 @@ const generateQuotationHTML = (quotation) => {
     .item-description {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      flex-wrap: nowrap;
     }
     
     .item-text {
       flex: 1;
       font-weight: bold;
       color: #2c3e50;
+      line-height: 1.4;
+      min-width: 0;
+      padding-right: 10px;
+      border-right: 1px solid #d0d0d0;
+      margin-right: 8px;
     }
     
     .item-image {
-      width: 32px;
-      height: 24px;
+      width: 40px;
+      height: 30px;
       object-fit: contain;
       border: 1px solid #d5d5d5;
       background: white;
       flex-shrink: 0;
+      display: block;
     }
     
     /* Totals Section */
@@ -700,61 +1132,96 @@ const generateQuotationHTML = (quotation) => {
  <body>
   <!-- Header -->
   <div class="header">
-    <div>
-      <span style="color: #0066cc; font-size: 18pt; font-weight: bold;">ALCOA</span>
-      <span style="color: #000000; font-size: 18pt; font-weight: bold;"> ALUMINIUM SCAFFOLDING</span>
-      <span style="color: #000000; font-size: 14pt; font-weight: bold; margin-left: 10px; direction: rtl; font-family: 'Arial', 'Tahoma', sans-serif;">الكوا سقالات ألمنيوم</span>
+    <div class="header-logo-container">
+      <div class="header-logo-wrapper">
+        ${logoBase64 ? `<img src="${logoBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING" class="header-logo">` : ''}
+        ${logoBase64 ? '' : '<span class="company-name">ALCOA</span>'}
+        <span class="company-name-text"> ALUMINIUM L.L.C</span>
+        <span class="company-name-arabic">الكوا ألمنيوم ذ.م.م</span>
+      </div>
     </div>
-    <div class="tagline">Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding</div>
-    <div style="font-size: 7.5pt; color: #666; margin: 2mm 0;">Sale | Hire | Installation | Maintenance | Safety Inspection | Training</div>
-    
-    <div class="divider"></div>
+    <div class="tagline-container">
+      <div class="tagline">Manufacturers of Aluminium Scaffolding · Ladders · Steel Cuplock Scaffolding</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="attributes-line">Innovative · High Quality · Safe · Reliable</div>
+    </div>
+    <div class="header-boxes-container">
+      <div class="activities-line">Sale · Hire · Erection · Certification</div>
+    </div>
     
     <div class="document-title">QUOTATION</div>
     <div class="trn">TRN: 100123456700003</div>
   </div>
   
-  <!-- Customer and Quote Details Table -->
-  <table class="details-table">
-    <tbody>
-      <tr>
-        <td class="detail-label">CUSTOMER NAME:</td>
-        <td class="detail-value">${quotation.customerName || 'N/A'}</td>
-        <td class="detail-label">Quotation No:</td>
-        <td class="detail-value">${quotation.quoteNumber || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">ADDRESS:</td>
-        <td class="detail-value">${quotation.customerAddress || 'N/A'}</td>
-        <td class="detail-label">Date:</td>
-        <td class="detail-value">${formatDate(quotation.quoteDate)}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">MOBILE NO:</td>
-        <td class="detail-value">${quotation.customerPhone || 'N/A'}</td>
-        <td class="detail-label">Sales Executive:</td>
-        <td class="detail-value">${quotation.salesExecutive || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">TRN:</td>
-        <td class="detail-value">${quotation.customerTRN || 'N/A'}</td>
-        <td class="detail-label">PO No:</td>
-        <td class="detail-value">${quotation.customerPONumber || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">CONTACT PERSON:</td>
-        <td class="detail-value">${quotation.contactPersonName || 'N/A'}</td>
-        <td class="detail-label">PAYMENT TERMS:</td>
-        <td class="detail-value">${quotation.paymentTerms || 'Cash/CDC'}</td>
-      </tr>
-      ${quotation.subject ? `
-      <tr>
-        <td class="detail-label">Subject:</td>
-        <td class="detail-value" colspan="3">${quotation.subject}</td>
-      </tr>
-      ` : ''}
-    </tbody>
-  </table>
+  <!-- Customer and Quote Details Container -->
+  <div class="details-container">
+    <!-- Left Side - Customer Details Box -->
+    <div class="customer-details-box">
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">CUSTOMER NAME :</div>
+        <div class="customer-detail-value">${quotation.customerName || 'N/A'}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">ADDRESS :</div>
+        <div class="customer-detail-value">${quotation.customerAddress || 'N/A'}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">MOBILE NO :</div>
+        <div class="customer-detail-value">${quotation.customerPhone || 'N/A'}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">TRN :</div>
+        <div class="customer-detail-value">${quotation.customerTRN || 'N/A'}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">CONTACT PERSON :</div>
+        <div class="customer-detail-value">${quotation.contactPersonName || 'N/A'}</div>
+      </div>
+    </div>
+    
+    <!-- Right Side - Quote Details Table -->
+    <div class="quote-details-wrapper">
+      <table class="quote-details-table">
+        <colgroup>
+          <col style="width: 28%;">
+          <col style="width: 22%;">
+          <col style="width: 25%;">
+          <col style="width: 25%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td class="quote-label">Quotation No:</td>
+            <td class="quote-value">${quotation.quoteNumber || 'N/A'}</td>
+            <td class="quote-label">Date:</td>
+            <td class="quote-value">${formatDate(quotation.quoteDate)}</td>
+          </tr>
+          <tr>
+            <td class="quote-label">Sales Executive:</td>
+            <td class="quote-value" colspan="3">${quotation.salesExecutive || 'N/A'}</td>
+          </tr>
+          ${quotation.customerPONumber ? `
+          <tr>
+            <td class="quote-label">PO No:</td>
+            <td class="quote-value" colspan="3">${quotation.customerPONumber}</td>
+          </tr>
+          ` : ''}
+          <tr>
+            <td class="quote-label">PAYMENT TERMS:</td>
+            <td class="quote-value" colspan="3">${quotation.paymentTerms || 'Cash/CDC'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Subject Section -->
+  ${quotation.subject ? `
+  <div class="subject-section">
+    <span class="subject-label">Subject: </span>
+    <span class="subject-value">${quotation.subject}</span>
+  </div>
+  ` : ''}
   
   <!-- Items Table -->
   <table class="items-table">
@@ -773,35 +1240,8 @@ const generateQuotationHTML = (quotation) => {
       </tr>
     </thead>
     <tbody>
-      ${quotation.items.map((item, index) => {
-        const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
-        const vatPercent = item.vatPercentage || 5;
-        const vatAmt = item.vatAmount || (taxable * (vatPercent / 100));
-        const total = taxable + vatAmt;
-        const imageSrc = item.itemImage || '';
-        const imageTag = imageSrc ? `<img src="${imageSrc}" alt="Item" class="item-image" onerror="this.style.display='none'">` : '';
-        
-        return `
-        <tr>
-          <td class="col-sn">${index + 1}</td>
-          <td class="col-desc">
-            <div class="item-description">
-              <div class="item-text">${item.equipmentType}${item.description ? '<br>' + item.description : ''}</div>
-              ${imageTag}
-            </div>
-          </td>
-          <td class="col-wt">${item.weight ? parseFloat(item.weight).toFixed(2) : '0.00'}</td>
-          <td class="col-cbm">${item.cbm ? parseFloat(item.cbm).toFixed(2) : '0.00'}</td>
-          <td class="col-qty">${item.quantity}</td>
-          <td class="col-rate">${item.ratePerUnit.toFixed(2)}</td>
-          <td class="col-taxable">${taxable.toFixed(2)}</td>
-          <td class="col-vat-pct">${vatPercent}</td>
-          <td class="col-vat-amt">${vatAmt.toFixed(2)}</td>
-          <td class="col-amount">${total.toFixed(2)}</td>
-        </tr>
-        `;
-      }).join('')}
-      
+      ${firstPageItems.map((item, index) => generateItemRow(item, index + 1)).join('')}
+      ${remainingItems.length === 0 ? `
       <!-- Totals Row -->
       <tr class="totals-row">
         <td class="col-sn"></td>
@@ -858,8 +1298,127 @@ const generateQuotationHTML = (quotation) => {
         <td class="col-vat-amt"></td>
         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
       </tr>
+      ` : ''}
      </tbody>
    </table>
+   
+   ${remainingItems.length > 0 ? (() => {
+     // Split remaining items into pages of 8 items each
+     let continuationPages = '';
+     for (let i = 0; i < remainingItems.length; i += itemsPerPage) {
+       const pageItems = remainingItems.slice(i, i + itemsPerPage);
+       const isLastPage = (i + itemsPerPage >= remainingItems.length);
+       const startIndex = itemsPerPage + i + 1;
+       
+       continuationPages += `
+   <div class="page-break"></div>
+   
+   <!-- Header -->
+   <div class="header">
+     <div class="header-logo-container">
+       <div class="header-logo-wrapper">
+         ${logoBase64 ? `<img src="${logoBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING" class="header-logo">` : ''}
+         ${logoBase64 ? '' : '<span class="company-name">ALCOA</span>'}
+         <span class="company-name-text"> ALUMINIUM L.L.C</span>
+         <span class="company-name-arabic">الكوا ألمنيوم ذ.م.م</span>
+       </div>
+     </div>
+     <div class="tagline-container">
+       <div class="tagline">Manufacturers of Aluminium Scaffolding · Ladders · Steel Cuplock Scaffolding</div>
+     </div>
+     <div class="header-boxes-container">
+       <div class="attributes-line">Innovative · High Quality · Safe · Reliable</div>
+     </div>
+     <div class="header-boxes-container">
+       <div class="activities-line">Sale · Hire · Erection · Certification</div>
+     </div>
+     
+     <div class="document-title">QUOTATION</div>
+     <div class="trn">TRN: 100123456700003</div>
+   </div>
+   
+   <!-- Items Table Continuation -->
+   <table class="items-table">
+     <thead>
+       <tr>
+         <th class="col-sn">SN</th>
+         <th class="col-desc">Description of Goods</th>
+         <th class="col-wt">Wt<br>(KG)</th>
+         <th class="col-cbm">CBM</th>
+         <th class="col-qty">Qty</th>
+         <th class="col-rate">Rate<br>(AED)</th>
+         <th class="col-taxable">Taxable<br>Amount</th>
+         <th class="col-vat-pct">VAT<br>%</th>
+         <th class="col-vat-amt">VAT<br>Amount</th>
+         <th class="col-amount">Amount<br>(AED)</th>
+       </tr>
+     </thead>
+     <tbody>
+       ${pageItems.map((item, idx) => generateItemRow(item, startIndex + idx)).join('')}
+       ${isLastPage ? `
+       <!-- Totals Row -->
+       <tr class="totals-row">
+         <td class="col-sn"></td>
+         <td class="col-desc totals-label">TOTAL</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable">${subtotalBeforeCharges.toFixed(2)}</td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt">${vatAmount.toFixed(2)}</td>
+         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
+       </tr>
+       
+       <!-- Summary Rows -->
+       <tr class="summary-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">Total w/o VAT</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable">${beforeDiscount.toFixed(2)}</td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt"></td>
+         <td class="col-amount"></td>
+       </tr>
+       
+       <tr class="summary-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">VAT (${quotation.vatPercentage || 5}%)</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable"></td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt">${vatAmount.toFixed(2)}</td>
+         <td class="col-amount"></td>
+       </tr>
+       
+       <tr class="net-total-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">
+           Net Total
+           <div class="amount-in-words">${amountText}</div>
+         </td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable"></td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt"></td>
+         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
+       </tr>
+       ` : ''}
+     </tbody>
+   </table>
+   `;
+     }
+     return continuationPages;
+   })() : ''}
    
    <!-- Footer - Always at bottom -->
    <div class="footer">
