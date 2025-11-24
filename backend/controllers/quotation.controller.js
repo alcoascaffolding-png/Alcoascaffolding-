@@ -496,9 +496,21 @@ class QuotationController {
     } catch (error) {
       logger.error('Error generating quotation PDF', error);
       
-      res.status(500).json({
+      // Handle Playwright-specific errors
+      let statusCode = 500;
+      let errorMessage = error.message || 'Failed to generate PDF';
+      
+      if (error.message && error.message.includes('Playwright browser not installed')) {
+        statusCode = 503; // Service Unavailable
+        errorMessage = 'PDF generation service is temporarily unavailable. Please try again later.';
+      } else if (error.message && error.message.includes('Executable doesn\'t exist')) {
+        statusCode = 503;
+        errorMessage = 'PDF generation service is temporarily unavailable. Please try again later.';
+      }
+      
+      res.status(statusCode).json({
         success: false,
-        message: error.message || 'Failed to generate PDF',
+        message: errorMessage,
         details: process.env.NODE_ENV === 'development' ? error.toString() : undefined
       });
     }

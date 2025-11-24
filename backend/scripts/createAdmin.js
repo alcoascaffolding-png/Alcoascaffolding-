@@ -11,8 +11,15 @@ const logger = require('../utils/logger');
 const createAdminUser = async () => {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/alcoa-scaffolding';
-    await mongoose.connect(mongoUri);
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+      console.error('❌ ERROR: MONGODB_URI not found in .env file');
+      process.exit(1);
+    }
+    await mongoose.connect(mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
     console.log('✅ Connected to MongoDB');
 
     // Check if admin already exists

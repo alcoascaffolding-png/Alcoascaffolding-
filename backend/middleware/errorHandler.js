@@ -51,6 +51,22 @@ const errorHandler = (err, req, res, next) => {
     error.details = 'Unable to connect to email service';
   }
 
+  // Handle Playwright browser errors
+  if (err.message && err.message.includes('Playwright browser not installed')) {
+    error.statusCode = 503;
+    error.message = 'PDF generation service unavailable';
+    error.details = err.message;
+  }
+
+  // Set CORS headers before sending response
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  }
+
   // Build response
   const response = {
     success: false,
@@ -70,6 +86,13 @@ const errorHandler = (err, req, res, next) => {
  * 404 Not Found handler
  */
 const notFoundHandler = (req, res) => {
+  // Set CORS headers for 404 responses
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  
   logger.warn(`404 - Route not found: ${req.method} ${req.path}`);
   res.status(404).json({
     success: false,

@@ -7,6 +7,7 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 /**
  * Convert number to words
@@ -31,7 +32,7 @@ const numberToWords = (num) => {
 };
 
 /**
- * Format date to DD/MM/YYYY
+ * Format date to DD-MM-YYYY (matching the exact format in the image)
  */
 const formatDate = (date) => {
   if (!date) return '';
@@ -39,13 +40,131 @@ const formatDate = (date) => {
   const day = String(d.getDate()).padStart(2, '0');
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+  return `${day}-${month}-${year}`;
+};
+
+/**
+ * Get logo as base64 data URI
+ */
+const getLogoBase64 = () => {
+  try {
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, '../backend/assets/Logo.png'),
+      path.join(__dirname, '../../backend/assets/Logo.png'),
+      path.join(__dirname, '../assets/Logo.png')
+    ];
+    
+    let logoPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        logoPath = testPath;
+        break;
+      }
+    }
+    
+    if (logoPath) {
+      const logoBuffer = fs.readFileSync(logoPath);
+      const logoBase64 = logoBuffer.toString('base64');
+      return `data:image/png;base64,${logoBase64}`;
+    } else {
+      console.warn('[PDF Generator] Logo not found. Tried paths:', possiblePaths);
+      return null;
+    }
+  } catch (error) {
+    console.error('[PDF Generator] Error loading logo:', error.message);
+    return null;
+  }
+};
+
+/**
+ * Get header image as base64 data URI
+ * This replaces the entire header section with a single PNG image
+ */
+const getHeaderImageBase64 = () => {
+  try {
+    // Try multiple possible paths for header image
+    const possiblePaths = [
+      path.join(__dirname, '../backend/assets/Header.png'),
+      path.join(__dirname, '../../backend/assets/Header.png'),
+      path.join(__dirname, '../assets/Header.png'),
+      path.join(__dirname, '../backend/assets/header.png'),
+      path.join(__dirname, '../../backend/assets/header.png'),
+      path.join(__dirname, '../assets/header.png')
+    ];
+    
+    let headerPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        headerPath = testPath;
+        break;
+      }
+    }
+    
+    if (headerPath) {
+      const headerBuffer = fs.readFileSync(headerPath);
+      const headerBase64 = headerBuffer.toString('base64');
+      return `data:image/png;base64,${headerBase64}`;
+    } else {
+      console.warn('[PDF Generator] Header image not found. Tried paths:', possiblePaths);
+      console.warn('[PDF Generator] Please place your header image as Header.png in backend/assets/ folder');
+      return null;
+    }
+  } catch (error) {
+    console.error('[PDF Generator] Error loading header image:', error.message);
+    return null;
+  }
+};
+
+/**
+ * Get footer image as base64 data URI
+ * This replaces the entire footer section with a single PNG image
+ */
+const getFooterImageBase64 = () => {
+  try {
+    // Try multiple possible paths for footer image
+    const possiblePaths = [
+      path.join(__dirname, '../backend/assets/Footer.png'),
+      path.join(__dirname, '../../backend/assets/Footer.png'),
+      path.join(__dirname, '../assets/Footer.png'),
+      path.join(__dirname, '../backend/assets/footer.png'),
+      path.join(__dirname, '../../backend/assets/footer.png'),
+      path.join(__dirname, '../assets/footer.png'),
+      path.join(__dirname, '../backend/backend/assets/Footer.png'),
+      path.join(__dirname, '../backend/backend/assets/footer.png')
+    ];
+    
+    let footerPath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        footerPath = testPath;
+        break;
+      }
+    }
+    
+    if (footerPath) {
+      const footerBuffer = fs.readFileSync(footerPath);
+      const footerBase64 = footerBuffer.toString('base64');
+      return `data:image/png;base64,${footerBase64}`;
+    } else {
+      console.warn('[PDF Generator] Footer image not found. Tried paths:', possiblePaths);
+      console.warn('[PDF Generator] Please place your footer image as Footer.png in backend/assets/ folder');
+      return null;
+    }
+  } catch (error) {
+    console.error('[PDF Generator] Error loading footer image:', error.message);
+    return null;
+  }
 };
 
 /**
  * Generate Terms & Conditions page HTML
  */
 const generateTermsAndConditionsPageHTML = (quotation) => {
+  // Get header and footer images
+  const headerImageBase64 = getHeaderImageBase64();
+  const footerImageBase64 = getFooterImageBase64();
+  
   // Default terms & conditions
   const defaultTerms = [
     'Current Dated Cheque / Cash with confirmation of order',
@@ -134,39 +253,42 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
       break-before: page;
     }
     
-    /* Header Section - Compact */
+    /* Header Section - Now just an image */
     .header {
       text-align: center;
-      margin-bottom: 4mm;
+      margin-bottom: 5mm;
+      width: 100%;
     }
     
-    .tagline {
-      font-size: 8pt;
-      color: #3c3c3c;
-      margin-bottom: 1mm;
-    }
-    
-    .divider {
-      border-top: 1px solid #c8c8c8;
-      margin: 2mm 0;
+    .header-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
     
     .document-title {
-      font-size: 16pt;
+      font-size: 14pt;
       font-weight: bold;
-      color: #dc3545;
+      color: #000000;
+      text-decoration: underline;
       text-align: center;
       margin: 2mm 0 1mm;
+      padding: 0;
     }
     
     .trn {
-      font-size: 8pt;
-      color: #3c3c3c;
+      font-size: 12pt;
+      color: #000000;
       text-align: center;
-      margin-bottom: 3mm;
+      margin-bottom: 0mm;
+      padding: 0;
+      font-weight: normal;
     }
     
     .section {
+      margin-top: 12mm;
       margin-bottom: 6mm;
     }
     
@@ -283,51 +405,32 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
       min-height: 12mm;
     }
     
-    /* Footer Section - Fixed on every page */
+    /* Footer Section - Fixed on every page, now just an image */
     .footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       width: 100%;
-      background-color: #f0f0f0;
-      padding: 4mm 5mm;
-      font-size: 7pt;
-      text-align: center;
       z-index: 1000;
+      text-align: center;
     }
     
-    .footer-services {
-      color: #3c3c3c;
-      margin-bottom: 2mm;
-    }
-    
-    .footer-contact {
-      color: #3c3c3c;
-      margin-bottom: 1mm;
-    }
-    
-    .footer-address {
-      color: #646464;
-      font-size: 6.5pt;
+    .footer-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
   </style>
 </head>
 <body>
   <div class="page-break"></div>
   
-  <!-- Header -->
+  <!-- Header - Single PNG Image -->
   <div class="header">
-    <div>
-      <span style="color: #0066cc; font-size: 16pt; font-weight: bold;">ALCOA</span>
-      <span style="color: #000000; font-size: 16pt; font-weight: bold;"> ALUMINIUM SCAFFOLDING</span>
-      <span style="color: #000000; font-size: 12pt; font-weight: bold; margin-left: 8px; direction: rtl; font-family: 'Arial', 'Tahoma', sans-serif;">الكوا سقالات ألمنيوم</span>
-    </div>
-    <div class="tagline">Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding</div>
-    <div style="font-size: 7pt; color: #666; margin: 1mm 0;">Sale | Hire | Installation | Maintenance | Safety Inspection | Training</div>
-    
-    <div class="divider"></div>
-    
+    ${headerImageBase64 ? `<img src="${headerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Header" class="header-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Header image not found. Please place Header.png in backend/assets/ folder</div>'}
     <div class="document-title">QUOTATION</div>
     <div class="trn">TRN: 100123456700003</div>
   </div>
@@ -385,17 +488,9 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
     </div>
   </div>
   
-  <!-- Footer - Always at bottom -->
+  <!-- Footer - Single PNG Image -->
   <div class="footer">
-    <div class="footer-services">
-      Sale & Hire of Single & Double Width Mobile Towers • Ladders • Steel Cup Lock Scaffolding • Couplers
-    </div>
-    <div class="footer-contact">
-      Tel: +971 58 137 5601 | +971 50 926 8038  |  Email: Sales@alcoascaffolding.com  |  Web: www.alcoascaffolding.com
-    </div>
-    <div class="footer-address">
-      Musaffah, Abu Dhabi, UAE
-    </div>
+    ${footerImageBase64 ? `<img src="${footerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Footer" class="footer-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Footer image not found. Please place Footer.png in backend/assets/ folder</div>'}
   </div>
 </body>
 </html>
@@ -403,9 +498,145 @@ const generateTermsAndConditionsPageHTML = (quotation) => {
 };
 
 /**
+ * Generate item row HTML
+ */
+/**
+ * Get item image as base64 data URI from filename or path
+ */
+const getItemImageBase64 = (itemImage) => {
+  if (!itemImage) return '';
+  
+  try {
+    // If it's already a data URI, return it
+    if (itemImage.startsWith('data:image/')) {
+      return itemImage;
+    }
+    
+    // If it's a URL, return it (Playwright can load URLs)
+    if (itemImage.startsWith('http://') || itemImage.startsWith('https://')) {
+      return itemImage;
+    }
+    
+    // If it's a filename or relative path, try to load from assets folder
+    const imageFileName = path.basename(itemImage);
+    const possiblePaths = [
+      path.join(__dirname, '../backend/assets', imageFileName),
+      path.join(__dirname, '../../backend/assets', imageFileName),
+      path.join(__dirname, '../assets', imageFileName),
+      path.join(__dirname, '..', 'backend', 'assets', imageFileName),
+      // Also try as absolute path
+      itemImage
+    ];
+    
+    let imagePath = null;
+    for (const testPath of possiblePaths) {
+      if (fs.existsSync(testPath)) {
+        imagePath = testPath;
+        break;
+      }
+    }
+    
+    if (imagePath) {
+      const imageBuffer = fs.readFileSync(imagePath);
+      const ext = path.extname(imageFileName).toLowerCase();
+      let mimeType = 'image/png';
+      if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+      else if (ext === '.png') mimeType = 'image/png';
+      else if (ext === '.gif') mimeType = 'image/gif';
+      
+      const base64 = imageBuffer.toString('base64');
+      return `data:${mimeType};base64,${base64}`;
+    }
+    
+    return '';
+  } catch (error) {
+    console.warn(`[PDF Generator] Error loading item image ${itemImage}:`, error.message);
+    return '';
+  }
+};
+
+const generateItemRow = (item, serialNumber) => {
+  const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
+  const vatPercent = item.vatPercentage || 5;
+  const vatAmt = item.vatAmount || (taxable * (vatPercent / 100));
+  const total = taxable + vatAmt;
+  const imageSrc = getItemImageBase64(item.itemImage || '');
+  const imageTag = imageSrc ? `<img src="${imageSrc}" alt="Item" class="item-image" onerror="this.style.display='none'">` : '';
+  
+  return `
+        <tr>
+          <td class="col-sn">${serialNumber}</td>
+          <td class="col-desc">
+            <div class="item-description">
+              <div class="item-text">${item.equipmentType}${item.description ? '<br>' + item.description : ''}</div>
+              ${imageTag}
+            </div>
+          </td>
+          <td class="col-wt">${item.weight ? parseFloat(item.weight).toFixed(2) : '0.00'}</td>
+          <td class="col-cbm">${item.cbm ? parseFloat(item.cbm).toFixed(2) : '0.00'}</td>
+          <td class="col-qty">${item.quantity} Nos</td>
+          <td class="col-rate">${item.ratePerUnit.toFixed(2)}</td>
+          <td class="col-taxable">${taxable.toFixed(2)}</td>
+          <td class="col-vat-pct">${vatPercent}</td>
+          <td class="col-vat-amt">${vatAmt.toFixed(2)}</td>
+          <td class="col-amount">${total.toFixed(2)}</td>
+        </tr>
+        `;
+};
+
+/**
+ * Generate continuation page with items table
+ */
+const generateContinuationPage = (quotation, items, startIndex, headerImageBase64) => {
+  const itemsHTML = items.map((item, idx) => generateItemRow(item, startIndex + idx)).join('');
+  
+  return `
+  <div class="page-break"></div>
+  
+  <!-- Header - Single PNG Image -->
+  <div class="header">
+    ${headerImageBase64 ? `<img src="${headerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Header" class="header-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Header image not found. Please place Header.png in backend/assets/ folder</div>'}
+    <div class="document-title">QUOTATION</div>
+    <div class="trn">TRN: 100123456700003</div>
+  </div>
+  
+  <!-- Items Table Continuation -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th class="col-sn">SN</th>
+        <th class="col-desc">Description of Goods</th>
+        <th class="col-wt">Wt<br>(KG)</th>
+        <th class="col-cbm">CBM</th>
+        <th class="col-qty">Qty</th>
+        <th class="col-rate">Rate<br>(AED)</th>
+        <th class="col-taxable">Taxable<br>Amount</th>
+        <th class="col-vat-pct">VAT<br>%</th>
+        <th class="col-vat-amt">VAT<br>Amount</th>
+        <th class="col-amount">Amount<br>(AED)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHTML}
+    </tbody>
+  </table>
+  `;
+};
+
+/**
  * Generate HTML template for quotation
  */
 const generateQuotationHTML = (quotation) => {
+  // Get header and footer images
+  const headerImageBase64 = getHeaderImageBase64();
+  const footerImageBase64 = getFooterImageBase64();
+  
+  // Split items into pages (8 items per page)
+  const itemsPerPage = 10;
+  const totalItems = quotation.items.length;
+  const firstPageItems = quotation.items.slice(0, itemsPerPage);
+  const remainingItems = quotation.items.slice(itemsPerPage);
+  
   // Calculate totals
   const subtotalBeforeCharges = quotation.items.reduce((sum, item) => {
     const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
@@ -462,118 +693,295 @@ const generateQuotationHTML = (quotation) => {
       min-height: 100vh;
     }
     
-    /* Header Section */
+    /* Header Section - Now just an image */
     .header {
       text-align: center;
-      margin-bottom: 8mm;
+      margin-bottom: 5mm;
+      width: 100%;
     }
     
-    .company-name {
-      font-size: 18pt;
+    .header-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    
+    .company-name-text {
+      font-size: 28pt;
       font-weight: bold;
-      background: linear-gradient(to right, #dc3545 0%, #dc3545 50%, #0066cc 50%, #0066cc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 1mm;
+      color: #000000;
       display: inline-block;
+      line-height: 0.2;
+      margin: 0;
+      padding: 0;
     }
     
     .company-name-arabic {
-      font-size: 14pt;
+      font-size: 22pt;
       font-weight: bold;
-      color: #0066cc;
+      color: #000000;
       direction: rtl;
       font-family: 'Arial', 'Tahoma', sans-serif;
-      margin-bottom: 2mm;
+      margin-left: 10px;
+      line-height: 0.2;
+      margin-top: 0;
+      margin-bottom: 0;
+      padding: 0;
     }
     
     .tagline {
       font-size: 9pt;
-      color: #3c3c3c;
-      margin-bottom: 2mm;
+      color: #0066cc;
+      margin-bottom:0.5mm;
+      text-align: center;
+      padding-bottom: 0.5mm;
+      padding-left: 4mm;
+      padding-right: 4mm;
+      border-bottom: 0.5px solid #0066cc;
+      font-weight: bold;
+      display: inline-block;
+      width: fit-content;
     }
     
+    .tagline-container {
+      text-align: center;
+      margin-bottom: 0.1mm;
+    }
+    
+    .attributes-line {
+      font-size: 8pt;
+      color: #dc3545;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #dc3545;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .activities-line {
+      font-size: 8pt;
+      color: #0066cc;
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      padding: 4px 12px;
+      border: 1px solid #0066cc;
+      border-radius: 4px;
+      display: inline-block;
+      width: fit-content;
+    }
+    
+    .header-boxes-container {
+      text-align: center;
+      margin: 0.05mm 0;
+    }
     
     .divider {
-      border-top: 1px solid #c8c8c8;
+      border-top: 1px solid #0066cc;
       margin: 3mm 0;
     }
     
     .document-title {
       font-size: 18pt;
       font-weight: bold;
-      color: #dc3545;
+      color: #000000;
+      text-decoration: underline;
       text-align: center;
-      margin: 4mm 0 2mm;
+      margin: 2mm 0 1mm;
+      padding: 0;
     }
     
     .trn {
-      font-size: 9pt;
-      color: #3c3c3c;
+      font-size: 22pt;
+      color: #000000;
       text-align: center;
-      margin-bottom: 5mm;
+      margin-bottom: 3mm;
+      padding: 0;
+      font-weight: normal;
     }
     
-    /* Customer and Quote Details Table */
-    .details-table {
+    /* Customer and Quote Details Container */
+    .details-container {
+      display: flex;
+      gap: 5mm;
+      margin: 2mm 0;
       width: 100%;
-      border-collapse: collapse;
-      margin: 4mm 0;
-      font-size: 8pt;
-      border: 1px solid #d0d0d0;
+      align-items: stretch;
     }
     
-    .details-table td {
-      padding: 5px 8px;
-      border: 1px solid #e1e1e1;
-      vertical-align: top;
+    /* Left Side - Customer Details Box */
+    .customer-details-box {
+      flex: 1 1 0;
+      border: 1px solid #000000;
+      padding: 8px 10px;
+      font-size: 7.5pt;
+      background-color: #ffffff;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-self: stretch;
     }
     
-    .details-table .detail-label {
+    .customer-detail-item {
+      margin-bottom: 5px;
+      line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .customer-detail-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .customer-detail-label {
       font-weight: bold;
-      color: #0066cc;
-      width: 40%;
-      background-color: #f8f9fa;
+      color: #000000;
+      display: inline-block;
+      min-width: 125px;
+      flex-shrink: 0;
+      margin-right: 6px;
+      font-size: 7.5pt;
     }
     
-    .details-table .detail-value {
-      color: #2c3e50;
-      width: 60%;
+    .customer-detail-value {
+      color: #000000;
+      flex: 1;
+      word-wrap: break-word;
+      font-size: 7.5pt;
     }
     
-    .details-table tr:nth-child(even) {
+    /* Right Side - Quote Details Container */
+    .quote-details-wrapper {
+      flex: 1 1 0;
+      box-sizing: border-box;
+      display: flex;
+      align-items: stretch;
+      align-self: stretch;
+    }
+    
+    /* Right Side - Quote Details Table */
+    .quote-details-table {
+      border-collapse: collapse;
+      font-size: 7.5pt;
+      border: 1px solid #000000;
+      width: 100%;
+      table-layout: fixed;
+      box-sizing: border-box;
+      height: 100%;
+      display: table;
+    }
+    
+    .quote-details-table tbody {
+      height: 100%;
+    }
+    
+    .quote-details-table tr:last-child {
+      height: 100%;
+    }
+    
+    .quote-details-table tr:last-child td {
+      vertical-align: bottom;
+    }
+    
+    .quote-details-table td {
+      padding: 8px 10px;
+      border: 1px solid #000000;
+      vertical-align: middle;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table .quote-label {
+      font-weight: bold;
+      color: #000000;
+      background-color: #ffffff;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table .quote-value {
+      color: #000000;
+      font-size: 7.5pt;
+    }
+    
+    .quote-details-table tr:nth-child(even) {
       background-color: #fafafa;
     }
     
-    .details-table tr:nth-child(odd) {
+    .quote-details-table tr:nth-child(odd) {
       background-color: #ffffff;
+    }
+    
+    /* Subject Section - Aligned with table */
+    .subject-section {
+      margin-top: 2mm;
+      margin-bottom: 0mm;
+      font-size: 8pt;
+      width: 100%;
+      border: 1px solid #000000;
+      border-bottom: none;
+      padding: 6px 4px;
+      background-color: #ffffff;
+      box-sizing: border-box;
+    }
+    
+    .subject-label {
+      font-weight: bold;
+      color: #2c3e50;
+      display: inline-block;
+    }
+    
+    .subject-value {
+      color: #2c3e50;
     }
     
     /* Table Styles */
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 4mm 0;
+      margin: 0;
+      margin-bottom: 4mm;
       font-size: 8pt;
+      page-break-inside: auto;
+      border: 1px solid #000000;
+      border-top: none;
     }
     
     .items-table thead {
-      background-color: #0066cc;
-      color: white;
+      background-color: #ffffff;
+      color: #000000;
+      display: table-header-group;
+    }
+    
+    .items-table thead tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
     }
     
     .items-table th {
       padding: 6px 4px;
       text-align: center;
       font-weight: bold;
-      border: 1px solid #004d99;
+      border: 1px solid #000000;
       font-size: 7.5pt;
+    }
+    
+    .items-table tbody {
+      display: table-row-group;
+    }
+    
+    .items-table tbody tr {
+      page-break-inside: avoid;
+      page-break-after: auto;
     }
     
     .items-table td {
       padding: 6px 4px;
-      border: 1px solid #e1e1e1;
+      border: 1px solid #000000;
       vertical-align: middle;
     }
     
@@ -583,6 +991,19 @@ const generateQuotationHTML = (quotation) => {
     
     .items-table tbody tr:nth-child(odd) {
       background-color: #ffffff;
+    }
+    
+    /* Page break for continuation pages */
+    .table-page-break {
+      page-break-before: always;
+      break-before: page;
+    }
+    
+    /* Ensure totals stay together */
+    .totals-row,
+    .summary-row,
+    .net-total-row {
+      page-break-inside: avoid;
     }
     
     .col-sn { width: 3%; text-align: center; font-weight: bold; }
@@ -599,22 +1020,29 @@ const generateQuotationHTML = (quotation) => {
     .item-description {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      flex-wrap: nowrap;
     }
     
     .item-text {
       flex: 1;
       font-weight: bold;
       color: #2c3e50;
+      line-height: 1.4;
+      min-width: 0;
+      padding-right: 10px;
+      border-right: 1px solid #000000;
+      margin-right: 8px;
     }
     
     .item-image {
-      width: 32px;
-      height: 24px;
+      width: 40px;
+      height: 30px;
       object-fit: contain;
       border: 1px solid #d5d5d5;
       background: white;
       flex-shrink: 0;
+      display: block;
     }
     
     /* Totals Section */
@@ -638,7 +1066,7 @@ const generateQuotationHTML = (quotation) => {
     }
     
     .summary-row td {
-      border: 1px solid #d0d0d0;
+      border: 1px solid #000000;
     }
     
     .net-total-row {
@@ -653,7 +1081,7 @@ const generateQuotationHTML = (quotation) => {
     }
     
     .net-total-amount {
-      color: #0066cc;
+      color: #000000;
       font-size: 10pt;
       font-weight: bold;
     }
@@ -665,95 +1093,97 @@ const generateQuotationHTML = (quotation) => {
       padding-top: 2px;
     }
     
-    /* Footer Section - Fixed on every page */
+    /* Footer Section - Fixed on every page, now just an image */
     .footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       width: 100%;
-      background-color: #f0f0f0;
-      padding: 4mm 5mm;
-      font-size: 7pt;
-      text-align: center;
       z-index: 1000;
+      text-align: center;
     }
     
-    .footer-services {
-      color: #3c3c3c;
-      margin-bottom: 2mm;
-    }
-    
-    .footer-contact {
-      color: #3c3c3c;
-      margin-bottom: 1mm;
-    }
-    
-    .footer-address {
-      color: #646464;
-      font-size: 6.5pt;
+    .footer-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
     }
     
   </style>
  </head>
  <body>
-  <!-- Header -->
+  <!-- Header - Single PNG Image -->
   <div class="header">
-    <div>
-      <span style="color: #0066cc; font-size: 18pt; font-weight: bold;">ALCOA</span>
-      <span style="color: #000000; font-size: 18pt; font-weight: bold;"> ALUMINIUM SCAFFOLDING</span>
-      <span style="color: #000000; font-size: 14pt; font-weight: bold; margin-left: 10px; direction: rtl; font-family: 'Arial', 'Tahoma', sans-serif;">الكوا سقالات ألمنيوم</span>
-    </div>
-    <div class="tagline">Manufacturers of Aluminium Scaffolding, Ladders, Steel Cuplock Scaffolding</div>
-    <div style="font-size: 7.5pt; color: #666; margin: 2mm 0;">Sale | Hire | Installation | Maintenance | Safety Inspection | Training</div>
-    
-    <div class="divider"></div>
-    
+    ${headerImageBase64 ? `<img src="${headerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Header" class="header-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Header image not found. Please place Header.png in backend/assets/ folder</div>'}
     <div class="document-title">QUOTATION</div>
     <div class="trn">TRN: 100123456700003</div>
   </div>
   
-  <!-- Customer and Quote Details Table -->
-  <table class="details-table">
-    <tbody>
-      <tr>
-        <td class="detail-label">CUSTOMER NAME:</td>
-        <td class="detail-value">${quotation.customerName || 'N/A'}</td>
-        <td class="detail-label">Quotation No:</td>
-        <td class="detail-value">${quotation.quoteNumber || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">ADDRESS:</td>
-        <td class="detail-value">${quotation.customerAddress || 'N/A'}</td>
-        <td class="detail-label">Date:</td>
-        <td class="detail-value">${formatDate(quotation.quoteDate)}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">MOBILE NO:</td>
-        <td class="detail-value">${quotation.customerPhone || 'N/A'}</td>
-        <td class="detail-label">Sales Executive:</td>
-        <td class="detail-value">${quotation.salesExecutive || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">TRN:</td>
-        <td class="detail-value">${quotation.customerTRN || 'N/A'}</td>
-        <td class="detail-label">PO No:</td>
-        <td class="detail-value">${quotation.customerPONumber || 'N/A'}</td>
-      </tr>
-      <tr>
-        <td class="detail-label">CONTACT PERSON:</td>
-        <td class="detail-value">${quotation.contactPersonName || 'N/A'}</td>
-        <td class="detail-label">PAYMENT TERMS:</td>
-        <td class="detail-value">${quotation.paymentTerms || 'Cash/CDC'}</td>
-      </tr>
-      ${quotation.subject ? `
-      <tr>
-        <td class="detail-label">Subject:</td>
-        <td class="detail-value" colspan="3">${quotation.subject}</td>
-      </tr>
-      ` : ''}
-    </tbody>
-  </table>
+  <!-- Customer and Quote Details Container -->
+  <div class="details-container">
+    <!-- Left Side - Customer Details Box -->
+    <div class="customer-details-box">
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">CUSTOMER NAME :</div>
+        <div class="customer-detail-value">${quotation.customerName || ''}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">ADDRESS :</div>
+        <div class="customer-detail-value">${quotation.customerAddress || ''}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">MOBILE NO :</div>
+        <div class="customer-detail-value">${quotation.customerPhone || ''}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">TRN :</div>
+        <div class="customer-detail-value">${quotation.customerTRN || ''}</div>
+      </div>
+      <div class="customer-detail-item">
+        <div class="customer-detail-label">CONTACT PERSON :</div>
+        <div class="customer-detail-value">${quotation.contactPersonName || ''}</div>
+      </div>
+    </div>
+    
+    <!-- Right Side - Quote Details Table -->
+    <div class="quote-details-wrapper">
+      <table class="quote-details-table">
+        <colgroup>
+          <col style="width: 28%;">
+          <col style="width: 22%;">
+          <col style="width: 25%;">
+          <col style="width: 25%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td class="quote-label">Quotation<br>No</td>
+            <td class="quote-value">${quotation.quoteNumber || ''}</td>
+            <td class="quote-label">Date</td>
+            <td class="quote-value">${formatDate(quotation.quoteDate)}</td>
+          </tr>
+          <tr>
+            <td class="quote-label">Sales Executive</td>
+            <td class="quote-value" colspan="3">${quotation.salesExecutive || ''}</td>
+          </tr>
+          <tr>
+            <td class="quote-label">PAYMENT TERMS</td>
+            <td class="quote-value" colspan="3">${quotation.paymentTerms || 'CDC/Cash'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Subject Section -->
+  ${quotation.subject ? `
+  <div class="subject-section">
+    <span class="subject-label">Subject: </span>
+    <span class="subject-value">${quotation.subject}</span>
+  </div>
+  ` : ''}
   
   <!-- Items Table -->
   <table class="items-table">
@@ -772,35 +1202,8 @@ const generateQuotationHTML = (quotation) => {
       </tr>
     </thead>
     <tbody>
-      ${quotation.items.map((item, index) => {
-        const taxable = item.taxableAmount || item.subtotal || (item.quantity * item.ratePerUnit);
-        const vatPercent = item.vatPercentage || 5;
-        const vatAmt = item.vatAmount || (taxable * (vatPercent / 100));
-        const total = taxable + vatAmt;
-        const imageSrc = item.itemImage || '';
-        const imageTag = imageSrc ? `<img src="${imageSrc}" alt="Item" class="item-image" onerror="this.style.display='none'">` : '';
-        
-        return `
-        <tr>
-          <td class="col-sn">${index + 1}</td>
-          <td class="col-desc">
-            <div class="item-description">
-              <div class="item-text">${item.equipmentType}${item.description ? '<br>' + item.description : ''}</div>
-              ${imageTag}
-            </div>
-          </td>
-          <td class="col-wt">${item.weight ? parseFloat(item.weight).toFixed(2) : '0.00'}</td>
-          <td class="col-cbm">${item.cbm ? parseFloat(item.cbm).toFixed(2) : '0.00'}</td>
-          <td class="col-qty">${item.quantity}</td>
-          <td class="col-rate">${item.ratePerUnit.toFixed(2)}</td>
-          <td class="col-taxable">${taxable.toFixed(2)}</td>
-          <td class="col-vat-pct">${vatPercent}</td>
-          <td class="col-vat-amt">${vatAmt.toFixed(2)}</td>
-          <td class="col-amount">${total.toFixed(2)}</td>
-        </tr>
-        `;
-      }).join('')}
-      
+      ${firstPageItems.map((item, index) => generateItemRow(item, index + 1)).join('')}
+      ${remainingItems.length === 0 ? `
       <!-- Totals Row -->
       <tr class="totals-row">
         <td class="col-sn"></td>
@@ -857,24 +1260,211 @@ const generateQuotationHTML = (quotation) => {
         <td class="col-vat-amt"></td>
         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
       </tr>
+      ` : ''}
      </tbody>
    </table>
    
-   <!-- Footer - Always at bottom -->
+   ${remainingItems.length > 0 ? (() => {
+     // Split remaining items into pages of 8 items each
+     let continuationPages = '';
+     for (let i = 0; i < remainingItems.length; i += itemsPerPage) {
+       const pageItems = remainingItems.slice(i, i + itemsPerPage);
+       const isLastPage = (i + itemsPerPage >= remainingItems.length);
+       const startIndex = itemsPerPage + i + 1;
+       
+       continuationPages += `
+   <div class="page-break"></div>
+   
+   <!-- Header - Single PNG Image -->
+   <div class="header">
+     ${headerImageBase64 ? `<img src="${headerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Header" class="header-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Header image not found. Please place Header.png in backend/assets/ folder</div>'}
+     <div class="document-title">QUOTATION</div>
+     <div class="trn">TRN: 100123456700003</div>
+   </div>
+   
+   <!-- Items Table Continuation -->
+   <table class="items-table">
+     <thead>
+       <tr>
+         <th class="col-sn">SN</th>
+         <th class="col-desc">Description of Goods</th>
+         <th class="col-wt">Wt<br>(KG)</th>
+         <th class="col-cbm">CBM</th>
+         <th class="col-qty">Qty</th>
+         <th class="col-rate">Rate<br>(AED)</th>
+         <th class="col-taxable">Taxable<br>Amount</th>
+         <th class="col-vat-pct">VAT<br>%</th>
+         <th class="col-vat-amt">VAT<br>Amount</th>
+         <th class="col-amount">Amount<br>(AED)</th>
+       </tr>
+     </thead>
+     <tbody>
+       ${pageItems.map((item, idx) => generateItemRow(item, startIndex + idx)).join('')}
+       ${isLastPage ? `
+       <!-- Totals Row -->
+       <tr class="totals-row">
+         <td class="col-sn"></td>
+         <td class="col-desc totals-label">TOTAL</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable">${subtotalBeforeCharges.toFixed(2)}</td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt">${vatAmount.toFixed(2)}</td>
+         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
+       </tr>
+       
+       <!-- Summary Rows -->
+       <tr class="summary-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">Total w/o VAT</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable">${beforeDiscount.toFixed(2)}</td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt"></td>
+         <td class="col-amount"></td>
+       </tr>
+       
+       <tr class="summary-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">VAT (${quotation.vatPercentage || 5}%)</td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable"></td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt">${vatAmount.toFixed(2)}</td>
+         <td class="col-amount"></td>
+       </tr>
+       
+       <tr class="net-total-row">
+         <td class="col-sn"></td>
+         <td class="col-desc">
+           Net Total
+           <div class="amount-in-words">${amountText}</div>
+         </td>
+         <td class="col-wt"></td>
+         <td class="col-cbm"></td>
+         <td class="col-qty"></td>
+         <td class="col-rate"></td>
+         <td class="col-taxable"></td>
+         <td class="col-vat-pct"></td>
+         <td class="col-vat-amt"></td>
+         <td class="col-amount net-total-amount">${netTotal.toFixed(2)}</td>
+       </tr>
+       ` : ''}
+     </tbody>
+   </table>
+   `;
+     }
+     return continuationPages;
+   })() : ''}
+   
+   <!-- Footer - Single PNG Image -->
    <div class="footer">
-     <div class="footer-services">
-       Sale & Hire of Single & Double Width Mobile Towers • Ladders • Steel Cup Lock Scaffolding • Couplers
-     </div>
-     <div class="footer-contact">
-       Tel: +971 58 137 5601 | +971 50 926 8038  |  Email: Sales@alcoascaffolding.com  |  Web: www.alcoascaffolding.com
-     </div>
-     <div class="footer-address">
-       Musaffah, Abu Dhabi, UAE
-     </div>
+     ${footerImageBase64 ? `<img src="${footerImageBase64}" alt="ALCOA ALUMINIUM SCAFFOLDING Footer" class="footer-image">` : '<div style="text-align: center; color: red; padding: 20px;">⚠️ Footer image not found. Please place Footer.png in backend/assets/ folder</div>'}
    </div>
  </body>
  </html>
   `;
+};
+
+/**
+ * Verify Playwright browser installation
+ * @returns {Promise<boolean>} - True if browser is installed
+ */
+const verifyBrowserInstallation = async () => {
+  try {
+    // Try to get the browser executable path
+    const executablePath = chromium.executablePath();
+    console.log('[Playwright] Checking browser at:', executablePath);
+    
+    if (executablePath && fs.existsSync(executablePath)) {
+      console.log('[Playwright] ✅ Browser found at:', executablePath);
+      return true;
+    }
+    
+    // Check common Render paths manually
+    const basePaths = [
+      '/opt/render/.cache/ms-playwright',
+      process.env.PLAYWRIGHT_BROWSERS_PATH,
+      path.join(process.env.HOME || '/tmp', '.cache/ms-playwright'),
+      path.join(process.cwd(), '.cache/ms-playwright')
+    ].filter(Boolean);
+    
+    for (const basePath of basePaths) {
+      try {
+        if (!fs.existsSync(basePath)) continue;
+        
+        // Check for chromium directories
+        const dirs = fs.readdirSync(basePath);
+        for (const dir of dirs) {
+          if (dir.startsWith('chromium')) {
+            // Check for chrome-linux directory
+            const chromeLinuxPath = path.join(basePath, dir, 'chrome-linux');
+            if (fs.existsSync(chromeLinuxPath)) {
+              const chromePath = path.join(chromeLinuxPath, 'chrome');
+              const headlessShellPath = path.join(chromeLinuxPath, 'headless_shell');
+              
+              if (fs.existsSync(chromePath) || fs.existsSync(headlessShellPath)) {
+                console.log('[Playwright] ✅ Browser found at alternative path:', chromePath || headlessShellPath);
+                return true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Continue checking other paths
+        console.log('[Playwright] Checked path:', basePath, '- not found');
+      }
+    }
+    
+    console.warn('[Playwright] ⚠️ Browser not found. Expected path:', executablePath);
+    return false;
+  } catch (error) {
+    console.error('[Playwright] Verification error:', error.message);
+    return false;
+  }
+};
+
+/**
+ * Install Playwright browsers if not already installed
+ * @returns {Promise<boolean>} - True if installation successful or already installed
+ */
+const ensureBrowserInstalled = async () => {
+  try {
+    const isInstalled = await verifyBrowserInstallation();
+    if (isInstalled) {
+      console.log('[Playwright] ✅ Browsers already installed');
+      return true;
+    }
+    
+    console.log('[Playwright] ⚠️ Browsers not found. Installing...');
+    execSync('npx playwright install chromium', {
+      stdio: 'inherit',
+      timeout: 300000, // 5 minutes timeout
+      env: { ...process.env, PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '0' }
+    });
+    
+    console.log('[Playwright] ✅ Browser installation completed');
+    
+    // Verify installation after install
+    const verified = await verifyBrowserInstallation();
+    if (!verified) {
+      console.error('[Playwright] ❌ Browser installation completed but verification failed');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[Playwright] ❌ Failed to install browsers:', error.message);
+    return false;
+  }
 };
 
 /**
@@ -886,10 +1476,25 @@ const generateQuotationPDFBuffer = async (quotation) => {
   let browser = null;
   
   try {
-    // Launch browser
+    // Ensure browser is installed (will check and install if needed)
+    const isReady = await ensureBrowserInstalled();
+    if (!isReady) {
+      throw new Error('Playwright browser not installed. Please ensure browsers are installed during deployment.');
+    }
+    
+    // Launch browser with production-friendly configuration
     browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ]
     });
     
     const page = await browser.newPage();
@@ -976,8 +1581,38 @@ const generateQuotationPDFBuffer = async (quotation) => {
     return pdfBuffer;
   } catch (error) {
     if (browser) {
-      await browser.close();
+      try {
+        await browser.close();
+      } catch (closeError) {
+        // Ignore browser close errors
+        console.warn('Error closing browser:', closeError.message);
+      }
     }
+    
+    // Log detailed error information
+    console.error('PDF Generation Error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
+    
+    // Provide more helpful error messages for common Playwright issues
+    if (error.message && (error.message.includes('Executable doesn\'t exist') || 
+        error.message.includes('browserType.launch'))) {
+      const enhancedError = new Error('Playwright browser not installed. The browser executable is missing. Please ensure Playwright browsers are installed during deployment.');
+      enhancedError.originalError = error.message;
+      enhancedError.statusCode = 503;
+      throw enhancedError;
+    }
+    
+    // Handle timeout errors
+    if (error.name === 'TimeoutError' || error.message.includes('timeout')) {
+      const timeoutError = new Error('PDF generation timed out. The service may be overloaded. Please try again.');
+      timeoutError.statusCode = 503;
+      throw timeoutError;
+    }
+    
     throw error;
   }
 };
@@ -1006,7 +1641,9 @@ const generateQuotationPDFFile = async (quotation) => {
 
 module.exports = {
   generateQuotationPDFBuffer,
-  generateQuotationPDFFile
+  generateQuotationPDFFile,
+  verifyBrowserInstallation,
+  ensureBrowserInstalled
 };
 
 
