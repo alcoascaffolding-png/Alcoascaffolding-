@@ -17,6 +17,18 @@ module.exports = {
       // Allow requests with no origin (like mobile apps, Postman, curl)
       if (!origin) return callback(null, true);
       
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+      
+      // In development, allow all localhost and 127.0.0.1 origins
+      if (isDevelopment) {
+        if (origin.startsWith('http://localhost') || 
+            origin.startsWith('http://127.0.0.1') ||
+            origin.startsWith('https://localhost') ||
+            origin.startsWith('https://127.0.0.1')) {
+          return callback(null, true);
+        }
+      }
+      
       const allowedOrigins = [
         // Local development (Vite default ports)
         'http://localhost:5173',
@@ -37,6 +49,7 @@ module.exports = {
         // Render
         'https://alcoa-scaffolding.onrender.com',
         'https://alco-aluminium-scaffolding.onrender.com',
+        'https://alco-aluminium-scaffolding-backend-5ucb.onrender.com',
         // Vercel
         'https://alcoa-scaffolding.vercel.app',
         'https://alco-aluminium-scaffolding.vercel.app'
@@ -67,9 +80,9 @@ module.exports = {
           console.warn(`CORS: Unlisted origin ${origin} - allowing in production mode`);
           callback(null, true);
         } else {
-          console.warn(`CORS blocked origin: ${origin}`);
-          console.warn(`Allowed origins:`, allowedOrigins);
-          callback(new Error(`Not allowed by CORS: ${origin}`));
+          // In development, allow all origins for easier debugging
+          console.warn(`CORS: Unlisted origin ${origin} - allowing in development mode`);
+          callback(null, true);
         }
       }
     },

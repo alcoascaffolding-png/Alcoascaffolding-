@@ -52,7 +52,7 @@ const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
           <div className="relative">
             <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
             <input
-              type="text"
+              type="email"
               value={contactForm.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -169,8 +169,11 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
 
   // Validation functions
   const validateEmail = (email) => {
+    if (!email) return false;
+    const trimmedEmail = email.trim();
+    if (trimmedEmail.length === 0) return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(trimmedEmail);
   };
 
   const validatePhone = (phone) => {
@@ -189,7 +192,8 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
     }
 
     // Email validation - with format check
-    if (!contactForm.email || contactForm.email.trim().length === 0) {
+    const trimmedEmail = contactForm.email ? contactForm.email.trim() : '';
+    if (!trimmedEmail || trimmedEmail.length === 0) {
       toast.error('❌ Please enter an email address', {
         position: "top-right",
         autoClose: 4000,
@@ -197,7 +201,7 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
       return false;
     }
 
-    if (!validateEmail(contactForm.email)) {
+    if (!validateEmail(trimmedEmail)) {
       toast.error('❌ Please enter a valid email address (e.g., user@example.com)', {
         position: "top-right",
         autoClose: 4000,
@@ -262,12 +266,12 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: contactForm.name,
-          email: contactForm.email,
-          phone: contactForm.phone,
-          company: contactForm.company,
+          name: contactForm.name?.trim() || '',
+          email: contactForm.email?.trim() || '',
+          phone: contactForm.phone?.trim() || '',
+          company: contactForm.company?.trim() || '',
           projectType: contactForm.projectType,
-          message: contactForm.message,
+          message: contactForm.message?.trim() || '',
           projectHeight: quoteData.projectHeight,
           coverageArea: quoteData.coverageArea,
           duration: quoteData.duration,
@@ -430,13 +434,13 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
             </label>
             <div className="relative">
               <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-              <input
-                type="text"
-                value={contactForm.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter your email"
-              />
+                <input
+                  type="email"
+                  value={contactForm.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Enter your email"
+                />
             </div>
           </div>
 
@@ -603,8 +607,11 @@ const ContactUs = () => {
 
   // Validation functions
   const validateEmail = (email) => {
+    if (!email) return false;
+    const trimmedEmail = email.trim();
+    if (trimmedEmail.length === 0) return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(trimmedEmail);
   };
 
   const validatePhone = (phone) => {
@@ -623,7 +630,8 @@ const ContactUs = () => {
     }
 
     // Email validation - with format check
-    if (!contactForm.email || contactForm.email.trim().length === 0) {
+    const trimmedEmail = contactForm.email ? contactForm.email.trim() : '';
+    if (!trimmedEmail || trimmedEmail.length === 0) {
       toast.error('❌ Please enter an email address', {
         position: "top-right",
         autoClose: 4000,
@@ -631,7 +639,7 @@ const ContactUs = () => {
       return false;
     }
 
-    if (!validateEmail(contactForm.email)) {
+    if (!validateEmail(trimmedEmail)) {
       toast.error('❌ Please enter a valid email address (e.g., user@example.com)', {
         position: "top-right",
         autoClose: 4000,
@@ -695,12 +703,12 @@ const ContactUs = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: contactForm.name,
-          email: contactForm.email,
-          phone: contactForm.phone,
-          company: contactForm.company,
+          name: contactForm.name?.trim() || '',
+          email: contactForm.email?.trim() || '',
+          phone: contactForm.phone?.trim() || '',
+          company: contactForm.company?.trim() || '',
           projectType: contactForm.projectType,
-          message: contactForm.message
+          message: contactForm.message?.trim() || ''
         })
       });
 
@@ -751,8 +759,22 @@ const ContactUs = () => {
       // Handle different types of errors
       let errorMessage = 'Failed to send message. ';
       
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      // Check for CORS errors specifically
+      if (error.message && (
+        error.message.includes('CORS') || 
+        error.message.includes('cors') ||
+        error.message.includes('Access-Control') ||
+        (error.name === 'TypeError' && error.message.includes('Failed to fetch'))
+      )) {
+        errorMessage += 'CORS error detected. Please make sure the backend server is running and CORS is properly configured.';
+        if (ENV_CONFIG.isDevelopment) {
+          errorMessage += ` (Backend URL: ${ENV_CONFIG.apiUrl})`;
+        }
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage += 'Cannot connect to server. Please make sure the backend server is running.';
+        if (ENV_CONFIG.isDevelopment) {
+          errorMessage += ` (Trying to connect to: ${ENV_CONFIG.apiUrl})`;
+        }
       } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
         errorMessage += 'Network error. Please check your internet connection.';
       } else {
