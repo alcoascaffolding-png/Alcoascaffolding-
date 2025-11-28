@@ -24,21 +24,44 @@ const isDev = isLocalhost ||
               import.meta.env.VITE_ENV === 'development';
 
 // Determine API URL:
-// 1. If VITE_API_URL is explicitly set, use it (highest priority)
-// 2. If on localhost (runtime check), use localhost backend
-// 3. Otherwise, use production URL (default for all production deployments)
+// CRITICAL: Runtime hostname check ALWAYS wins - prevents localhost on production
 const getApiUrl = () => {
-  // Highest priority: explicit environment variable
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // STEP 1: Runtime hostname check (ABSOLUTE PRIORITY - cannot be overridden)
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const hostname = window.location.hostname.toLowerCase().trim();
+    
+    // Explicitly check for localhost/local network - if NOT localhost, use production
+    const isLocalhostDomain = hostname === 'localhost' || 
+                              hostname === '127.0.0.1' || 
+                              hostname === '' ||
+                              hostname.startsWith('192.168.') || 
+                              hostname.startsWith('10.0.');
+    
+    // If NOT on localhost, ALWAYS use production backend (no exceptions)
+    if (!isLocalhostDomain) {
+      // We're on a production/public domain - FORCE production backend
+      // This overrides VITE_API_URL even if it's set to localhost
+      return PRODUCTION_API_URL;
+    }
+    
+    // If on localhost, use localhost backend
+    if (isLocalhostDomain) {
+      return DEVELOPMENT_API_URL;
+    }
   }
   
-  // Second priority: if running on localhost, use localhost backend
-  if (isLocalhost) {
-    return DEVELOPMENT_API_URL;
+  // STEP 2: Fallback - Check VITE_API_URL (but NEVER use localhost URLs)
+  // This only applies in edge cases where hostname check didn't run
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  if (viteApiUrl && 
+      typeof viteApiUrl === 'string' &&
+      !viteApiUrl.includes('localhost') &&
+      !viteApiUrl.includes('127.0.0.1') &&
+      viteApiUrl.startsWith('https://')) {
+    return viteApiUrl;
   }
   
-  // Default: use production URL for all non-localhost deployments
+  // STEP 3: Default to production URL (safest for all deployments)
   return PRODUCTION_API_URL;
 };
 
