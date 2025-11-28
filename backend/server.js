@@ -182,6 +182,18 @@ const startServer = async () => {
   
   server = app.listen(PORT, () => {
     logger.serverStarted(PORT, config.server.env);
+  }).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      logger.error(`❌ Port ${PORT} is already in use.`);
+      logger.error('💡 To fix this, run one of the following:');
+      logger.error(`   Windows: netstat -ano | findstr :${PORT} (then taskkill /PID <PID> /F)`);
+      logger.error(`   Or use: .\\kill-port.ps1 ${PORT}`);
+      logger.error(`   Mac/Linux: lsof -ti:${PORT} | xargs kill -9`);
+      process.exit(1);
+    } else {
+      logger.error('❌ Server error:', err);
+      process.exit(1);
+    }
   });
   
   return server;

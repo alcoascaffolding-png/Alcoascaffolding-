@@ -3,14 +3,19 @@
  * Central place for all environment variables
  */
 
+// Determine if we're in development mode
+const isDev = import.meta.env.DEV || import.meta.env.VITE_ENV === 'development' || import.meta.env.MODE === 'development';
+
 export const ENV_CONFIG = {
-  // API Configuration
-  apiUrl: import.meta.env.VITE_API_URL || 'https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api',
+  // API Configuration - use localhost in development, production URL otherwise
+  apiUrl: import.meta.env.VITE_API_URL || (isDev 
+    ? 'http://localhost:5000/api' 
+    : 'https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api'),
   
   // Environment
-  env: import.meta.env.VITE_ENV || 'production',
-  isDevelopment: import.meta.env.VITE_ENV === 'development',
-  isProduction: import.meta.env.VITE_ENV === 'production',
+  env: import.meta.env.VITE_ENV || (isDev ? 'development' : 'production'),
+  isDevelopment: isDev,
+  isProduction: !isDev,
   
   // Site Configuration
   appName: import.meta.env.VITE_APP_NAME || 'Alcoa Scaffolding',
