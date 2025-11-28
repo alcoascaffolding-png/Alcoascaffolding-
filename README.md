@@ -357,19 +357,27 @@ Export your data in multiple formats:
 npm start
 ```
 
-### Frontend Deployment (Netlify/Vercel)
+### Frontend Deployment (Netlify/Vercel/Render)
 
 1. Build the production version:
 ```bash
+cd frontend
 npm run build
 ```
 
 2. Deploy the `dist` folder to your hosting platform
 
-3. Set environment variable:
+3. **Important:** Set environment variable in your deployment platform:
 ```
-VITE_API_URL=https://your-backend-url.com/api
+VITE_API_URL=https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api
 ```
+
+**Note:** If `VITE_API_URL` is not set, the app will automatically use the production backend URL (`https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api`) when built for production. However, it's recommended to explicitly set it in your deployment platform's environment variables.
+
+**For different platforms:**
+- **Netlify:** Go to Site Settings → Environment Variables → Add `VITE_API_URL`
+- **Vercel:** Go to Project Settings → Environment Variables → Add `VITE_API_URL`
+- **Render:** Add to `envVars` in your `render.yaml` or in the dashboard
 
 ## 🤝 Contributing
 
