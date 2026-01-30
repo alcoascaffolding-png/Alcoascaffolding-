@@ -35,30 +35,6 @@ const Projects = () => {
     },
     {
       id: 2,
-      title: 'Abu Dhabi Financial Center',
-      category: 'commercial',
-      location: 'Abu Dhabi, UAE',
-      duration: '4 months',
-      team: '12 specialists',
-      description: 'Large-scale scaffolding for shopping center expansion while maintaining operations.',
-      image: 'westfield',
-      stats: { height: '25m', area: '4,000m²', difficulty: 'Advanced' },
-      tags: ['Retail Active', 'Multi-Level', 'Public Safety']
-    },
-    {
-      id: 3,
-      title: 'Abu Dhabi Residential Tower',
-      category: 'residential',
-      location: 'Abu Dhabi, UAE',
-      duration: '8 months',
-      team: '20 specialists',
-      description: 'High-rise residential building construction with premium scaffolding systems.',
-      image: 'residential-tower',
-      stats: { height: '120m', area: '1,800m²', difficulty: 'Expert' },
-      tags: ['High-Rise', 'Luxury Finish', 'Weather Protection']
-    },
-    {
-      id: 4,
       title: 'Industrial Refinery Maintenance',
       category: 'industrial',
       location: 'Abu Dhabi, UAE',
@@ -68,30 +44,6 @@ const Projects = () => {
       image: 'refinery',
       stats: { height: '45m', area: '3,200m²', difficulty: 'Expert' },
       tags: ['Hazardous Environment', 'Specialized Access', '24/7 Operations']
-    },
-    {
-      id: 5,
-      title: 'Heritage Church Restoration',
-      category: 'commercial',
-      location: 'Abu Dhabi, UAE',
-      duration: '5 months',
-      team: '8 specialists',
-      description: 'Delicate scaffolding work for 150-year-old church restoration project.',
-      image: 'church',
-      stats: { height: '35m', area: '800m²', difficulty: 'Advanced' },
-      tags: ['Heritage Preservation', 'Minimal Impact', 'Architectural Detail']
-    },
-    {
-      id: 6,
-      title: 'Suburban Home Extension',
-      category: 'residential',
-      location: 'Abu Dhabi, UAE',
-      duration: '2 months',
-      team: '4 specialists',
-      description: 'Efficient scaffolding solution for residential extension and renovation.',
-      image: 'home-extension',
-      stats: { height: '8m', area: '300m²', difficulty: 'Standard' },
-      tags: ['Residential', 'Quick Setup', 'Neighbor Friendly']
     }
   ];
 
