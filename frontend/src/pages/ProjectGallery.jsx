@@ -59,44 +59,6 @@ const ProjectGallery = () => {
     },
     {
       id: 2,
-      title: 'Abu Dhabi Financial Center',
-      category: 'commercial',
-      location: 'Abu Dhabi, UAE',
-      year: '2023',
-      duration: '4 months',
-      team: '12 specialists',
-      description: 'Large-scale scaffolding for shopping center expansion while maintaining full retail operations.',
-      challenge: 'Maintaining customer access and safety during active retail operations',
-      solution: 'Phased installation with sound barriers and protected walkways',
-      results: [
-        'Zero customer incidents',
-        'Retail operations uninterrupted',
-        'Customer satisfaction maintained'
-      ],
-      stats: { height: '25m', area: '4,000m²', complexity: 'Advanced' },
-      tags: ['Retail Active', 'Multi-Phase', 'Public Safety']
-    },
-    {
-      id: 3,
-      title: 'Abu Dhabi Residential Tower',
-      category: 'residential',
-      location: 'Abu Dhabi, UAE',
-      year: '2022',
-      duration: '8 months',
-      team: '20 specialists',
-      description: 'High-rise residential building construction with premium aluminum scaffolding systems.',
-      challenge: 'Weather protection for luxury finishes at extreme heights',
-      solution: 'Weather-resistant scaffolding with integrated protection systems',
-      results: [
-        'Zero weather delays',
-        'Premium finish quality maintained',
-        'Resident safety ensured'
-      ],
-      stats: { height: '120m', area: '1,800m²', complexity: 'Expert' },
-      tags: ['High-Rise', 'Luxury', 'Weather Protection']
-    },
-    {
-      id: 4,
       title: 'Abu Dhabi Refinery Maintenance',
       category: 'industrial',
       location: 'Abu Dhabi, UAE',
@@ -115,7 +77,7 @@ const ProjectGallery = () => {
       tags: ['Hazardous Environment', 'Industrial', '24/7 Operations']
     },
     {
-      id: 5,
+      id: 3,
       title: 'Abu Dhabi Heritage Mosque',
       category: 'heritage',
       location: 'Abu Dhabi, UAE',
@@ -134,7 +96,7 @@ const ProjectGallery = () => {
       tags: ['Heritage', 'Community', 'Award Winning']
     },
     {
-      id: 6,
+      id: 4,
       title: 'Abu Dhabi Industrial Complex',
       category: 'industrial',
       location: 'Abu Dhabi, UAE',
