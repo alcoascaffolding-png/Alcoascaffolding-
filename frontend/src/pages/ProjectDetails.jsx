@@ -63,84 +63,6 @@ const ProjectDetails = () => {
     },
     {
       id: 2,
-      title: 'Abu Dhabi Financial Center',
-      category: 'commercial',
-      location: 'Abu Dhabi, UAE',
-      year: '2023',
-      duration: '4 months',
-      team: '12 specialists',
-      description: 'Large-scale scaffolding for shopping center expansion while maintaining full retail operations.',
-      challenge: 'Maintaining customer access and safety during active retail operations',
-      solution: 'Phased installation with sound barriers and protected walkways',
-      results: [
-        'Zero customer incidents',
-        'Retail operations uninterrupted',
-        'Customer satisfaction maintained'
-      ],
-      stats: { height: '25m', area: '4,000m²', complexity: 'Advanced' },
-      tags: ['Retail Active', 'Multi-Phase', 'Public Safety'],
-      fullDescription: 'The Abu Dhabi Financial Center expansion required innovative scaffolding solutions to accommodate ongoing retail operations. Our team successfully delivered a comprehensive scaffolding system that maintained full customer access while ensuring construction safety.',
-      approach: [
-        'Night-time installation phases to minimize disruption',
-        'Sound barrier implementation for noise control',
-        'Protected customer walkways and access routes',
-        'Real-time monitoring of retail operations impact',
-        'Flexible scheduling based on retail traffic patterns'
-      ],
-      technologies: [
-        'Low-Noise Installation Equipment',
-        'Sound Dampening Materials',
-        'Flexible Access Control Systems',
-        'Real-Time Monitoring Technology',
-        'Quick-Deploy Safety Barriers'
-      ],
-      awards: [
-        'Commercial Excellence Award 2023',
-        'Innovation in Retail Construction',
-        'Zero Disruption Achievement'
-      ]
-    },
-    {
-      id: 3,
-      title: 'Abu Dhabi Residential Tower',
-      category: 'residential',
-      location: 'Abu Dhabi, UAE',
-      year: '2022',
-      duration: '8 months',
-      team: '20 specialists',
-      description: 'High-rise residential building construction with premium aluminum scaffolding systems.',
-      challenge: 'Weather protection for luxury finishes at extreme heights',
-      solution: 'Weather-resistant scaffolding with integrated protection systems',
-      results: [
-        'Zero weather delays',
-        'Premium finish quality maintained',
-        'Resident safety ensured'
-      ],
-      stats: { height: '120m', area: '1,800m²', complexity: 'Expert' },
-      tags: ['High-Rise', 'Luxury', 'Weather Protection'],
-      fullDescription: 'This high-rise residential project demanded exceptional attention to weather protection and luxury finish standards. Our scaffolding solution provided comprehensive protection against UAE\'s challenging weather conditions while maintaining the highest quality standards.',
-      approach: [
-        'Advanced weather monitoring and prediction systems',
-        'Integrated protection for luxury finishes',
-        'Multi-level safety protocols for extreme heights',
-        'Resident communication and safety programs',
-        'Quality assurance at every construction phase'
-      ],
-      technologies: [
-        'Weather-Resistant Aluminum Systems',
-        'Integrated Finish Protection',
-        'Advanced Height Safety Equipment',
-        'Weather Monitoring Technology',
-        'Premium Quality Materials'
-      ],
-      awards: [
-        'High-Rise Construction Excellence 2022',
-        'Weather Innovation Award',
-        'Luxury Construction Standard'
-      ]
-    },
-    {
-      id: 4,
       title: 'Abu Dhabi Refinery Maintenance',
       category: 'industrial',
       location: 'Abu Dhabi, UAE',
@@ -179,7 +101,7 @@ const ProjectDetails = () => {
       ]
     },
     {
-      id: 5,
+      id: 3,
       title: 'Abu Dhabi Heritage Mosque',
       category: 'heritage',
       location: 'Abu Dhabi, UAE',
@@ -218,7 +140,7 @@ const ProjectDetails = () => {
       ]
     },
     {
-      id: 6,
+      id: 4,
       title: 'Abu Dhabi Industrial Complex',
       category: 'industrial',
       location: 'Abu Dhabi, UAE',
