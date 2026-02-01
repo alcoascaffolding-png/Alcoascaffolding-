@@ -84,14 +84,14 @@ const ProductDetail = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-20 transition-theme">
         <div className="container-custom">
-          <Link 
-            to="/products" 
+          <Link
+            to="/products"
             className="inline-flex items-center text-brand-primary-600 dark:text-brand-primary-400 hover:text-brand-primary-700 dark:hover:text-brand-primary-300 mb-6 transition-colors"
           >
             <FiArrowLeft className="mr-2" />
             Back to Products
           </Link>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -122,11 +122,12 @@ const ProductDetail = () => {
               >
                 {/* Product Image */}
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-                  <img 
+                  {/* <img 
                     src={product.image} 
                     alt={product.title}
                     className="w-full h-full object-contain"
-                  />
+                  /> */}
+                  <FiPackage className="w-20 h-20 text-brand-primary-600 dark:text-brand-primary-400 opacity-50" />
                 </div>
 
                 {/* Content */}
@@ -134,7 +135,7 @@ const ProductDetail = () => {
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
                     {product.title}
                   </h3>
-                  
+
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
                     {product.description}
                   </p>
@@ -173,7 +174,7 @@ const ProductDetail = () => {
 
                   {/* CTA */}
                   <div className="flex gap-2">
-                    <Link 
+                    <Link
                       to={`/contact-us?product=${product.title}`}
                       className="btn-primary flex-1 text-sm py-2"
                     >

@@ -21,26 +21,26 @@ const ServiceDetail = () => {
           <div className="inline-block bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium mb-4">
             {service.category}
           </div>
-          
+
           <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-4 sm:mb-6">
             {service.title}
           </h1>
-          
+
           <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark">
             {service.description}
           </p>
-          
+
           {/* CTA Buttons */}
           <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Link 
-              to={`/contact-us?service=${serviceId}`} 
+            <Link
+              to={`/contact-us?service=${serviceId}`}
               className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
               <FiMail className="mr-2" />
               Get Quote
             </Link>
-            <a 
-              href="tel:+971581375601" 
+            <a
+              href="tel:+971581375601"
               className="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-semibold rounded-lg border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
             >
               <FiPhone className="mr-2" />
@@ -56,12 +56,15 @@ const ServiceDetail = () => {
           {/* Main Content - Left Side (2/3) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Service Image */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
-              <img 
+            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md flex items-center justify-center py-12">
+              {/* <img 
                 src={service.image} 
                 alt={service.title}
                 className="w-full h-64 sm:h-96 object-contain bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6"
-              />
+              /> */}
+              <div className="text-8xl sm:text-9xl bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full p-8">
+                <FiTool className="w-24 h-24 text-blue-600 dark:text-blue-400" />
+              </div>
             </div>
 
             {/* Highlights */}
@@ -116,13 +119,13 @@ const ServiceDetail = () => {
 
               {/* Contact CTA */}
               <div className="mt-6 space-y-3">
-                <Link 
+                <Link
                   to={`/contact-us?service=${serviceId}`}
                   className="block w-full text-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Request Quote
                 </Link>
-                <a 
+                <a
                   href="tel:+971581375601"
                   className="block w-full text-center px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
                 >
@@ -156,7 +159,7 @@ const ServiceDetail = () => {
       {/* Back to Services */}
       <section className="pb-12 sm:pb-16">
         <div className="container-custom text-center">
-          <Link 
+          <Link
             to="/services"
             className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
           >

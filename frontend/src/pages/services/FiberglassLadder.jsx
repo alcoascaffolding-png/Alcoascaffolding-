@@ -20,12 +20,13 @@ const FiberglassLadder = () => {
         <div className="container-custom grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Service Image */}
           <div className="lg:col-span-3 mb-6">
-            <div className="card overflow-hidden">
-              <img 
+            <div className="card overflow-hidden flex items-center justify-center py-12 bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              {/* <img 
                 src={fiberglassLadder} 
                 alt="Fiberglass Ladder" 
                 className="w-full h-64 sm:h-96 object-contain bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
-              />
+              /> */}
+              <div className="text-8xl sm:text-9xl">🪜</div>
             </div>
           </div>
 
