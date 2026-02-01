@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { servicesData } from '../../data/servicesData';
-import { FiCheck, FiPhone, FiMail } from 'react-icons/fi';
+import { FiCheck, FiPhone, FiMail, FiTool } from 'react-icons/fi';
 
 const ServiceDetail = () => {
   const { serviceId } = useParams();
