@@ -124,7 +124,7 @@ const Footer = () => {
               </div> */}
             </Link>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-8 leading-relaxed text-justify max-w-sm">
-              Professional scaffolding solutions in Abu Dhabi, UAE. We deliver safe, reliable, and efficient services for all your construction needs.
+              Alcoa Aluminium Scaffolding L.L.C - S.P.C provides professional scaffolding solutions in Abu Dhabi, UAE. We deliver safe, reliable, and efficient services to support a wide range of construction and maintenance projects, helping meet your scaffolding and site access needs with quality equipment and experienced support.
             </p>
             <div className="flex space-x-4">
               {socialLinks.map((social) => (
@@ -173,6 +173,9 @@ const Footer = () => {
                   </a>
                   <a href="tel:+971509268038" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
                     +971 50 926 8038
+                  </a>
+                  <a href="tel:+971024429933" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                    +971 02 442 9933
                   </a>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Monday-Saturday, 8am-6pm</p>
                 </div>
