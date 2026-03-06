@@ -560,7 +560,8 @@ const ContactUs = () => {
       icon: FiPhone,
       title: 'Phone',
       primary: '+971 58 137 5601',
-      secondary: '+971 50 926 8038',
+      secondary: '+971 02 442 9933',
+      //secondary: '+971 50 926 8038',
       description: 'Monday-Saturday, 8am-6pm',
       action: 'tel:+971581375601'
     },
@@ -596,6 +597,7 @@ const ContactUs = () => {
       address: 'Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinaiyah 1 Street, Office number 11, 1st Floor, Abu Dhabi, UAE',
       phone: '+971 58 137 5601',
       phone2: '+971 50 926 8038',
+      phone3: '+971 02 442 9933',
       email: 'Sales@alcoascaffolding.com',
       isHeadquarters: true
     }
