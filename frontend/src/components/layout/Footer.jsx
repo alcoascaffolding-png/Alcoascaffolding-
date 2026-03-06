@@ -193,7 +193,7 @@ const Footer = () => {
                   <FiMapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <span className="text-gray-600 dark:text-gray-300 font-medium">Musaffah, Abu Dhabi</span>
+                  <span className="text-gray-600 dark:text-gray-300 font-medium">Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinai'yah 1 Street, Office number 11, 1st Floor, Abu Dhabi</span>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">UAE</p>
                 </div>
               </div>
