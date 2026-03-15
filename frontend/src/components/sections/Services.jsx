@@ -69,7 +69,7 @@ const Services = () => {
           title: 'Single Width Scaffolding',
           description: 'Tall, narrow scaffolding tower with working platform, wheels, and outriggers for stability.',
           features: ['Compact design', 'Mobile with wheels', 'Extended outriggers'],
-          image: singleWidthScaffolding,
+          image: ,
           link: '/services/single-width-scaffolding'
         },
         {
