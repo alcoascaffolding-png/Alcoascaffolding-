@@ -69,49 +69,49 @@ const Services = () => {
           title: 'Single Width Scaffolding',
           description: 'Tall, narrow scaffolding tower with working platform, wheels, and outriggers for stability.',
           features: ['Compact design', 'Mobile with wheels', 'Extended outriggers'],
-          image: ,
+          image: null,
           link: '/services/single-width-scaffolding'
         },
         {
           title: 'Double Width Scaffolding',
           description: 'Wider scaffolding tower with enhanced stability and larger working platform.',
           features: ['Greater stability', 'Higher load capacity', 'Wide working platform'],
-          image: ,
+          image: null,
           link: '/services/double-width-scaffolding'
         },
         {
           title: 'Stairway Scaffolding',
           description: 'Scaffolding tower with integrated internal stairway for safer access to upper platform.',
           features: ['Internal stairway', 'Enhanced safety', 'Easy platform access'],
-          image: ,
+          image: null,
           link: '/services/stairway-scaffolding'
         },
         {
           title: 'Folding Tower',
           description: 'Foldable aluminium step tower designed for easy storage and transport.',
           features: ['Compact folding design', 'Easy transport', 'Quick setup'],
-          image: ,
+          image: null,
           link: '/services/folding-tower'
         },
         {
           title: 'Combination Scaffolding',
           description: 'Two towers connected by elevated platform for wider access and versatile configurations.',
           features: ['Connected dual towers', 'Wide access solution', 'Enhanced stability'],
-          image: ,
+          image: null,
           link: '/services/combination-scaffolding'
         },
         {
           title: 'Bridge Scaffolding',
           description: 'Bridge-like structure with two towers supporting elevated platform for overhead access.',
           features: ['Overhead walkway', 'Dual tower support', 'Long-span platform'],
-          image: ,
+          image: null,
           link: '/services/bridge-scaffolding'
         },
         {
           title: 'Cantilever Scaffolding',
           description: 'Scaffolding with extended platform supported by cantilevered beams for hard-to-reach areas.',
           features: ['Extended reach', 'Cantilevered platform', 'Access difficult areas'],
-          image: ,
+          image: null,
           link: '/services/cantilever-scaffolding'
         }
       ]
@@ -125,63 +125,63 @@ const Services = () => {
           title: 'Aluminium A Type Dual Purpose',
           description: 'Wide-step A-frame ladder with robust construction for general-purpose use.',
           features: ['Dual-purpose design', 'Wide stable steps', 'Anti-slip feet'],
-          image: ,
+          image: null,
           link: '/services/aluminium-a-type-dual'
         },
         {
           title: 'Aluminium A Type 2 Way (Heavy Duty)',
           description: 'Heavy-duty A-frame ladder with reinforced construction for demanding tasks.',
           features: ['Heavy-duty build', 'Two-way access', 'Robust structure'],
-          image: ,
+          image: null,
           link: '/services/aluminium-a-type-2way'
         },
         {
           title: 'Aluminium Straight Ladder',
           description: 'Single-section straight ladder for leaning against vertical surfaces.',
           features: ['Lightweight aluminium', 'Multiple rung options', 'Easy to transport'],
-          image: ,
+          image: null,
           link: '/services/aluminium-straight-ladder'
         },
         {
           title: 'Aluminium Extension Ladder (Rope Operated)',
           description: 'Two-section rung ladder with rope mechanism for extending to greater heights.',
           features: ['Rope-operated extension', 'Two interlocking sections', 'Extended reach'],
-          image: ,
+          image: null,
           link: '/services/aluminium-extension-ladder'
         },
         {
           title: 'Aluminium Multi-Purpose Ladder',
           description: 'Versatile ladder with multiple hinges for various configurations.',
           features: ['Multiple configurations', 'Compact folding', 'Scaffold compatible'],
-          image: ,
+          image: null,
           link: '/services/aluminium-multi-purpose'
         },
         {
           title: 'Aluminium Combination Ladder',
           description: 'Combined A-frame step ladder with extendable section for versatile tasks.',
           features: ['A-frame & extension combo', 'Multi-functional', 'Space-saving design'],
-          image: ,
+          image: null,
           link: '/services/aluminium-combination'
         },
         {
           title: 'Aluminium Rolling Platform Ladder',
           description: 'Mobile platform ladder with guardrails and wheels for safe elevated work.',
           features: ['Wide stable platform', 'Safety guardrails', 'Easy mobility with wheels'],
-          image: ,
+          image: null,
           link: '/services/aluminium-rolling-platform'
         },
         {
           title: 'Fiberglass A Type One Way Ladder',
           description: 'Non-conductive fiberglass A-frame ladder for electrical work environments.',
           features: ['Non-conductive material', 'Electrical safety rated', 'Weather resistant'],
-          image: ,
+          image: null,
           link: '/services/fiberglass-a-type-oneway'
         },
         {
           title: 'Fiberglass A Type Two Way Ladder',
           description: 'Two-way access fiberglass ladder for electrical safety applications.',
           features: ['Two-way access', 'Non-conductive', 'Heavy-duty fiberglass'],
-          image: ,
+          image: null,
           link: '/services/fiberglass-a-type-twoway'
         }
       ]
@@ -195,63 +195,63 @@ const Services = () => {
           title: 'Standard',
           description: 'Vertical steel cuplock standards with integrated cup connectors for main support.',
           features: ['Heavy-duty vertical support', 'Multiple cup positions', 'Corrosion-resistant finish'],
-          image: ,
+          image: null,
           link: '/services/cuplock-standard'
         },
         {
           title: 'Ledger',
           description: 'High-quality steel cuplock ledgers for horizontal support in scaffolding systems.',
           features: ['Durable steel construction', 'Multiple lengths available', 'Easy connection system'],
-          image: ,
+          image: null,
           link: '/services/cuplock-ledger'
         },
         {
           title: 'Intermediate Transom',
           description: 'Intermediate transoms for additional horizontal support and stability.',
           features: ['Enhanced stability', 'Quick installation', 'Load distribution'],
-          image: ,
+          image: null,
           link: '/services/intermediate-transom'
         },
         {
           title: 'Base Jacks',
           description: 'Adjustable base jacks for leveling scaffolding on uneven ground surfaces.',
           features: ['Height adjustable', 'Stable base plate', 'Load distribution'],
-          image: ,
+          image: null,
           link: '/services/base-jacks'
         },
         {
           title: 'Prop Jacks',
           description: 'Adjustable prop jacks for vertical support and height adjustment.',
           features: ['Height adjustable', 'Heavy-duty construction', 'Easy adjustment mechanism'],
-          image: ,
+          image: null,
           link: '/services/prop-jacks'
         },
         {
           title: 'Steel Planks',
           description: 'Durable steel planks for creating safe working platforms on scaffolding.',
           features: ['Anti-slip surface', 'High strength', 'Weather resistant'],
-          image: ,
+          image: null,
           link: '/services/steel-planks'
         },
         {
           title: 'I-Beam (Aluminium)',
           description: 'Lightweight aluminium I-beams for structural support in scaffolding systems.',
           features: ['Lightweight yet strong', 'Corrosion-resistant', 'Easy to handle'],
-          image: ,
+          image: null,
           link: '/services/aluminium-beam'
         },
         {
           title: 'Wooden Planks',
           description: 'Heavy-duty wooden scaffolding planks with metal reinforcement for safe platforms.',
           features: ['Metal reinforced ends', 'High load capacity', 'Standard dimensions'],
-          image: ,
+          image: null,
           link: '/services/wooden-planks'
         },
         {
           title: 'Lattice Beam',
           description: 'Lattice truss beams for long-span support and structural reinforcement.',
           features: ['Long-span capability', 'Lightweight design', 'High strength-to-weight ratio'],
-          image: ,
+          image: null,
           link: '/services/lattice-beam'
         }
       ]
@@ -265,119 +265,119 @@ const Services = () => {
           title: 'Double Coupler',
           description: 'Heavy-duty double couplers with two jaws for secure 90-degree connections.',
           features: ['90-degree connection', 'High load capacity', 'Corrosion-resistant'],
-          image: ,
+          image: null,
           link: '/services/double-coupler'
         },
         {
           title: 'Double Coupler Pressed',
           description: 'Pressed steel double coupler with smooth finish for right-angle connections.',
           features: ['Pressed steel construction', 'Smooth finish', 'Quick installation'],
-          image: ,
+          image: null,
           link: '/services/double-coupler-pressed'
         },
         {
           title: 'Board Retaining Coupler',
           description: 'L-bracket coupler for securing boards and planks to scaffolding tubes.',
           features: ['Board securing', 'L-bracket design', 'Single bolt mechanism'],
-          image: ,
+          image: null,
           link: '/services/board-retaining-coupler'
         },
         {
           title: 'Swivel Coupler',
           description: 'Adjustable swivel couplers for connecting tubes at any angle with rotation.',
           features: ['360-degree rotation', 'Flexible positioning', 'Strong grip mechanism'],
-          image: ,
+          image: null,
           link: '/services/swivel-coupler'
         },
         {
           title: 'Swivel Coupler Pressed',
           description: 'Pressed steel swivel coupler with smooth finish for angled connections.',
           features: ['Pressed steel', 'Any angle connection', 'Swivel mechanism'],
-          image: ,
+          image: null,
           link: '/services/swivel-coupler-pressed'
         },
         {
           title: 'Single Coupler (Putlog Coupler)',
           description: 'Single-ended coupler with fixed hook for connecting putlog tubes to standards.',
           features: ['Single-tube connection', 'Wall support', 'Easy to install'],
-          image: ,
+          image: null,
           link: '/services/putlog-coupler'
         },
         {
           title: 'Ladder Clamp',
           description: 'Large U-shaped clamp with wing nut for securing ladders to scaffolding.',
           features: ['U-shaped hook', 'Wing nut adjustment', 'Ladder securing'],
-          image: ,
+          image: null,
           link: '/services/ladder-clamp'
         },
         {
           title: 'Gravlock Coupler (Beam Coupler)',
           description: 'Robust coupler with wide flat base for clamping onto beams and girders.',
           features: ['Beam support', 'Heavy load capacity', 'Secure locking system'],
-          image: ,
+          image: null,
           link: '/services/beam-coupler'
         },
         {
           title: 'Toe Board Clamp',
           description: 'Small clamp with curved hook for securing toe boards to platform bases.',
           features: ['Toe board securing', 'Compact design', 'Easy installation'],
-          image: ,
+          image: null,
           link: '/services/toe-board-clamp'
         },
         {
           title: 'Universal Clamp',
           description: 'C-shaped adjustable clamp for flexible connections between scaffolding tubes.',
           features: ['Adjustable connection', 'C-shaped body', 'Easy tightening'],
-          image: ,
+          image: null,
           link: '/services/universal-clamp'
         },
         {
           title: 'Sleeve Coupler',
           description: 'U-shaped coupler with parallel bolts for joining tubes end-to-end.',
           features: ['Length extension', 'Rigid connection', 'High tensile strength'],
-          image: ,
+          image: null,
           link: '/services/sleeve-coupler'
         },
         {
           title: 'Spigot Pin',
           description: 'Square profile pin with collar for connecting vertical scaffolding standards.',
           features: ['Standard connection', 'Square profile', 'Locking hole'],
-          image: ,
+          image: null,
           link: '/services/spigot-pin'
         },
         {
           title: 'Joint Pin',
           description: 'Spring-loaded split pin for secure internal tube connections.',
           features: ['Spring-loaded', 'Internal connection', 'Easy manipulation'],
-          image: ,
+          image: null,
           link: '/services/joint-pin'
         },
         {
           title: 'Wing Nut',
           description: 'Hand-tightening nut with wing projections for quick assembly and disassembly.',
           features: ['Hand-tightening', 'No wrench required', 'Quick fastening'],
-          image: ,
+          image: null,
           link: '/services/wing-nut'
         },
         {
           title: 'Rapid Clamp',
           description: 'Quick-release lever clamp for efficient fastening in formwork applications.',
           features: ['Lever mechanism', 'Quick release', 'Efficient fastening'],
-          image: ,
+          image: null,
           link: '/services/rapid-clamp'
         },
         {
           title: 'Shuttering Clamp',
           description: 'L-shaped sliding clamp for securing and aligning concrete formwork panels.',
           features: ['Formwork application', 'Sliding mechanism', 'Panel alignment'],
-          image: ,
+          image: null,
           link: '/services/shuttering-clamp'
         },
         {
           title: 'Tie Rod',
           description: 'Long cylindrical rod for connecting formwork panels and resisting concrete pressure.',
           features: ['Formwork connection', 'Pressure resistance', 'Long-span support'],
-          image: ,
+          image: null,
           link: '/services/tie-rod'
         }
       ]
