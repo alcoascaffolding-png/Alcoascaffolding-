@@ -470,14 +470,7 @@ const Services = () => {
                     className="group h-full"
                   >
                     <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden h-full flex flex-col hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700">
-                      {/* Service Image */}
-                      <div className="w-full h-48 sm:h-56 overflow-hidden bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-                        <img 
-                          src={service.image} 
-                          alt={service.title}
-                          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
+                      
                       
                       {/* Content */}
                       <div className="p-4 sm:p-6 flex-1 flex flex-col bg-white dark:bg-gray-800">
