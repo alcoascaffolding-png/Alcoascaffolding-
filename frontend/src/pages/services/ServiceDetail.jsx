@@ -57,11 +57,7 @@ const ServiceDetail = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* Service Image */}
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
-              <img 
-                src={service.image} 
-                alt={service.title}
-                className="w-full h-64 sm:h-96 object-contain bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6"
-              />
+              
             </div>
 
             {/* Highlights */}
