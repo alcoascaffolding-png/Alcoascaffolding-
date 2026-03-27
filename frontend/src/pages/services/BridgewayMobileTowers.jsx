@@ -21,11 +21,7 @@ const BridgewayMobileTowers = () => {
           {/* Service Image */}
           <div className="lg:col-span-3 mb-6">
             <div className="card overflow-hidden">
-              <img 
-                src={bridgeScaffolding} 
-                alt="Bridgeway Mobile Towers" 
-                className="w-full h-64 sm:h-96 object-contain bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
-              />
+              
             </div>
           </div>
 
