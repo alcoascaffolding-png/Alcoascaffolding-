@@ -122,11 +122,7 @@ const ProductDetail = () => {
               >
                 {/* Product Image */}
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-                  <img 
-                    src={product.image} 
-                    alt={product.title}
-                    className="w-full h-full object-contain"
-                  />
+                  
                 </div>
 
                 {/* Content */}
