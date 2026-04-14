@@ -12,7 +12,7 @@ import {
   FiArrowUp
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-  import logo from '../../assets/logo.jpeg';
+import logo from '../../assets/logo.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

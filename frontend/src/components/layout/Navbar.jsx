@@ -16,7 +16,7 @@ import {
   selectMobileMenuOpen 
 } from '../../redux/slices/navigationSlice';
 import DarkModeToggle from '../common/DarkModeToggle';
-import logo from '../../assets/logo.jpeg';
+import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const dispatch = useDispatch();
