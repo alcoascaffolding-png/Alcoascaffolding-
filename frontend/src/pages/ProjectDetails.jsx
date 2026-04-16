@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { 
-  FiArrowLeft, 
-  FiExternalLink, 
-  FiCalendar, 
-  FiMapPin, 
+import {
+  FiArrowLeft,
+  FiExternalLink,
+  FiCalendar,
+  FiMapPin,
   FiUsers,
   FiArrowRight,
   FiAward,
@@ -34,7 +34,7 @@ const ProjectDetails = () => {
       solution: 'Custom aluminum scaffolding with heritage-compliant finishes and tourist-safe barriers',
       results: [
         'Zero tourism disruption',
-        'Heritage compliance maintained', 
+        'Heritage compliance maintained',
         'Completed 2 weeks ahead of schedule'
       ],
       stats: { height: '60m', area: '2,500m²', complexity: 'Expert' },
