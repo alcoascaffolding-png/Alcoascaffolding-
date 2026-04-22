@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 
 const PurchaseOrders = () => {
   // ⭐ TOGGLE: Set to false to show working page to client ⭐
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

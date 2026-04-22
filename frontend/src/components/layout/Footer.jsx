@@ -113,7 +113,7 @@ const Footer = () => {
             <Link to="/" className="flex items-center space-x-3 mb-6">
               <img
                 src={logo}
-                alt="Alcoa Aluminium Scaffolding"
+                alt="Alcoa Scaffolding UAE - scaffolding rental Abu Dhabi"
                 className="h-12 w-auto"
               />
               {/* <div>

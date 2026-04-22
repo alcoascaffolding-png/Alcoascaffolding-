@@ -15,6 +15,7 @@ import {
   FiAlertCircle
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 import {
   updateContactForm,
   setContactFormSubmitting,
@@ -791,6 +792,12 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Near Me UAE | Contact Alcoa Scaffolding"
+        description="Search scaffolding near me UAE and contact Alcoa Scaffolding for quotes, supplier support, and fast delivery in Dubai, Abu Dhabi, and Musaffah."
+        keywords="scaffolding near me uae, scaffolding supplier dubai, scaffolding supplier abu dhabi, scaffolding quote dubai, scaffolding quote abu dhabi, alcoa scaffolding"
+        canonical="/scaffolding-near-me-uae"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -801,8 +808,8 @@ const ContactUs = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Get In
-              <span className="text-gradient"> Touch</span>
+              Scaffolding Near Me 
+              <span className="text-gradient">UAE</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Ready to start your project? Contact our expert team for a free consultation

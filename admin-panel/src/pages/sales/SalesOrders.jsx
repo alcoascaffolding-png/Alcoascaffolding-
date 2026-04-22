@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const SalesOrders = () => {
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);

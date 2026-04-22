@@ -11,6 +11,7 @@ import {
   FiAward
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const ProjectGallery = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -168,6 +169,12 @@ const ProjectGallery = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Projects Gallery — UAE Construction Projects by Alcoa"
+        description="View Alcoa's portfolio of successful scaffolding projects across UAE. Heritage buildings, commercial towers, industrial facilities, and residential projects in Dubai, Abu Dhabi and Musaffah."
+        keywords="scaffolding projects UAE, scaffolding portfolio Dubai, scaffolding case studies Abu Dhabi, construction scaffolding gallery UAE, Alcoa projects UAE"
+        canonical="/projects"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">

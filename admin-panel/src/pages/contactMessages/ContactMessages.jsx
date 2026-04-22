@@ -24,7 +24,7 @@ import ENV_CONFIG from '../../config/env';
 
 const ContactMessages = () => {
   // Toggle this to show/hide construction page
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
   
   // Redux state
   const dispatch = useDispatch();
@@ -223,10 +223,9 @@ const ContactMessages = () => {
   // Loading State
   if (loading && !messages.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center gap-3">
+      <div className="space-y-6">
+        <div className="py-2">
+          <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -236,10 +235,9 @@ const ContactMessages = () => {
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Contact Messages</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
               </div>
-            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div>
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
             <div className="px-6 py-20 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -254,10 +252,9 @@ const ContactMessages = () => {
   // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center gap-3">
+      <div className="space-y-6">
+        <div className="py-2">
+          <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -267,10 +264,9 @@ const ContactMessages = () => {
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Contact Messages</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Error loading data</p>
               </div>
-            </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div>
           <div className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200 dark:border-red-800 rounded-2xl p-8 shadow-lg">
           <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -311,10 +307,9 @@ const ContactMessages = () => {
         subtitle: "This module is currently under development and will be available soon."
       }}
     >
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900">
+      <div className="space-y-6">
         {/* Modern Header with Gradient */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="py-2">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -358,10 +353,9 @@ const ContactMessages = () => {
           </button>
           </div>
         </div>
-      </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="space-y-6">
         {/* Statistics Cards */}
       <StatsCards stats={stats} />
 

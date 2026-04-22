@@ -8,7 +8,7 @@ import { PageWrapper } from '../../components/common';
 
 const SalesOrders = () => {
   // ⭐ SIMPLY CHANGE THIS TO false WHEN READY TO GO LIVE ⭐
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
 
   return (
     <PageWrapper

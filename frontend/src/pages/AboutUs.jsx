@@ -12,6 +12,7 @@ import {
   FiMapPin
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const AboutUs = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -117,6 +118,12 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Alcoa Scaffolding | UAE Scaffolding Company | Alcoa UAE"
+        description="Learn about Alcoa Scaffolding, the UAE scaffolding company trusted since 2008 for certified aluminum scaffolding across Dubai and Abu Dhabi."
+        keywords="alcoa scaffolding, scaffolding company uae, scaffolding company abu dhabi, scaffolding company dubai, aluminium scaffolding manufacturer uae"
+        canonical="/alcoa-scaffolding"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -127,8 +134,8 @@ const AboutUs = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              About 
-              <span className="text-gradient"> Alcoa Scaffolding</span>
+              Alcoa Scaffolding 
+              <span className="text-gradient">Company in UAE</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Building UAE's future, one scaffold at a time. Since 2008, we've been 

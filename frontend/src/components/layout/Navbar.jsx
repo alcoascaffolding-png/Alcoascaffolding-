@@ -143,7 +143,7 @@ const Navbar = () => {
             <Link to="/" className="flex items-center space-x-3">
               <img
                 src={logo}
-                alt="Alcoa Aluminium Scaffolding"
+                alt="Alcoa Scaffolding UAE - scaffolding rental Dubai"
                 className="h-12 sm:h-14 w-auto"
               />
               <div className="hidden sm:block">

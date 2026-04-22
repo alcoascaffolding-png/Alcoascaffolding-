@@ -13,6 +13,7 @@ import {
   FiExternalLink
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const SafetyStandards = () => {
 const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -174,6 +175,12 @@ const [showUnderConstruction, setShowUnderConstruction] = useState(false);
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Safety Standards & Compliance UAE — Alcoa"
+        description="Learn about Alcoa's comprehensive scaffolding safety standards and UAE compliance. Zero major incidents since 2008. Safety training programs, inspections and certifications across Dubai, Abu Dhabi and Musaffah."
+        keywords="scaffolding safety UAE, scaffolding compliance UAE, scaffolding safety standards Dubai, scaffolding safety inspector Abu Dhabi, scaffolding training UAE, AS NZS 1576 scaffolding UAE"
+        canonical="/safety"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-success-50 to-brand-primary-50 dark:from-brand-success-950 dark:to-brand-primary-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">

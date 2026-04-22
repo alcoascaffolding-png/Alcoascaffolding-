@@ -15,6 +15,7 @@ import {
 } from 'react-icons/fi';
 import { branchesData, getBranchesWithService, getBranchesWithSpecialty } from '../data/branches';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const Branches = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -263,6 +264,12 @@ const Branches = () => {
     <>
    
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Rental Abu Dhabi | Scaffolding Contractor Abu Dhabi | Alcoa Scaffold"
+        description="Find scaffolding rental Abu Dhabi and Musaffah locations with Alcoa Scaffolding. Serving Dubai, Abu Dhabi, Musaffah, and the UAE with professional scaffolding contractor support."
+        keywords="scaffolding rental abu dhabi, scaffolding contractor abu dhabi, scaffolding near me uae, scaffolding musaffah, scaffolding supplier abu dhabi, alcoa scaffolding"
+        canonical="/scaffolding-rental-abu-dhabi"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 section-padding-sm transition-theme">
         <div className="container-custom">
@@ -273,12 +280,12 @@ const Branches = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Our 
-              <span className="text-gradient"> Branches</span>
+              Scaffolding Rental Abu Dhabi 
+              <span className="text-gradient"> & Musaffah</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
-              Find your nearest Alcoa Scaffolding branch across Abu Dhabi and UAE. 
-              Professional service and expert support wherever you are.
+              Find your nearest Alcoa Scaffolding branch across Abu Dhabi and UAE.
+              We support scaffolding contractor Abu Dhabi requests, scaffolding near me UAE searches, and fast local service.
             </p>
           </motion.div>
         </div>

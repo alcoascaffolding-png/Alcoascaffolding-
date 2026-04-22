@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiCheck, FiInfo, FiPackage } from 'react-icons/fi';
 import { servicesData } from '../../data/servicesData';
+import SEOHead from '../../components/common/SEOHead';
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -81,6 +82,12 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title={`${productCategory.title} | Buy or Rent in UAE | Alcoa Scaffold`}
+        description={`Buy or rent premium ${productCategory.category.toLowerCase()} in Dubai & Abu Dhabi. High-quality scaffolding systems with fast delivery. Contact us today!`}
+        keywords={`${productCategory.category} UAE, ${productCategory.category} Dubai, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
+        canonical={`/products/${productId}`}
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-20 transition-theme">
         <div className="container-custom">
@@ -98,7 +105,7 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
-              {productCategory.title}
+              {productCategory.title} in <span className="text-gradient">Dubai & Abu Dhabi</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
               {productCategory.description}

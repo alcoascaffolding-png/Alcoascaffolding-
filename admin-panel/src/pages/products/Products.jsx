@@ -14,7 +14,7 @@ import { mockProducts } from '../../data/mockData';
 import toast from 'react-hot-toast';
 
 const Products = () => {
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);

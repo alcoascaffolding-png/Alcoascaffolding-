@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 
 const PurchaseInvoices = () => {
   // ⭐ TOGGLE: Set to false to show working page to client ⭐
-  const [isUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
   
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
