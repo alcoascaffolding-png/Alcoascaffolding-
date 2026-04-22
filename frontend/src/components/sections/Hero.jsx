@@ -72,7 +72,7 @@ const Hero = () => {
             >
               <FiAward className="w-3 h-3 xs:w-4 xs:h-4" />
               <span className="text-xs xs:text-sm font-semibold">
-                UAE's Best Scaffolding Company
+                Alcoa Scaffolding UAE
               </span>
             </motion.div>
 
@@ -83,15 +83,11 @@ const Hero = () => {
               transition={{ delay: 0.3 }}
               className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
             >
-              <span className="text-slate-800 dark:text-slate-200">Heavy-Duty</span>
+              <span className="text-slate-800 dark:text-slate-200">Scaffolding Rental </span>
+              <span className="text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-600 to-slate-600 bg-clip-text text-transparent">Dubai </span>
               <br />
-              <span className="text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-600 to-slate-600 bg-clip-text text-transparent">Aluminium</span>
-              <br />
-              <span className="text-blue-500 dark:text-blue-300">Scaffolding</span>
-              <br />
-              <span className="text-slate-800 dark:text-slate-200">Systems &</span>
-              <br />
-              <span className="text-slate-800 dark:text-slate-200">Solutions</span>
+              <span className="text-slate-800 dark:text-slate-200">for </span>
+              <span className="text-blue-500 dark:text-blue-300">Dubai & Abu Dhabi</span>
             </motion.h1>
 
             {/* Subtitle */}
@@ -101,9 +97,9 @@ const Hero = () => {
               transition={{ delay: 0.4 }}
               className="text-xs xs:text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0"
             >
-              We provide strong, safe scaffolding for all your building projects. 
-              Our aluminium scaffolding is light, strong, and easy to use. 
-              Serving Abu Dhabi and all of UAE.
+              Alcoa Scaffolding is a scaffolding company UAE offering rental, hire, and delivery across Dubai, Abu Dhabi, and Musaffah.
+              We provide strong, safe scaffolding for all your building projects.
+              Our aluminium scaffolding is light, strong, and easy to use.
             </motion.p>
 
             {/* Features List */}

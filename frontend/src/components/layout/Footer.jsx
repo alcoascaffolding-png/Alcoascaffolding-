@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FiPhone, 
-  FiMail, 
-  FiMapPin, 
+import {
+  FiPhone,
+  FiMail,
+  FiMapPin,
   FiClock,
   FiFacebook,
   FiLinkedin,
@@ -111,9 +111,9 @@ const Footer = () => {
           {/* Company Info */}
           <div>
             <Link to="/" className="flex items-center space-x-3 mb-6">
-              <img 
-                src={logo} 
-                alt="Alcoa Aluminium Scaffolding" 
+              <img
+                src={logo}
+                alt="Alcoa Scaffolding UAE - scaffolding rental Abu Dhabi"
                 className="h-12 w-auto"
               />
               {/* <div>
@@ -161,46 +161,46 @@ const Footer = () => {
 
             {/* Contact */}
             <div>
-            <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">Contact</h4>
-            <div className="space-y-4 text-sm">
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FiPhone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h4 className="font-bold text-gray-900 dark:text-white mb-6 text-lg">Contact</h4>
+              <div className="space-y-4 text-sm">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FiPhone className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <a href="tel:+971581375601" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                      +971 58 137 5601
+                    </a>
+                    <a href="tel:+971509268038" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
+                      +971 50 926 8038
+                    </a>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Monday-Saturday, 8am-6pm</p>
+                  </div>
                 </div>
-                <div>
-                  <a href="tel:+971581375601" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
-                    +971 58 137 5601
-                  </a>
-                  <a href="tel:+971509268038" className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium">
-                    +971 50 926 8038
-                  </a>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Monday-Saturday, 8am-6pm</p>
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FiMail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <a href="mailto:Sales@alcoascaffolding.com" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium break-all">
+                      Sales@alcoascaffolding.com
+                    </a>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">24/7 Response</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FiMail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <a href="mailto:Sales@alcoascaffolding.com" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium break-all">
-                    Sales@alcoascaffolding.com
-                  </a>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">24/7 Response</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FiMapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <span className="text-gray-600 dark:text-gray-300 font-medium">Musaffah, Abu Dhabi</span>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">UAE</p>
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <FiMapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-300 font-medium">Musaffah, Abu Dhabi</span>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">UAE</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
         {/* Bottom Bar */}
         <div className="border-t border-gray-200 dark:border-gray-700 pt-8">

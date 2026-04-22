@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  FiTool, 
+import {
+  FiTool,
   FiArrowRight,
   FiCheck
 } from 'react-icons/fi';
@@ -422,12 +422,12 @@ const Services = () => {
             <FiTool className="w-4 h-4" />
             <span>Our Services</span>
           </div>
-          
+
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary dark:text-text-primary-dark mb-3 sm:mb-4">
             Comprehensive Scaffolding Solutions
           </h2>
           <p className="text-sm sm:text-base lg:text-lg text-text-secondary dark:text-text-secondary-dark max-w-3xl mx-auto">
-            From installation to maintenance, we provide end-to-end scaffolding services 
+            From installation to maintenance, we provide end-to-end scaffolding services
             designed to meet your project requirements and safety standards.
           </p>
         </motion.div>
@@ -481,13 +481,13 @@ const Services = () => {
                           {categoryItem.icon}
                         </div>
                       </div>
-                      
+
                       {/* Content */}
                       <div className="p-4 sm:p-6 flex-1 flex flex-col bg-white dark:bg-gray-800">
                         <h4 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-3">
                           {service.title}
                         </h4>
-                        
+
                         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed mb-4">
                           {service.description}
                         </p>
@@ -504,7 +504,7 @@ const Services = () => {
 
                         {/* CTA */}
                         <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                          <Link 
+                          <Link
                             to={service.link}
                             className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold text-sm sm:text-base transition-colors"
                           >
@@ -534,13 +534,13 @@ const Services = () => {
               Need a Custom Solution?
             </h3>
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
-              Every project is unique. Our expert team will work with you to design 
+              Every project is unique. Our expert team will work with you to design
               and implement the perfect scaffolding solution for your specific requirements.
             </p>
-            
+
             <div className="flex justify-center">
-              <Link 
-                to="/contact-us" 
+              <Link
+                to="/contact-us"
                 className="text-blue-600 hover:text-blue-700 font-medium underline text-sm sm:text-base lg:text-lg"
               >
                 Get Custom Quote

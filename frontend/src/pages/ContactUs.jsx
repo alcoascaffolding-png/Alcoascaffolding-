@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { 
-  FiPhone, 
-  FiMail, 
-  FiMapPin, 
+import {
+  FiPhone,
+  FiMail,
+  FiMapPin,
   FiClock,
   FiSend,
   FiUser,
@@ -15,148 +15,149 @@ import {
   FiAlertCircle
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
-import { 
-  updateContactForm, 
-  setContactFormSubmitting, 
+import SEOHead from '../components/common/SEOHead';
+import {
+  updateContactForm,
+  setContactFormSubmitting,
   setContactFormSubmitted,
   resetContactForm,
-  selectContactForm 
+  selectContactForm
 } from '../redux/slices/formSlice';
 import ENV_CONFIG from '../config/env';
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Personal Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Full Name *
-          </label>
-          <div className="relative">
-            <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-            <input
-              type="text"
-              value={contactForm.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter your full name"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Email Address *
-          </label>
-          <div className="relative">
-            <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-            <input
-              type="email"
-              value={contactForm.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter your email"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Phone Number *
-          </label>
-          <div className="relative">
-            <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-            <input
-              type="tel"
-              value={contactForm.phone}
-              onChange={(e) => {
-                // Only allow numbers (digits only)
-                const value = e.target.value.replace(/[^\d]/g, '');
-                handleInputChange('phone', value);
-              }}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter your phone number"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Company (Optional)
-          </label>
-          <div className="relative">
-            <FiBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-            <input
-              type="text"
-              value={contactForm.company}
-              onChange={(e) => handleInputChange('company', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Enter company name"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Project Information */}
+  <form onSubmit={handleSubmit} className="space-y-6">
+    {/* Personal Information */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Project Type
-        </label>
-        <select
-          value={contactForm.projectType}
-          onChange={(e) => handleInputChange('projectType', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="">Select project type</option>
-          <option value="residential">Residential</option>
-          <option value="commercial">Commercial</option>
-          <option value="industrial">Industrial</option>
-          <option value="emergency">Emergency Service</option>
-          <option value="rental">Equipment Rental</option>
-          <option value="consultation">Consultation</option>
-        </select>
-      </div>
-
-      {/* Message */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Message *
+          Full Name *
         </label>
         <div className="relative">
-          <FiMessageSquare className="absolute left-3 top-3 text-gray-400 dark:text-gray-500 w-5 h-5" />
-          <textarea
-            rows={6}
-            value={contactForm.message}
-            onChange={(e) => handleInputChange('message', e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-            placeholder="Tell us about your project requirements..."
+          <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+          <input
+            type="text"
+            value={contactForm.name}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Enter your full name"
           />
         </div>
       </div>
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={contactForm.isSubmitting}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Email Address *
+        </label>
+        <div className="relative">
+          <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+          <input
+            type="email"
+            value={contactForm.email}
+            onChange={(e) => handleInputChange('email', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Enter your email"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Phone Number *
+        </label>
+        <div className="relative">
+          <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+          <input
+            type="tel"
+            value={contactForm.phone}
+            onChange={(e) => {
+              // Only allow numbers (digits only)
+              const value = e.target.value.replace(/[^\d]/g, '');
+              handleInputChange('phone', value);
+            }}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Enter your phone number"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Company (Optional)
+        </label>
+        <div className="relative">
+          <FiBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+          <input
+            type="text"
+            value={contactForm.company}
+            onChange={(e) => handleInputChange('company', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            placeholder="Enter company name"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Project Information */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Project Type
+      </label>
+      <select
+        value={contactForm.projectType}
+        onChange={(e) => handleInputChange('projectType', e.target.value)}
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       >
-        {contactForm.isSubmitting ? (
-          <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-            Sending Message...
-          </>
-        ) : (
-          <>
-            <FiSend className="w-5 h-5 mr-2" />
-            Send Message
-          </>
-        )}
-      </button>
-    </form>
-  );
+        <option value="">Select project type</option>
+        <option value="residential">Residential</option>
+        <option value="commercial">Commercial</option>
+        <option value="industrial">Industrial</option>
+        <option value="emergency">Emergency Service</option>
+        <option value="rental">Equipment Rental</option>
+        <option value="consultation">Consultation</option>
+      </select>
+    </div>
+
+    {/* Message */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Message *
+      </label>
+      <div className="relative">
+        <FiMessageSquare className="absolute left-3 top-3 text-gray-400 dark:text-gray-500 w-5 h-5" />
+        <textarea
+          rows={6}
+          value={contactForm.message}
+          onChange={(e) => handleInputChange('message', e.target.value)}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+          placeholder="Tell us about your project requirements..."
+        />
+      </div>
+    </div>
+
+    {/* Submit Button */}
+    <button
+      type="submit"
+      disabled={contactForm.isSubmitting}
+      className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {contactForm.isSubmitting ? (
+        <>
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+          Sending Message...
+        </>
+      ) : (
+        <>
+          <FiSend className="w-5 h-5 mr-2" />
+          Send Message
+        </>
+      )}
+    </button>
+  </form>
+);
 
 // Quote Form Component - Moved outside to prevent re-creation on each render
 const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
@@ -241,25 +242,25 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
 
   const handleQuoteSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateQuoteForm()) {
       return;
     }
 
     dispatch(setContactFormSubmitting(true));
-    
+
     // Show info toast for submission
     toast.info('📤 Sending your quote request...', {
       position: "top-right",
       autoClose: 2000,
     });
-    
+
     try {
       // Use environment-based API URL (auto-switches between dev/prod)
       const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-quote`;
       console.log(`💰 Sending quote request to: ${ENV_CONFIG.env} backend`);
-      
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -305,7 +306,7 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
         // Handle specific error messages from backend
         const errorMessage = data.error || 'Failed to send quote request. Please try again.';
         let errorDetails = '';
-        
+
         // Parse error details if it's an object
         if (data.details) {
           if (typeof data.details === 'object') {
@@ -315,11 +316,11 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
             errorDetails = data.details;
           }
         }
-        
-        const fullMessage = errorDetails 
-          ? `❌ ${errorMessage}: ${errorDetails}` 
+
+        const fullMessage = errorDetails
+          ? `❌ ${errorMessage}: ${errorDetails}`
           : `❌ ${errorMessage}`;
-        
+
         toast.error(fullMessage, {
           position: "top-right",
           autoClose: 5000,
@@ -328,10 +329,10 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
       }
     } catch (error) {
       console.error('Error sending quote:', error);
-      
+
       // Handle different types of errors
       let errorMessage = 'Failed to send quote request. ';
-      
+
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage += 'Cannot connect to server. Please make sure the backend server is running.';
       } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
@@ -339,7 +340,7 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
       } else {
         errorMessage += 'Please try again later or contact support if the issue persists.';
       }
-      
+
       toast.error(`❌ ${errorMessage}`, {
         position: "top-right",
         autoClose: 5000,
@@ -350,190 +351,190 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
 
   return (
     <form onSubmit={handleQuoteSubmit} className="space-y-6">
-        {/* Quick Quote Form */}
-        <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            Quick Quote Request
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Project Height (meters)
-              </label>
-              <input
-                type="number"
-                value={quoteData.projectHeight}
-                onChange={(e) => setQuoteData({ ...quoteData, projectHeight: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
-                placeholder="e.g., 10"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Coverage Area (sqm)
-              </label>
-              <input
-                type="number"
-                value={quoteData.coverageArea}
-                onChange={(e) => setQuoteData({ ...quoteData, coverageArea: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
-                placeholder="e.g., 100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Project Duration
-              </label>
-              <select 
-                value={quoteData.duration}
-                onChange={(e) => setQuoteData({ ...quoteData, duration: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
-              >
-                <option value="">Select duration</option>
-                <option value="1-7 days">1-7 days</option>
-                <option value="1-4 weeks">1-4 weeks</option>
-                <option value="1-3 months">1-3 months</option>
-                <option value="3+ months">3+ months</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={quoteData.startDate}
-                onChange={(e) => setQuoteData({ ...quoteData, startDate: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
-              />
-            </div>
+      {/* Quick Quote Form */}
+      <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Quick Quote Request
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Project Height (meters)
+            </label>
+            <input
+              type="number"
+              value={quoteData.projectHeight}
+              onChange={(e) => setQuoteData({ ...quoteData, projectHeight: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
+              placeholder="e.g., 10"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Coverage Area (sqm)
+            </label>
+            <input
+              type="number"
+              value={quoteData.coverageArea}
+              onChange={(e) => setQuoteData({ ...quoteData, coverageArea: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
+              placeholder="e.g., 100"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Project Duration
+            </label>
+            <select
+              value={quoteData.duration}
+              onChange={(e) => setQuoteData({ ...quoteData, duration: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
+            >
+              <option value="">Select duration</option>
+              <option value="1-7 days">1-7 days</option>
+              <option value="1-4 weeks">1-4 weeks</option>
+              <option value="1-3 months">1-3 months</option>
+              <option value="3+ months">3+ months</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={quoteData.startDate}
+              onChange={(e) => setQuoteData({ ...quoteData, startDate: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
+            />
           </div>
         </div>
+      </div>
 
-        {/* Contact Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Full Name *
-            </label>
-            <div className="relative">
-              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-              <input
-                type="text"
-                value={contactForm.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter your full name"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Email Address *
-            </label>
-            <div className="relative">
-              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-                <input
-                  type="email"
-                  value={contactForm.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="Enter your email"
-                />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number *
-            </label>
-            <div className="relative">
-              <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-              <input
-                type="tel"
-                value={contactForm.phone}
-                onChange={(e) => {
-                  // Only allow numbers (digits only)
-                  const value = e.target.value.replace(/[^\d]/g, '');
-                  handleInputChange('phone', value);
-                }}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter your phone number"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Company (Optional)
-            </label>
-            <div className="relative">
-              <FiBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-              <input
-                type="text"
-                value={contactForm.company}
-                onChange={(e) => handleInputChange('company', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter company name"
-              />
-            </div>
-          </div>
-        </div>
-
+      {/* Contact Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Type
-          </label>
-          <select
-            value={contactForm.projectType}
-            onChange={(e) => handleInputChange('projectType', e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          >
-            <option value="">Select project type</option>
-            <option value="residential">Residential</option>
-            <option value="commercial">Commercial</option>
-            <option value="industrial">Industrial</option>
-            <option value="emergency">Emergency Service</option>
-            <option value="rental">Equipment Rental</option>
-            <option value="consultation">Consultation</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Additional Notes
+            Full Name *
           </label>
           <div className="relative">
-            <FiMessageSquare className="absolute left-3 top-3 text-gray-400 dark:text-gray-500 w-5 h-5" />
-            <textarea
-              rows={4}
-              value={contactForm.message}
-              onChange={(e) => handleInputChange('message', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-              placeholder="Any additional information..."
+            <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <input
+              type="text"
+              value={contactForm.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your full name"
             />
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={contactForm.isSubmitting}
-          className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Email Address *
+          </label>
+          <div className="relative">
+            <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <input
+              type="email"
+              value={contactForm.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your email"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Phone Number *
+          </label>
+          <div className="relative">
+            <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <input
+              type="tel"
+              value={contactForm.phone}
+              onChange={(e) => {
+                // Only allow numbers (digits only)
+                const value = e.target.value.replace(/[^\d]/g, '');
+                handleInputChange('phone', value);
+              }}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your phone number"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Company (Optional)
+          </label>
+          <div className="relative">
+            <FiBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <input
+              type="text"
+              value={contactForm.company}
+              onChange={(e) => handleInputChange('company', e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter company name"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Project Type
+        </label>
+        <select
+          value={contactForm.projectType}
+          onChange={(e) => handleInputChange('projectType', e.target.value)}
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
-          {contactForm.isSubmitting ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Sending Quote Request...
-            </>
-          ) : (
-            <>
-              <FiSend className="w-5 h-5 mr-2" />
-              Request Quote
-            </>
-          )}
-        </button>
-      </form>
+          <option value="">Select project type</option>
+          <option value="residential">Residential</option>
+          <option value="commercial">Commercial</option>
+          <option value="industrial">Industrial</option>
+          <option value="emergency">Emergency Service</option>
+          <option value="rental">Equipment Rental</option>
+          <option value="consultation">Consultation</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Additional Notes
+        </label>
+        <div className="relative">
+          <FiMessageSquare className="absolute left-3 top-3 text-gray-400 dark:text-gray-500 w-5 h-5" />
+          <textarea
+            rows={4}
+            value={contactForm.message}
+            onChange={(e) => handleInputChange('message', e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            placeholder="Any additional information..."
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={contactForm.isSubmitting}
+        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {contactForm.isSubmitting ? (
+          <>
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            Sending Quote Request...
+          </>
+        ) : (
+          <>
+            <FiSend className="w-5 h-5 mr-2" />
+            Request Quote
+          </>
+        )}
+      </button>
+    </form>
   );
 };
 
@@ -569,7 +570,7 @@ const ContactUs = () => {
       title: 'Email',
       primary: 'Sales@alcoascaffolding.com',
       // secondary: 'Sales@alcoascaffolding.com',
-      description: '24/7 response within 2 hours',  
+      description: '24/7 response within 2 hours',
       action: 'mailto:Sales@alcoascaffolding.com'
     },
     {
@@ -678,25 +679,25 @@ const ContactUs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form before submission
     if (!validateForm()) {
       return;
     }
 
     dispatch(setContactFormSubmitting(true));
-    
+
     // Show info toast for submission
     toast.info('📤 Sending your message...', {
       position: "top-right",
       autoClose: 2000,
     });
-    
+
     try {
       // Use environment-based API URL (auto-switches between dev/prod)
       const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-contact`;
       console.log(`📤 Sending contact form to: ${ENV_CONFIG.env} backend`);
-      
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -732,7 +733,7 @@ const ContactUs = () => {
         // Handle specific error messages from backend
         const errorMessage = data.error || 'Failed to send message. Please try again.';
         let errorDetails = '';
-        
+
         // Parse error details if it's an object
         if (data.details) {
           if (typeof data.details === 'object') {
@@ -742,11 +743,11 @@ const ContactUs = () => {
             errorDetails = data.details;
           }
         }
-        
-        const fullMessage = errorDetails 
-          ? `❌ ${errorMessage}: ${errorDetails}` 
+
+        const fullMessage = errorDetails
+          ? `❌ ${errorMessage}: ${errorDetails}`
           : `❌ ${errorMessage}`;
-        
+
         toast.error(fullMessage, {
           position: "top-right",
           autoClose: 5000,
@@ -755,13 +756,13 @@ const ContactUs = () => {
       }
     } catch (error) {
       console.error('Error sending email:', error);
-      
+
       // Handle different types of errors
       let errorMessage = 'Failed to send message. ';
-      
+
       // Check for CORS errors specifically
       if (error.message && (
-        error.message.includes('CORS') || 
+        error.message.includes('CORS') ||
         error.message.includes('cors') ||
         error.message.includes('Access-Control') ||
         (error.name === 'TypeError' && error.message.includes('Failed to fetch'))
@@ -780,7 +781,7 @@ const ContactUs = () => {
       } else {
         errorMessage += 'Please try again later or contact support if the issue persists.';
       }
-      
+
       toast.error(`❌ ${errorMessage}`, {
         position: "top-right",
         autoClose: 5000,
@@ -791,6 +792,12 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Near Me UAE | Contact Alcoa Scaffolding"
+        description="Search scaffolding near me UAE and contact Alcoa Scaffolding for quotes, supplier support, and fast delivery in Dubai, Abu Dhabi, and Musaffah."
+        keywords="scaffolding near me uae, scaffolding supplier dubai, scaffolding supplier abu dhabi, scaffolding quote dubai, scaffolding quote abu dhabi, alcoa scaffolding"
+        canonical="/scaffolding-near-me-uae"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -801,11 +808,11 @@ const ContactUs = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Get In 
-              <span className="text-gradient"> Touch</span>
+              Scaffolding Near Me 
+              <span className="text-gradient">UAE</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
-              Ready to start your project? Contact our expert team for a free consultation 
+              Ready to start your project? Contact our expert team for a free consultation
               and customized scaffolding solution.
             </p>
           </motion.div>
@@ -865,21 +872,19 @@ const ContactUs = () => {
               <div className="flex mb-8 bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm">
                 <button
                   onClick={() => setActiveTab('contact')}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                    activeTab === 'contact'
-                      ? 'bg-primary-600 text-black dark:text-white shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${activeTab === 'contact'
+                    ? 'bg-primary-600 text-black dark:text-white shadow-lg'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
                 >
                   Contact Form
                 </button>
                 <button
                   onClick={() => setActiveTab('quote')}
-                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                    activeTab === 'quote'
-                      ? 'bg-primary-600 text-black dark:text-white shadow-lg'
-                      : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${activeTab === 'quote'
+                    ? 'bg-primary-600 text-black dark:text-white shadow-lg'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
                 >
                   Quick Quote
                 </button>
@@ -912,13 +917,13 @@ const ContactUs = () => {
                       {activeTab === 'contact' ? 'Send us a Message' : 'Get Quick Quote'}
                     </h2>
                     {activeTab === 'contact' ? (
-                      <ContactForm 
+                      <ContactForm
                         contactForm={contactForm}
                         handleInputChange={handleInputChange}
                         handleSubmit={handleSubmit}
                       />
                     ) : (
-                      <QuoteForm 
+                      <QuoteForm
                         contactForm={contactForm}
                         handleInputChange={handleInputChange}
                         dispatch={dispatch}
@@ -957,7 +962,7 @@ const ContactUs = () => {
                       </h3>
                       <FiMapPin className="w-5 h-5 text-primary-600" />
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                       <p>{office.address}</p>
                       <p>
@@ -994,7 +999,7 @@ const ContactUs = () => {
                   </h3>
                 </div>
                 <p className="text-red-700 dark:text-red-300 mb-4">
-                  For urgent scaffolding needs or safety emergencies, 
+                  For urgent scaffolding needs or safety emergencies,
                   contact our 24/7 emergency hotline.
                 </p>
                 <a

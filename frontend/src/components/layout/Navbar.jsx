@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiMenu, 
-  FiX, 
-  FiPhone, 
-  FiMail, 
+import {
+  FiMenu,
+  FiX,
+  FiPhone,
+  FiMail,
   FiMapPin,
-  FiChevronDown 
+  FiChevronDown
 } from 'react-icons/fi';
-import { 
-  toggleMobileMenu, 
+import {
+  toggleMobileMenu,
   setMobileMenuOpen,
-  selectMobileMenuOpen 
+  selectMobileMenuOpen
 } from '../../redux/slices/navigationSlice';
 import DarkModeToggle from '../common/DarkModeToggle';
 import logo from '../../assets/logo.png';
@@ -42,9 +42,9 @@ const Navbar = () => {
 
   const navigationItems = [
     { name: 'Home', path: '/', hasDropdown: false },
-    { 
-      name: 'Products', 
-      path: '/products', 
+    {
+      name: 'Products',
+      path: '/products',
       hasDropdown: true,
       dropdownItems: [
         { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
@@ -52,9 +52,9 @@ const Navbar = () => {
         { name: 'Steel Cuplock Scaffolding', path: '/products/steel-cuplock-scaffolding' },
       ]
     },
-    { 
-      name: 'Services', 
-      path: '/services', 
+    {
+      name: 'Services',
+      path: '/services',
       hasDropdown: true,
       dropdownItems: [
         { name: 'Scaffolding Delivery', path: '/services/scaffolding-delivery' },
@@ -133,18 +133,17 @@ const Navbar = () => {
       </div>
 
       {/* Main Navigation */}
-      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md shadow-lg' 
-          : 'bg-surface-light dark:bg-surface-dark shadow-md'
-      } border-b border-border-light dark:border-border-dark`}>
+      <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled
+        ? 'bg-surface-light/95 dark:bg-surface-dark/95 backdrop-blur-md shadow-lg'
+        : 'bg-surface-light dark:bg-surface-dark shadow-md'
+        } border-b border-border-light dark:border-border-dark`}>
         <div className="container-custom">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-3">
-              <img 
-                src={logo} 
-                alt="Alcoa Aluminium Scaffolding" 
+              <img
+                src={logo}
+                alt="Alcoa Scaffolding UAE - scaffolding rental Dubai"
                 className="h-12 sm:h-14 w-auto"
               />
               <div className="hidden sm:block">
@@ -158,25 +157,23 @@ const Navbar = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               {navigationItems.map((item) => (
-                <div 
-                  key={item.name} 
+                <div
+                  key={item.name}
                   className="relative group"
                   onMouseEnter={() => item.hasDropdown && setActiveDropdown(item.name)}
                   onMouseLeave={() => item.hasDropdown && setActiveDropdown(null)}
                 >
                   <Link
                     to={item.path}
-                    className={`flex items-center space-x-1 transition-colors font-medium ${
-                      isActiveLink(item.path) 
-                        ? 'nav-link-active text-brand-primary-600' 
-                        : 'nav-link text-text-secondary dark:text-text-secondary-dark hover:text-brand-primary-600'
-                    }`}
+                    className={`flex items-center space-x-1 transition-colors font-medium ${isActiveLink(item.path)
+                      ? 'nav-link-active text-brand-primary-600'
+                      : 'nav-link text-text-secondary dark:text-text-secondary-dark hover:text-brand-primary-600'
+                      }`}
                   >
                     <span>{item.name}</span>
                     {item.hasDropdown && (
-                      <FiChevronDown className={`w-4 h-4 transition-transform ${
-                        activeDropdown === item.name ? 'rotate-180' : ''
-                      }`} />
+                      <FiChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === item.name ? 'rotate-180' : ''
+                        }`} />
                     )}
                   </Link>
 
@@ -188,11 +185,10 @@ const Navbar = () => {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
-                          className={`absolute top-full left-0 mt-2 bg-surface-light dark:bg-surface-muted-dark rounded-lg shadow-xl border border-border-light dark:border-border-dark py-2 ${
-                            item.dropdownItems.length > 8 
-                              ? 'grid grid-cols-2 gap-x-4 w-[520px]' 
-                              : 'w-64'
-                          }`}
+                          className={`absolute top-full left-0 mt-2 bg-surface-light dark:bg-surface-muted-dark rounded-lg shadow-xl border border-border-light dark:border-border-dark py-2 ${item.dropdownItems.length > 8
+                            ? 'grid grid-cols-2 gap-x-4 w-[520px]'
+                            : 'w-64'
+                            }`}
                         >
                           {item.dropdownItems.map((dropdownItem) => (
                             <Link
@@ -249,11 +245,10 @@ const Navbar = () => {
                       <div className="flex items-center justify-between">
                         <Link
                           to={item.path}
-                          className={`transition-colors font-medium ${
-                            isActiveLink(item.path) 
-                              ? 'text-brand-primary-600' 
-                              : 'text-text-secondary dark:text-text-secondary-dark hover:text-brand-primary-600'
-                          }`}
+                          className={`transition-colors font-medium ${isActiveLink(item.path)
+                            ? 'text-brand-primary-600'
+                            : 'text-text-secondary dark:text-text-secondary-dark hover:text-brand-primary-600'
+                            }`}
                         >
                           {item.name}
                         </Link>
@@ -262,13 +257,12 @@ const Navbar = () => {
                             onClick={() => handleDropdownToggle(item.name)}
                             className="p-1 text-text-muted dark:text-text-muted-dark hover:text-brand-primary-600"
                           >
-                            <FiChevronDown className={`w-4 h-4 transition-transform ${
-                              activeDropdown === item.name ? 'rotate-180' : ''
-                            }`} />
+                            <FiChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === item.name ? 'rotate-180' : ''
+                              }`} />
                           </button>
                         )}
                       </div>
-                      
+
                       {/* Mobile Dropdown */}
                       {item.hasDropdown && activeDropdown === item.name && (
                         <motion.div
@@ -289,7 +283,7 @@ const Navbar = () => {
                       )}
                     </div>
                   ))}
-                  
+
                   <div className="pt-4 border-t border-border-light dark:border-border-dark space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark">

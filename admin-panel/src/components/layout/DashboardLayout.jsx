@@ -16,12 +16,12 @@ const DashboardLayout = () => {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main Content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64 ml-64' : 'lg:ml-20 ml-20'}`}>
+      <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         {/* Navbar */}
         <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

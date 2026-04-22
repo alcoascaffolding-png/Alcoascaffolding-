@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  FiFilter, 
-  FiExternalLink, 
-  FiCalendar, 
-  FiMapPin, 
+import {
+  FiFilter,
+  FiExternalLink,
+  FiCalendar,
+  FiMapPin,
   FiUsers,
   FiArrowRight,
   FiAward
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const ProjectGallery = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -50,7 +51,7 @@ const ProjectGallery = () => {
       solution: 'Custom aluminum scaffolding with heritage-compliant finishes and tourist-safe barriers',
       results: [
         'Zero tourism disruption',
-        'Heritage compliance maintained', 
+        'Heritage compliance maintained',
         'Completed 2 weeks ahead of schedule'
       ],
       stats: { height: '60m', area: '2,500m²', complexity: 'Expert' },
@@ -154,8 +155,8 @@ const ProjectGallery = () => {
     }
   ];
 
-  const filteredProjects = activeFilter === 'all' 
-    ? projects 
+  const filteredProjects = activeFilter === 'all'
+    ? projects
     : projects.filter(project => project.category === activeFilter);
 
   const getComplexityColor = (complexity) => {
@@ -168,6 +169,12 @@ const ProjectGallery = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Scaffolding Projects Gallery — UAE Construction Projects by Alcoa"
+        description="View Alcoa's portfolio of successful scaffolding projects across UAE. Heritage buildings, commercial towers, industrial facilities, and residential projects in Dubai, Abu Dhabi and Musaffah."
+        keywords="scaffolding projects UAE, scaffolding portfolio Dubai, scaffolding case studies Abu Dhabi, construction scaffolding gallery UAE, Alcoa projects UAE"
+        canonical="/projects"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -178,11 +185,11 @@ const ProjectGallery = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Project 
+              Project
               <span className="text-gradient"> Gallery</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
-              Explore our portfolio of successful scaffolding projects across Abu Dhabi and UAE. 
+              Explore our portfolio of successful scaffolding projects across Abu Dhabi and UAE.
               From heritage restorations to industrial complexes, see how we deliver excellence.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -205,11 +212,10 @@ const ProjectGallery = () => {
               <button
                 key={filter.id}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-full font-medium transition-all ${
-                  activeFilter === filter.id
-                    ? 'bg-primary-600 text-black shadow-lg ring-2 ring-primary-200 dark:bg-primary-500 dark:text-white dark:ring-primary-800'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400'
-                }`}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-full font-medium transition-all ${activeFilter === filter.id
+                  ? 'bg-primary-600 text-black shadow-lg ring-2 ring-primary-200 dark:bg-primary-500 dark:text-white dark:ring-primary-800'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400'
+                  }`}
               >
                 <FiFilter className="w-4 h-4" />
                 <span>{filter.name}</span>
@@ -240,10 +246,10 @@ const ProjectGallery = () => {
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
                     </svg>
                   </div>
-                  
+
                   {/* Featured Badge - Positioned separately to maintain consistent complexity badge position */}
                   {project.featured && (
                     <div className="absolute top-4 left-4">
@@ -252,7 +258,7 @@ const ProjectGallery = () => {
                       </span>
                     </div>
                   )}
-                  
+
                   {/* Complexity Badge - Always positioned at same level */}
                   <div className={`absolute left-4 ${project.featured ? 'top-4' : 'top-4'}`}>
                     <span className={`px-3 py-1 text-xs rounded-full border ${getComplexityColor(project.stats.complexity)}`}>
@@ -269,7 +275,7 @@ const ProjectGallery = () => {
 
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Link 
+                    <Link
                       to={`/project-details/${project.id}`}
                       className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
@@ -361,7 +367,7 @@ const ProjectGallery = () => {
 
                   {/* CTA */}
                   <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <Link 
+                    <Link
                       to={`/project-details/${project.id}`}
                       className="w-full btn-secondary text-sm inline-flex items-center justify-center"
                     >
@@ -390,7 +396,7 @@ const ProjectGallery = () => {
               Award-Winning Projects
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Our commitment to excellence has been recognized by industry leaders 
+              Our commitment to excellence has been recognized by industry leaders
               and clients across Abu Dhabi and UAE.
             </p>
           </motion.div>
@@ -456,7 +462,7 @@ const ProjectGallery = () => {
               Ready to Create Your Success Story?
             </h2>
             <p className="text-lg text-primary-100 mb-8 max-w-2xl mx-auto">
-              Join our portfolio of successful projects. Contact us today to discuss 
+              Join our portfolio of successful projects. Contact us today to discuss
               your scaffolding requirements and create the next showcase project.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

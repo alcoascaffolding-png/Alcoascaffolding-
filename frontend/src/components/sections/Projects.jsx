@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  FiExternalLink, 
-  FiCalendar, 
-  FiMapPin, 
+import {
+  FiExternalLink,
+  FiCalendar,
+  FiMapPin,
   FiUsers,
   FiArrowRight,
   FiFilter
@@ -95,8 +95,8 @@ const Projects = () => {
     }
   ];
 
-  const filteredProjects = activeFilter === 'all' 
-    ? projects 
+  const filteredProjects = activeFilter === 'all'
+    ? projects
     : projects.filter(project => project.category === activeFilter);
 
   const containerVariants = {
@@ -146,12 +146,12 @@ const Projects = () => {
             <FiUsers className="w-4 h-4" />
             <span>Our Work</span>
           </div>
-          
+
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-text-primary dark:text-text-primary-dark mb-3 sm:mb-4">
             Featured Projects
           </h2>
           <p className="text-sm sm:text-base lg:text-lg text-text-secondary dark:text-text-secondary-dark max-w-3xl mx-auto">
-            Explore some of our most challenging and successful scaffolding projects 
+            Explore some of our most challenging and successful scaffolding projects
             across residential, commercial, and industrial sectors.
           </p>
         </motion.div>
@@ -168,11 +168,10 @@ const Projects = () => {
             <button
               key={filter.id}
               onClick={() => setActiveFilter(filter.id)}
-              className={`px-3 sm:px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm ${
-                activeFilter === filter.id
-                  ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 shadow-sm dark:shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              className={`px-3 sm:px-4 py-2 rounded-full font-medium transition-all flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm ${activeFilter === filter.id
+                ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-600 shadow-sm dark:shadow-md'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
             >
               <FiFilter className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>{filter.name}</span>
@@ -204,10 +203,10 @@ const Projects = () => {
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none" />
                     </svg>
                   </div>
-                  
+
                   {/* Difficulty Badge */}
                   <div className={`absolute top-8 right-8 px-3 py-1 rounded-lg text-xs font-semibold ${getDifficultyColor(project.stats.difficulty)}`}>
                     {project.stats.difficulty}

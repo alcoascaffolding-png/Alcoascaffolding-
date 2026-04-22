@@ -44,18 +44,24 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/scaffolding-rental-dubai" element={<Home />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/aluminum-scaffolding-dubai" element={<Products />} />
                 {/* Dynamic route for all product detail pages */}
                 <Route path="/products/:productId" element={<ProductDetail />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/construction-scaffolding-uae" element={<Services />} />
                 {/* Dynamic route for all service detail pages */}
                 <Route path="/services/:serviceId" element={<ServiceDetail />} />
                 <Route path="/about-us" element={<AboutUs />} />
+                <Route path="/alcoa-scaffolding" element={<AboutUs />} />
                 <Route path="/contact-us" element={<ContactUs />} />
+                <Route path="/scaffolding-near-me-uae" element={<ContactUs />} />
                 <Route path="/projects" element={<ProjectGallery />} />
                 <Route path="/project-details/:id" element={<ProjectDetails />} />
                 <Route path="/safety" element={<SafetyStandards />} />
                 <Route path="/branches" element={<Branches />} />
+                <Route path="/scaffolding-rental-abu-dhabi" element={<Branches />} />
                 {/* Catch-all route for 404 */}
                 <Route path="*" element={<div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">

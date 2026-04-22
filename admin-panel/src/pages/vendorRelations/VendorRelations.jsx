@@ -8,7 +8,7 @@ import { PageWrapper } from '../../components/common';
 
 const VendorRelations = () => {
   // Toggle this state to show/hide under construction
-  const [isUnderConstruction, setIsUnderConstruction] = useState(true);
+  const [isUnderConstruction] = useState(false);
 
   return (
     <PageWrapper

@@ -14,6 +14,7 @@ import {
   FiAward
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const ServicesPage = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -468,6 +469,12 @@ const ServicesPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Construction Scaffolding UAE | Scaffolding Equipment UAE | Alcoa Scaffold"
+        description="Construction scaffolding UAE for rental, sale, installation, and delivery in Dubai, Abu Dhabi, and Musaffah. Contact Alcoa Scaffolding for reliable scaffolding equipment and fast support."
+        keywords="construction scaffolding UAE, scaffolding equipment UAE, scaffold rental price Dubai, scaffolding for construction Dubai, scaffolding rental Abu Dhabi, scaffolding rental Dubai, scaffolding supplier Dubai, scaffolding supplier Abu Dhabi"
+        canonical="/construction-scaffolding-uae"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -478,12 +485,12 @@ const ServicesPage = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Professional 
-              <span className="text-gradient"> Scaffolding Services</span>
+               Construction Scaffolding UAE for
+              <span className="text-gradient"> Dubai & Abu Dhabi</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
-              From installation to maintenance, we provide comprehensive scaffolding 
-              services designed to meet your project needs and exceed safety standards.
+              Construction scaffolding UAE from Alcoa Scaffolding covers rental, sale, installation, delivery, and maintenance.
+              From installation to maintenance, we provide comprehensive scaffolding services designed to meet your project needs and exceed safety standards.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/contact-us" className="btn-primary">

@@ -11,6 +11,7 @@ import {
   FiInfo
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
+import SEOHead from '../components/common/SEOHead';
 
 const Products = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -138,6 +139,12 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title="Aluminum Scaffolding Dubai | Steel Scaffolding UAE | Alcoa Scaffold"
+        description="Browse aluminum scaffolding Dubai and steel scaffolding UAE products from Alcoa Scaffolding. Buy or rent ladders, mobile towers, fiberglass ladders, and cuplock systems across UAE."
+        keywords="aluminum scaffolding dubai, steel scaffolding uae, mobile scaffolding tower uae, scaffolding supplier dubai, scaffolding supplier abu dhabi, scaffolding equipment uae"
+        canonical="/aluminum-scaffolding-dubai"
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -148,12 +155,12 @@ const Products = () => {
             className="text-center max-w-3xl sm:max-w-4xl mx-auto px-2"
           >
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-4 sm:mb-6">
-              Premium 
-              <span className="text-gradient"> Scaffolding Products</span>
+              Aluminum Scaffolding 
+              <span className="text-gradient">Dubai</span>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-6 sm:mb-8">
-              Discover our comprehensive range of professional-grade aluminum scaffolding 
-              systems designed for safety, efficiency, and versatility.
+              Discover our comprehensive range of professional-grade aluminum scaffolding systems designed for safety, efficiency, and versatility.
+              We also supply steel scaffolding UAE, mobile scaffolding tower UAE, and ladder solutions for construction projects.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link to="/contact-us" className="btn-primary">

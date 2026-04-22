@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { 
-  FiArrowLeft, 
-  FiExternalLink, 
-  FiCalendar, 
-  FiMapPin, 
+import {
+  FiArrowLeft,
+  FiExternalLink,
+  FiCalendar,
+  FiMapPin,
   FiUsers,
   FiArrowRight,
   FiAward,
@@ -14,6 +14,7 @@ import {
   FiTarget,
   FiTrendingUp
 } from 'react-icons/fi';
+import SEOHead from '../components/common/SEOHead';
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -34,7 +35,7 @@ const ProjectDetails = () => {
       solution: 'Custom aluminum scaffolding with heritage-compliant finishes and tourist-safe barriers',
       results: [
         'Zero tourism disruption',
-        'Heritage compliance maintained', 
+        'Heritage compliance maintained',
         'Completed 2 weeks ahead of schedule'
       ],
       stats: { height: '60m', area: '2,500m²', complexity: 'Expert' },
@@ -281,6 +282,17 @@ const ProjectDetails = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title={`${project.title} | Scaffolding Case Study UAE | Alcoa`}
+        description={`See how Alcoa Scaffolding delivered ${project.title} in ${project.location}. Safe and efficient access solutions across UAE. Contact us for similar projects!`}
+        keywords={`${project.title}, ${project.category} scaffolding UAE, ${project.location} scaffolding project, Alcoa scaffolding projects, construction case study UAE`}
+        canonical={`/project-details/${id}`}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Projects', path: '/projects' },
+          { name: project.title, path: `/project-details/${id}` },
+        ]}
+      />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
         <div className="container-custom">
@@ -302,7 +314,7 @@ const ProjectDetails = () => {
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h1 className="text-4xl lg:text-5xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
-                    {project.title}
+                    {project.title} in <span className="text-gradient">{project.location}</span>
                   </h1>
                   <p className="text-xl text-text-secondary dark:text-text-secondary-dark mb-6">
                     {project.description}

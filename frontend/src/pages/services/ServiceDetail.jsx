@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { servicesData } from '../../data/servicesData';
 import { FiCheck, FiPhone, FiMail, FiTool } from 'react-icons/fi';
+import SEOHead from '../../components/common/SEOHead';
 
 const ServiceDetail = () => {
   const { serviceId } = useParams();
@@ -12,39 +13,59 @@ const ServiceDetail = () => {
     return <Navigate to="/services" replace />;
   }
 
+  // Build Service JSON-LD schema for this specific service
+  const serviceJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: service.title,
+    description: service.description,
+    provider: {
+      '@type': 'LocalBusiness',
+      name: 'Alcoa Aluminium Scaffolding',
+      url: 'https://alcoascaffolding.com',
+      telephone: '+971581375601',
+    },
+    areaServed: ['Dubai', 'Abu Dhabi', 'Musaffah', 'UAE'],
+    serviceType: service.category,
+  };
+
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <SEOHead
+        title={`${service.title} in UAE | Rental & Sale | Alcoa Scaffold`}
+        description={`Buy or rent ${service.title} in Dubai & Abu Dhabi. High-quality scaffolding with fast UAE delivery. Contact us for a free quote!`}
+        keywords={`${service.title} UAE, ${service.title} Dubai, ${service.title} Abu Dhabi, ${service.category} UAE, scaffolding ${service.title.toLowerCase()} Musaffah`}
+        canonical={`/services/${serviceId}`}
+        jsonLd={serviceJsonLd}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/services' },
+          { name: service.title, path: `/services/${serviceId}` },
+        ]}
+      />
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-24 transition-theme">
-        <div className="container-custom text-center max-w-3xl sm:max-w-4xl mx-auto px-4">
+      <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-24 transition-theme text-center">
+        <div className="container-custom max-w-3xl sm:max-w-4xl mx-auto px-4">
           {/* Category Badge */}
           <div className="inline-block bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium mb-4">
             {service.category}
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-4 sm:mb-6">
-            {service.title}
+            {service.title} in <span className="text-gradient">Dubai & Abu Dhabi</span>
           </h1>
 
-          <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark">
-            {service.description}
+          <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
+            Leading provider of professional {service.title.toLowerCase()} solutions. 
+            We offer high-quality, certified systems for sale and rental across the UAE.
           </p>
-
-          {/* CTA Buttons */}
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Link
-              to={`/contact-us?service=${serviceId}`}
-              className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FiMail className="mr-2" />
-              Get Quote
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/contact-us" className="btn-primary">
+              Get Free Quote
             </Link>
-            <a
-              href="tel:+971581375601"
-              className="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 font-semibold rounded-lg border-2 border-blue-600 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <FiPhone className="mr-2" />
-              Call Now
+            <a href="tel:+971581375601" className="btn-secondary">
+              Call +971 58 137 5601
             </a>
           </div>
         </div>
@@ -54,17 +75,25 @@ const ServiceDetail = () => {
       <section className="section-padding py-12 sm:py-16">
         <div className="container-custom grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Main Content - Left Side (2/3) */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Service Image */}
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md flex items-center justify-center py-12">
-              {/* <img 
-                src={service.image} 
-                alt={service.title}
-                className="w-full h-64 sm:h-96 object-contain bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6"
-              /> */}
-              <div className="text-8xl sm:text-9xl bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full p-8">
+               <div className="text-8xl sm:text-9xl bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full p-8">
                 <FiTool className="w-24 h-24 text-blue-600 dark:text-blue-400" />
               </div>
+            </div>
+
+            {/* What is Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md prose dark:prose-invert max-w-none">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                What is {service.title}?
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300">
+                {service.description} Our {service.title.toLowerCase()} systems are engineered for maximum safety 
+                and efficiency, making them the ideal choice for construction, maintenance, and industrial 
+                projects across UAE. Whether you're working on a high-rise building in Dubai or a 
+                residential renovation in Abu Dhabi, our scaffolding provides the stability you need.
+              </p>
             </div>
 
             {/* Highlights */}
@@ -72,7 +101,7 @@ const ServiceDetail = () => {
               <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 dark:text-white">
                 Key Features & Highlights
               </h2>
-              <ul className="space-y-3">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {service.highlights.map((highlight, index) => (
                   <li key={index} className="flex items-start space-x-3">
                     <FiCheck className="w-5 h-5 text-green-500 flex-shrink-0 mt-1" />
@@ -82,21 +111,60 @@ const ServiceDetail = () => {
               </ul>
             </div>
 
-            {/* Additional Information */}
+            {/* How We Work - Process */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 dark:text-white">
+                Our Process: How We Deliver Excellence
+              </h2>
+              <div className="space-y-4">
+                {service.process ? (
+                  service.process.map((step, index) => (
+                    <div key={index} className="flex items-start space-x-4">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 font-bold">
+                        {index + 1}
+                      </div>
+                      <p className="text-gray-700 dark:text-gray-300 mt-1">{step}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-700 dark:text-gray-300">
+                    We follow a systematic approach from initial requirement capture to 
+                    delivery and installation, ensuring every safety protocol is strictly 
+                    adhered to for your peace of mind.
+                  </p>
+                )}
+              </div>
+            </div>
+
+             {/* Why Choose ALCOA? */}
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
               <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900 dark:text-white">
-                Why Choose ALCOA?
+                Why Choose Alcoa Scaffolding?
               </h2>
               <div className="space-y-3 text-gray-700 dark:text-gray-300">
-                <p>At ALCOA Aluminium Scaffolding, we provide top-quality scaffolding solutions with:</p>
+                <p>At Alcoa Aluminium Scaffolding, we provide top-quality scaffolding solutions with:</p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li>UAE-wide delivery and logistics support</li>
-                  <li>Professional installation and setup services</li>
-                  <li>Compliance with international safety standards</li>
-                  <li>Flexible rental and purchase options</li>
-                  <li>Expert technical support and consultation</li>
-                  <li>Quality-certified products</li>
+                  <li><strong>UAE-Wide Delivery:</strong> 24/7 logistics support across Dubai, Abu Dhabi, Musaffah, and Sharjah.</li>
+                  <li><strong>Certified Safety:</strong> All our {service.title.toLowerCase()} systems meet international and UAE safety regulations.</li>
+                  <li><strong>Expert Installation:</strong> Professional teams available for safe erection and dismantling.</li>
+                  <li><strong>Flexible Options:</strong> Competitive rates for both scaffolding rental and sales.</li>
+                  <li><strong>Technical Support:</strong> On-call consultation to help you choose the right equipment for your project.</li>
                 </ul>
+              </div>
+            </div>
+
+            {/* Pricing Section (Cost) */}
+            <div className="bg-blue-50 dark:bg-gray-900 border border-blue-200 dark:border-blue-800 rounded-lg p-6 shadow-md">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-blue-900 dark:text-blue-100">
+                Service Cost & Pricing in UAE
+              </h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Our pricing for {service.title.toLowerCase()} is highly competitive and depends on various 
+                factors including project duration, height requirements, and delivery location. 
+                We offer the best value for money in the UAE scaffolding market.
+              </p>
+              <div className="flex items-center text-blue-700 dark:text-blue-300 font-semibold italic">
+                 <FiCheck className="mr-2" /> Request a free, no-obligation quote today for the most accurate pricing.
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaWhatsapp } from 'react-icons/fa';
+import { trackWhatsAppClick } from '../../utils/analytics';
 
 const WhatsAppButton = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -20,6 +21,8 @@ const WhatsAppButton = () => {
   }, []);
 
   const openWhatsApp = () => {
+    // Track the WhatsApp click as a GA4 conversion event
+    trackWhatsAppClick();
     const encodedMessage = encodeURIComponent(message);
     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
     window.open(whatsappURL, '_blank');
