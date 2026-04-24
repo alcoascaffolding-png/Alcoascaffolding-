@@ -95,10 +95,11 @@ This app lives in a **monorepo**. Vercel must use **`alcoa-admin`** as the proje
 
 1. **Vercel → Add New → Project** → import this Git repository.
 2. On **Configure Project**, set **Root Directory** to `alcoa-admin` (use “Edit” next to the root path if the wizard hides it; you can type `alcoa-admin`). Framework should detect **Next.js**.
-3. If you already have a Vercel project wired to the same repo with the wrong root, open **Settings → General → Root Directory** and change it to `alcoa-admin`, then redeploy.
-4. Copy every variable from **`.env.local.example`** into **Vercel → Settings → Environment Variables** (Production and Preview as needed). Set **`NEXTAUTH_URL`** to your real Vercel URL (for example `https://your-app.vercel.app`).
-5. Optional for PDFs on Vercel: set `CHROMIUM_TAR_URL` to the `@sparticuz/chromium-min` release tarball URL; install that package if the build expects it.
-6. Optional: `BLOB_READ_WRITE_TOKEN` (Vercel Blob), `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (Upstash) for rate limits.
+3. **Critical — Build & Output Settings:** turn **off** all three override toggles (**Build Command**, **Output Directory**, **Install Command**) so Vercel uses Next.js defaults (`next build`, no custom `dist` folder). If any toggle is on, remove values like `cd frontend && …` or `frontend/dist`; those belong only to the legacy `frontend/` Vite app with Root Directory `frontend`.
+4. If you already have a Vercel project wired to the same repo with the wrong root, open **Settings → General → Root Directory** and change it to `alcoa-admin`, then redeploy.
+5. Copy every variable from **`.env.local.example`** into **Vercel → Settings → Environment Variables** (Production and Preview as needed). Set **`NEXTAUTH_URL`** to your real Vercel URL (for example `https://your-app.vercel.app`).
+6. Optional for PDFs on Vercel: set **`CHROMIUM_TAR_URL`** to a matching `@sparticuz/chromium-min` release tarball if the default binary fails in your region (see package docs).
+7. Optional: `BLOB_READ_WRITE_TOKEN` (Vercel Blob), `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (Upstash) for rate limits.
 
 The legacy marketing **Vite** site uses **`frontend/vercel.json`** when that folder is deployed with Root Directory **`frontend`**.
 

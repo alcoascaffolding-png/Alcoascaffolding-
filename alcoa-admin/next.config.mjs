@@ -5,6 +5,7 @@ const nextConfig = {
   serverExternalPackages: [
     "mongoose",
     "playwright-core",
+    "@sparticuz/chromium-min",
     "twilio",
     "bcryptjs",
     "exceljs",
