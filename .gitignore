@@ -9,7 +9,7 @@ lerna-debug.log*
 # Admin panel
 admin-panel/
 
-# Environment variables
+# Environment variables (never commit secrets)
 .env
 .env.local
 .env.development
@@ -18,6 +18,12 @@ admin-panel/
 .env.test.local
 .env.production
 .env.production.local
+.env*.local
+!.env*.example
+
+# Next.js / tooling caches (nested apps, e.g. alcoa-admin)
+**/.next/
+**/.turbo/
 
 # Build outputs
 dist/
