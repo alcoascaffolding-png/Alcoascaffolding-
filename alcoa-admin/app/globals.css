@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+/* ============================================================
+   GLOBAL DESIGN SYSTEM — edit :root / .dark here only.
+
+   Dashboard-aligned tokens:
+   • Primary (CTAs, active nav, progress, key metrics)  #A54100
+   • Accent (links, info highlights, secondary emphasis) #4F46E5
+   • Foreground / headlines                              #0F172A
+   • Muted surfaces                                       #F1F5F9
+   • Muted / supporting text                            #64748B
+
+   Typography: Inter (app/layout.js → --font-inter)
+   ============================================================ */
+
+:root {
+  /* Raw brand */
+  --brand-primary: #a54100;
+  --brand-accent: #4f46e5;
+  --brand-secondary: #0f172a;
+  --brand-neutral: #64748b;
+
+  /* Canvas: soft gray page, white cards (reference UI) */
+  --background: #f8fafc;
+  --foreground: var(--brand-secondary);
+
+  --card: #ffffff;
+  --card-foreground: var(--brand-secondary);
+
+  --popover: #ffffff;
+  --popover-foreground: var(--brand-secondary);
+
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: var(--brand-secondary);
+
+  --muted: #f1f5f9;
+  --muted-foreground: var(--brand-neutral);
+
+  --accent: #eef2ff;
+  --accent-foreground: #312e81;
+
+  /* Indigo actions (badges, alternate emphasis) */
+  --tertiary: var(--brand-accent);
+  --tertiary-foreground: #ffffff;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: var(--brand-primary);
+
+  --radius: 0.625rem;
+
+  /* Charts — full colors (use as var(--chart-1) in SVG/CSS, not hsl(...)) */
+  --chart-1: #a54100;
+  --chart-2: #4f46e5;
+  --chart-3: #0d9488;
+  --chart-4: #ca8a04;
+  --chart-5: #64748b;
+
+  /* Sidebar: white rail, rust active pill */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #475569;
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  --sidebar-accent-foreground: var(--brand-secondary);
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: var(--brand-primary);
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+
+  --primary: #ea580c;
+  --primary-foreground: #ffffff;
+
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --accent: #312e81;
+  --accent-foreground: #e0e7ff;
+
+  --tertiary: #6366f1;
+  --tertiary-foreground: #ffffff;
+
+  --destructive: #b91c1c;
+  --destructive-foreground: #fef2f2;
+
+  --border: #334155;
+  --input: #334155;
+  --ring: #ea580c;
+
+  --chart-1: #fb923c;
+  --chart-2: #818cf8;
+  --chart-3: #2dd4bf;
+  --chart-4: #fbbf24;
+  --chart-5: #94a3b8;
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #ea580c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #fb923c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-foreground: var(--tertiary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-neutral: var(--brand-neutral);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in srgb, var(--ring) 40%, transparent);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    transition-property: color, background-color, border-color;
+    transition-duration: 200ms;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 1.25rem + 1.5vw, 1.875rem);
+    line-height: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--foreground);
+  }
+
+  h2 {
+    font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  p {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+  }
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .text-headline {
+    font-size: clamp(1.5rem, 1.25rem + 1.5vw, 1.875rem);
+    line-height: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--foreground);
+  }
+
+  .text-body {
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    color: var(--muted-foreground);
+  }
+
+  .text-label {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+}
