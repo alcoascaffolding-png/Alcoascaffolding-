@@ -91,11 +91,16 @@ NEXTAUTH_URL=http://localhost:3000
 
 ## Deployment (Vercel)
 
-1. Connect the `alcoa-admin/` directory to a new Vercel project
-2. Set all environment variables from `.env.local.example`
-3. For PDF generation on Vercel, set `CHROMIUM_TAR_URL` to the `@sparticuz/chromium-min` release URL
-4. Set `BLOB_READ_WRITE_TOKEN` from your Vercel Blob store
-5. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` from Upstash
+This app lives in a **monorepo**. Vercel must use **`alcoa-admin`** as the project root (not the repo root, not `backend`, not `frontend`).
+
+1. **Vercel → Add New → Project** → import this Git repository.
+2. On **Configure Project**, set **Root Directory** to `alcoa-admin` (use “Edit” next to the root path if the wizard hides it; you can type `alcoa-admin`). Framework should detect **Next.js**.
+3. If you already have a Vercel project wired to the same repo with the wrong root, open **Settings → General → Root Directory** and change it to `alcoa-admin`, then redeploy.
+4. Copy every variable from **`.env.local.example`** into **Vercel → Settings → Environment Variables** (Production and Preview as needed). Set **`NEXTAUTH_URL`** to your real Vercel URL (for example `https://your-app.vercel.app`).
+5. Optional for PDFs on Vercel: set `CHROMIUM_TAR_URL` to the `@sparticuz/chromium-min` release tarball URL; install that package if the build expects it.
+6. Optional: `BLOB_READ_WRITE_TOKEN` (Vercel Blob), `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (Upstash) for rate limits.
+
+The legacy marketing **Vite** site uses **`frontend/vercel.json`** when that folder is deployed with Root Directory **`frontend`**.
 
 ## Migration from the Vite Admin Panel
 

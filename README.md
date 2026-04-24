@@ -401,6 +401,13 @@ For technical support or questions:
 
 ---
 
+## Vercel (monorepo)
+
+- **Next.js admin (`alcoa-admin`):** create or edit the Vercel project with **Root Directory = `alcoa-admin`**. See `alcoa-admin/README.md`.
+- **Legacy Vite site (`frontend`):** use **Root Directory = `frontend`**; build settings are in `frontend/vercel.json`.
+
+---
+
 **Version**: 1.0.0  
 **Last Updated**: November 2025
 
