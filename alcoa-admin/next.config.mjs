@@ -1,10 +1,19 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Monorepo / Vercel: trace files from repo root so serverless output includes deps correctly.
+  outputFileTracingRoot: path.join(__dirname, ".."),
+
   // External packages that should not be bundled for server components
   // Needed for mongoose, playwright-core, twilio, etc.
   serverExternalPackages: [
     "mongoose",
     "playwright-core",
+    "@sparticuz/chromium-min",
     "twilio",
     "bcryptjs",
     "exceljs",
@@ -20,9 +29,17 @@ const nextConfig = {
     ],
   },
 
-  // CORS headers for public email API endpoints (used by the marketing site)
   async headers() {
     return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
       {
         source: "/api/email/:path*",
         headers: [

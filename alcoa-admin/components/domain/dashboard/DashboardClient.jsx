@@ -38,7 +38,7 @@ function StatCard({ title, value, description, icon: Icon, trend, color = "prima
   const colorMap = {
     primary: "text-primary",
     success: "text-emerald-600 dark:text-emerald-400",
-    warning: "text-amber-600 dark:text-amber-400",
+    warning: "text-chart-2 dark:text-orange-300",
     danger: "text-red-600 dark:text-red-400",
     accent: "text-brand-accent",
   };
@@ -215,7 +215,7 @@ export function DashboardClient() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-500" />
+                    <Clock className="h-4 w-4 text-chart-2" />
                     <div>
                       <p className="text-xs text-muted-foreground">Total Invoiced</p>
                       <p className="text-sm font-bold">{formatCurrency(stats?.invoices?.totalValue ?? 0)}</p>
