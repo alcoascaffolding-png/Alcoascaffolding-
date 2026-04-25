@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Do not set `turbopack.root` to the same directory as this app: it makes
+  // `path.relative(root, dir)` become "" → "." and breaks CSS `@import "tailwindcss"`
+  // resolution (parent folder, no package.json). See vercel/next.js#90307.
+
   // External packages that should not be bundled for server components
   // Needed for mongoose, playwright-core, twilio, etc.
   serverExternalPackages: [
@@ -21,9 +25,17 @@ const nextConfig = {
     ],
   },
 
-  // CORS headers for public email API endpoints (used by the marketing site)
   async headers() {
     return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-XSS-Protection", value: "1; mode=block" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
       {
         source: "/api/email/:path*",
         headers: [

@@ -168,7 +168,7 @@ export function CustomerDetail({ id }) {
             </Card>
             <Card>
               <CardContent className="p-4 flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-amber-500" />
+                <Calendar className="h-5 w-5 text-chart-2" />
                 <div>
                   <p className="text-xs text-muted-foreground">Customer Since</p>
                   <p className="text-sm font-medium">{formatDate(c.customerSince)}</p>

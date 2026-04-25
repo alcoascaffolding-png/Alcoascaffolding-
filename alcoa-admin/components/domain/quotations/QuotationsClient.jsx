@@ -15,7 +15,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { formatDate, formatCurrency, isFeatureEnabled } from "@/lib/utils";
+import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
   MoreHorizontal, Eye, Pencil, Trash2, Download, Mail, MessageSquare, Loader2,
 } from "lucide-react";
@@ -129,6 +129,8 @@ export function QuotationsClient() {
       accessorKey: "customerName",
       header: "Customer",
       cell: ({ row }) => <span className="font-medium">{row.original.customerName}</span>,
+      size: 240,
+      minSize: 160,
     },
     {
       accessorKey: "quoteDate",
@@ -140,9 +142,11 @@ export function QuotationsClient() {
       accessorKey: "validUntil",
       header: "Valid Until",
       cell: ({ row }) => {
-        const expired = new Date(row.original.validUntil) < new Date();
+        const expired =
+          isLocalCalendarDayBeforeToday(row.original.validUntil) &&
+          !["approved", "converted"].includes(row.original.status);
         return (
-          <span className={`text-sm ${expired ? "text-destructive" : ""}`}>
+          <span className={`text-sm ${expired ? "text-destructive font-medium" : ""}`}>
             {formatDate(row.original.validUntil)}
           </span>
         );
@@ -218,7 +222,7 @@ export function QuotationsClient() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pending</p><p className="text-2xl font-bold text-amber-500">{(stats.draft || 0) + (stats.sent || 0)}</p></CardContent></Card>
+          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pending</p><p className="text-2xl font-bold text-chart-2">{(stats.draft || 0) + (stats.sent || 0)}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Approved</p><p className="text-2xl font-bold text-emerald-500">{stats.approved}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Value</p><p className="text-lg font-bold">{formatCurrency(stats.totalValue)}</p></CardContent></Card>
         </div>

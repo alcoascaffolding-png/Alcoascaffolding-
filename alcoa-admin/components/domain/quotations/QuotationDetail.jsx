@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Download, Mail, MessageSquare, Loader2 } from "lucide-react";
-import { formatDate, formatCurrency, isFeatureEnabled } from "@/lib/utils";
+import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 
 const STATUS_MAP = {
   draft: "outline", sent: "info", viewed: "secondary", approved: "success",
@@ -207,7 +207,18 @@ export function QuotationDetail({ id }) {
             <CardHeader><CardTitle className="text-base">Quote Details</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Quote Date</span><span>{formatDate(q.quoteDate)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Valid Until</span><span className={new Date(q.validUntil) < new Date() ? "text-destructive" : ""}>{formatDate(q.validUntil)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Valid Until</span>
+                <span
+                  className={
+                    isLocalCalendarDayBeforeToday(q.validUntil) && !["approved", "converted"].includes(q.status)
+                      ? "text-destructive font-medium"
+                      : ""
+                  }
+                >
+                  {formatDate(q.validUntil)}
+                </span>
+              </div>
               <div className="flex justify-between"><span className="text-muted-foreground">Quote Type</span><span className="capitalize">{q.quoteType}</span></div>
               {q.paymentTerms && <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span>{q.paymentTerms}</span></div>}
               {q.deliveryTerms && <div className="flex justify-between"><span className="text-muted-foreground">Delivery Terms</span><span className="text-right max-w-[150px]">{q.deliveryTerms}</span></div>}
