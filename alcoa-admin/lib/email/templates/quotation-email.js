@@ -49,11 +49,14 @@ export default function quotationEmailTemplate(quotation) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quotation ${quoteNumber}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;padding:0;background:#f5f5f5;">
+<body style="font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;line-height:1.6;color:#0f172a;margin:0;padding:0;background:#f1f5f9;">
   <div style="max-width:700px;margin:20px auto;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
     
-    <div style="background:linear-gradient(135deg,#a54100 0%,#7c2d12 100%);color:white;padding:30px;text-align:center;">
+    <div style="background:linear-gradient(135deg,#4f46e5 0%,#4338ca 100%);color:white;padding:30px;text-align:center;">
       <h1 style="margin:0;font-size:28px;">QUOTATION</h1>
       <p style="margin:8px 0 0;font-size:16px;opacity:0.9;">${quoteNumber}</p>
     </div>
@@ -75,7 +78,7 @@ export default function quotationEmailTemplate(quotation) {
 
       <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
         <thead>
-          <tr style="background:#a54100;color:white;">
+          <tr style="background:#4f46e5;color:white;">
             <th style="padding:10px;text-align:left;font-size:13px;width:40px;">#</th>
             <th style="padding:10px;text-align:left;font-size:13px;">Description</th>
             <th style="padding:10px;text-align:center;font-size:13px;">Qty</th>
@@ -112,12 +115,12 @@ export default function quotationEmailTemplate(quotation) {
         </tr>
       </table>
 
-      ${notes ? `<div style="background:#fff7ed;border-left:4px solid #4f46e5;padding:15px;border-radius:5px;margin-bottom:20px;"><p style="margin:0 0 5px;font-weight:bold;color:#a54100;">Notes:</p><p style="margin:0;color:#374151;font-size:13px;">${notes.replace(/\n/g, "<br>")}</p></div>` : ""}
+      ${notes ? `<div style="background:#eef2ff;border-left:4px solid #4f46e5;padding:15px;border-radius:8px;margin-bottom:20px;"><p style="margin:0 0 5px;font-weight:bold;color:#a54100;">Notes:</p><p style="margin:0;color:#0f172a;font-size:13px;">${notes.replace(/\n/g, "<br>")}</p></div>` : ""}
     </div>
 
     <div style="background:#0f172a;color:white;padding:20px;text-align:center;">
       <p style="margin:5px 0;font-weight:bold;">${companyName}</p>
-      <p style="margin:5px 0;font-size:13px;"><a href="mailto:${companyEmail}" style="color:#fdba74;">${companyEmail}</a></p>
+      <p style="margin:5px 0;font-size:13px;"><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
     </div>
   </div>
 </body>
