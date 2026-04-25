@@ -1,8 +1,12 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Do not set `turbopack.root` to the same directory as this app: it makes
-  // `path.relative(root, dir)` become "" → "." and breaks CSS `@import "tailwindcss"`
-  // resolution (parent folder, no package.json). See vercel/next.js#90307.
+  // Monorepo / Vercel: trace files from repo root so serverless output includes deps correctly.
+  outputFileTracingRoot: path.join(__dirname, ".."),
 
   // External packages that should not be bundled for server components
   // Needed for mongoose, playwright-core, twilio, etc.
