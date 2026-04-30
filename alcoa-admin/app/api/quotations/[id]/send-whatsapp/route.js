@@ -26,10 +26,23 @@ export const POST = withErrorHandler(async (request, { params }) => {
   const body = await request.json().catch(() => ({}));
   const toPhone = body.phone || quotation.customerPhone;
   if (!toPhone) throw new AppError("No phone number specified", 400);
+  if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+    throw new AppError(
+      "WhatsApp is not configured. Please set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env.local.",
+      503
+    );
+  }
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new AppError(
+      "WhatsApp PDF attachment requires BLOB_READ_WRITE_TOKEN in .env.local.",
+      503
+    );
+  }
 
-  // Generate PDF and upload to Vercel Blob
+  // Generate PDF and upload to Blob so Twilio can send media attachment.
   const pdfBuffer = await generateQuotationPDF(quotation);
-  const { url: pdfUrl } = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
+  const uploaded = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
+  const pdfUrl = uploaded.url;
 
   // Build WhatsApp message
   const message = [
@@ -45,6 +58,8 @@ export const POST = withErrorHandler(async (request, { params }) => {
 
   // Record in DB
   await Quotation.findByIdAndUpdate(params.id, {
+    status: "sent",
+    sentDate: new Date(),
     $push: {
       whatsappSent: {
         sentAt: new Date(),

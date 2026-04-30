@@ -46,7 +46,19 @@ async function fetchMessages(params) {
 async function fetchStats() {
   const res = await fetch("/api/contact-messages/stats");
   const data = await res.json();
-  return data.data;
+  if (!res.ok || !data.success) {
+    throw new Error(data?.error || "Failed to fetch contact message stats");
+  }
+  return (
+    data.data || {
+      total: 0,
+      newMessages: 0,
+      inProgress: 0,
+      contactCount: 0,
+      quoteCount: 0,
+      urgent: 0,
+    }
+  );
 }
 
 async function updateMessage(id, updates) {

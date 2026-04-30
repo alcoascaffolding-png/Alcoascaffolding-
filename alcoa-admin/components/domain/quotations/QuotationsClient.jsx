@@ -112,7 +112,8 @@ export function QuotationsClient() {
       toast.success("WhatsApp message sent");
       qc.invalidateQueries({ queryKey: ["quotations"] });
     } catch (e) {
-      toast.error("Failed to send WhatsApp: " + e.message);
+      const msg = String(e?.message || "");
+      toast.error("Failed to send WhatsApp: " + msg);
     } finally {
       setSendingId(null);
     }

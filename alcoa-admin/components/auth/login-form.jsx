@@ -20,7 +20,7 @@ const loginSchema = z.object({
 const ERROR_MESSAGES = {
   CredentialsSignin: "Invalid email or password. Please try again.",
   Configuration:
-    "Server configuration error. Check the server console for details.",
+    "Cannot connect to database right now. Check MongoDB Atlas network access/IP allowlist, then try again.",
   Default: "Sign in failed. Please try again.",
 };
 

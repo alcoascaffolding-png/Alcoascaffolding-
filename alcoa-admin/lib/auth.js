@@ -65,6 +65,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         } catch (err) {
           console.error("[auth] authorize error:", err.message);
+          // Credentials errors should return null. Infrastructure failures (DB/network)
+          // should throw so the client can surface a non-credentials error state.
+          if (
+            err?.name === "MongooseServerSelectionError" ||
+            err?.name === "MongoNetworkError" ||
+            err?.name === "MongoServerSelectionError" ||
+            /Could not connect to any servers/i.test(String(err?.message ?? ""))
+          ) {
+            throw new Error("DatabaseUnavailable");
+          }
           return null;
         }
       },
