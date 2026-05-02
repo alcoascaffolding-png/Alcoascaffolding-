@@ -36,6 +36,20 @@ export function QuotationDetail({ id }) {
     },
   });
 
+  const { data: uiFeatures } = useQuery({
+    queryKey: ["ui-features"],
+    queryFn: async () => {
+      const res = await fetch("/api/config/features");
+      const d = await res.json();
+      if (!d.success) return { whatsapp: false, pdfEmail: false };
+      return d.data;
+    },
+    staleTime: 60_000,
+  });
+
+  const showWhatsApp =
+    uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
+
   const deleteMut = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/quotations/${id}`, { method: "DELETE" });
@@ -134,7 +148,7 @@ export function QuotationDetail({ id }) {
             {sending === "email" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
             Email
           </Button>
-          {isFeatureEnabled("whatsapp") && (
+          {showWhatsApp && (
             <Button
               variant="outline"
               size="sm"

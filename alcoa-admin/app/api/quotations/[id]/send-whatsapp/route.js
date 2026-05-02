@@ -9,14 +9,17 @@ import Quotation from "@/models/Quotation";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import { uploadToBlob } from "@/lib/storage/blob";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
-import { isFeatureEnabled } from "@/lib/utils";
+import { isWhatsAppFeatureAvailable } from "@/lib/server-features";
 
 export const POST = withErrorHandler(async (request, { params }) => {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
 
-  if (!isFeatureEnabled("whatsapp")) {
-    return apiError("WhatsApp feature is disabled", 503);
+  if (!isWhatsAppFeatureAvailable()) {
+    return apiError(
+      "WhatsApp is not available. Add FEATURES=whatsapp (or SERVER_FEATURES) in Vercel, or set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and BLOB_READ_WRITE_TOKEN.",
+      503
+    );
   }
 
   await connectDB();
