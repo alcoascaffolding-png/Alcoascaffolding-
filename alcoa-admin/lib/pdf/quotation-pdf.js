@@ -127,11 +127,14 @@ function buildQuotationHTML(quotation) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quotation ${quoteNumber}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; font-size: 13px; color: #1a1a1a; background: white; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 13px; color: #0f172a; background: white; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; }
-    .header-bar { background: linear-gradient(135deg, #a54100, #7c2d12); color: white; padding: 20px 25px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header-bar { background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; padding: 20px 25px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
     .company-name { font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }
     .company-sub { font-size: 11px; opacity: 0.85; margin-top: 3px; }
     .quote-badge { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 6px; text-align: right; }
@@ -146,7 +149,7 @@ function buildQuotationHTML(quotation) {
     .customer-name { font-size: 15px; font-weight: bold; color: #111827; margin-bottom: 4px; }
     .customer-sub { font-size: 12px; color: #6b7280; }
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .items-table th { background: #a54100; color: white; padding: 9px 10px; font-size: 12px; text-align: left; }
+    .items-table th { background: #4f46e5; color: white; padding: 9px 10px; font-size: 12px; text-align: left; }
     .items-table th.center, .items-table td.center { text-align: center; }
     .items-table th.right, .items-table td.right { text-align: right; }
     .row-even { background: #ffffff; }
@@ -158,12 +161,12 @@ function buildQuotationHTML(quotation) {
     .totals-section { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     .totals-table { width: 300px; }
     .totals-table tr td { padding: 6px 10px; font-size: 13px; }
-    .total-row { background: #a54100; color: white; font-weight: bold; font-size: 15px; }
+    .total-row { background: #4f46e5; color: white; font-weight: bold; font-size: 15px; }
     .total-row td { padding: 10px; }
-    .amount-words { background: #fff7ed; border: 1px solid #fdba74; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
-    .amount-words strong { color: #9a3412; }
+    .amount-words { background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
+    .amount-words strong { color: #3730a3; }
     .section { margin-bottom: 15px; }
-    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #a54100; border-bottom: 2px solid #a54100; padding-bottom: 4px; margin-bottom: 10px; }
+    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #4f46e5; border-bottom: 2px solid #4f46e5; padding-bottom: 4px; margin-bottom: 10px; }
     .details-table { width: 100%; }
     .details-table td { padding: 4px 8px; font-size: 12px; }
     .detail-label { color: #6b7280; width: 150px; }
@@ -173,7 +176,7 @@ function buildQuotationHTML(quotation) {
     .signature-line { border-bottom: 2px solid #374151; margin-bottom: 8px; height: 50px; }
     .signature-label { font-size: 11px; color: #6b7280; }
     .footer-bar { background: #0f172a; color: white; padding: 12px 20px; border-radius: 6px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-    .footer-bar a { color: #fdba74; text-decoration: none; }
+    .footer-bar a { color: #c7d2fe; text-decoration: none; }
   </style>
 </head>
 <body>

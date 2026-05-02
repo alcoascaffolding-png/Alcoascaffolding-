@@ -1,27 +1,28 @@
 @import "tailwindcss";
 
 /* ============================================================
-   GLOBAL DESIGN SYSTEM — edit :root / .dark here only.
+   GLOBAL DESIGN SYSTEM — Alcoa Management System brand kit
 
-   Dashboard-aligned tokens:
-   • Primary (CTAs, active nav, progress, key metrics)  #A54100
-   • Accent (links, info highlights, secondary emphasis) #4F46E5
-   • Foreground / headlines                              #0F172A
-   • Muted surfaces                                       #F1F5F9
-   • Muted / supporting text                            #64748B
+   • Primary   #4F46E5 — CTAs, active nav, primary buttons, links
+   • Secondary #0F172A — headlines, body text, inverted surfaces
+   • Tertiary  #A54100 — rust accent, status highlights, icon actions
+   • Neutral   #64748B — labels, borders, supporting text
 
    Typography: Inter (app/layout.js → --font-inter)
+   Radius: ~10px (0.625rem), cards/buttons aligned to brand UI kit
    ============================================================ */
 
 :root {
-  /* Raw brand */
-  --brand-primary: #a54100;
-  --brand-accent: #4f46e5;
+  /* Raw brand (hex aligned to guideline) */
+  --brand-primary: #4f46e5;
   --brand-secondary: #0f172a;
+  --brand-tertiary: #a54100;
   --brand-neutral: #64748b;
+  /* Highlights that mirror primary (charts, dashboard accents) */
+  --brand-accent: var(--brand-primary);
 
-  /* Canvas: soft gray page, white cards (reference UI) */
-  --background: #f8fafc;
+  /* Canvas: cool light gray page, white cards */
+  --background: #f1f5f9;
   --foreground: var(--brand-secondary);
 
   --card: #ffffff;
@@ -40,10 +41,9 @@
   --muted-foreground: var(--brand-neutral);
 
   --accent: #eef2ff;
-  --accent-foreground: #312e81;
+  --accent-foreground: #3730a3;
 
-  /* Indigo actions (badges, alternate emphasis) */
-  --tertiary: var(--brand-accent);
+  --tertiary: var(--brand-tertiary);
   --tertiary-foreground: #ffffff;
 
   --destructive: #dc2626;
@@ -55,19 +55,19 @@
 
   --radius: 0.625rem;
 
-  /* Charts — full colors (use as var(--chart-1) in SVG/CSS, not hsl(...)) */
-  --chart-1: #a54100;
-  --chart-2: #4f46e5;
+  /* Charts — primary / tertiary / supporting palette */
+  --chart-1: #4f46e5;
+  --chart-2: #a54100;
   --chart-3: #0d9488;
   --chart-4: #ca8a04;
   --chart-5: #64748b;
 
-  /* Sidebar: white rail, rust active pill */
+  /* Sidebar: white rail, indigo active state */
   --sidebar: #ffffff;
   --sidebar-foreground: #475569;
   --sidebar-primary: var(--brand-primary);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  --sidebar-accent: color-mix(in srgb, var(--brand-primary) 12%, #ffffff);
   --sidebar-accent-foreground: var(--brand-secondary);
   --sidebar-border: #e2e8f0;
   --sidebar-ring: var(--brand-primary);
@@ -83,7 +83,7 @@
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
 
-  --primary: #ea580c;
+  --primary: #818cf8;
   --primary-foreground: #ffffff;
 
   --secondary: #1e293b;
@@ -95,7 +95,7 @@
   --accent: #312e81;
   --accent-foreground: #e0e7ff;
 
-  --tertiary: #6366f1;
+  --tertiary: #ea580c;
   --tertiary-foreground: #ffffff;
 
   --destructive: #b91c1c;
@@ -103,22 +103,22 @@
 
   --border: #334155;
   --input: #334155;
-  --ring: #ea580c;
+  --ring: #818cf8;
 
-  --chart-1: #fb923c;
-  --chart-2: #818cf8;
+  --chart-1: #818cf8;
+  --chart-2: #fb923c;
   --chart-3: #2dd4bf;
   --chart-4: #fbbf24;
   --chart-5: #94a3b8;
 
   --sidebar: #0f172a;
   --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #ea580c;
+  --sidebar-primary: #818cf8;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #334155;
-  --sidebar-ring: #fb923c;
+  --sidebar-ring: #818cf8;
 }
 
 @theme inline {
@@ -160,6 +160,7 @@
   --color-brand-primary: var(--brand-primary);
   --color-brand-accent: var(--brand-accent);
   --color-brand-secondary: var(--brand-secondary);
+  --color-brand-tertiary: var(--brand-tertiary);
   --color-brand-neutral: var(--brand-neutral);
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -219,7 +220,7 @@
   label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--foreground);
+    color: var(--muted-foreground);
   }
 }
 

@@ -33,6 +33,18 @@ export function formatDate(date) {
 }
 
 /**
+ * True when `dateInput`'s **local calendar day** is strictly before today's local calendar day.
+ * Matches how {@link formatDate} presents the date (avoids UTC vs local mismatches for stored ISO dates).
+ */
+export function isLocalCalendarDayBeforeToday(dateInput) {
+  const d = new Date(dateInput);
+  if (isNaN(d.getTime())) return false;
+  const today = new Date();
+  const ymd = (x) => x.getFullYear() * 10000 + (x.getMonth() + 1) * 100 + x.getDate();
+  return ymd(d) < ymd(today);
+}
+
+/**
  * Format a date to relative time (e.g. "2 hours ago")
  */
 export function formatRelativeTime(date) {

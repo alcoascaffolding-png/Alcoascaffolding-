@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Download, Mail, MessageSquare, Loader2 } from "lucide-react";
-import { formatDate, formatCurrency, isFeatureEnabled } from "@/lib/utils";
+import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 
 const STATUS_MAP = {
   draft: "outline", sent: "info", viewed: "secondary", approved: "success",
@@ -85,6 +85,27 @@ export function QuotationDetail({ id }) {
     }
   }
 
+  async function handleSendWhatsApp() {
+    setSending("whatsapp");
+    try {
+      const res = await fetch(`/api/quotations/${id}/send-whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      toast.success(`Quotation sent on WhatsApp to ${quotation.customerPhone}`);
+      qc.invalidateQueries({ queryKey: ["quotations", "detail", id] });
+      qc.invalidateQueries({ queryKey: ["quotations"] });
+    } catch (e) {
+      const msg = String(e?.message || "");
+      toast.error("Failed: " + msg);
+    } finally {
+      setSending(null);
+    }
+  }
+
   if (isLoading) return <div className="h-96 bg-muted animate-pulse rounded-lg" />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
@@ -114,8 +135,18 @@ export function QuotationDetail({ id }) {
             Email
           </Button>
           {isFeatureEnabled("whatsapp") && (
-            <Button variant="outline" size="sm" disabled={!q.customerPhone}>
-              <MessageSquare className="h-4 w-4 mr-1" /> WhatsApp
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendWhatsApp}
+              disabled={sending === "whatsapp" || !q.customerPhone}
+            >
+              {sending === "whatsapp" ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <MessageSquare className="h-4 w-4 mr-1" />
+              )}
+              WhatsApp
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => router.push(`/quotations/${id}/edit`)}>
@@ -207,7 +238,18 @@ export function QuotationDetail({ id }) {
             <CardHeader><CardTitle className="text-base">Quote Details</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Quote Date</span><span>{formatDate(q.quoteDate)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Valid Until</span><span className={new Date(q.validUntil) < new Date() ? "text-destructive" : ""}>{formatDate(q.validUntil)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Valid Until</span>
+                <span
+                  className={
+                    isLocalCalendarDayBeforeToday(q.validUntil) && !["approved", "converted"].includes(q.status)
+                      ? "text-destructive font-medium"
+                      : ""
+                  }
+                >
+                  {formatDate(q.validUntil)}
+                </span>
+              </div>
               <div className="flex justify-between"><span className="text-muted-foreground">Quote Type</span><span className="capitalize">{q.quoteType}</span></div>
               {q.paymentTerms && <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span>{q.paymentTerms}</span></div>}
               {q.deliveryTerms && <div className="flex justify-between"><span className="text-muted-foreground">Delivery Terms</span><span className="text-right max-w-[150px]">{q.deliveryTerms}</span></div>}

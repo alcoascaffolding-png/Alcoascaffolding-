@@ -1,7 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npm run build",
   "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--max-old-space-size=8192"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

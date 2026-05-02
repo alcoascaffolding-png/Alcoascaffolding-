@@ -12,6 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Inbox } from "lucide-react";
@@ -31,6 +32,8 @@ export function DataTable({
   pageSize: defaultPageSize = 20,
   onRowClick,
   emptyMessage = "No records found.",
+  /** Wrap toolbar + table + pagination in the same Card shell as dashboard metric tiles */
+  card = true,
 }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
@@ -52,8 +55,8 @@ export function DataTable({
     manualPagination: false,
   });
 
-  return (
-    <div className="space-y-4">
+  const inner = (
+    <>
       {/* Toolbar */}
       {(searchable || toolbar) && (
         <div className="flex items-center justify-between gap-4">
@@ -64,7 +67,7 @@ export function DataTable({
                 placeholder={searchPlaceholder}
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                className="pl-9"
+                className="pl-9 border-border bg-card shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30"
               />
             </div>
           )}
@@ -75,7 +78,7 @@ export function DataTable({
       {/* Table */}
       <div
         className={cn(
-          "rounded-md border overflow-hidden relative transition-opacity",
+          "rounded-lg border border-border/70 bg-card overflow-hidden relative transition-opacity",
           isFetching && !isLoading && "opacity-70"
         )}
       >
@@ -85,16 +88,20 @@ export function DataTable({
             Updating…
           </div>
         )}
-        <Table>
+        <Table className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="hover:bg-transparent">
+              <TableRow key={hg.id} className="border-b border-border/60 bg-card hover:bg-card">
                 {hg.headers.map((header) => (
                   <TableHead
                     key={header.id}
                     className={cn(header.column.getCanSort() && "cursor-pointer select-none")}
                     onClick={header.column.getToggleSortingHandler()}
-                    style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
+                    style={{
+                      width: header.getSize(),
+                      minWidth: header.getSize(),
+                      maxWidth: header.getSize(),
+                    }}
                   >
                     {header.isPlaceholder
                       ? null
@@ -108,9 +115,16 @@ export function DataTable({
           <TableBody>
             {isLoading ? (
               [...Array(5)].map((_, i) => (
-                <TableRow key={i}>
-                  {columns.map((_, ci) => (
-                    <TableCell key={ci}>
+                <TableRow key={i} className="bg-card hover:bg-card">
+                  {table.getHeaderGroups()[0]?.headers.map((header) => (
+                    <TableCell
+                      key={header.id}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                        maxWidth: header.getSize(),
+                      }}
+                    >
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
@@ -120,18 +134,39 @@ export function DataTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={cn(onRowClick && "cursor-pointer")}
+                  className={cn("bg-card hover:bg-muted/40", onRowClick && "cursor-pointer")}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: cell.column.getSize(),
+                        minWidth: cell.column.getSize(),
+                        maxWidth: cell.column.getSize(),
+                      }}
+                    >
+                      <div
+                        className={cn(
+                          "min-w-0",
+                          cell.column.id === "customerName" &&
+                            "break-words [overflow-wrap:anywhere] leading-snug",
+                          cell.column.id === "actions" && "flex justify-end",
+                          cell.column.id === "status" && "whitespace-nowrap",
+                          cell.column.id !== "customerName" &&
+                            cell.column.id !== "actions" &&
+                            cell.column.id !== "status" &&
+                            "truncate"
+                        )}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
-              <TableRow>
+              <TableRow className="bg-card hover:bg-card">
                 <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
                   <div className="flex flex-col items-center gap-2">
                     <Inbox className="h-8 w-8 opacity-30" />
@@ -146,7 +181,7 @@ export function DataTable({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between gap-4 border-t border-border/60 pt-4">
           <p className="text-sm text-muted-foreground">
             {table.getFilteredRowModel().rows.length} record(s)
           </p>
@@ -169,6 +204,16 @@ export function DataTable({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
+
+  if (card) {
+    return (
+      <Card>
+        <CardContent className="space-y-4 p-4">{inner}</CardContent>
+      </Card>
+    );
+  }
+
+  return <div className="space-y-4">{inner}</div>;
 }

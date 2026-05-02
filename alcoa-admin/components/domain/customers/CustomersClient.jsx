@@ -247,7 +247,7 @@ export function CustomersClient() {
           </Card>
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
-              <Users className="h-5 w-5 text-amber-500" />
+              <Users className="h-5 w-5 text-chart-2" />
               <div>
                 <p className="text-xs text-muted-foreground">Prospects</p>
                 <p className="text-2xl font-bold">{stats.prospect}</p>

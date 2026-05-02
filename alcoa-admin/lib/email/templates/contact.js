@@ -7,20 +7,23 @@ const baseTemplate = (content, title) => `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
-    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .header { background: linear-gradient(135deg, #a54100 0%, #7c2d12 100%); color: white; padding: 30px; text-align: center; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
-    .content { background: #f9fafb; padding: 30px; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.6; color: #0f172a; margin: 0; padding: 0; background-color: #f1f5f9; }
+    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(15,23,42,0.08); }
+    .header { background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; font-weight: 700; }
+    .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.95; }
+    .content { background: #f8fafc; padding: 30px; }
     .field { margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; border-left: 3px solid #4f46e5; }
-    .label { font-weight: bold; color: #4b5563; margin-bottom: 5px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .value { color: #1f2937; font-size: 15px; margin-top: 5px; }
+    .label { font-weight: 600; color: #64748b; margin-bottom: 5px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .value { color: #0f172a; font-size: 15px; margin-top: 5px; }
     .footer { background: #0f172a; color: white; padding: 20px; text-align: center; }
     .footer p { margin: 5px 0; font-size: 13px; }
-    a { color: #a54100; text-decoration: none; }
-    h2 { color: #0f172a; margin: 20px 0 15px 0; font-size: 18px; border-bottom: 2px solid #a54100; padding-bottom: 8px; }
+    a { color: #4f46e5; text-decoration: none; font-weight: 500; }
+    h2 { color: #0f172a; margin: 20px 0 15px 0; font-size: 18px; font-weight: 600; border-bottom: 2px solid #4f46e5; padding-bottom: 8px; }
   </style>
 </head>
 <body>${content}</body>
@@ -64,7 +67,7 @@ export function contactCompanyTemplate(data) {
     </div>
     <div class="footer">
       <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#fdba74;">${companyEmail}</a></p>
+      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
     </div>
   </div>`;
 
@@ -97,7 +100,7 @@ export function contactCustomerTemplate(data) {
     </div>
     <div class="footer">
       <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#fdba74;">${companyEmail}</a></p>
+      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
     </div>
   </div>`;
 
@@ -136,7 +139,7 @@ export function quoteCompanyTemplate(data) {
     </div>
     <div class="footer">
       <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#fdba74;">${companyEmail}</a></p>
+      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
     </div>
   </div>`;
 
@@ -168,7 +171,7 @@ export function quoteCustomerTemplate(data) {
     </div>
     <div class="footer">
       <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#fdba74;">${companyEmail}</a></p>
+      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
     </div>
   </div>`;
 
