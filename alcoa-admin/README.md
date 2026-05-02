@@ -98,10 +98,19 @@ This app lives in a **monorepo**. Vercel must use **`alcoa-admin`** as the proje
 3. **Critical — Build & Output Settings:** turn **off** all three override toggles (**Build Command**, **Output Directory**, **Install Command**) so Vercel uses Next.js defaults (`next build`, no custom `dist` folder). If any toggle is on, remove values like `cd frontend && …` or `frontend/dist`; those belong only to the legacy `frontend/` Vite app with Root Directory `frontend`.
 4. If you already have a Vercel project wired to the same repo with the wrong root, open **Settings → General → Root Directory** and change it to `alcoa-admin`, then redeploy.
 5. Copy every variable from **`.env.local.example`** into **Vercel → Settings → Environment Variables** (Production and Preview as needed). Set **`NEXTAUTH_URL`** to your real Vercel URL (for example `https://your-app.vercel.app`).
-6. Optional for PDFs on Vercel: set **`CHROMIUM_TAR_URL`** to a matching `@sparticuz/chromium-min` release tarball if the default binary fails in your region (see package docs).
-7. Optional: `BLOB_READ_WRITE_TOKEN` (Vercel Blob), `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (Upstash) for rate limits.
+6. **PDF / email on Vercel:** ensure **`RESEND_API_KEY`** (and usually **`RESEND_FROM_EMAIL`**) are set in the Vercel project env. PDFs use **`@sparticuz/chromium-min`** with a default **x64** pack URL baked into `lib/pdf/chromium.js`; if the download fails or you deploy on **arm64**, set **`CHROMIUM_TAR_URL`** to the matching `chromium-v*-pack.arm64.tar` from [Sparticuz releases](https://github.com/Sparticuz/chromium/releases).
+7. **WhatsApp in the UI:** **`NEXT_PUBLIC_FEATURES`** must include **`whatsapp`** at **build** time (set it in Vercel env, then redeploy). The API also needs **`TWILIO_*`** and **`BLOB_READ_WRITE_TOKEN`** as in `.env.local.example`.
+8. Optional: `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (Upstash) for rate limits.
 
 The legacy marketing **Vite** site uses **`frontend/vercel.json`** when that folder is deployed with Root Directory **`frontend`**.
+
+### Troubleshooting: `Next.js output directory "frontend/dist" was not found`
+
+That path means **Output Directory** in Vercel is set to `frontend/dist` (or similar) while **Root Directory** is `alcoa-admin`. Next.js builds to **`.next`** here, not `frontend/dist`. Fix it in the dashboard:
+
+1. **Vercel** → your project → **Settings** → **General** → **Build & Development Settings**.
+2. Open **Output Directory** — if it shows `frontend/dist`, **clear the field** and turn **Override** **off** (same for Build / Install unless you intentionally need them).
+3. Redeploy. Do **not** copy Output Directory from the **`frontend/`** Vite app; that app uses Root **`frontend`** and output **`dist`** only relative to that folder.
 
 ## Migration from the Vite Admin Panel
 

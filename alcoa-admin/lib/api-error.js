@@ -45,6 +45,24 @@ export function withErrorHandler(handler) {
         return apiError(`Invalid ${err.path}: ${err.value}`, 400);
       }
 
+      const msg = typeof err?.message === "string" ? err.message : "";
+      if (msg.includes("RESEND_API_KEY")) {
+        return apiError(
+          "Email is not configured. Add RESEND_API_KEY (and RESEND_FROM_EMAIL if needed) in your deployment environment.",
+          503
+        );
+      }
+      if (
+        msg.includes("Chromium not available") ||
+        msg.includes("Chromium not found for PDF") ||
+        msg.includes("@sparticuz/chromium-min executablePath failed")
+      ) {
+        return apiError(
+          "PDF generation is not available on this server. On Vercel, set CHROMIUM_TAR_URL if the default Chromium pack fails, or see deployment docs.",
+          503
+        );
+      }
+
       return apiError("Internal server error", 500);
     }
   };

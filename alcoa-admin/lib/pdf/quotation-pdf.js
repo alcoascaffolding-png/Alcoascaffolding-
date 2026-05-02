@@ -292,7 +292,9 @@ export async function generateQuotationPDF(quotation) {
   let page;
   try {
     page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle" });
+    // Avoid "networkidle" on serverless: Google Fonts and other subresources can prevent
+    // idle from ever settling, causing timeouts on Vercel.
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,

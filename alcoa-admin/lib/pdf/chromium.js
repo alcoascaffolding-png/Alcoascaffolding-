@@ -1,59 +1,81 @@
 /**
  * Chromium bootstrap for Vercel serverless.
  *
- * - In production (Vercel): uses @sparticuz/chromium-min + playwright-core
- * - In development: uses playwright-core with locally installed Chromium
+ * - In production / on Vercel: @sparticuz/chromium-min + playwright-core
+ *   (must pass chromium.args and a pack tarball URL for -min; see Sparticuz docs.)
+ * - In development: playwright-core with locally installed Chromium
  *   (run `npx playwright install chromium` once)
  */
 
 import fs from "node:fs";
 
-let chromiumExecutablePath = null;
+/**
+ * Default pack for Linux x64 (Vercel). Keep major version aligned with
+ * `@sparticuz/chromium-min` in package.json; override via CHROMIUM_TAR_URL.
+ */
+const SPARTICUZ_CHROMIUM_PACK_X64_TAR =
+  "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.x64.tar";
 
+let localExecutablePathCache = null;
+
+/**
+ * Resolve Playwright-bundled Chromium path for local dev only.
+ */
 export async function getChromiumPath() {
-  if (chromiumExecutablePath) return chromiumExecutablePath;
-
-  // Allow explicit override via env (useful for Docker / self-hosted)
   if (process.env.CHROMIUM_EXECUTABLE_PATH) {
-    chromiumExecutablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
-    return chromiumExecutablePath;
+    return process.env.CHROMIUM_EXECUTABLE_PATH;
   }
 
-  // In production on Vercel, use @sparticuz/chromium-min
-  if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
-    try {
-      const chromium = await import("@sparticuz/chromium-min");
-      const chromiumMod = chromium.default || chromium;
+  if (localExecutablePathCache !== null) return localExecutablePathCache;
 
-      // If a tarball URL is set, use it; otherwise use the default CDN path
-      if (process.env.CHROMIUM_TAR_URL) {
-        chromiumExecutablePath = await chromiumMod.executablePath(process.env.CHROMIUM_TAR_URL);
-      } else {
-        chromiumExecutablePath = await chromiumMod.executablePath();
-      }
-
-      return chromiumExecutablePath;
-    } catch (err) {
-      console.error("[PDF] Failed to load @sparticuz/chromium-min:", err.message);
-      throw new Error("Chromium not available. Install @sparticuz/chromium-min or set CHROMIUM_EXECUTABLE_PATH.");
-    }
-  }
-
-  // Development: use playwright's bundled browser
   const { chromium } = await import("playwright-core");
   const candidatePath = chromium.executablePath();
-  // Playwright may return a stale path when browser binaries are not installed.
-  chromiumExecutablePath =
+  localExecutablePathCache =
     candidatePath && fs.existsSync(candidatePath) ? candidatePath : null;
-  return chromiumExecutablePath;
+  return localExecutablePathCache;
 }
 
 /**
  * Launch a Chromium browser instance
  */
 export async function launchBrowser() {
-  const executablePath = await getChromiumPath();
   const { chromium } = await import("playwright-core");
+  const useSparticuz =
+    process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+
+  if (useSparticuz) {
+    const chromiumMod = await import("@sparticuz/chromium-min");
+    const sc = chromiumMod.default ?? chromiumMod;
+
+    if (typeof sc.setGraphicsMode === "function") {
+      sc.setGraphicsMode(false);
+    }
+
+    const tarUrl = process.env.CHROMIUM_TAR_URL || SPARTICUZ_CHROMIUM_PACK_X64_TAR;
+
+    let executablePath;
+    try {
+      executablePath = await sc.executablePath(tarUrl);
+    } catch (err) {
+      console.error("[PDF] @sparticuz/chromium-min executablePath failed:", err?.message);
+      throw new Error(
+        "Chromium not available. Set CHROMIUM_TAR_URL to a matching chromium-v*-pack.(x64|arm64).tar from Sparticuz releases, or set CHROMIUM_EXECUTABLE_PATH."
+      );
+    }
+
+    const serverArgs = Array.isArray(sc.args) ? sc.args : [];
+
+    try {
+      return await chromium.launch({
+        headless: true,
+        args: serverArgs,
+        executablePath,
+      });
+    } catch (err) {
+      console.error("[PDF] Chromium launch failed:", err?.message);
+      throw err;
+    }
+  }
 
   const baseOptions = {
     headless: true,
@@ -69,7 +91,8 @@ export async function launchBrowser() {
     ],
   };
 
-  // Preferred path (Playwright bundle or explicit CHROMIUM_EXECUTABLE_PATH)
+  const executablePath = await getChromiumPath();
+
   if (executablePath) {
     try {
       return await chromium.launch({
@@ -84,7 +107,6 @@ export async function launchBrowser() {
     }
   }
 
-  // Local development fallback: use installed Chrome/Edge when Playwright binaries are missing.
   for (const channel of ["chrome", "msedge"]) {
     try {
       return await chromium.launch({
