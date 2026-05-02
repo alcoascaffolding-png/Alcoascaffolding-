@@ -1,7 +1,8 @@
-# Environment variables
+# Environment variables (never commit secrets)
 .env
-.env.local
-.env.production
+.env.*
+!.env*.example
+!.env.example
 
 # Node modules
 node_modules/
