@@ -85,6 +85,27 @@ export function QuotationDetail({ id }) {
     }
   }
 
+  async function handleSendWhatsApp() {
+    setSending("whatsapp");
+    try {
+      const res = await fetch(`/api/quotations/${id}/send-whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      toast.success(`Quotation sent on WhatsApp to ${quotation.customerPhone}`);
+      qc.invalidateQueries({ queryKey: ["quotations", "detail", id] });
+      qc.invalidateQueries({ queryKey: ["quotations"] });
+    } catch (e) {
+      const msg = String(e?.message || "");
+      toast.error("Failed: " + msg);
+    } finally {
+      setSending(null);
+    }
+  }
+
   if (isLoading) return <div className="h-96 bg-muted animate-pulse rounded-lg" />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
@@ -114,8 +135,18 @@ export function QuotationDetail({ id }) {
             Email
           </Button>
           {isFeatureEnabled("whatsapp") && (
-            <Button variant="outline" size="sm" disabled={!q.customerPhone}>
-              <MessageSquare className="h-4 w-4 mr-1" /> WhatsApp
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSendWhatsApp}
+              disabled={sending === "whatsapp" || !q.customerPhone}
+            >
+              {sending === "whatsapp" ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <MessageSquare className="h-4 w-4 mr-1" />
+              )}
+              WhatsApp
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => router.push(`/quotations/${id}/edit`)}>

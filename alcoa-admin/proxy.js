@@ -1,12 +1,8 @@
-/**
- * Next.js Middleware — runs on the Edge runtime.
- * Uses only the Edge-compatible auth config (no Node.js APIs, no Mongoose).
- */
+import { NextResponse } from "next/server";
 
-import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth.config";
-
-export default NextAuth(authConfig).auth;
+export default function proxy() {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

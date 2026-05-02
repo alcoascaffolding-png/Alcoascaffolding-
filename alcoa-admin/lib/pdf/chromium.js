@@ -6,6 +6,8 @@
  *   (run `npx playwright install chromium` once)
  */
 
+import fs from "node:fs";
+
 let chromiumExecutablePath = null;
 
 export async function getChromiumPath() {
@@ -39,7 +41,10 @@ export async function getChromiumPath() {
 
   // Development: use playwright's bundled browser
   const { chromium } = await import("playwright-core");
-  chromiumExecutablePath = chromium.executablePath();
+  const candidatePath = chromium.executablePath();
+  // Playwright may return a stale path when browser binaries are not installed.
+  chromiumExecutablePath =
+    candidatePath && fs.existsSync(candidatePath) ? candidatePath : null;
   return chromiumExecutablePath;
 }
 
@@ -50,8 +55,7 @@ export async function launchBrowser() {
   const executablePath = await getChromiumPath();
   const { chromium } = await import("playwright-core");
 
-  const browser = await chromium.launch({
-    executablePath,
+  const baseOptions = {
     headless: true,
     args: [
       "--no-sandbox",
@@ -63,7 +67,36 @@ export async function launchBrowser() {
       "--single-process",
       "--disable-gpu",
     ],
-  });
+  };
 
-  return browser;
+  // Preferred path (Playwright bundle or explicit CHROMIUM_EXECUTABLE_PATH)
+  if (executablePath) {
+    try {
+      return await chromium.launch({
+        ...baseOptions,
+        executablePath,
+      });
+    } catch (err) {
+      console.warn(
+        "[PDF] Launch with executablePath failed, trying system browser channel:",
+        err?.message
+      );
+    }
+  }
+
+  // Local development fallback: use installed Chrome/Edge when Playwright binaries are missing.
+  for (const channel of ["chrome", "msedge"]) {
+    try {
+      return await chromium.launch({
+        ...baseOptions,
+        channel,
+      });
+    } catch {
+      // Try the next channel.
+    }
+  }
+
+  throw new Error(
+    "Chromium not found for PDF generation. Run `npx playwright install chromium` or set CHROMIUM_EXECUTABLE_PATH."
+  );
 }
