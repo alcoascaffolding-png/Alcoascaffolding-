@@ -1,4 +1,5 @@
 import { apiSuccess } from "@/lib/api-response";
+import { isBlobReadWriteTokenConfigured } from "@/lib/storage/blob";
 
 export const GET = async () => {
   return apiSuccess({
@@ -8,5 +9,6 @@ export const GET = async () => {
     env: process.env.NODE_ENV,
     resendConfigured: !!process.env.RESEND_API_KEY,
     mongoConfigured: !!process.env.MONGODB_URI,
+    blobReadWriteConfigured: isBlobReadWriteTokenConfigured(),
   });
 };

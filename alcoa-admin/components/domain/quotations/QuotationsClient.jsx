@@ -54,6 +54,20 @@ export function QuotationsClient() {
 
   const { data: stats } = useQuery({ queryKey: ["quotations-stats"], queryFn: fetchStats });
 
+  const { data: uiFeatures } = useQuery({
+    queryKey: ["ui-features"],
+    queryFn: async () => {
+      const res = await fetch("/api/config/features");
+      const d = await res.json();
+      if (!d.success) return { whatsapp: false, pdfEmail: false };
+      return d.data;
+    },
+    staleTime: 60_000,
+  });
+
+  const showWhatsApp =
+    uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
+
   const deleteMut = useMutation({
     mutationFn: async (id) => {
       const res = await fetch(`/api/quotations/${id}`, { method: "DELETE" });
@@ -198,7 +212,7 @@ export function QuotationsClient() {
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSendEmail(qid); }} disabled={busy || !q.customerEmail}>
                 <Mail className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send Email"}
               </DropdownMenuItem>
-              {isFeatureEnabled("whatsapp") && (
+              {showWhatsApp && (
                 <DropdownMenuItem
                   onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(qid); }}
                   disabled={busy || !q.customerPhone}
