@@ -3,6 +3,10 @@ import { put, del, list } from "@vercel/blob";
 /**
  * Read-write token from env, normalized (common copy/paste issues from Vercel UI / .env).
  */
+export function isBlobReadWriteTokenConfigured() {
+  return !!getBlobReadWriteToken();
+}
+
 function getBlobReadWriteToken() {
   let raw = (process.env.BLOB_READ_WRITE_TOKEN || "").trim();
   if (!raw) return null;
