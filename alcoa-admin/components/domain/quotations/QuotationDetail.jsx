@@ -12,8 +12,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2, Download, Mail, MessageSquare } from "lucide-react";
-import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import { ArrowLeft, Pencil, Trash2, Download, Mail } from "lucide-react";
+import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 
@@ -38,6 +38,7 @@ export function QuotationDetail({ id }) {
     },
   });
 
+  /* WhatsApp UI disabled — uncomment block + handler + button below to restore
   const { data: uiFeatures } = useQuery({
     queryKey: ["ui-features"],
     queryFn: async () => {
@@ -51,6 +52,7 @@ export function QuotationDetail({ id }) {
 
   const showWhatsApp =
     uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
+  */
 
   const deleteMut = useMutation({
     mutationFn: async () => {
@@ -101,6 +103,7 @@ export function QuotationDetail({ id }) {
     }
   }
 
+  /* WhatsApp — restore with UI block below
   async function handleSendWhatsApp() {
     setSending("whatsapp");
     try {
@@ -121,6 +124,7 @@ export function QuotationDetail({ id }) {
       setSending(null);
     }
   }
+  */
 
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
@@ -150,6 +154,7 @@ export function QuotationDetail({ id }) {
             {sending === "email" ? <InlineSkeleton className="mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
             Email
           </Button>
+          {/* WhatsApp button — uncomment together with handleSendWhatsApp + uiFeatures block above
           {showWhatsApp && (
             <Button
               variant="outline"
@@ -165,6 +170,7 @@ export function QuotationDetail({ id }) {
               WhatsApp
             </Button>
           )}
+          */}
           <Button variant="outline" size="sm" onClick={() => router.push(`/quotations/${id}/edit`)}>
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>

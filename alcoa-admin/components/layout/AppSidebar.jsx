@@ -46,6 +46,7 @@ const navigation = [
       { name: "Sales Invoices", href: "/sales-invoices", icon: Receipt },
     ],
   },
+  /* ─── Temporarily hidden — restore Purchases / Inventory / Accounts when ready ───
   {
     label: "Purchases",
     items: [
@@ -69,6 +70,7 @@ const navigation = [
       { name: "Payments", href: "/payments", icon: Wallet },
     ],
   },
+  ─── end hidden nav ─── */
 ];
 
 function NavGroup({ group, collapsed, onNavigate }) {

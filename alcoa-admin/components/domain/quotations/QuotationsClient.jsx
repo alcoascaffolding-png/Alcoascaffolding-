@@ -15,9 +15,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
-  MoreHorizontal, Eye, Pencil, Trash2, Download, Mail, MessageSquare,
+  MoreHorizontal, Eye, Pencil, Trash2, Download, Mail,
 } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 
@@ -55,6 +55,7 @@ export function QuotationsClient() {
 
   const { data: stats } = useQuery({ queryKey: ["quotations-stats"], queryFn: fetchStats });
 
+  /* WhatsApp menu disabled — uncomment with handleSendWhatsApp + dropdown item below
   const { data: uiFeatures } = useQuery({
     queryKey: ["ui-features"],
     queryFn: async () => {
@@ -68,6 +69,7 @@ export function QuotationsClient() {
 
   const showWhatsApp =
     uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
+  */
 
   const deleteMut = useMutation({
     mutationFn: async (id) => {
@@ -113,6 +115,7 @@ export function QuotationsClient() {
     }
   }
 
+  /* WhatsApp — restore with uiFeatures block + menu item
   async function handleSendWhatsApp(id) {
     const sid = String(id);
     setSendingId(sid);
@@ -133,6 +136,7 @@ export function QuotationsClient() {
       setSendingId(null);
     }
   }
+  */
 
   const columns = [
     {
@@ -213,6 +217,7 @@ export function QuotationsClient() {
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSendEmail(qid); }} disabled={busy || !q.customerEmail}>
                 <Mail className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send Email"}
               </DropdownMenuItem>
+              {/* Send WhatsApp — uncomment with handleSendWhatsApp + uiFeatures block above
               {showWhatsApp && (
                 <DropdownMenuItem
                   onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(qid); }}
@@ -221,6 +226,7 @@ export function QuotationsClient() {
                   <MessageSquare className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send WhatsApp"}
                 </DropdownMenuItem>
               )}
+              */}
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(qid); }} disabled={busy}>
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
