@@ -31,20 +31,32 @@ export const POST = withErrorHandler(async (request, { params }) => {
   if (!toPhone) throw new AppError("No phone number specified", 400);
   if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
     throw new AppError(
-      "WhatsApp is not configured. Please set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env.local.",
+      "WhatsApp is not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in your deployment environment (Vercel → Environment Variables).",
       503
     );
   }
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     throw new AppError(
-      "WhatsApp PDF attachment requires BLOB_READ_WRITE_TOKEN in .env.local.",
+      "WhatsApp needs Vercel Blob: set BLOB_READ_WRITE_TOKEN from the same Vercel project (Storage → Blob → token).",
       503
     );
   }
 
   // Generate PDF and upload to Blob so Twilio can send media attachment.
   const pdfBuffer = await generateQuotationPDF(quotation);
-  const uploaded = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
+  let uploaded;
+  try {
+    uploaded = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
+  } catch (err) {
+    const m = err?.message || "";
+    if (m.includes("store does not exist") || m.includes("Vercel Blob")) {
+      throw new AppError(
+        "Vercel Blob rejected the upload (invalid or expired token, or the Blob store was removed). Open Vercel → this project → Storage → Blob and create a new read/write token, then update BLOB_READ_WRITE_TOKEN.",
+        503
+      );
+    }
+    throw err;
+  }
   const pdfUrl = uploaded.url;
 
   // Build WhatsApp message

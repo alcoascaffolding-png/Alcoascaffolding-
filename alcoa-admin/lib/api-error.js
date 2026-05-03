@@ -63,6 +63,17 @@ export function withErrorHandler(handler) {
         );
       }
 
+      if (
+        msg.includes("Vercel Blob") ||
+        msg.includes("store does not exist") ||
+        msg.includes("BLOB_READ_WRITE_TOKEN")
+      ) {
+        return apiError(
+          "Vercel Blob storage is missing or invalid. In this same Vercel project, open Storage → Blob, ensure a store exists, then create a new read/write token and set BLOB_READ_WRITE_TOKEN (old tokens break if the store was deleted or belongs to another team).",
+          503
+        );
+      }
+
       return apiError("Internal server error", 500);
     }
   };

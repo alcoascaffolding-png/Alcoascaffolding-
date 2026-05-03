@@ -8,13 +8,25 @@ import { put, del, list } from "@vercel/blob";
  * @returns {Promise<{url: string, pathname: string}>}
  */
 export async function uploadToBlob(buffer, filename, contentType = "application/pdf") {
-  const blob = await put(`quotation-pdfs/${filename}`, buffer, {
-    access: "public",
-    contentType,
-    addRandomSuffix: false,
-  });
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("BLOB_READ_WRITE_TOKEN is not set");
+  }
 
-  return { url: blob.url, pathname: blob.pathname };
+  try {
+    const blob = await put(`quotation-pdfs/${filename}`, buffer, {
+      access: "public",
+      contentType,
+      addRandomSuffix: false,
+      token,
+    });
+
+    return { url: blob.url, pathname: blob.pathname };
+  } catch (err) {
+    const msg = err?.message || String(err);
+    console.error("[Blob] put failed:", msg);
+    throw err;
+  }
 }
 
 /**
