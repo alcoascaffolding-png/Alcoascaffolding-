@@ -74,6 +74,30 @@ export function withErrorHandler(handler) {
         );
       }
 
+      // Twilio REST errors (invalid number, unverified trial destination, auth, etc.)
+      if (
+        err.name === "RestException" ||
+        msg.includes("Twilio") ||
+        msg.includes("twilio") ||
+        msg.includes("Authenticate")
+      ) {
+        const status =
+          typeof err.status === "number" && err.status >= 400 && err.status < 600 ? err.status : 502;
+        return apiError(msg || "Messaging provider error", status);
+      }
+
+      if (msg.includes("Twilio credentials not configured")) {
+        return apiError(
+          "Twilio is not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in your environment.",
+          503
+        );
+      }
+
+      // Local development: surface real message so API failures are debuggable
+      if (process.env.NODE_ENV === "development" && msg) {
+        return apiError(`Internal server error: ${msg}`, 500, err.name ? { name: err.name } : null);
+      }
+
       return apiError("Internal server error", 500);
     }
   };

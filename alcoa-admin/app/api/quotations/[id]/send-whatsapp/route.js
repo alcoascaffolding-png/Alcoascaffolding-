@@ -20,9 +20,16 @@ function isLocalTextOnlyWhatsAppMode() {
   );
 }
 
-export const POST = withErrorHandler(async (request, { params }) => {
+export const POST = withErrorHandler(async (request, context) => {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
+
+  const routeParams =
+    context.params && typeof context.params.then === "function"
+      ? await context.params
+      : context.params;
+  const quotationId = routeParams?.id;
+  if (!quotationId) return apiError("Missing quotation id", 400);
 
   const localTextOnly = isLocalTextOnlyWhatsAppMode();
   const twilioReady =
@@ -36,7 +43,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
   }
 
   await connectDB();
-  const quotation = await Quotation.findById(params.id).lean();
+  const quotation = await Quotation.findById(quotationId).lean();
   if (!quotation) throw new AppError("Quotation not found", 404);
 
   const body = await request.json().catch(() => ({}));
@@ -66,7 +73,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
     baseLines.splice(2, 0, "(Local dev: PDF not attached — remove WHATSAPP_LOCAL_TEXT_ONLY and set BLOB_READ_WRITE_TOKEN for full flow.)");
     const message = baseLines.join("\n");
     const result = await sendWhatsAppMessage(toPhone, message, null);
-    await recordWhatsAppSent(params.id, toPhone, result.sid);
+    await recordWhatsAppSent(quotationId, toPhone, result.sid);
     return apiSuccess({ sent: true, sid: result.sid, pdfUrl: null, devTextOnly: true });
   }
 
@@ -103,7 +110,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
   ].join("\n");
 
   const result = await sendWhatsAppMessage(toPhone, message, pdfUrl);
-  await recordWhatsAppSent(params.id, toPhone, result.sid);
+  await recordWhatsAppSent(quotationId, toPhone, result.sid);
   return apiSuccess({ sent: true, sid: result.sid, pdfUrl });
 });
 
