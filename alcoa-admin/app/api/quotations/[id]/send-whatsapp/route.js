@@ -7,6 +7,11 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Quotation from "@/models/Quotation";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
+import {
+  BlobAccessError,
+  BlobClientTokenExpiredError,
+  BlobStoreNotFoundError,
+} from "@vercel/blob";
 import { uploadToBlob, isBlobReadWriteTokenConfigured } from "@/lib/storage/blob";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import { isWhatsAppFeatureAvailable } from "@/lib/server-features";
@@ -89,10 +94,28 @@ export const POST = withErrorHandler(async (request, context) => {
   try {
     uploaded = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
   } catch (err) {
+    if (err instanceof BlobStoreNotFoundError) {
+      throw new AppError(
+        "Vercel Blob could not find the store for this token. Use the same Vercel project as this deployment: Storage → Blob → your store → .env.local tab → copy the read-write value into BLOB_READ_WRITE_TOKEN (it must start with vercel_blob_rw_). Remove duplicate or old blob env vars, then redeploy.",
+        503
+      );
+    }
+    if (err instanceof BlobAccessError) {
+      throw new AppError(
+        "Vercel Blob denied access. Regenerate a read-write token from Storage → Blob → .env.local (not a read-only token) and set BLOB_READ_WRITE_TOKEN.",
+        503
+      );
+    }
+    if (err instanceof BlobClientTokenExpiredError) {
+      throw new AppError(
+        "Vercel Blob token expired. Create a new read-write token from Storage → Blob and update BLOB_READ_WRITE_TOKEN.",
+        503
+      );
+    }
     const m = err?.message || "";
     if (m.includes("store does not exist") || m.includes("Vercel Blob")) {
       throw new AppError(
-        "Vercel Blob rejected the upload (invalid or expired token, or the Blob store was removed). Open Vercel → this project → Storage → Blob and create a new read/write token, then update BLOB_READ_WRITE_TOKEN in .env.local.",
+        "Vercel Blob rejected the upload (invalid token or wrong project). Open this deployment’s Vercel project → Storage → Blob → .env.local tab, copy BLOB_READ_WRITE_TOKEN (vercel_blob_rw_…), save env, redeploy.",
         503
       );
     }

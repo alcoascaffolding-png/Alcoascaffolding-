@@ -4,6 +4,8 @@
  * `NEXT_PUBLIC_FEATURES` was missing at build (Next inlines NEXT_PUBLIC_* at compile time).
  */
 
+import { isBlobReadWriteTokenConfigured } from "@/lib/storage/blob";
+
 function parseFeatureCsv(value) {
   return (value || "")
     .split(",")
@@ -30,7 +32,7 @@ export function isWhatsAppFeatureAvailable() {
   return (
     !!process.env.TWILIO_ACCOUNT_SID &&
     !!process.env.TWILIO_AUTH_TOKEN &&
-    !!process.env.BLOB_READ_WRITE_TOKEN
+    isBlobReadWriteTokenConfigured()
   );
 }
 
