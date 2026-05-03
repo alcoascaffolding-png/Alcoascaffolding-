@@ -14,6 +14,7 @@ const nextConfig = {
     "mongoose",
     "playwright-core",
     "@sparticuz/chromium-min",
+    "tar-fs",
     "twilio",
     "bcryptjs",
     "exceljs",

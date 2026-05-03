@@ -8,6 +8,7 @@
  */
 
 import fs from "node:fs";
+import path from "node:path";
 
 /**
  * Default pack for Linux x64 (Vercel). Keep major version aligned with
@@ -65,11 +66,21 @@ export async function launchBrowser() {
 
     const serverArgs = Array.isArray(sc.args) ? sc.args : [];
 
+    // Sparticuz args already include --headless='shell'. Playwright also injects
+    // --headless when headless: true, which breaks Chromium on Vercel (conflicting modes).
+    const execDir = path.dirname(executablePath);
+    if (execDir) {
+      process.env.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH
+        ? `${execDir}:${process.env.LD_LIBRARY_PATH}`
+        : execDir;
+    }
+
     try {
       return await chromium.launch({
         headless: true,
         args: serverArgs,
         executablePath,
+        ignoreDefaultArgs: ["--headless"],
       });
     } catch (err) {
       console.error("[PDF] Chromium launch failed:", err?.message);
