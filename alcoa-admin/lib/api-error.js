@@ -93,6 +93,17 @@ export function withErrorHandler(handler) {
         );
       }
 
+      if (
+        msg.includes("invalid username") ||
+        msg.includes("Authentication Error") ||
+        msg.includes("20003")
+      ) {
+        return apiError(
+          "Twilio rejected the credentials (wrong Account SID or Auth Token). In Twilio Console → Account, copy Account SID (starts with AC) and Auth Token into TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN with no extra spaces or quotes.",
+          401
+        );
+      }
+
       // Local development: surface real message so API failures are debuggable
       if (process.env.NODE_ENV === "development" && msg) {
         return apiError(`Internal server error: ${msg}`, 500, err.name ? { name: err.name } : null);
