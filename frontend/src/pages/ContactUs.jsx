@@ -23,7 +23,7 @@ import {
   resetContactForm,
   selectContactForm
 } from '../redux/slices/formSlice';
-import ENV_CONFIG from '../config/env';
+import ENV_CONFIG, { getContactFormApiUrls } from '../config/env';
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
@@ -257,11 +257,10 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
     });
 
     try {
-      // Use environment-based API URL (auto-switches between dev/prod)
-      const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-quote`;
-      console.log(`💰 Sending quote request to: ${ENV_CONFIG.env} backend`);
+      const { sendQuote: quoteApiUrl } = getContactFormApiUrls();
+      console.log(`💰 Sending quote request to: ${quoteApiUrl}`);
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(quoteApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -694,11 +693,10 @@ const ContactUs = () => {
     });
 
     try {
-      // Use environment-based API URL (auto-switches between dev/prod)
-      const apiUrl = `${ENV_CONFIG.apiUrl}/email/send-contact`;
-      console.log(`📤 Sending contact form to: ${ENV_CONFIG.env} backend`);
+      const { sendContact: contactApiUrl } = getContactFormApiUrls();
+      console.log(`📤 Sending contact form to: ${contactApiUrl}`);
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(contactApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -769,12 +767,12 @@ const ContactUs = () => {
       )) {
         errorMessage += 'CORS error detected. Please make sure the backend server is running and CORS is properly configured.';
         if (ENV_CONFIG.isDevelopment) {
-          errorMessage += ` (Backend URL: ${ENV_CONFIG.apiUrl})`;
+          errorMessage += ` (API: ${getContactFormApiUrls().sendContact})`;
         }
       } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage += 'Cannot connect to server. Please make sure the backend server is running.';
         if (ENV_CONFIG.isDevelopment) {
-          errorMessage += ` (Trying to connect to: ${ENV_CONFIG.apiUrl})`;
+          errorMessage += ` (Trying to connect to: ${getContactFormApiUrls().sendContact})`;
         }
       } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
         errorMessage += 'Network error. Please check your internet connection.';

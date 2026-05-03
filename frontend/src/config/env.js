@@ -65,6 +65,87 @@ const getApiUrl = () => {
   return PRODUCTION_API_URL;
 };
 
+function trimOrigin(value) {
+  if (value == null || typeof value !== "string") return "";
+  const t = value.trim().replace(/\/+$/, "");
+  return t || "";
+}
+
+/** True when the marketing site is opened from this machine / LAN (same rule as getApiUrl localhost branch). */
+function isLocalMarketingHostname() {
+  if (typeof window === "undefined" || !window.location?.hostname) return false;
+  const h = window.location.hostname.toLowerCase().trim();
+  return (
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h === "" ||
+    h.startsWith("192.168.") ||
+    h.startsWith("10.0.")
+  );
+}
+
+const DEFAULT_LOCAL_ADMIN_ORIGIN = "http://localhost:3000";
+
+/** Next default port; override with VITE_LOCAL_ADMIN_ORIGIN if admin runs elsewhere. */
+const LOCAL_ADMIN_PORT = "3000";
+
+function resolveAutoLocalAdminOrigin() {
+  const explicit = trimOrigin(import.meta.env.VITE_LOCAL_ADMIN_ORIGIN);
+  if (explicit) return explicit;
+  if (typeof window === "undefined" || !window.location?.hostname) {
+    return DEFAULT_LOCAL_ADMIN_ORIGIN;
+  }
+  const h = window.location.hostname.toLowerCase().trim();
+  const host = h === "localhost" || h === "127.0.0.1" || h === "" ? "localhost" : h;
+  return `http://${host}:${LOCAL_ADMIN_PORT}`;
+}
+
+function adminEmailPaths(origin) {
+  return {
+    sendContact: `${origin}/api/email/send-contact`,
+    sendQuote: `${origin}/api/email/send-quote`,
+  };
+}
+
+/**
+ * Where contact + quick-quote forms POST so entries appear in alcoa-admin → Contact Messages.
+ *
+ * Priority:
+ * 1. VITE_CONTACT_INGEST_ORIGIN or VITE_ADMIN_APP_ORIGIN — deployed alcoa-admin origin (https://…, no trailing slash).
+ * 2. Site opened on localhost / LAN — auto `http://<same-host>:3000` (or VITE_LOCAL_ADMIN_ORIGIN).
+ * 3. Legacy Express: same base as getApiUrl() + /email/send-contact|send-quote (only if that API shares MongoDB with admin).
+ */
+export function getContactFormApiUrls() {
+  const explicit =
+    trimOrigin(import.meta.env.VITE_CONTACT_INGEST_ORIGIN) ||
+    trimOrigin(import.meta.env.VITE_ADMIN_APP_ORIGIN);
+  if (explicit) {
+    return adminEmailPaths(explicit);
+  }
+
+  if (isLocalMarketingHostname()) {
+    return adminEmailPaths(resolveAutoLocalAdminOrigin());
+  }
+
+  const base = getApiUrl();
+  return {
+    sendContact: `${base}/email/send-contact`,
+    sendQuote: `${base}/email/send-quote`,
+  };
+}
+
+/** For debug logs: how contact ingest was resolved. */
+export function getContactIngestResolution() {
+  const explicit =
+    trimOrigin(import.meta.env.VITE_CONTACT_INGEST_ORIGIN) ||
+    trimOrigin(import.meta.env.VITE_ADMIN_APP_ORIGIN);
+  if (explicit) return { mode: "explicit-admin", origin: explicit };
+  if (isLocalMarketingHostname()) {
+    return { mode: "auto-local-admin", origin: resolveAutoLocalAdminOrigin() };
+  }
+  return { mode: "legacy-express", origin: null };
+}
+
 export const ENV_CONFIG = {
   // API Configuration
   apiUrl: getApiUrl(),
@@ -81,8 +162,17 @@ export const ENV_CONFIG = {
 
 // Always log configuration for debugging (helps identify issues in production)
 if (typeof window !== 'undefined') {
+  const ingest = getContactIngestResolution();
   console.log('🔧 Frontend Environment Configuration:', {
     apiUrl: ENV_CONFIG.apiUrl,
+    contactFormApis: getContactFormApiUrls(),
+    contactIngest:
+      ingest.mode === "legacy-express"
+        ? {
+            ...ingest,
+            hint: "Set VITE_CONTACT_INGEST_ORIGIN (build env) to your deployed alcoa-admin origin so Contact Messages receives submissions.",
+          }
+        : ingest,
     env: ENV_CONFIG.env,
     isDevelopment: ENV_CONFIG.isDevelopment,
     isProduction: ENV_CONFIG.isProduction,
