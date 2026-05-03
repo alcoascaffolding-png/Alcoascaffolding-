@@ -1,6 +1,5 @@
 import { Resend } from "resend";
 import { getQuotationLogoDataUri, getQuotationCompanyName } from "@/lib/quotation-brand";
-import { getQuotationLogoDataUri, getQuotationCompanyName } from "@/lib/quotation-brand";
 import {
   contactCompanyTemplate,
   contactCustomerTemplate,
