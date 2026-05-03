@@ -10,15 +10,23 @@ import { Input } from "@/components/ui/input";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
 } from "@/components/forms/form-fields";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { useEffect, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
+import {
+  bankAccountToQuotationBankDetails,
+  customerSnapshotToQuotationFormPatch,
+  isQuotationBankDetailsEmpty,
+  pickDefaultBankAccount,
+} from "@/lib/map-customer-to-quotation";
 
 const lineItemSchema = z.object({
   equipmentType: z.string().min(1, "Required"),
@@ -141,16 +149,68 @@ export function QuotationFormPage({ id }) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: bankAccountsList } = useQuery({
+    queryKey: ["bank-accounts", "quotation-form"],
+    queryFn: async () => {
+      const res = await fetch("/api/bank-accounts?limit=50");
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data.items || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const selectedCustomerId = form.watch("customer");
+
+  const loadedQuoteCustomerId = useMemo(() => {
+    if (!existing) return null;
+    const cust = existing.customer;
+    if (cust && typeof cust === "object" && cust._id != null) return String(cust._id);
+    if (cust != null) return String(cust);
+    return null;
+  }, [existing]);
+
   useEffect(() => {
     if (!selectedCustomerId || selectedCustomerId === "__none__" || !customerList?.length) return;
     const c = customerList.find((x) => String(x._id) === String(selectedCustomerId));
-    if (c) {
-      form.setValue("customerName", c.companyName || "");
-      form.setValue("customerEmail", c.primaryEmail || "");
-      form.setValue("customerPhone", c.primaryPhone || "");
+    if (!c) return;
+
+    const sameCustomerAsLoadedQuote =
+      isEdit &&
+      loadedQuoteCustomerId != null &&
+      String(selectedCustomerId) === String(loadedQuoteCustomerId);
+
+    if (sameCustomerAsLoadedQuote) {
+      const banks = bankAccountsList || [];
+      if (banks.length && isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) {
+        const def = pickDefaultBankAccount(banks);
+        const bd = bankAccountToQuotationBankDetails(def);
+        if (bd && (bd.bankName || bd.accountNumber)) {
+          form.setValue("bankDetails", bd, { shouldDirty: true, shouldValidate: false });
+        }
+      }
+      return;
     }
-  }, [selectedCustomerId, customerList, form.setValue]);
+
+    const patch = customerSnapshotToQuotationFormPatch(c);
+    Object.entries(patch).forEach(([key, val]) => {
+      form.setValue(key, val ?? "", { shouldDirty: true, shouldValidate: false });
+    });
+
+    const notesEmpty = !String(form.getValues("notes") || "").trim();
+    if (notesEmpty && c.notes && String(c.notes).trim()) {
+      form.setValue("notes", String(c.notes).trim(), { shouldDirty: true });
+    }
+
+    const banks = bankAccountsList || [];
+    if (banks.length && isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) {
+      const def = pickDefaultBankAccount(banks);
+      const bd = bankAccountToQuotationBankDetails(def);
+      if (bd && (bd.bankName || bd.accountNumber)) {
+        form.setValue("bankDetails", bd, { shouldDirty: true, shouldValidate: false });
+      }
+    }
+  }, [selectedCustomerId, customerList, bankAccountsList, isEdit, form, loadedQuoteCustomerId]);
 
   const customerSelectOptions = useMemo(() => {
     const list = [...(customerList || [])];
@@ -241,20 +301,7 @@ export function QuotationFormPage({ id }) {
   });
 
   if (isEdit && loadingExisting) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Skeleton className="h-9 w-9 rounded-md" />
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-        <Card><CardHeader><Skeleton className="h-5 w-40" /></CardHeader><CardContent className="grid gap-4 md:grid-cols-2"><Skeleton className="h-10 md:col-span-2" /><Skeleton className="h-10" /><Skeleton className="h-10" /></CardContent></Card>
-        <Card><CardHeader><Skeleton className="h-5 w-36" /></CardHeader><CardContent className="grid gap-4 md:grid-cols-3">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10" />)}</CardContent></Card>
-        <Skeleton className="h-40 rounded-lg" />
-      </div>
-    );
+    return <QuotationFormEditSkeleton />;
   }
 
   return (
@@ -265,17 +312,10 @@ export function QuotationFormPage({ id }) {
         aria-busy={saveMut.isPending}
       >
         {saveMut.isPending && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex flex-col items-center gap-4 rounded-xl border bg-card px-10 py-8 shadow-lg">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-medium">{isEdit ? "Updating quotation…" : "Creating quotation…"}</p>
-              <p className="text-xs text-muted-foreground">Please wait</p>
-            </div>
-          </div>
+          <BlockingSaveOverlay
+            title={isEdit ? "Updating quotation…" : "Creating quotation…"}
+            description="Please wait — saving line items and totals."
+          />
         )}
         <div className="flex items-center gap-3 mb-2">
           <Button type="button" variant="ghost" size="icon" onClick={() => router.back()}>
@@ -441,7 +481,7 @@ export function QuotationFormPage({ id }) {
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
           <Button type="submit" disabled={saveMut.isPending}>
-            {saveMut.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2 inline" aria-hidden />}
+            {saveMut.isPending && <InlineSkeleton className="mr-2 inline" />}
             {isEdit ? "Update Quotation" : "Create Quotation"}
           </Button>
         </div>

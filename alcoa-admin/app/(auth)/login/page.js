@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 import { Providers } from "@/components/providers";
+import { RouteLoadingView } from "@/components/loading/loading-kit";
 
 export const metadata = {
   title: "Sign In",
@@ -20,7 +21,7 @@ export default function LoginPage() {
               Sign in to access the admin panel
             </p>
           </div>
-          <Suspense fallback={<div className="h-64 animate-pulse bg-muted rounded-lg" />}>
+          <Suspense fallback={<RouteLoadingView variant="auth" />}>
             <LoginForm />
           </Suspense>
         </div>

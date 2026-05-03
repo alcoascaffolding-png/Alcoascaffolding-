@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RouteLoadingView } from "@/components/loading/loading-kit";
 import { CustomerDetail } from "@/components/domain/customers/CustomerDetail";
 
 export const metadata = { title: "Customer Details" };
@@ -7,7 +7,7 @@ export const metadata = { title: "Customer Details" };
 export default async function CustomerDetailPage({ params }) {
   const { id } = await params;
   return (
-    <Suspense fallback={<Skeleton className="h-96 rounded-lg" />}>
+    <Suspense fallback={<RouteLoadingView variant="embedded" />}>
       <CustomerDetail id={id} />
     </Suspense>
   );

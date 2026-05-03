@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RouteLoadingView } from "@/components/loading/loading-kit";
 import { CustomersClient } from "@/components/domain/customers/CustomersClient";
 import { Plus } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function CustomersPage() {
           </Button>
         </Link>
       </div>
-      <Suspense fallback={<Skeleton className="h-96 rounded-lg" />}>
+      <Suspense fallback={<RouteLoadingView variant="embedded" />}>
         <CustomersClient />
       </Suspense>
     </div>

@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Inbox } from "lucide-react";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -83,9 +84,9 @@ export function DataTable({
         )}
       >
         {isFetching && !isLoading && (
-          <div className="absolute right-2 top-2 z-10 flex items-center gap-1.5 rounded-md border bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" aria-hidden />
-            Updating…
+          <div className="absolute right-2 top-2 z-10 flex items-center gap-2 rounded-md border border-border/80 bg-background/95 px-2.5 py-1.5 text-xs text-muted-foreground shadow-sm">
+            <InlineSkeleton />
+            <span>Refreshing…</span>
           </div>
         )}
         <Table className="table-fixed">

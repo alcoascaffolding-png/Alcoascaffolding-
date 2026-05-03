@@ -17,8 +17,9 @@ import {
 import { toast } from "sonner";
 import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
-  MoreHorizontal, Eye, Pencil, Trash2, Download, Mail, MessageSquare, Loader2,
+  MoreHorizontal, Eye, Pencil, Trash2, Download, Mail, MessageSquare,
 } from "lucide-react";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 
 const STATUS_COLORS = {
   draft: "outline", sent: "info", viewed: "secondary", approved: "success",
@@ -271,7 +272,7 @@ export function QuotationsClient() {
             >
               {deleteMut.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin inline" aria-hidden />
+                  <InlineSkeleton className="mr-2 inline" />
                   Deleting…
                 </>
               ) : (

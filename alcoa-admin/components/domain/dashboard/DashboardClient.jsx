@@ -7,7 +7,11 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DashboardStatCardsSkeleton,
+  DashboardChartSkeleton,
+  DashboardActivityListSkeleton,
+} from "@/components/loading/skeleton-kit";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend,
@@ -108,7 +112,9 @@ export function DashboardClient() {
       {/* Stat cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statsLoading ? (
-          [...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-lg" />)
+          <div className="col-span-full md:col-span-2 lg:col-span-4">
+            <DashboardStatCardsSkeleton />
+          </div>
         ) : (
           <>
             <StatCard
@@ -153,7 +159,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent>
             {salesLoading ? (
-              <Skeleton className="h-48 w-full" />
+              <DashboardChartSkeleton className="min-h-[200px]" />
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={salesData || []}>
@@ -196,7 +202,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent>
             {statsLoading ? (
-              <Skeleton className="h-48 w-full" />
+              <DashboardChartSkeleton className="min-h-[200px]" />
             ) : (
               <div className="space-y-4 pt-2">
                 <div className="grid grid-cols-2 gap-4">
@@ -263,9 +269,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent>
             {activitiesLoading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12" />)}
-              </div>
+              <DashboardActivityListSkeleton />
             ) : (
               <div className="space-y-3">
                 {(activities?.messages || []).slice(0, 5).map((msg) => (
@@ -298,9 +302,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent>
             {activitiesLoading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12" />)}
-              </div>
+              <DashboardActivityListSkeleton />
             ) : (
               <div className="space-y-3">
                 {(activities?.quotations || []).slice(0, 5).map((q) => (

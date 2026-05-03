@@ -1,4 +1,11 @@
 import { launchBrowser } from "./chromium";
+import {
+  QUOTATION_BRAND,
+  getQuotationCompanyName,
+  getQuotationTagline,
+  getQuotationCompanyEmail,
+  getQuotationLogoDataUri,
+} from "@/lib/quotation-brand";
 
 function formatDate(date) {
   if (!date) return "N/A";
@@ -35,7 +42,9 @@ function numberToWords(num) {
   return result;
 }
 
-function buildQuotationHTML(quotation) {
+function buildQuotationHTML(quotation, options = {}) {
+  const { logoDataUri = "" } = options;
+  const b = QUOTATION_BRAND;
   const {
     quoteNumber = "",
     customerName = "",
@@ -68,8 +77,12 @@ function buildQuotationHTML(quotation) {
     bankDetails = {},
   } = quotation;
 
-  const companyName = process.env.NEXT_PUBLIC_APP_NAME || "ALCOA ALUMINIUM SCAFFOLDING LLC";
-  const companyEmail = process.env.COMPANY_EMAIL || "sales@alcoascaffolding.com";
+  const companyName = getQuotationCompanyName();
+  const companyEmail = getQuotationCompanyEmail();
+  const tagline = getQuotationTagline();
+  const logoBlock = logoDataUri
+    ? `<img class="header-logo" src="${logoDataUri}" alt="" crossorigin="anonymous" />`
+    : "";
 
   const defaultTerms = `
 1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
@@ -132,14 +145,16 @@ function buildQuotationHTML(quotation) {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 13px; color: #0f172a; background: white; }
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 13px; color: ${b.text}; background: white; }
     .page { width: 210mm; min-height: 297mm; padding: 15mm; }
-    .header-bar { background: linear-gradient(135deg, #4f46e5, #4338ca); color: white; padding: 20px 25px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .company-name { font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }
-    .company-sub { font-size: 11px; opacity: 0.85; margin-top: 3px; }
-    .quote-badge { background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 6px; text-align: right; }
-    .quote-badge .label { font-size: 11px; opacity: 0.85; }
-    .quote-badge .number { font-size: 18px; font-weight: bold; }
+    .header-bar { background: ${b.headerGradient}; color: white; padding: 18px 22px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .header-brand { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; }
+    .header-logo { height: 52px; width: auto; max-width: 160px; object-fit: contain; flex-shrink: 0; }
+    .company-name { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.2; }
+    .company-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; font-weight: 500; }
+    .quote-badge { background: rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; text-align: right; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
+    .quote-badge .label { font-size: 10px; opacity: 0.9; letter-spacing: 0.12em; font-weight: 600; }
+    .quote-badge .number { font-size: 17px; font-weight: 700; margin-top: 2px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
     .info-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
     .info-box-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; font-weight: bold; }
@@ -149,7 +164,7 @@ function buildQuotationHTML(quotation) {
     .customer-name { font-size: 15px; font-weight: bold; color: #111827; margin-bottom: 4px; }
     .customer-sub { font-size: 12px; color: #6b7280; }
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .items-table th { background: #4f46e5; color: white; padding: 9px 10px; font-size: 12px; text-align: left; }
+    .items-table th { background: ${b.primary}; color: white; padding: 9px 10px; font-size: 12px; text-align: left; }
     .items-table th.center, .items-table td.center { text-align: center; }
     .items-table th.right, .items-table td.right { text-align: right; }
     .row-even { background: #ffffff; }
@@ -161,12 +176,12 @@ function buildQuotationHTML(quotation) {
     .totals-section { display: flex; justify-content: flex-end; margin-bottom: 20px; }
     .totals-table { width: 300px; }
     .totals-table tr td { padding: 6px 10px; font-size: 13px; }
-    .total-row { background: #4f46e5; color: white; font-weight: bold; font-size: 15px; }
+    .total-row { background: ${b.totalBar}; color: white; font-weight: bold; font-size: 15px; }
     .total-row td { padding: 10px; }
-    .amount-words { background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
-    .amount-words strong { color: #3730a3; }
+    .amount-words { background: ${b.accentWash}; border: 1px solid ${b.accentBorder}; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
+    .amount-words strong { color: ${b.primary}; }
     .section { margin-bottom: 15px; }
-    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #4f46e5; border-bottom: 2px solid #4f46e5; padding-bottom: 4px; margin-bottom: 10px; }
+    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: ${b.primary}; border-bottom: 2px solid ${b.primary}; padding-bottom: 4px; margin-bottom: 10px; }
     .details-table { width: 100%; }
     .details-table td { padding: 4px 8px; font-size: 12px; }
     .detail-label { color: #6b7280; width: 150px; }
@@ -175,16 +190,19 @@ function buildQuotationHTML(quotation) {
     .signature-box { text-align: center; }
     .signature-line { border-bottom: 2px solid #374151; margin-bottom: 8px; height: 50px; }
     .signature-label { font-size: 11px; color: #6b7280; }
-    .footer-bar { background: #0f172a; color: white; padding: 12px 20px; border-radius: 6px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+    .footer-bar { background: ${b.footerBg}; color: white; padding: 12px 20px; border-radius: 6px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
     .footer-bar a { color: #c7d2fe; text-decoration: none; }
   </style>
 </head>
 <body>
 <div class="page">
   <div class="header-bar">
-    <div>
-      <div class="company-name">${companyName}</div>
-      <div class="company-sub">Professional Scaffolding Solutions | UAE</div>
+    <div class="header-brand">
+      ${logoBlock}
+      <div>
+        <div class="company-name">${companyName}</div>
+        <div class="company-sub">${tagline}</div>
+      </div>
     </div>
     <div class="quote-badge">
       <div class="label">QUOTATION</div>
@@ -211,7 +229,7 @@ function buildQuotationHTML(quotation) {
     </div>
   </div>
 
-  ${subject ? `<div style="background:#f0f9ff;border-left:4px solid #0284c7;padding:10px 15px;border-radius:4px;margin-bottom:15px;font-size:13px;"><strong>Subject:</strong> ${subject}</div>` : ""}
+  ${subject ? `<div style="background:${b.accentWash};border-left:4px solid ${b.primary};padding:10px 15px;border-radius:6px;margin-bottom:15px;font-size:13px;color:${b.text};"><strong>Subject:</strong> ${subject}</div>` : ""}
 
   <table class="items-table">
     <thead>
@@ -286,7 +304,8 @@ function buildQuotationHTML(quotation) {
  * @returns {Promise<Buffer>} PDF buffer
  */
 export async function generateQuotationPDF(quotation) {
-  const html = buildQuotationHTML(quotation);
+  const logoDataUri = getQuotationLogoDataUri();
+  const html = buildQuotationHTML(quotation, { logoDataUri });
 
   const browser = await launchBrowser();
   let page;

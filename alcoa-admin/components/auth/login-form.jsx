@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, Loader2, LogIn, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,10 +127,10 @@ export function LoginForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full gap-2" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <InlineSkeleton />
                 Signing in…
               </>
             ) : (

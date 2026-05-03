@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { ContactMessagesClient } from "@/components/domain/contact-messages/ContactMessagesClient";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RouteLoadingView } from "@/components/loading/loading-kit";
 
 export const metadata = { title: "Contact Messages" };
 
@@ -13,7 +13,7 @@ export default function ContactMessagesPage() {
           <p className="text-sm text-muted-foreground">Customer inquiries and quote requests</p>
         </div>
       </div>
-      <Suspense fallback={<Skeleton className="h-96 rounded-lg" />}>
+      <Suspense fallback={<RouteLoadingView variant="embedded" />}>
         <ContactMessagesClient />
       </Suspense>
     </div>

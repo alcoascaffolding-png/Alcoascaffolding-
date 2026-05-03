@@ -8,12 +8,14 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
 } from "@/components/forms/form-fields";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { FormEditSkeleton } from "@/components/loading/skeleton-kit";
 
 // ─── Enum constants (must match Customer model exactly) ───────────────────────
 const BUSINESS_TYPES = [
@@ -240,30 +242,7 @@ export function CustomerForm({ customerId }) {
   });
 
   if (isEdit && isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-1">
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-36" />
-        </div>
-        <Card>
-          <CardHeader><Skeleton className="h-5 w-44" /></CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <Skeleton className="h-10 md:col-span-2" />
-            <Skeleton className="h-10" /><Skeleton className="h-10" />
-            <Skeleton className="h-10" /><Skeleton className="h-10" />
-            <Skeleton className="h-10 md:col-span-2" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
-          </CardContent>
-        </Card>
-        <Skeleton className="h-24 rounded-lg" />
-      </div>
-    );
+    return <FormEditSkeleton />;
   }
 
   // Once data is ready (or it's a new customer), mount the real form.
@@ -362,18 +341,10 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
       >
         {/* Full-screen save overlay */}
         {saveMut.isPending && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex flex-col items-center gap-4 rounded-xl border bg-card px-10 py-8 shadow-lg">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-medium">
-                {isEdit ? "Updating customer…" : "Creating customer…"}
-              </p>
-            </div>
-          </div>
+          <BlockingSaveOverlay
+            title={isEdit ? "Updating customer…" : "Creating customer…"}
+            description="Please wait — saving company, contact, and address."
+          />
         )}
 
         {/* Page title */}
@@ -567,9 +538,7 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
           <Button type="submit" disabled={saveMut.isPending}>
-            {saveMut.isPending && (
-              <Loader2 className="h-4 w-4 animate-spin mr-2 inline" aria-hidden />
-            )}
+            {saveMut.isPending && <InlineSkeleton className="mr-2 inline" />}
             {isEdit ? "Update Customer" : "Create Customer"}
           </Button>
         </div>

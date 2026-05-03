@@ -18,6 +18,7 @@ import {
   Users, CreditCard, Calendar, MessageSquare,
 } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 
 /** Digits only for wa.me (E.164 without +) */
 function phoneToWhatsAppDigits(phone) {
@@ -92,12 +93,7 @@ export function CustomerDetail({ id }) {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-        <div className="h-48 bg-muted animate-pulse rounded-lg" />
-      </div>
-    );
+    return <DetailRecordSkeleton />;
   }
 
   if (error) {

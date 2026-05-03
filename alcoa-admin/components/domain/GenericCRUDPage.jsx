@@ -17,7 +17,8 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, Package, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Package } from "lucide-react";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 /**
@@ -185,7 +186,7 @@ export function GenericCRUDPage({
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setEditItem(null)}>Cancel</Button>
                   <Button type="submit" disabled={saveMut.isPending}>
-                    {saveMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {saveMut.isPending && <InlineSkeleton className="mr-2" />}
                     {editItem?._id ? "Update" : "Create"}
                   </Button>
                 </DialogFooter>

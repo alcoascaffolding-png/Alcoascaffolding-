@@ -4,6 +4,7 @@ import { ClientThemeProvider } from "@wrksz/themes/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Toaster } from "sonner";
+import { AppLoadingChrome } from "@/components/app-loading-chrome";
 
 export function Providers({ children }) {
   const [queryClient] = useState(
@@ -34,6 +35,7 @@ export function Providers({ children }) {
       storageKey="theme"
     >
       <QueryClientProvider client={queryClient}>
+        <AppLoadingChrome />
         {children}
         <Toaster
           position="top-right"

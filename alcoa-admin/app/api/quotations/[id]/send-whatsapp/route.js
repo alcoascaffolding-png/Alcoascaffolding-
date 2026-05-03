@@ -15,6 +15,7 @@ import {
 import { uploadToBlob, isBlobReadWriteTokenConfigured } from "@/lib/storage/blob";
 import { sendWhatsAppMessage } from "@/lib/whatsapp";
 import { isWhatsAppFeatureAvailable } from "@/lib/server-features";
+import { buildWhatsAppQuotationBody } from "@/lib/quotation-brand";
 
 /** Local dev only: send WhatsApp text without PDF/Blob (Twilio cannot use localhost PDF URLs). */
 function isLocalTextOnlyWhatsAppMode() {
@@ -62,21 +63,16 @@ export const POST = withErrorHandler(async (request, context) => {
     );
   }
 
-  const baseLines = [
-    `*Quotation ${quotation.quoteNumber}* from Alcoa Aluminium Scaffolding`,
-    `Dear ${quotation.customerName},`,
-    `Total: AED ${quotation.totalAmount?.toLocaleString("en-AE", { minimumFractionDigits: 2 })}`,
-    `Valid until: ${new Date(quotation.validUntil).toLocaleDateString("en-GB")}`,
-    `\nFor any queries, please contact us.`,
-  ];
-
   let pdfUrl = null;
   let devTextOnly = false;
 
   if (localTextOnly) {
     devTextOnly = true;
-    baseLines.splice(2, 0, "(Local dev: PDF not attached — remove WHATSAPP_LOCAL_TEXT_ONLY and set BLOB_READ_WRITE_TOKEN for full flow.)");
-    const message = baseLines.join("\n");
+    const message = buildWhatsAppQuotationBody(quotation, {
+      attachmentLine: false,
+      devNoPdfNote:
+        "(Local dev: PDF not attached — remove WHATSAPP_LOCAL_TEXT_ONLY and set BLOB_READ_WRITE_TOKEN for full flow.)",
+    });
     const result = await sendWhatsAppMessage(toPhone, message, null);
     await recordWhatsAppSent(quotationId, toPhone, result.sid);
     return apiSuccess({ sent: true, sid: result.sid, pdfUrl: null, devTextOnly: true });
@@ -123,14 +119,7 @@ export const POST = withErrorHandler(async (request, context) => {
   }
   pdfUrl = uploaded.url;
 
-  const message = [
-    `*Quotation ${quotation.quoteNumber}* from Alcoa Aluminium Scaffolding`,
-    `Dear ${quotation.customerName},`,
-    `Please find your quotation attached.`,
-    `Total: AED ${quotation.totalAmount?.toLocaleString("en-AE", { minimumFractionDigits: 2 })}`,
-    `Valid until: ${new Date(quotation.validUntil).toLocaleDateString("en-GB")}`,
-    `\nFor any queries, please contact us.`,
-  ].join("\n");
+  const message = buildWhatsAppQuotationBody(quotation);
 
   const result = await sendWhatsAppMessage(toPhone, message, pdfUrl);
   await recordWhatsAppSent(quotationId, toPhone, result.sid);

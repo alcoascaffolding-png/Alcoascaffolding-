@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { getQuotationLogoDataUri, getQuotationCompanyName } from "@/lib/quotation-brand";
+import { getQuotationLogoDataUri, getQuotationCompanyName } from "@/lib/quotation-brand";
 import {
   contactCompanyTemplate,
   contactCustomerTemplate,
@@ -92,7 +94,9 @@ export async function sendQuoteRequestEmail(data) {
 
 export async function sendQuotationEmail(quotation, pdfBuffer) {
   const { default: quotationEmailTemplate } = await import("./templates/quotation-email");
-  const html = quotationEmailTemplate(quotation);
+  const logoDataUri = getQuotationLogoDataUri();
+  const html = quotationEmailTemplate(quotation, { logoDataUri });
+  const brandName = getQuotationCompanyName();
 
   const attachments = pdfBuffer
     ? [{ filename: `${quotation.quoteNumber}.pdf`, content: pdfBuffer }]
@@ -102,7 +106,7 @@ export async function sendQuotationEmail(quotation, pdfBuffer) {
     from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
     to: [quotation.customerEmail],
     cc: [COMPANY_EMAIL],
-    subject: `Quotation ${quotation.quoteNumber} from Alcoa Aluminium Scaffolding`,
+    subject: `Quotation ${quotation.quoteNumber} — ${brandName}`,
     html,
     attachments,
     reply_to: COMPANY_EMAIL,

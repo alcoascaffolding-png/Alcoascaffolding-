@@ -19,8 +19,9 @@ import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import {
   MoreHorizontal, Pencil, Trash2, Users, UserCheck, TrendingUp,
-  Eye, Mail, MessageSquare, Loader2,
+  Eye, Mail, MessageSquare,
 } from "lucide-react";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 
 const STATUS_COLORS = {
   active: "success", inactive: "secondary",
@@ -296,7 +297,7 @@ export function CustomersClient() {
               onClick={(e) => { e.preventDefault(); if (deleteId) deleteMut.mutate(deleteId); }}
             >
               {deleteMut.isPending
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin inline" aria-hidden />Deleting…</>
+                ? <><InlineSkeleton className="mr-2 inline" />Deleting…</>
                 : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>

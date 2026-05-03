@@ -12,8 +12,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2, Download, Mail, MessageSquare, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Download, Mail, MessageSquare } from "lucide-react";
 import { formatDate, formatCurrency, isFeatureEnabled, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 
 const STATUS_MAP = {
   draft: "outline", sent: "info", viewed: "secondary", approved: "success",
@@ -120,7 +122,7 @@ export function QuotationDetail({ id }) {
     }
   }
 
-  if (isLoading) return <div className="h-96 bg-muted animate-pulse rounded-lg" />;
+  if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const q = quotation;
@@ -141,11 +143,11 @@ export function QuotationDetail({ id }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={sending === "pdf"}>
-            {sending === "pdf" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Download className="h-4 w-4 mr-1" />}
+            {sending === "pdf" ? <InlineSkeleton className="mr-1" /> : <Download className="h-4 w-4 mr-1" />}
             PDF
           </Button>
           <Button variant="outline" size="sm" onClick={handleSendEmail} disabled={sending === "email" || !q.customerEmail}>
-            {sending === "email" ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+            {sending === "email" ? <InlineSkeleton className="mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
             Email
           </Button>
           {showWhatsApp && (
@@ -156,7 +158,7 @@ export function QuotationDetail({ id }) {
               disabled={sending === "whatsapp" || !q.customerPhone}
             >
               {sending === "whatsapp" ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                <InlineSkeleton className="mr-1" />
               ) : (
                 <MessageSquare className="h-4 w-4 mr-1" />
               )}
