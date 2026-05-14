@@ -15,7 +15,7 @@ function formatCurrency(amount, currency = "AED") {
 }
 
 export default function quotationEmailTemplate(quotation, options = {}) {
-  const { logoDataUri = "" } = options;
+  const { logoDataUri = "", publicUrl = "" } = options;
   const b = QUOTATION_BRAND;
   const companyName = getQuotationCompanyName();
   const tagline = getQuotationTagline();
@@ -151,6 +151,25 @@ export default function quotationEmailTemplate(quotation, options = {}) {
       </table>
 
       ${notes ? `<div style="background:${b.accentWash};border:1px solid ${b.accentBorder};padding:14px 16px;border-radius:8px;margin-bottom:8px;"><p style="margin:0 0 6px;font-weight:700;color:${b.primary};font-size:12px;text-transform:uppercase;letter-spacing:0.04em;">Notes</p><p style="margin:0;color:${b.text};font-size:13px;line-height:1.6;">${String(notes).replace(/\n/g, "<br>")}</p></div>` : ""}
+
+      ${publicUrl ? `
+      <div style="margin-top:24px;padding:18px;background:#f8fafc;border:1px solid ${b.accentBorder};border-radius:10px;text-align:center;">
+        <p style="margin:0 0 12px;font-size:13px;color:${b.text};font-weight:600;">Please review and confirm this quotation:</p>
+        <table style="margin:0 auto;border-collapse:separate;border-spacing:8px;">
+          <tr>
+            <td>
+              <a href="${publicUrl}?action=accept" style="display:inline-block;padding:11px 22px;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">Accept Quotation</a>
+            </td>
+            <td>
+              <a href="${publicUrl}?action=reject" style="display:inline-block;padding:11px 22px;background:#dc2626;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;">Reject</a>
+            </td>
+            <td>
+              <a href="${publicUrl}" style="display:inline-block;padding:11px 22px;background:#ffffff;color:${b.primary};text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;border:1px solid ${b.accentBorder};">View Online</a>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:12px 0 0;font-size:11px;color:${b.muted};">If buttons don't work, open: <a href="${publicUrl}" style="color:${b.primary};">${publicUrl}</a></p>
+      </div>` : ""}
     </div>
 
     <div style="background:${b.footerBg};color:#e2e8f0;padding:18px 24px;text-align:center;font-size:12px;">

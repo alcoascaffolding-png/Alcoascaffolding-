@@ -8,6 +8,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import Quotation from "@/models/Quotation";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import { sendQuotationEmail } from "@/lib/email/resend";
+import { ensureQuotationPublicToken } from "@/lib/quotation-save";
 
 export const POST = withErrorHandler(async (request, { params }) => {
   const session = await auth();
@@ -18,11 +19,11 @@ export const POST = withErrorHandler(async (request, { params }) => {
   if (!quotation) throw new AppError("Quotation not found", 404);
   if (!quotation.customerEmail) throw new AppError("Quotation has no customer email", 400);
 
-  // Generate PDF
+  const { url: publicUrl } = await ensureQuotationPublicToken(params.id, Quotation);
+
   const pdfBuffer = await generateQuotationPDF(quotation);
 
-  // Send via Resend with attachment
-  const result = await sendQuotationEmail(quotation, pdfBuffer);
+  const result = await sendQuotationEmail(quotation, pdfBuffer, { publicUrl });
 
   // Record in DB
   await Quotation.findByIdAndUpdate(params.id, {

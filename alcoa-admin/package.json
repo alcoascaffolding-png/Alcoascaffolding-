@@ -9,7 +9,8 @@
     "dev": "node --require ./dns-fix.cjs ./node_modules/next/dist/bin/next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "seed": "node --require ./dns-fix.cjs scripts/seed.mjs"
+    "seed": "node --require ./dns-fix.cjs scripts/seed.mjs",
+    "seed:dummy-quotations": "node --require ./dns-fix.cjs scripts/seed-dummy-quotations.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

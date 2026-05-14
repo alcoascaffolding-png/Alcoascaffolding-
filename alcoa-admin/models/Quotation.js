@@ -80,6 +80,8 @@ const quotationSchema = new mongoose.Schema(
     termsAndConditions: { type: String, trim: true },
     sentDate: { type: Date },
     viewedDate: { type: Date },
+    /** Random token used by the public Accept/Reject page (`/q/:token`). */
+    publicToken: { type: String, index: true, unique: true, sparse: true },
     emailsSent: [
       {
         sentAt: Date,

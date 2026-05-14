@@ -91,10 +91,10 @@ export async function sendQuoteRequestEmail(data) {
   };
 }
 
-export async function sendQuotationEmail(quotation, pdfBuffer) {
+export async function sendQuotationEmail(quotation, pdfBuffer, options = {}) {
   const { default: quotationEmailTemplate } = await import("./templates/quotation-email");
   const logoDataUri = getQuotationLogoDataUri();
-  const html = quotationEmailTemplate(quotation, { logoDataUri });
+  const html = quotationEmailTemplate(quotation, { logoDataUri, publicUrl: options.publicUrl });
   const brandName = getQuotationCompanyName();
 
   const attachments = pdfBuffer
@@ -112,4 +112,42 @@ export async function sendQuotationEmail(quotation, pdfBuffer) {
   });
 
   return result;
+}
+
+export async function sendSalesOrderEmail(order, pdfBuffer) {
+  const { default: salesOrderEmailTemplate } = await import("./templates/sales-order-email");
+  const logoDataUri = getQuotationLogoDataUri();
+  const html = salesOrderEmailTemplate(order, { logoDataUri });
+  const brandName = getQuotationCompanyName();
+  const attachments = pdfBuffer
+    ? [{ filename: `${order.orderNumber}.pdf`, content: pdfBuffer }]
+    : [];
+  return sendEmail({
+    from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
+    to: [order.customerEmail],
+    cc: [COMPANY_EMAIL],
+    subject: `Sales Order ${order.orderNumber} — ${brandName}`,
+    html,
+    attachments,
+    reply_to: COMPANY_EMAIL,
+  });
+}
+
+export async function sendSalesInvoiceEmail(invoice, pdfBuffer) {
+  const { default: salesInvoiceEmailTemplate } = await import("./templates/sales-invoice-email");
+  const logoDataUri = getQuotationLogoDataUri();
+  const html = salesInvoiceEmailTemplate(invoice, { logoDataUri });
+  const brandName = getQuotationCompanyName();
+  const attachments = pdfBuffer
+    ? [{ filename: `${invoice.invoiceNumber}.pdf`, content: pdfBuffer }]
+    : [];
+  return sendEmail({
+    from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
+    to: [invoice.customerEmail],
+    cc: [COMPANY_EMAIL],
+    subject: `Invoice ${invoice.invoiceNumber} — ${brandName}`,
+    html,
+    attachments,
+    reply_to: COMPANY_EMAIL,
+  });
 }

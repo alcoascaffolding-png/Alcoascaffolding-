@@ -4,29 +4,31 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2, Download, Mail } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
-
-const STATUS_MAP = {
-  draft: "outline", sent: "info", viewed: "secondary", approved: "success",
-  rejected: "destructive", expired: "warning", converted: "success",
-};
+import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
+import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
+import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
+import { QuotationPublicLinkBadge } from "@/components/domain/quotations/QuotationPublicLinkBadge";
 
 export function QuotationDetail({ id }) {
   const router = useRouter();
   const qc = useQueryClient();
   const [showDelete, setShowDelete] = useState(false);
-  const [sending, setSending] = useState(null);
 
   const { data: quotation, isLoading, error } = useQuery({
     queryKey: ["quotations", "detail", id],
@@ -38,21 +40,22 @@ export function QuotationDetail({ id }) {
     },
   });
 
-  /* WhatsApp UI disabled — uncomment block + handler + button below to restore
-  const { data: uiFeatures } = useQuery({
-    queryKey: ["ui-features"],
-    queryFn: async () => {
-      const res = await fetch("/api/config/features");
-      const d = await res.json();
-      if (!d.success) return { whatsapp: false, pdfEmail: false };
-      return d.data;
-    },
-    staleTime: 60_000,
+  const {
+    showWhatsApp,
+    sending,
+    downloadPdf,
+    sendEmail,
+    sendWhatsApp,
+    copyWhatsAppLink,
+  } = useDocumentDetailOutbound({
+    id,
+    apiBase: "/api/quotations",
+    listQueryKey: ["quotations"],
+    detailQueryKey: ["quotations", "detail", id],
+    document: quotation,
+    numberField: "quoteNumber",
+    statsQueryKey: ["quotations-stats"],
   });
-
-  const showWhatsApp =
-    uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
-  */
 
   const deleteMut = useMutation({
     mutationFn: async () => {
@@ -62,69 +65,12 @@ export function QuotationDetail({ id }) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["quotations"] });
+      qc.invalidateQueries({ queryKey: ["quotations-stats"] });
       toast.success("Quotation deleted");
       router.push("/quotations");
     },
     onError: (e) => toast.error(e.message),
   });
-
-  async function handleDownloadPDF() {
-    setSending("pdf");
-    try {
-      const res = await fetch(`/api/quotations/${id}/pdf`);
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${quotation.quoteNumber}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("PDF downloaded");
-    } catch (e) {
-      toast.error("Failed: " + e.message);
-    } finally {
-      setSending(null);
-    }
-  }
-
-  async function handleSendEmail() {
-    setSending("email");
-    try {
-      const res = await fetch(`/api/quotations/${id}/send-email`, { method: "POST" });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-      toast.success("Quotation emailed to " + quotation.customerEmail);
-      qc.invalidateQueries({ queryKey: ["quotations", "detail", id] });
-    } catch (e) {
-      toast.error("Failed: " + e.message);
-    } finally {
-      setSending(null);
-    }
-  }
-
-  /* WhatsApp — restore with UI block below
-  async function handleSendWhatsApp() {
-    setSending("whatsapp");
-    try {
-      const res = await fetch(`/api/quotations/${id}/send-whatsapp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-      toast.success(`Quotation sent on WhatsApp to ${quotation.customerPhone}`);
-      qc.invalidateQueries({ queryKey: ["quotations", "detail", id] });
-      qc.invalidateQueries({ queryKey: ["quotations"] });
-    } catch (e) {
-      const msg = String(e?.message || "");
-      toast.error("Failed: " + msg);
-    } finally {
-      setSending(null);
-    }
-  }
-  */
 
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
@@ -143,41 +89,29 @@ export function QuotationDetail({ id }) {
             <h1 className="text-2xl font-semibold tracking-tight font-mono">{q.quoteNumber}</h1>
             <p className="text-sm text-muted-foreground">{q.customerName}</p>
           </div>
-          <Badge variant={STATUS_MAP[q.status] || "outline"}>{q.status}</Badge>
+          <QuotationStatusChanger
+            id={id}
+            value={q.status}
+            detailQueryKey={["quotations", "detail", id]}
+          />
+          <QuotationPublicLinkBadge
+            id={id}
+            publicToken={q.publicToken}
+            detailQueryKey={["quotations", "detail", id]}
+          />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={sending === "pdf"}>
-            {sending === "pdf" ? <InlineSkeleton className="mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSendEmail} disabled={sending === "email" || !q.customerEmail}>
-            {sending === "email" ? <InlineSkeleton className="mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
-            Email
-          </Button>
-          {/* WhatsApp button — uncomment together with handleSendWhatsApp + uiFeatures block above
-          {showWhatsApp && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSendWhatsApp}
-              disabled={sending === "whatsapp" || !q.customerPhone}
-            >
-              {sending === "whatsapp" ? (
-                <InlineSkeleton className="mr-1" />
-              ) : (
-                <MessageSquare className="h-4 w-4 mr-1" />
-              )}
-              WhatsApp
-            </Button>
-          )}
-          */}
-          <Button variant="outline" size="sm" onClick={() => router.push(`/quotations/${id}/edit`)}>
-            <Pencil className="h-4 w-4 mr-1" /> Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-destructive border-destructive" onClick={() => setShowDelete(true)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+        <DocumentDetailToolbar
+          sending={sending}
+          showWhatsApp={showWhatsApp}
+          hasEmail={!!q.customerEmail}
+          hasPhone={!!q.customerPhone}
+          onDownloadPdf={downloadPdf}
+          onSendEmail={sendEmail}
+          onSendWhatsApp={sendWhatsApp}
+          onCopyWhatsAppLink={copyWhatsAppLink}
+          onEdit={() => router.push(`/quotations/${id}/edit`)}
+          onDelete={() => setShowDelete(true)}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

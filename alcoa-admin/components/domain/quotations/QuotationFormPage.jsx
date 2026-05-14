@@ -27,6 +27,7 @@ import {
   isQuotationBankDetailsEmpty,
   pickDefaultBankAccount,
 } from "@/lib/map-customer-to-quotation";
+import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
 
 const lineItemSchema = z.object({
   equipmentType: z.string().min(1, "Required"),
@@ -274,8 +275,13 @@ export function QuotationFormPage({ id }) {
         discount,
         vatPercentage: vatPct,
       };
-      if (!payload.customer || payload.customer === "__none__") delete payload.customer;
-      else payload.customer = String(payload.customer);
+      if (payload.customer && payload.customer !== "__none__") {
+        payload.customer = String(payload.customer);
+      } else if (isEdit) {
+        payload.customer = null;
+      } else {
+        delete payload.customer;
+      }
 
       const url = isEdit ? `/api/quotations/${id}` : "/api/quotations";
       const method = isEdit ? "PATCH" : "POST";
@@ -293,6 +299,8 @@ export function QuotationFormPage({ id }) {
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["quotations"] });
+      qc.invalidateQueries({ queryKey: ["quotations-stats"] });
+      qc.invalidateQueries({ queryKey: ["quotations", "sales-order-form"] });
       toast.success(isEdit ? "Quotation updated" : "Quotation created");
       const qid = data._id ?? data.id;
       router.push(`/quotations/${qid}`);
@@ -327,27 +335,18 @@ export function QuotationFormPage({ id }) {
           </div>
         </div>
 
-        {/* Customer */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Customer Information</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormSelectField
-              control={form.control}
-              name="customer"
-              label="Existing customer (optional)"
-              placeholder="Select…"
-              options={customerSelectOptions}
-              description="Pick a saved customer to link this quote, or leave manual entry — a prospect is created automatically if needed."
-              className="md:col-span-2"
-            />
-            <FormTextField control={form.control} name="customerName" label="Customer / Company Name *" placeholder="ABC Construction LLC" className="md:col-span-2" />
-            <FormTextField control={form.control} name="customerEmail" label="Email" type="email" />
-            <FormTextField control={form.control} name="customerPhone" label="Phone" />
-            <FormTextField control={form.control} name="customerTRN" label="TRN / VAT Number" />
-            <FormTextField control={form.control} name="contactPersonName" label="Contact Person" />
-            <FormTextAreaField control={form.control} name="customerAddress" label="Address" rows={2} className="md:col-span-2" />
-          </CardContent>
-        </Card>
+        <DocumentCustomerCard
+          control={form.control}
+          title="Customer Information"
+          customerOptions={customerSelectOptions}
+          customerSelectDescription="Pick a saved customer to link this quote, or leave manual entry — a prospect is created automatically if needed."
+          customerNameLabel="Customer / Company Name *"
+          customerNamePlaceholder="ABC Construction LLC"
+        >
+          <FormTextField control={form.control} name="customerTRN" label="TRN / VAT Number" />
+          <FormTextField control={form.control} name="contactPersonName" label="Contact Person" />
+          <FormTextAreaField control={form.control} name="customerAddress" label="Address" rows={2} className="md:col-span-2" />
+        </DocumentCustomerCard>
 
         {/* Quote info */}
         <Card>
