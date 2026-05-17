@@ -8,6 +8,7 @@ lerna-debug.log*
 
 # Admin panel
 admin-panel/
+alcoa-admin/
 
 # Environment variables
 .env
