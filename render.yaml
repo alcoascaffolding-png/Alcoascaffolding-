@@ -1,6 +1,11 @@
-# Render deployment configuration for multi-folder project
+# Render deployment configuration
+# NOTE: The new Next.js admin panel (alcoa-admin/) is deployed to Vercel.
+# Only the legacy Express backend is deployed here.
+# The old admin-panel/ (Vite static site) has been replaced by the new Next.js app.
 services:
-  # Backend Service
+  # Legacy Express Backend (kept running during Next.js migration overlap)
+  # Once all API routes are migrated to Next.js Route Handlers,
+  # this service can be decommissioned.
   - type: web
     name: alcoa-scaffolding-backend
     env: node
@@ -13,44 +18,31 @@ services:
       - key: PORT
         value: 10000
       - key: RESEND_API_KEY
-        sync: false  # Add in Render dashboard
+        sync: false
       - key: RESEND_FROM_EMAIL
         value: Sales@alcoascaffolding.com
       - key: COMPANY_EMAIL
         value: sales@alcoascaffolding.com
       - key: SUPPORT_EMAIL
         value: sales@alcoascaffolding.com
-      - key: SECONDARY_EMAIL
-        value: sales@alcoascaffolding.com
       - key: MONGODB_URI
-        sync: false  # Add in Render dashboard
+        sync: false
       - key: JWT_SECRET
-        sync: false  # Add in Render dashboard
+        sync: false
       - key: FRONTEND_URL
         value: https://alcoascaffolding.com
       - key: COMPANY_NAME
         value: Alcoa Aluminium Scaffolding
-      - key: COMPANY_ADDRESS
-        value: Musaffah, Abu Dhabi, UAE
-      - key: EMERGENCY_HOTLINE
-        value: +971 58 137 5601
-      - key: RESPONSE_TIME
-        value: 2 hours
       - key: LOG_LEVEL
         value: info
       - key: TIMEZONE
         value: Asia/Dubai
 
-  # Admin Panel Service (Optional)
-  - type: web
-    name: alcoa-admin-panel
-    env: static
-    rootDirectory: admin-panel
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://alco-aluminium-scaffolding-backend-5ucb.onrender.com/api
-      - key: VITE_ENV
-        value: production
-
+  # DECOMMISSIONED: Old Vite static admin panel
+  # Replaced by alcoa-admin/ Next.js app deployed to Vercel
+  # - type: web
+  #   name: alcoa-admin-panel
+  #   env: static
+  #   rootDirectory: admin-panel
+  #   buildCommand: npm install && npm run build
+  #   staticPublishPath: ./dist
