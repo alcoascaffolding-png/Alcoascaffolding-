@@ -148,12 +148,16 @@ quotationSchema.methods.calculateTotals = function () {
   return this.totalAmount;
 };
 
-quotationSchema.statics.generateQuoteNumber = async function () {
-  const year = new Date().getFullYear();
-  const prefix = `QT-${year}-`;
-  const last = await this.findOne({ quoteNumber: new RegExp(`^${prefix}`) }).sort({ quoteNumber: -1 });
-  const number = last ? parseInt(last.quoteNumber.split("-")[2]) + 1 : 1;
-  return `${prefix}${String(number).padStart(4, "0")}`;
+/** @param {Date|string|number} [baseDate] defaults to quote date or today */
+quotationSchema.statics.generateQuoteNumber = async function (baseDate = new Date()) {
+  const { generateNewDocumentNumber, DOCUMENT_PREFIX } = await import("@/lib/document-number");
+  const SalesOrder = (await import("@/models/SalesOrder")).default;
+  const SalesInvoice = (await import("@/models/SalesInvoice")).default;
+  return generateNewDocumentNumber(
+    { Quotation: this, SalesOrder, SalesInvoice },
+    DOCUMENT_PREFIX.QUOTATION,
+    baseDate
+  );
 };
 
 quotationSchema.pre("save", function (next) {

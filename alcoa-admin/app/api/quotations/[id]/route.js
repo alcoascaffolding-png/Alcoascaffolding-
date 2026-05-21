@@ -2,7 +2,12 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { applyQuotationPatch } from "@/lib/quotation-save";
+import { applyQuotationPatch, normalizeQuotationPatchCustomer } from "@/lib/quotation-save";
+import { ensureSalesOrderFromQuotation } from "@/lib/convert-quotation-to-sales-order";
+import {
+  markQuotationConvertedFromSalesOrder,
+  revertQuotationFromConvertedToApproved,
+} from "@/lib/sync-quotation-sales-order";
 import Quotation from "@/models/Quotation";
 
 export const GET = withErrorHandler(async (request, { params }) => {
@@ -25,12 +30,48 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   const doc = await Quotation.findById(params.id);
   if (!doc) throw new AppError("Quotation not found", 404);
 
-  applyQuotationPatch(doc, body);
+  const prevStatus = doc.status;
+  const patchBody = await normalizeQuotationPatchCustomer(body, session.user.id);
+  applyQuotationPatch(doc, patchBody);
   doc.lastModifiedBy = session.user.id;
   await doc.save();
 
-  const q = await Quotation.findById(params.id).populate("customer", "companyName primaryEmail primaryPhone").lean();
-  return apiSuccess(q);
+  const nextStatus = doc.status;
+  let conversion = null;
+
+  if (nextStatus === "converted" && prevStatus !== "converted") {
+    try {
+      const result = await ensureSalesOrderFromQuotation(doc._id, session.user.id);
+      conversion = {
+        created: result.created,
+        orderNumber: result.orderNumber,
+        salesOrderId: String(result.salesOrder._id),
+      };
+    } catch (err) {
+      await Quotation.findByIdAndUpdate(doc._id, {
+        $set: { status: prevStatus, convertedToOrder: false },
+        $unset: { convertedAt: "" },
+      });
+      throw err instanceof AppError
+        ? err
+        : new AppError(err.message || "Could not create sales order from quotation", 400);
+    }
+  } else if (prevStatus === "converted" && nextStatus !== "converted") {
+    await revertQuotationFromConvertedToApproved(doc._id);
+  } else if (nextStatus === "converted") {
+    const result = await ensureSalesOrderFromQuotation(doc._id, session.user.id);
+    conversion = {
+      created: result.created,
+      orderNumber: result.orderNumber,
+      salesOrderId: String(result.salesOrder._id),
+    };
+  }
+
+  const q = await Quotation.findById(params.id)
+    .populate("customer", "companyName primaryEmail primaryPhone")
+    .lean();
+
+  return apiSuccess(conversion ? { ...q, conversion } : q);
 });
 
 export const DELETE = withErrorHandler(async (request, { params }) => {

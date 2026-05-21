@@ -1,5 +1,11 @@
 import { Resend } from "resend";
-import { getQuotationLogoDataUri, getQuotationCompanyName } from "@/lib/quotation-brand";
+import {
+  getQuotationLogoBuffer,
+  getQuotationLogoDataUri,
+  getQuotationLogoPublicUrl,
+  getQuotationCompanyName,
+  QUOTATION_EMAIL_LOGO_CID,
+} from "@/lib/quotation-brand";
 import {
   contactCompanyTemplate,
   contactCustomerTemplate,
@@ -93,13 +99,23 @@ export async function sendQuoteRequestEmail(data) {
 
 export async function sendQuotationEmail(quotation, pdfBuffer, options = {}) {
   const { default: quotationEmailTemplate } = await import("./templates/quotation-email");
-  const logoDataUri = getQuotationLogoDataUri();
-  const html = quotationEmailTemplate(quotation, { logoDataUri, publicUrl: options.publicUrl });
+  const logoBuffer = getQuotationLogoBuffer();
+  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
+  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
+  const html = quotationEmailTemplate(quotation, { logoCid, logoUrl });
   const brandName = getQuotationCompanyName();
 
-  const attachments = pdfBuffer
-    ? [{ filename: `${quotation.quoteNumber}.pdf`, content: pdfBuffer }]
-    : [];
+  const attachments = [];
+  if (pdfBuffer) {
+    attachments.push({ filename: `${quotation.quoteNumber}.pdf`, content: pdfBuffer });
+  }
+  if (logoBuffer) {
+    attachments.push({
+      filename: "quotation-logo.png",
+      content: logoBuffer,
+      contentId: QUOTATION_EMAIL_LOGO_CID,
+    });
+  }
 
   const result = await sendEmail({
     from: `Alcoa Scaffolding <${FROM_EMAIL}>`,

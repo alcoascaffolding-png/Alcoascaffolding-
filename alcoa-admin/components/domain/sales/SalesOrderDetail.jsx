@@ -19,11 +19,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { formatDate, formatCurrency } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import {
+  QUOTATION_PDF_BANK_DETAILS,
+  itemAmountWithVat,
+} from "@/lib/quotation-display";
+import {
+  mapSalesOrderItemsForDisplay,
+  formatCustomerAddressFromRecord,
+} from "@/lib/map-sales-order-for-quotation-pdf";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { SalesOrderStatusChanger } from "@/components/domain/sales/SalesOrderStatusChanger";
+
+function InfoRow({ label, value, valueClassName = "" }) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="grid grid-cols-[minmax(0,38%)_1fr] gap-x-3 gap-y-0.5 py-2 border-b border-border/60 last:border-0 text-sm">
+      <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">{label}</span>
+      <span className={valueClassName}>{value}</span>
+    </div>
+  );
+}
+
+function InfoRowAlways({ label, value }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,38%)_1fr] gap-x-3 gap-y-0.5 py-2 border-b border-border/60 last:border-0 text-sm">
+      <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">{label}</span>
+      <span>{value || "—"}</span>
+    </div>
+  );
+}
 
 export function SalesOrderDetail({ id }) {
   const router = useRouter();
@@ -76,6 +103,14 @@ export function SalesOrderDetail({ id }) {
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const o = order;
+  const subtotal = Number(o.subtotal || 0);
+  const vatAmount = Number(o.vatAmount || 0);
+  const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
+  const displayItems = mapSalesOrderItemsForDisplay(o);
+  const bank = QUOTATION_PDF_BANK_DETAILS;
+  const subject = `Sales Order ${o.orderNumber}`;
+  const customer = o.customer && typeof o.customer === "object" ? o.customer : null;
+  const customerAddress = o.customerAddress || formatCustomerAddressFromRecord(customer);
 
   return (
     <>
@@ -108,136 +143,170 @@ export function SalesOrderDetail({ id }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Line Items</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Customer</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-2 pr-4 font-medium">#</th>
-                      <th className="text-left py-2 pr-4 font-medium">Description</th>
-                      <th className="text-right py-2 pr-4 font-medium">Qty</th>
-                      <th className="text-right py-2 pr-4 font-medium">Rate</th>
-                      <th className="text-right py-2 font-medium">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {o.items?.map((item, i) => (
-                      <tr key={item._id || i} className="border-b last:border-0">
-                        <td className="py-2.5 pr-4 text-muted-foreground">{i + 1}</td>
-                        <td className="py-2.5 pr-4 font-medium">{item.description}</td>
-                        <td className="py-2.5 pr-4 text-right">
-                          {item.quantity} {item.unit}
-                        </td>
-                        <td className="py-2.5 pr-4 text-right">{formatCurrency(item.unitPrice)}</td>
-                        <td className="py-2.5 text-right font-medium">{formatCurrency(item.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <Separator className="my-4" />
-              <div className="flex flex-col items-end gap-2 text-sm">
-                <div className="flex gap-8 w-full max-w-xs justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(o.subtotal)}</span>
-                </div>
-                <div className="flex gap-8 w-full max-w-xs justify-between">
-                  <span className="text-muted-foreground">VAT</span>
-                  <span>{formatCurrency(o.vatAmount)}</span>
-                </div>
-                <Separator className="w-full max-w-xs" />
-                <div className="flex gap-8 w-full max-w-xs justify-between font-bold text-base">
-                  <span>Total ({o.currency})</span>
-                  <span className="text-primary">{formatCurrency(o.total)}</span>
-                </div>
-              </div>
+            <CardContent className="pt-0">
+              <InfoRowAlways label="Customer Name" value={o.customerName} />
+              <InfoRowAlways label="Address" value={customerAddress} />
+              <InfoRowAlways label="Mobile No" value={o.customerPhone} />
+              <InfoRow label="Email" value={o.customerEmail} />
             </CardContent>
           </Card>
 
-          {o.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{o.notes}</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Order Details</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Sales Order</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Order date</span>
-                <span>{formatDate(o.orderDate)}</span>
-              </div>
-              {o.deliveryDate && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span>{formatDate(o.deliveryDate)}</span>
+            <CardContent className="pt-0">
+              <InfoRowAlways label="Order No" value={o.orderNumber} />
+              <InfoRowAlways label="Order Date" value={formatDate(o.orderDate)} />
+              <InfoRowAlways
+                label="Status"
+                value={String(o.status || "").replace(/_/g, " ")}
+              />
+              <InfoRowAlways label="Delivery Date" value={formatDate(o.deliveryDate)} />
+              <InfoRowAlways label="Payment Terms" value="Cash/CDC" />
+              {o.quotation && (
+                <div className="pt-3 border-t border-border/60 mt-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                    Linked quotation
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-sm font-medium">
+                      {typeof o.quotation === "object" ? o.quotation.quoteNumber : "—"}
+                    </span>
+                    {typeof o.quotation === "object" && o.quotation.status != null && (
+                      <Badge variant="secondary" className="text-xs font-normal capitalize">
+                        {String(o.quotation.status).replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      const qid =
+                        typeof o.quotation === "object" && o.quotation._id != null
+                          ? String(o.quotation._id)
+                          : String(o.quotation);
+                      router.push(`/quotations/${qid}`);
+                    }}
+                  >
+                    View quotation
+                  </Button>
                 </div>
               )}
             </CardContent>
           </Card>
+        </div>
 
-          {o.quotation && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base">Linked quotation</CardTitle>
-                {typeof o.quotation === "object" && o.quotation.status != null && (
-                  <Badge variant="secondary" className="text-xs font-normal capitalize">
-                    {String(o.quotation.status).replace(/_/g, " ")}
-                  </Badge>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <p className="font-mono font-medium">
-                  {typeof o.quotation === "object" ? o.quotation.quoteNumber : "—"}
-                </p>
-                {typeof o.quotation === "object" && o.quotation.customerName && (
-                  <p className="text-muted-foreground">{o.quotation.customerName}</p>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-1"
-                  onClick={() => {
-                    const qid =
-                      typeof o.quotation === "object" && o.quotation._id != null
-                        ? String(o.quotation._id)
-                        : String(o.quotation);
-                    router.push(`/quotations/${qid}`);
-                  }}
-                >
-                  View quotation
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+        <Card>
+          <CardContent className="py-3 px-4">
+            <p className="text-sm">
+              <span className="font-semibold">Subject:</span> {subject}
+            </p>
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Line Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto -mx-1">
+              <table className="w-full text-sm border-collapse min-w-[720px]">
+                <thead>
+                  <tr className="border-b-2 border-primary/30 bg-muted/40">
+                    <th className="text-center py-2 px-2 font-medium w-10">SN</th>
+                    <th className="text-left py-2 px-2 font-medium min-w-[200px]">Description of Goods</th>
+                    <th className="text-right py-2 px-2 font-medium w-16">Wt (KG)</th>
+                    <th className="text-right py-2 px-2 font-medium w-14">CBM</th>
+                    <th className="text-right py-2 px-2 font-medium w-20">Qty</th>
+                    <th className="text-right py-2 px-2 font-medium w-24">Rate (AED)</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">Taxable Amount</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">VAT ({vatPct}%) Amount</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">Amount (AED)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayItems.map((item, i) => (
+                    <tr key={item._id || i} className="border-b border-border/60 align-top">
+                      <td className="py-2.5 px-2 text-center text-muted-foreground">{i + 1}</td>
+                      <td className="py-2.5 px-2">
+                        <p className="font-medium">{item.equipmentType}</p>
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">—</td>
+                      <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">—</td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap">
+                        {item.quantity} {item.unit || "Nos"}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.ratePerUnit || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.taxableAmount || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.vatAmount || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right font-medium tabular-nums">
+                        {itemAmountWithVat(item, vatPct).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <Separator className="my-4" />
+            <div className="flex flex-col items-end gap-2 text-sm">
+              <div className="flex gap-8 w-full max-w-sm justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums">{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex gap-8 w-full max-w-sm justify-between">
+                <span className="text-muted-foreground">VAT ({vatPct}%)</span>
+                <span className="tabular-nums">{vatAmount.toFixed(2)}</span>
+              </div>
+              <Separator className="w-full max-w-sm" />
+              <div className="flex gap-8 w-full max-w-sm justify-between font-bold text-base">
+                <span>Total ({o.currency || "AED"})</span>
+                <span className="text-primary tabular-nums">
+                  {Number(o.total || 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {o.notes && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Customer</CardTitle>
+              <CardTitle className="text-base">Notes</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p className="font-medium">{o.customerName}</p>
-              {o.customerEmail && <p className="text-muted-foreground">{o.customerEmail}</p>}
-              {o.customerPhone && <p className="text-muted-foreground">{o.customerPhone}</p>}
+            <CardContent>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{o.notes}</p>
             </CardContent>
           </Card>
-        </div>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bank Details</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <InfoRowAlways label="Bank details" value={bank.accountName} />
+            <InfoRowAlways label="Bank name" value={bank.bankName} />
+            <InfoRowAlways label="Account no" value={bank.accountNumber} />
+            <InfoRowAlways label="IBAN" value={bank.iban} />
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>

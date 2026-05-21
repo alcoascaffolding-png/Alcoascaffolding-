@@ -34,6 +34,15 @@ function formatCurrency(amount, currency = "AED") {
   return `${currency} ${Number(amount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** Line total including VAT for PDF amount column. */
+function itemAmountWithVat(item, defaultVatPct = 5) {
+  const taxable = Number(item.taxableAmount ?? item.subtotal ?? 0);
+  const vat = Number(item.vatAmount ?? 0);
+  if (vat > 0) return taxable + vat;
+  const pct = Number(item.vatPercentage ?? defaultVatPct ?? 5);
+  return taxable * (1 + pct / 100);
+}
+
 function numberToWords(num) {
   if (!num || num === 0) return "Zero";
   const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
@@ -406,7 +415,10 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
  * @param {{ logoDataUri?: string; headerDataUri?: string; footerDataUri?: string }} options
  */
 function buildQuotationPdfLayout(quotation, options = {}) {
-  const { logoDataUri = "", headerDataUri = "", footerDataUri = "" } = options;
+  const { logoDataUri = "", headerDataUri = "", footerDataUri = "", docKind = "quotation" } =
+    options;
+  const isSalesOrder = docKind === "salesOrder";
+  const isSalesInvoice = docKind === "salesInvoice";
   const {
     quoteNumber = "",
     customerName = "",
@@ -419,6 +431,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     preparedBy = "",
     paymentTerms = "Cash/CDC",
     deliveryTerms = "7-10 days from date of order",
+    status = "",
+    paymentStatus = "",
+    paidAmount = 0,
+    balance,
     items = [],
     subtotal = 0,
     deliveryCharges = 0,
@@ -433,12 +449,49 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     notes = "",
     termsAndConditions = "",
     quoteDate,
+    validUntil,
   } = quotation;
 
   const companyName = getQuotationCompanyName();
   const companyEmail = getQuotationCompanyEmail();
   const companyTRN = process.env.COMPANY_TRN || "100123456700003";
-  const safeSubject = subject || `Quotation ${quoteNumber}`;
+  const safeSubject =
+    subject ||
+    (isSalesOrder
+      ? `Sales Order ${quoteNumber}`
+      : isSalesInvoice
+        ? `Sales Invoice ${quoteNumber}`
+        : `Quotation ${quoteNumber}`);
+  const docTitle = isSalesOrder
+    ? "SALES ORDER"
+    : isSalesInvoice
+      ? "SALES INVOICE"
+      : "QUOTATION";
+  const displayBalance =
+    balance != null
+      ? Number(balance)
+      : Math.max(0, Number(totalAmount || 0) - Number(paidAmount || 0));
+  const rightMetaRows = isSalesOrder
+    ? `
+              <tr><td class="mini-label">Order No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Order Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Status</td><td>${String(status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Delivery Date</td><td>${formatDate(validUntil)}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>`
+    : isSalesInvoice
+      ? `
+              <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>
+              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Paid</td><td>${Number(paidAmount || 0).toFixed(2)}</td></tr>
+              <tr><td class="mini-label">Balance</td><td>${displayBalance.toFixed(2)}</td></tr>`
+      : `
+              <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
+              <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>`;
   const pdfBank = getQuotationPdfBankDetails();
   const headerImageBlock = headerDataUri
     ? `<img class="header-art" src="${headerDataUri}" alt="Quotation header" crossorigin="anonymous" />`
@@ -483,51 +536,64 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           ${item.specifications ? `<div class="item-sub">${item.specifications}</div>` : ""}
           ${item.size ? `<div class="item-sub">Size: ${item.size}</div>` : ""}
         </td>
-        <td class="center">${Number(item.weight || 0).toFixed(2)}</td>
-        <td class="center">${Number(item.cbm || 0).toFixed(2)}</td>
+        <td class="center">${Number(item.weight || 0).toFixed(3)}</td>
+        <td class="center">${Number(item.cbm || 0).toFixed(3)}</td>
         <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
         <td class="right">${Number(item.ratePerUnit || 0).toFixed(2)}</td>
         <td class="right">${Number(item.taxableAmount ?? item.subtotal ?? 0).toFixed(2)}</td>
-        <td class="center">${Number(item.vatPercentage ?? vatPercentage ?? 5)}</td>
         <td class="right">${Number(item.vatAmount || 0).toFixed(2)}</td>
-        <td class="right strong">${Number(item.subtotal || 0).toFixed(2)}</td>
+        <td class="right strong">${itemAmountWithVat(item, vatPercentage).toFixed(2)}</td>
       </tr>`
       )
       .join("");
 
-  const renderTotalsTfoot = () => `
+  const renderTotalsTfoot = () => {
+    const invoicePaymentRows = isSalesInvoice
+      ? `
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Paid</td>
+          <td colspan="3" class="totals-value right">${Number(paidAmount || 0).toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Balance</td>
+          <td colspan="3" class="totals-value right strong">${displayBalance.toFixed(2)}</td>
+        </tr>`
+      : "";
+    return `
       <tfoot class="items-totals-foot">
         <tr>
-          <td colspan="7" class="totals-spacer"></td>
-          <td colspan="2" class="totals-label">Subtotal</td>
-          <td class="totals-value right strong">${displaySubtotal.toFixed(2)}</td>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Subtotal</td>
+          <td colspan="3" class="totals-value right strong">${displaySubtotal.toFixed(2)}</td>
         </tr>
         <tr>
-          <td colspan="7" class="totals-spacer"></td>
-          <td colspan="2" class="totals-label">VAT (${vatPercentage}%)</td>
-          <td class="totals-value right">${Number(vatAmount || 0).toFixed(2)}</td>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">VAT (${vatPercentage}%)</td>
+          <td colspan="3" class="totals-value right">${Number(vatAmount || 0).toFixed(2)}</td>
         </tr>
         <tr class="totals-grand">
-          <td colspan="7" class="totals-spacer"></td>
-          <td colspan="2" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
-          <td class="totals-value right strong">${Number(totalAmount || 0).toFixed(2)}</td>
-        </tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
+          <td colspan="3" class="totals-value right strong">${Number(totalAmount || 0).toFixed(2)}</td>
+        </tr>${invoicePaymentRows}
       </tfoot>`;
+  };
 
   const renderTable = (rows, withTotals = false) => `
     <table class="items-table">
       <thead>
         <tr>
           <th style="width:3%;">SN</th>
-          <th class="desc-col" style="width:49%;">Description of Goods</th>
+          <th class="desc-col" style="width:52%;">Description of Goods</th>
           <th style="width:5%;">Wt (KG)</th>
           <th style="width:4%;">CBM</th>
           <th style="width:5%;">Qty</th>
           <th style="width:9%;">Rate<br>(AED)</th>
           <th style="width:8%;">Taxable Amount</th>
-          <th style="width:3%;">VAT %</th>
-          <th style="width:6%;">VAT Amount</th>
-          <th style="width:8%;">Amount (AED)</th>
+          <th style="width:7%;">VAT (${vatPercentage}%)<br>AMOUNT</th>
+          <th style="width:7%;">Amount<br>(AED)</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -536,7 +602,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 
   const docHeadingBlock = `
         <div class="doc-heading">
-          <div class="doc-title">QUOTATION</div>
+          <div class="doc-title">${docTitle}</div>
           <div class="doc-trn"><strong>TRN:</strong> ${companyTRN}</div>
         </div>`;
 
@@ -624,11 +690,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           </div>
           <div class="box">
             <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
-              <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
-              <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
-              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
-              <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>
+              ${rightMetaRows}
             </table>
           </div>
         </div>`;
@@ -641,26 +703,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
         ${runningHeadBlock}
         <div class="pdf-page-fill">
-        <div class="head-grid">
-          <div class="box">
-            <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Customer Name</td><td>${customerName || "-"}</td></tr>
-              <tr><td class="mini-label">Address</td><td>${customerAddress || "-"}</td></tr>
-              <tr><td class="mini-label">Mobile No</td><td>${customerPhone || "-"}</td></tr>
-              <tr><td class="mini-label">TRN</td><td>${customerTRN || "-"}</td></tr>
-              <tr><td class="mini-label">Contact Person</td><td>${contactPersonName || "-"}</td></tr>
-            </table>
-          </div>
-          <div class="box">
-            <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
-              <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
-              <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
-              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
-              <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>
-            </table>
-          </div>
-        </div>
+        ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(tbodyRowsHtml)}
@@ -673,26 +716,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
         ${runningHeadBlock}
         <div class="pdf-page-fill">
-        <div class="head-grid">
-          <div class="box">
-            <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Customer Name</td><td>${customerName || "-"}</td></tr>
-              <tr><td class="mini-label">Address</td><td>${customerAddress || "-"}</td></tr>
-              <tr><td class="mini-label">Mobile No</td><td>${customerPhone || "-"}</td></tr>
-              <tr><td class="mini-label">TRN</td><td>${customerTRN || "-"}</td></tr>
-              <tr><td class="mini-label">Contact Person</td><td>${contactPersonName || "-"}</td></tr>
-            </table>
-          </div>
-          <div class="box">
-            <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
-              <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
-              <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
-              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
-              <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>
-            </table>
-          </div>
-        </div>
+        ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(tbodyRowsHtml, true)}
@@ -861,11 +885,11 @@ function buildQuotationHTML(quotation, options = {}) {
  * @param {Object} quotation - Mongoose document or plain object
  * @returns {Promise<Buffer>} PDF buffer
  */
-export async function generateQuotationPDF(quotation) {
+export async function generateQuotationPDF(quotation, pdfOptions = {}) {
   const logoDataUri = getQuotationLogoDataUri();
   const headerDataUri = getQuotationHeaderDataUri();
   const footerDataUri = getQuotationFooterDataUri();
-  const brandOpts = { logoDataUri, headerDataUri, footerDataUri };
+  const brandOpts = { logoDataUri, headerDataUri, footerDataUri, ...pdfOptions };
 
   const browser = await launchBrowser();
   let page;

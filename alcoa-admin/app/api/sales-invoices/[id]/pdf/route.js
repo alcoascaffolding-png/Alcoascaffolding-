@@ -20,7 +20,9 @@ export const GET = withErrorHandler(async (request, context) => {
   if (!id) return apiError("Missing id", 400);
 
   await connectDB();
-  const invoice = await SalesInvoice.findById(id).lean();
+  const invoice = await SalesInvoice.findById(id)
+    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
+    .lean();
   if (!invoice) throw new AppError("Sales Invoice not found", 404);
 
   const pdfBuffer = await generateSalesInvoicePDF(invoice);

@@ -21,9 +21,11 @@ import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { useEffect, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { itemAmountWithVat, quotationDisplaySubtotal } from "@/lib/quotation-display";
 import {
   bankAccountToQuotationBankDetails,
   customerSnapshotToQuotationFormPatch,
+  getLinkedCustomerId,
   isQuotationBankDetailsEmpty,
   pickDefaultBankAccount,
 } from "@/lib/map-customer-to-quotation";
@@ -32,10 +34,15 @@ import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCust
 const lineItemSchema = z.object({
   equipmentType: z.string().min(1, "Required"),
   description: z.string().optional(),
+  specifications: z.string().optional(),
+  size: z.string().optional(),
+  weight: z.coerce.number().min(0).optional(),
+  cbm: z.coerce.number().min(0).optional(),
   quantity: z.coerce.number().min(1),
   unit: z.string().default("Nos"),
   ratePerUnit: z.coerce.number().min(0),
   vatPercentage: z.coerce.number().min(0).max(100).default(5),
+  taxableAmount: z.coerce.number().min(0).optional(),
   subtotal: z.coerce.number().min(0).default(0),
   vatAmount: z.coerce.number().min(0).default(0),
 });
@@ -77,7 +84,21 @@ const quotationSchema = z.object({
 const today = new Date().toISOString().split("T")[0];
 const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-const defaultItem = { equipmentType: "", description: "", quantity: 1, unit: "Nos", ratePerUnit: 0, vatPercentage: 5, subtotal: 0, vatAmount: 0 };
+const defaultItem = {
+  equipmentType: "",
+  description: "",
+  specifications: "",
+  size: "",
+  weight: 0,
+  cbm: 0,
+  quantity: 1,
+  unit: "Nos",
+  ratePerUnit: 0,
+  vatPercentage: 5,
+  taxableAmount: 0,
+  subtotal: 0,
+  vatAmount: 0,
+};
 
 const quoteTypeOpts = [
   { value: "rental", label: "Rental" }, { value: "sales", label: "Sales" },
@@ -85,6 +106,62 @@ const quoteTypeOpts = [
 ];
 
 const unitOpts = ["Nos", "Set", "M", "Sqm", "Day", "Week", "Month", "Job"].map((v) => ({ value: v, label: v }));
+
+function mapItemToForm(item) {
+  return {
+    ...defaultItem,
+    ...item,
+    equipmentType: item?.equipmentType ?? "",
+    description: item?.description ?? "",
+    specifications: item?.specifications ?? "",
+    size: item?.size ?? "",
+    weight: Number(item?.weight) || 0,
+    cbm: Number(item?.cbm) || 0,
+    quantity: Number(item?.quantity) || 1,
+    unit: item?.unit || "Nos",
+    ratePerUnit: Number(item?.ratePerUnit) || 0,
+    vatPercentage: Number(item?.vatPercentage) || 5,
+    taxableAmount: Number(item?.taxableAmount) || 0,
+    subtotal: Number(item?.subtotal) || 0,
+    vatAmount: Number(item?.vatAmount) || 0,
+  };
+}
+
+function mapQuotationToFormValues(existing) {
+  const fmt = (d) => (d ? new Date(d).toISOString().split("T")[0] : today);
+  return {
+    customer: getLinkedCustomerId(existing.customer),
+    customerName: existing.customerName ?? "",
+    customerEmail: existing.customerEmail ?? "",
+    customerPhone: existing.customerPhone ?? "",
+    customerAddress: existing.customerAddress ?? "",
+    customerTRN: existing.customerTRN ?? "",
+    contactPersonName: existing.contactPersonName ?? "",
+    quoteDate: fmt(existing.quoteDate),
+    validUntil: fmt(existing.validUntil),
+    quoteType: existing.quoteType ?? "rental",
+    subject: existing.subject ?? "",
+    salesExecutive: existing.salesExecutive ?? "",
+    preparedBy: existing.preparedBy ?? "",
+    paymentTerms: existing.paymentTerms ?? "Cash/CDC",
+    deliveryTerms: existing.deliveryTerms ?? "7-10 days from date of order",
+    projectDuration: existing.projectDuration ?? "",
+    items: existing.items?.length ? existing.items.map(mapItemToForm) : [{ ...defaultItem }],
+    deliveryCharges: Number(existing.deliveryCharges) || 0,
+    installationCharges: Number(existing.installationCharges) || 0,
+    discount: Number(existing.discount) || 0,
+    vatPercentage: Number(existing.vatPercentage) || 5,
+    notes: existing.notes ?? "",
+    termsAndConditions: existing.termsAndConditions ?? "",
+    bankDetails: existing.bankDetails || {
+      bankName: "",
+      accountName: "",
+      accountNumber: "",
+      iban: "",
+      swiftCode: "",
+    },
+  };
+}
 
 export function QuotationFormPage({ id }) {
   const router = useRouter();
@@ -118,24 +195,10 @@ export function QuotationFormPage({ id }) {
     },
   });
 
-  // Populate form when editing
+  // Populate form when editing (explicit mapping — avoids object `customer` breaking the select)
   useEffect(() => {
     if (existing) {
-      const fmt = (d) => d ? new Date(d).toISOString().split("T")[0] : today;
-      const cust = existing.customer;
-      const customerId =
-        cust && typeof cust === "object" && cust._id != null
-          ? String(cust._id)
-          : cust != null
-            ? String(cust)
-            : "__none__";
-      form.reset({
-        ...existing,
-        customer: customerId,
-        quoteDate: fmt(existing.quoteDate),
-        validUntil: fmt(existing.validUntil),
-        bankDetails: existing.bankDetails || { bankName: "", accountName: "", accountNumber: "", iban: "", swiftCode: "" },
-      });
+      form.reset(mapQuotationToFormValues(existing));
     }
   }, [existing]);
 
@@ -165,10 +228,8 @@ export function QuotationFormPage({ id }) {
 
   const loadedQuoteCustomerId = useMemo(() => {
     if (!existing) return null;
-    const cust = existing.customer;
-    if (cust && typeof cust === "object" && cust._id != null) return String(cust._id);
-    if (cust != null) return String(cust);
-    return null;
+    const id = getLinkedCustomerId(existing.customer);
+    return id === "__none__" ? null : id;
   }, [existing]);
 
   useEffect(() => {
@@ -216,11 +277,13 @@ export function QuotationFormPage({ id }) {
   const customerSelectOptions = useMemo(() => {
     const list = [...(customerList || [])];
     if (isEdit && existing?.customer) {
-      const cid = String(existing.customer._id ?? existing.customer);
-      if (!list.some((c) => String(c._id) === cid)) {
+      const cid = getLinkedCustomerId(existing.customer);
+      if (cid !== "__none__" && !list.some((c) => String(c._id) === cid)) {
+        const populatedName =
+          typeof existing.customer === "object" ? existing.customer.companyName : null;
         list.unshift({
           _id: cid,
-          companyName: existing.customerName || existing.customer?.companyName || "Linked customer",
+          companyName: existing.customerName || populatedName || "Linked customer",
         });
       }
     }
@@ -230,6 +293,18 @@ export function QuotationFormPage({ id }) {
     ];
   }, [customerList, isEdit, existing]);
 
+  // Re-bind customer select once options include the linked customer (Radix needs matching option)
+  useEffect(() => {
+    if (!isEdit || !existing) return;
+    const linkedId = getLinkedCustomerId(existing.customer);
+    if (linkedId === "__none__") return;
+    const hasOption = customerSelectOptions.some((o) => o.value === linkedId);
+    if (!hasOption) return;
+    if (form.getValues("customer") !== linkedId) {
+      form.setValue("customer", linkedId, { shouldValidate: false, shouldDirty: false });
+    }
+  }, [isEdit, existing, customerSelectOptions, form]);
+
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
 
   const watchedItems = form.watch("items");
@@ -238,32 +313,58 @@ export function QuotationFormPage({ id }) {
   const installationCharges = form.watch("installationCharges") || 0;
   const discount = form.watch("discount") || 0;
 
-  const subtotal = watchedItems.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.ratePerUnit || 0)), 0);
-  const beforeVAT = subtotal + Number(deliveryCharges) + Number(installationCharges) - Number(discount);
+  const lineSubtotal = watchedItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0) * Number(item.ratePerUnit || 0),
+    0
+  );
+  const previewTotals = {
+    subtotal: lineSubtotal,
+    deliveryCharges: Number(deliveryCharges) || 0,
+    installationCharges: Number(installationCharges) || 0,
+    pickupCharges: 0,
+    discount: Number(discount) || 0,
+    discountType: "fixed",
+  };
+  const displaySubtotal = quotationDisplaySubtotal(previewTotals);
+  const beforeVAT = displaySubtotal;
   const vatAmount = (beforeVAT * Number(vatPct || 0)) / 100;
   const totalAmount = beforeVAT + vatAmount;
 
   const saveMut = useMutation({
     mutationFn: async (values) => {
-      const items = values.items.map((item) => ({
-        ...item,
-        quantity: Number(item.quantity) || 1,
-        ratePerUnit: Number(item.ratePerUnit) || 0,
-        vatPercentage: Number(item.vatPercentage ?? 5),
-        subtotal: Number(item.quantity) * Number(item.ratePerUnit),
-        vatAmount:
-          (Number(item.quantity) * Number(item.ratePerUnit) * Number(item.vatPercentage ?? 5)) / 100,
-      }));
+      const docVatPct = Number(values.vatPercentage ?? 5);
+      const items = values.items.map((item) => {
+        const taxable = Number(item.quantity || 0) * Number(item.ratePerUnit || 0);
+        const lineVat = (taxable * docVatPct) / 100;
+        return {
+          ...item,
+          quantity: Number(item.quantity) || 1,
+          ratePerUnit: Number(item.ratePerUnit) || 0,
+          weight: Number(item.weight) || 0,
+          cbm: Number(item.cbm) || 0,
+          vatPercentage: docVatPct,
+          taxableAmount: taxable,
+          subtotal: taxable,
+          vatAmount: lineVat,
+        };
+      });
       const lineSubtotal = items.reduce((s, it) => s + it.subtotal, 0);
       const deliveryCharges = Number(values.deliveryCharges) || 0;
       const installationCharges = Number(values.installationCharges) || 0;
       const discount = Number(values.discount) || 0;
       const vatPct = Number(values.vatPercentage ?? 5);
-      let beforeVAT = lineSubtotal + deliveryCharges + installationCharges - discount;
-      if (beforeVAT < 0) beforeVAT = 0;
+      const beforeVAT = quotationDisplaySubtotal({
+        subtotal: lineSubtotal,
+        deliveryCharges,
+        installationCharges,
+        pickupCharges: 0,
+        discount,
+        discountType: "fixed",
+      });
       const vatAmount = (beforeVAT * vatPct) / 100;
       const totalAmount = beforeVAT + vatAmount;
 
+      const linkedCustomer = getLinkedCustomerId(values.customer);
       const payload = {
         ...values,
         items,
@@ -275,10 +376,8 @@ export function QuotationFormPage({ id }) {
         discount,
         vatPercentage: vatPct,
       };
-      if (payload.customer && payload.customer !== "__none__") {
-        payload.customer = String(payload.customer);
-      } else if (isEdit) {
-        payload.customer = null;
+      if (linkedCustomer !== "__none__") {
+        payload.customer = linkedCustomer;
       } else {
         delete payload.customer;
       }
@@ -298,11 +397,14 @@ export function QuotationFormPage({ id }) {
       return d.data;
     },
     onSuccess: (data) => {
+      const qid = data._id ?? data.id ?? id;
       qc.invalidateQueries({ queryKey: ["quotations"] });
       qc.invalidateQueries({ queryKey: ["quotations-stats"] });
       qc.invalidateQueries({ queryKey: ["quotations", "sales-order-form"] });
+      if (qid) {
+        qc.invalidateQueries({ queryKey: ["quotations", "detail", qid] });
+      }
       toast.success(isEdit ? "Quotation updated" : "Quotation created");
-      const qid = data._id ?? data.id;
       router.push(`/quotations/${qid}`);
     },
     onError: (e) => toast.error(e.message),
@@ -355,7 +457,13 @@ export function QuotationFormPage({ id }) {
             <FormTextField control={form.control} name="quoteDate" label="Quote Date" type="date" />
             <FormTextField control={form.control} name="validUntil" label="Valid Until" type="date" />
             <FormSelectField control={form.control} name="quoteType" label="Quote Type" options={quoteTypeOpts} />
-            <FormTextField control={form.control} name="subject" label="Subject" placeholder="Scaffolding for ABC Project" className="md:col-span-3" />
+            <FormTextField
+              control={form.control}
+              name="subject"
+              label="Subject"
+              placeholder="Scaffolding for ABC Project"
+              className="md:col-span-3 [&_input]:text-base"
+            />
             <FormTextField control={form.control} name="salesExecutive" label="Sales Executive" />
             <FormTextField control={form.control} name="preparedBy" label="Prepared By" />
             <FormTextField control={form.control} name="projectDuration" label="Project Duration" placeholder="3 months" />
@@ -373,7 +481,10 @@ export function QuotationFormPage({ id }) {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <p className="text-xs text-muted-foreground mb-3">
+              Line totals match the PDF: taxable amount, VAT ({vatPct}%) amount, and amount including VAT.
+            </p>
+            <div className="space-y-4">
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-12 gap-2 items-start p-3 rounded-lg border bg-muted/20">
                   <div className="col-span-12 md:col-span-4">
@@ -383,9 +494,25 @@ export function QuotationFormPage({ id }) {
                       <p className="text-xs text-destructive mt-1">{form.formState.errors.items[index].equipmentType.message}</p>
                     )}
                   </div>
-                  <div className="col-span-12 md:col-span-3">
+                  <div className="col-span-12 md:col-span-4">
                     <label className="text-xs text-muted-foreground mb-1 block">Description</label>
                     <Input placeholder="Optional details" {...form.register(`items.${index}.description`)} />
+                  </div>
+                  <div className="col-span-12 md:col-span-4">
+                    <label className="text-xs text-muted-foreground mb-1 block">Specifications</label>
+                    <Input placeholder="Optional" {...form.register(`items.${index}.specifications`)} />
+                  </div>
+                  <div className="col-span-6 md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Size</label>
+                    <Input placeholder="e.g. 8m" {...form.register(`items.${index}.size`)} />
+                  </div>
+                  <div className="col-span-6 md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Wt (KG)</label>
+                    <Input type="number" min="0" step="0.001" {...form.register(`items.${index}.weight`)} />
+                  </div>
+                  <div className="col-span-6 md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">CBM</label>
+                    <Input type="number" min="0" step="0.001" {...form.register(`items.${index}.cbm`)} />
                   </div>
                   <div className="col-span-4 md:col-span-1">
                     <label className="text-xs text-muted-foreground mb-1 block">Qty</label>
@@ -399,15 +526,35 @@ export function QuotationFormPage({ id }) {
                     <label className="text-xs text-muted-foreground mb-1 block">Rate (AED)</label>
                     <Input type="number" min="0" step="0.01" {...form.register(`items.${index}.ratePerUnit`)} />
                   </div>
-                  <div className="col-span-11 md:col-span-1 flex items-end justify-between">
+                  <div className="col-span-12 md:col-span-4 grid grid-cols-3 gap-2 text-sm">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Amount</label>
-                      <p className="text-sm font-medium py-2">
-                        {formatCurrency(Number(form.watch(`items.${index}.quantity`) || 0) * Number(form.watch(`items.${index}.ratePerUnit`) || 0))}
-                      </p>
+                      <span className="text-xs text-muted-foreground block">Taxable Amount</span>
+                      <span className="font-medium tabular-nums">
+                        {(Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0)).toFixed(2)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block">VAT ({vatPct}%) Amount</span>
+                      <span className="font-medium tabular-nums">
+                        {((Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0)) * Number(vatPct || 0) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground block">Amount (AED)</span>
+                      <span className="font-semibold tabular-nums">
+                        {itemAmountWithVat(
+                          {
+                            ...watchedItems[index],
+                            taxableAmount: Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0),
+                            vatAmount: (Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0) * Number(vatPct || 0)) / 100,
+                            subtotal: Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0),
+                          },
+                          vatPct
+                        ).toFixed(2)}
+                      </span>
                     </div>
                   </div>
-                  <div className="col-span-1 flex items-end pb-1">
+                  <div className="col-span-12 md:col-span-1 flex md:justify-end">
                     <Button
                       type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive"
                       onClick={() => remove(index)} disabled={fields.length === 1}
@@ -437,12 +584,12 @@ export function QuotationFormPage({ id }) {
                   <Input type="number" min="0" step="0.01" {...form.register("discount")} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">VAT %</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">VAT % (quotation)</label>
                   <Input type="number" min="0" max="100" step="0.01" {...form.register("vatPercentage")} />
                 </div>
               </div>
               <div className="col-span-2 space-y-1.5 text-sm border-t pt-3">
-                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Subtotal (before VAT)</span><span className="tabular-nums">{displaySubtotal.toFixed(2)}</span></div>
                 {Number(deliveryCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatCurrency(deliveryCharges)}</span></div>}
                 {Number(installationCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Installation</span><span>{formatCurrency(installationCharges)}</span></div>}
                 {Number(discount) > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>- {formatCurrency(discount)}</span></div>}

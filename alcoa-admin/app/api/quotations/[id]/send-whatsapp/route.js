@@ -19,7 +19,7 @@ import {
   isWhatsAppTwilioMode,
 } from "@/lib/server-features";
 import { buildWhatsAppQuotationBody } from "@/lib/quotation-brand";
-import { ensureQuotationPublicToken } from "@/lib/quotation-save";
+// import { ensureQuotationPublicToken } from "@/lib/quotation-save";
 
 /** Local dev only: send WhatsApp text without PDF/Blob (Twilio cannot use localhost PDF URLs). */
 function isLocalTextOnlyWhatsAppMode() {
@@ -101,7 +101,8 @@ export const POST = withErrorHandler(async (request, context) => {
   const toPhone = body.phone || quotation.customerPhone;
   if (!toPhone) throw new AppError("No phone number specified", 400);
 
-  const { url: publicUrl } = await ensureQuotationPublicToken(quotationId, Quotation);
+  // Customer accept/reject links disabled — PDF + summary only
+  // const { url: publicUrl } = await ensureQuotationPublicToken(quotationId, Quotation);
 
   // ─── Twilio API path ───────────────────────────────────────────────────
   if (useTwilio) {
@@ -115,7 +116,6 @@ export const POST = withErrorHandler(async (request, context) => {
     if (localTextOnly) {
       const message = buildWhatsAppQuotationBody(quotation, {
         attachmentLine: false,
-        publicUrl,
         devNoPdfNote:
           "(Local dev: PDF not attached — remove WHATSAPP_LOCAL_TEXT_ONLY and set BLOB_READ_WRITE_TOKEN for full flow.)",
       });
@@ -163,7 +163,6 @@ export const POST = withErrorHandler(async (request, context) => {
   const pdfUrl = await uploadQuotationPdfToBlob(quotation);
   const textBody = `${buildWhatsAppQuotationBody(quotation, {
     attachmentLine: false,
-    publicUrl,
   })}\n\nDownload (PDF):\n${pdfUrl}`;
   const waMeUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(textBody)}`;
 

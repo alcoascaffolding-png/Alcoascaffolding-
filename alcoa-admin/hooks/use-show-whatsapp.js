@@ -11,7 +11,7 @@ async function fetchUiFeatures() {
 }
 
 /**
- * Server-driven WhatsApp availability (falls back to NEXT_PUBLIC_FEATURES via isFeatureEnabled).
+ * Server-driven WhatsApp availability (controlled by WHATSAPP_UI_AND_API_ENABLED in lib/server-features.js).
  */
 export function useShowWhatsApp() {
   const { data: uiFeatures } = useQuery({

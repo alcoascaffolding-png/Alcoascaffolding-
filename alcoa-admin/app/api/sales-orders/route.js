@@ -2,10 +2,12 @@ import mongoose from "mongoose";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
-import { withErrorHandler } from "@/lib/api-error";
+import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
+import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import SalesOrder from "@/models/SalesOrder";
+import Quotation from "@/models/Quotation";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -26,8 +28,13 @@ export const GET = withErrorHandler(async (request) => {
 
   const filter = {};
   if (searchParams.get("status")) filter.status = searchParams.get("status");
-  if (searchParams.get("search")) {
-    filter.$text = { $search: searchParams.get("search") };
+  const searchTerm = (searchParams.get("search") || "").trim();
+  if (searchTerm) {
+    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { orderNumber: { $regex: escaped, $options: "i" } },
+      { customerName: { $regex: escaped, $options: "i" } },
+    ];
   }
 
   const [items, total] = await Promise.all([
@@ -88,10 +95,17 @@ export const POST = withErrorHandler(async (request) => {
   const qid = toObjectId(quotationRef);
   if (qid) payload.quotation = qid;
 
-  if (orderNumber && String(orderNumber).trim()) {
-    payload.orderNumber = String(orderNumber).trim();
-  } else {
-    payload.orderNumber = await SalesOrder.generateOrderNumber();
+  try {
+    payload.orderNumber = await resolveOrderNumberForCreate(
+      {
+        quotationId: qid,
+        orderDate: payload.orderDate,
+        orderNumber,
+      },
+      { Quotation, SalesOrder }
+    );
+  } catch (err) {
+    throw new AppError(err.message || "Could not assign order number", 400);
   }
 
   const doc = await SalesOrder.create({ ...payload, createdBy: session.user.id });

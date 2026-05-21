@@ -38,7 +38,15 @@ const orderSchema = z.object({
   quotation: z.string().optional(),
   orderDate: z.string(),
   deliveryDate: z.string().optional(),
-  status: z.enum(["draft", "confirmed", "in_progress", "delivered", "completed", "cancelled"]),
+  status: z.enum([
+    "draft",
+    "confirmed",
+    "in_progress",
+    "delivered",
+    "completed",
+    "invoiced",
+    "cancelled",
+  ]),
   items: z.array(lineItemSchema).min(1, "At least one line item"),
   vatPercentage: z.coerce.number().min(0).max(100).default(5),
   notes: z.string().optional(),
@@ -53,6 +61,7 @@ const statusOpts = [
   "in_progress",
   "delivered",
   "completed",
+  "invoiced",
   "cancelled",
 ].map((v) => ({ value: v, label: v.replace(/_/g, " ") }));
 

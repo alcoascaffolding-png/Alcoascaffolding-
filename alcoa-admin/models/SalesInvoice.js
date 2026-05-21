@@ -75,19 +75,18 @@ salesInvoiceSchema.pre("save", function (next) {
   next();
 });
 
-function escapeRegex(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-salesInvoiceSchema.statics.generateInvoiceNumber = async function generateInvoiceNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
-  const last = await this.findOne({ invoiceNumber: new RegExp(`^${escapeRegex(prefix)}`) })
-    .sort({ invoiceNumber: -1 })
-    .select("invoiceNumber")
-    .lean();
-  const n = last ? parseInt(String(last.invoiceNumber).split("-")[2], 10) + 1 : 1;
-  return `${prefix}${String(n).padStart(4, "0")}`;
+/** @param {Date|string|number} [baseDate] */
+salesInvoiceSchema.statics.generateInvoiceNumber = async function generateInvoiceNumber(
+  baseDate = new Date()
+) {
+  const { generateNewDocumentNumber, DOCUMENT_PREFIX } = await import("@/lib/document-number");
+  const Quotation = (await import("@/models/Quotation")).default;
+  const SalesOrder = (await import("@/models/SalesOrder")).default;
+  return generateNewDocumentNumber(
+    { Quotation, SalesOrder, SalesInvoice: this },
+    DOCUMENT_PREFIX.SALES_INVOICE,
+    baseDate
+  );
 };
 
 export default mongoose.models.SalesInvoice || mongoose.model("SalesInvoice", salesInvoiceSchema);

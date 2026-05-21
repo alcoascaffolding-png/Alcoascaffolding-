@@ -5,6 +5,12 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+/** Content-ID for inline logo in outbound emails (Gmail blocks data: URIs). */
+export const QUOTATION_EMAIL_LOGO_CID = "alcoa-quotation-logo";
+
+const _adminRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Navy palette aligned with ALCOA corporate logo */
 export const QUOTATION_BRAND = {
@@ -46,17 +52,53 @@ function getDataUriFromCandidates(candidates) {
   return "";
 }
 
-/**
- * Returns a data URI for embedding in PDF/HTML, or empty string if no file found.
- */
-export function getQuotationLogoDataUri() {
+function getQuotationLogoFileCandidates() {
   const cwd = process.cwd();
-  return getDataUriFromCandidates([
+  return [
+    path.join(_adminRoot, "public", "brand", "quotation-logo.png"),
+    path.join(_adminRoot, "public", "brand", "logo.png"),
     path.join(cwd, "public", "brand", "quotation-logo.png"),
     path.join(cwd, "public", "brand", "logo.png"),
     path.join(cwd, "..", "frontend", "src", "assets", "logo.png"),
     path.join(cwd, "frontend", "src", "assets", "logo.png"),
-  ]);
+  ];
+}
+
+/** First existing logo file path, or null. */
+export function getQuotationLogoFilePath() {
+  for (const filePath of getQuotationLogoFileCandidates()) {
+    if (fs.existsSync(filePath)) return filePath;
+  }
+  return null;
+}
+
+/** Logo bytes for email inline (CID) attachments. */
+export function getQuotationLogoBuffer() {
+  const filePath = getQuotationLogoFilePath();
+  if (!filePath) return null;
+  try {
+    return fs.readFileSync(filePath);
+  } catch {
+    return null;
+  }
+}
+
+/** Public URL for logo (fallback when CID is unavailable). */
+export function getQuotationLogoPublicUrl() {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+  if (!raw) return "";
+  const origin = raw.startsWith("http") ? raw : `https://${raw}`;
+  return `${origin.replace(/\/$/, "")}/brand/quotation-logo.png`;
+}
+
+/**
+ * Returns a data URI for embedding in PDF/HTML, or empty string if no file found.
+ */
+export function getQuotationLogoDataUri() {
+  return getDataUriFromCandidates(getQuotationLogoFileCandidates());
 }
 
 /** Header art (PNG) used by quotation PDF. */
@@ -114,15 +156,16 @@ export function buildWhatsAppQuotationBody(
     `Total: AED ${Number(quotation.totalAmount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     `Valid until: ${new Date(quotation.validUntil).toLocaleDateString("en-GB")}`
   );
-  if (publicUrl) {
-    lines.push(
-      "",
-      `Review & confirm online:`,
-      `${publicUrl}`,
-      `Accept: ${publicUrl}?action=accept`,
-      `Reject: ${publicUrl}?action=reject`
-    );
-  }
+  // Customer accept/reject links disabled — admin updates status in panel
+  // if (publicUrl) {
+  //   lines.push(
+  //     "",
+  //     `Review & confirm online:`,
+  //     `${publicUrl}`,
+  //     `Accept: ${publicUrl}?action=accept`,
+  //     `Reject: ${publicUrl}?action=reject`
+  //   );
+  // }
   lines.push("", `Questions? Reply here or email ${getQuotationCompanyEmail()}.`);
   return lines.join("\n");
 }

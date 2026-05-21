@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import crypto from "node:crypto";
 import Customer from "@/models/Customer";
 import { AppError } from "@/lib/api-error";
+import { getLinkedCustomerId } from "@/lib/map-customer-to-quotation";
 
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -72,22 +73,6 @@ export async function resolveQuotationCustomerId(body, userId) {
   return doc._id;
 }
 
-/** Strip fields that must not be overwritten from arbitrary JSON. */
-const PATCH_DENY = new Set([
-  "_id",
-  "__v",
-  "createdAt",
-  "updatedAt",
-  "createdBy",
-  "lastModifiedBy",
-  "quoteNumber",
-  "emailsSent",
-  "whatsappSent",
-  "convertedToOrder",
-  "orderId",
-  "convertedAt",
-]);
-
 /**
  * Side-effects of a status transition. Stamps `sentDate` / `viewedDate` /
  * `convertedAt` automatically so timeline fields stay consistent with status.
@@ -100,27 +85,109 @@ export function applyStatusSideEffects(doc, nextStatus) {
   if (nextStatus === "converted" && !doc.convertedAt) doc.convertedAt = now;
 }
 
+/** Quotation fields allowed on PATCH (explicit list — avoids silent drops from deny-list gaps). */
+const PATCH_SCALAR_FIELDS = [
+  "customerName",
+  "customerAddress",
+  "customerEmail",
+  "customerPhone",
+  "customerTRN",
+  "contactPersonName",
+  "contactPersonDesignation",
+  "contactPersonEmail",
+  "contactPersonPhone",
+  "quoteType",
+  "status",
+  "subject",
+  "salesExecutive",
+  "preparedBy",
+  "customerPONumber",
+  "referenceNumber",
+  "paymentTerms",
+  "deliveryTerms",
+  "projectDuration",
+  "subtotal",
+  "deliveryCharges",
+  "installationCharges",
+  "pickupCharges",
+  "discount",
+  "discountType",
+  "vatPercentage",
+  "vatAmount",
+  "totalAmount",
+  "currency",
+  "notes",
+  "internalNotes",
+  "termsAndConditions",
+  "followUpNotes",
+  "deliveryDate",
+  "followUpDate",
+];
+
+/**
+ * Normalize `customer` on the PATCH body to a Mongo ObjectId (or omit to keep existing).
+ * Call before {@link applyQuotationPatch}.
+ */
+export async function normalizeQuotationPatchCustomer(body, userId) {
+  if (!Object.prototype.hasOwnProperty.call(body, "customer")) return body;
+
+  const linked = getLinkedCustomerId(body.customer);
+  const next = { ...body };
+
+  if (linked === "__none__") {
+    if (String(next.customerName || "").trim()) {
+      next.customer = await resolveQuotationCustomerId(next, userId);
+    } else {
+      delete next.customer;
+    }
+    return next;
+  }
+
+  if (mongoose.Types.ObjectId.isValid(linked)) {
+    next.customer = new mongoose.Types.ObjectId(linked);
+  } else {
+    delete next.customer;
+  }
+  return next;
+}
+
 export function applyQuotationPatch(doc, body) {
   if (Object.prototype.hasOwnProperty.call(body, "status")) {
     applyStatusSideEffects(doc, body.status);
   }
-  for (const [key, val] of Object.entries(body)) {
-    if (PATCH_DENY.has(key) || key === "customer" || key === "quoteDate" || key === "validUntil") continue;
-    if (val === undefined) continue;
-    doc.set(key, val);
+
+  for (const key of PATCH_SCALAR_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(body, key)) {
+      doc.set(key, body[key]);
+    }
   }
+
+  if (body.deliveryAddress !== undefined) {
+    doc.deliveryAddress = body.deliveryAddress;
+    doc.markModified("deliveryAddress");
+  }
+  if (body.bankDetails !== undefined) {
+    doc.bankDetails = body.bankDetails;
+    doc.markModified("bankDetails");
+  }
+  if (Array.isArray(body.items)) {
+    doc.items = body.items;
+    doc.markModified("items");
+  }
+
   if (body.quoteDate != null && body.quoteDate !== "") {
     doc.quoteDate = coerceQuotationDate(body.quoteDate, doc.quoteDate);
   }
   if (body.validUntil != null && body.validUntil !== "") {
     doc.validUntil = coerceQuotationDate(body.validUntil, doc.validUntil);
   }
-  if (Object.prototype.hasOwnProperty.call(body, "customer")) {
-    const raw = body.customer;
-    if (raw == null || raw === "" || raw === "__none__") {
-      doc.set("customer", null);
-    } else if (mongoose.Types.ObjectId.isValid(String(raw))) {
-      doc.customer = new mongoose.Types.ObjectId(String(raw));
+
+  if (body.customer instanceof mongoose.Types.ObjectId) {
+    doc.customer = body.customer;
+  } else if (Object.prototype.hasOwnProperty.call(body, "customer") && body.customer != null) {
+    const linked = getLinkedCustomerId(body.customer);
+    if (linked !== "__none__" && mongoose.Types.ObjectId.isValid(linked)) {
+      doc.customer = new mongoose.Types.ObjectId(linked);
     }
   }
 }

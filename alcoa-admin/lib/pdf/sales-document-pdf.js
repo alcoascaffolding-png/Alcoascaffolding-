@@ -154,43 +154,15 @@ function buildDocHTML(doc, kind, options = {}) {
 }
 
 export async function generateSalesOrderPDF(order) {
-  const headerDataUri = getQuotationHeaderDataUri();
-  const footerDataUri = getQuotationFooterDataUri();
-  const html = buildDocHTML(order, "order", { headerDataUri, footerDataUri });
-  const browser = await launchBrowser();
-  let page;
-  try {
-    page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0", bottom: "0", left: "0", right: "0" },
-    });
-    return Buffer.from(pdfBuffer);
-  } finally {
-    if (page) await page.close();
-    await browser.close();
-  }
+  const { generateQuotationPDF } = await import("./quotation-pdf");
+  const { mapSalesOrderForQuotationPdf } = await import("@/lib/map-sales-order-for-quotation-pdf");
+  const mapped = mapSalesOrderForQuotationPdf(order);
+  return generateQuotationPDF(mapped, { docKind: "salesOrder" });
 }
 
 export async function generateSalesInvoicePDF(invoice) {
-  const headerDataUri = getQuotationHeaderDataUri();
-  const footerDataUri = getQuotationFooterDataUri();
-  const html = buildDocHTML(invoice, "invoice", { headerDataUri, footerDataUri });
-  const browser = await launchBrowser();
-  let page;
-  try {
-    page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "0", bottom: "0", left: "0", right: "0" },
-    });
-    return Buffer.from(pdfBuffer);
-  } finally {
-    if (page) await page.close();
-    await browser.close();
-  }
+  const { generateQuotationPDF } = await import("./quotation-pdf");
+  const { mapSalesInvoiceForQuotationPdf } = await import("@/lib/map-sales-order-for-quotation-pdf");
+  const mapped = mapSalesInvoiceForQuotationPdf(invoice);
+  return generateQuotationPDF(mapped, { docKind: "salesInvoice" });
 }

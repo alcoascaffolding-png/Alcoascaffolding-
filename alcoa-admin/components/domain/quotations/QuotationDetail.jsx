@@ -18,12 +18,36 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import { formatDate, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import {
+  QUOTATION_PDF_BANK_DETAILS,
+  itemAmountWithVat,
+  quotationDisplaySubtotal,
+} from "@/lib/quotation-display";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
-import { QuotationPublicLinkBadge } from "@/components/domain/quotations/QuotationPublicLinkBadge";
+// import { QuotationPublicLinkBadge } from "@/components/domain/quotations/QuotationPublicLinkBadge";
+
+function InfoRow({ label, value, valueClassName = "" }) {
+  if (value == null || value === "") return null;
+  return (
+    <div className="grid grid-cols-[minmax(0,38%)_1fr] gap-x-3 gap-y-0.5 py-2 border-b border-border/60 last:border-0 text-sm">
+      <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">{label}</span>
+      <span className={valueClassName}>{value}</span>
+    </div>
+  );
+}
+
+function InfoRowAlways({ label, value }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,38%)_1fr] gap-x-3 gap-y-0.5 py-2 border-b border-border/60 last:border-0 text-sm">
+      <span className="text-muted-foreground font-medium uppercase text-xs tracking-wide">{label}</span>
+      <span>{value || "—"}</span>
+    </div>
+  );
+}
 
 export function QuotationDetail({ id }) {
   const router = useRouter();
@@ -76,10 +100,13 @@ export function QuotationDetail({ id }) {
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const q = quotation;
+  const vatPct = q.vatPercentage ?? 5;
+  const displaySubtotal = quotationDisplaySubtotal(q);
+  const bank = QUOTATION_PDF_BANK_DETAILS;
+  const subject = q.subject || `Quotation ${q.quoteNumber}`;
 
   return (
     <>
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => router.push("/quotations")}>
@@ -94,11 +121,12 @@ export function QuotationDetail({ id }) {
             value={q.status}
             detailQueryKey={["quotations", "detail", id]}
           />
-          <QuotationPublicLinkBadge
+          {/* Customer public link / accept-reject — disabled; use status dropdown */}
+          {/* <QuotationPublicLinkBadge
             id={id}
             publicToken={q.publicToken}
             detailQueryKey={["quotations", "detail", id]}
-          />
+          /> */}
         </div>
         <DocumentDetailToolbar
           sending={sending}
@@ -114,127 +142,209 @@ export function QuotationDetail({ id }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Items table */}
+      <div className="space-y-6">
+        {/* PDF-style header info — above line items */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">Line Items</CardTitle></CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-2 pr-4 font-medium">#</th>
-                      <th className="text-left py-2 pr-4 font-medium">Description</th>
-                      <th className="text-right py-2 pr-4 font-medium">Qty</th>
-                      <th className="text-right py-2 pr-4 font-medium">Rate</th>
-                      <th className="text-right py-2 font-medium">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {q.items?.map((item, i) => (
-                      <tr key={item._id || i} className="border-b last:border-0">
-                        <td className="py-2.5 pr-4 text-muted-foreground">{i + 1}</td>
-                        <td className="py-2.5 pr-4">
-                          <p className="font-medium">{item.equipmentType}</p>
-                          {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
-                        </td>
-                        <td className="py-2.5 pr-4 text-right">{item.quantity} {item.unit}</td>
-                        <td className="py-2.5 pr-4 text-right">{formatCurrency(item.ratePerUnit)}</td>
-                        <td className="py-2.5 text-right font-medium">{formatCurrency(item.subtotal)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <Separator className="my-4" />
-              <div className="flex flex-col items-end gap-2 text-sm">
-                <div className="flex gap-8 w-full max-w-xs justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(q.subtotal)}</span>
-                </div>
-                {q.deliveryCharges > 0 && (
-                  <div className="flex gap-8 w-full max-w-xs justify-between">
-                    <span className="text-muted-foreground">Delivery</span>
-                    <span>{formatCurrency(q.deliveryCharges)}</span>
-                  </div>
-                )}
-                {q.discount > 0 && (
-                  <div className="flex gap-8 w-full max-w-xs justify-between text-emerald-600">
-                    <span>Discount</span>
-                    <span>- {formatCurrency(q.discount)}</span>
-                  </div>
-                )}
-                <div className="flex gap-8 w-full max-w-xs justify-between">
-                  <span className="text-muted-foreground">VAT ({q.vatPercentage}%)</span>
-                  <span>{formatCurrency(q.vatAmount)}</span>
-                </div>
-                <Separator className="w-full max-w-xs" />
-                <div className="flex gap-8 w-full max-w-xs justify-between font-bold text-base">
-                  <span>Total ({q.currency})</span>
-                  <span className="text-primary">{formatCurrency(q.totalAmount)}</span>
-                </div>
-              </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Customer</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <InfoRowAlways label="Customer Name" value={q.customerName} />
+              <InfoRowAlways label="Address" value={q.customerAddress} />
+              <InfoRowAlways label="Mobile No" value={q.customerPhone} />
+              <InfoRowAlways label="TRN" value={q.customerTRN} />
+              <InfoRowAlways label="Contact Person" value={q.contactPersonName} />
+              <InfoRow label="Email" value={q.customerEmail} />
             </CardContent>
           </Card>
 
-          {q.notes && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Notes</CardTitle></CardHeader>
-              <CardContent><p className="text-sm text-muted-foreground whitespace-pre-line">{q.notes}</p></CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Quotation</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <InfoRowAlways label="Quotation No" value={q.quoteNumber} />
+              <InfoRowAlways label="Date" value={formatDate(q.quoteDate)} />
+              <InfoRowAlways label="Sales Executive" value={q.salesExecutive || q.preparedBy} />
+              <InfoRowAlways label="Payment Terms" value={q.paymentTerms || "Cash/CDC"} />
+              <InfoRowAlways label="Delivery Terms" value={q.deliveryTerms} />
+              <InfoRow
+                label="Valid Until"
+                value={formatDate(q.validUntil)}
+                valueClassName={
+                  isLocalCalendarDayBeforeToday(q.validUntil) &&
+                  !["approved", "converted"].includes(q.status)
+                    ? "text-destructive font-medium"
+                    : ""
+                }
+              />
+              <InfoRow label="Quote Type" value={q.quoteType ? String(q.quoteType).replace(/_/g, " ") : null} />
+              <InfoRow label="Prepared By" value={q.preparedBy} />
+              <InfoRow label="Reference" value={q.referenceNumber} />
+              <InfoRow label="Customer PO" value={q.customerPONumber} />
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Quote Details</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Quote Date</span><span>{formatDate(q.quoteDate)}</span></div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Valid Until</span>
-                <span
-                  className={
-                    isLocalCalendarDayBeforeToday(q.validUntil) && !["approved", "converted"].includes(q.status)
-                      ? "text-destructive font-medium"
-                      : ""
-                  }
-                >
-                  {formatDate(q.validUntil)}
+        <Card>
+          <CardContent className="py-3 px-4">
+            <p className="text-sm">
+              <span className="font-semibold">Subject:</span> {subject}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Line items — same columns as PDF */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Line Items</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto -mx-1">
+              <table className="w-full text-sm border-collapse min-w-[720px]">
+                <thead>
+                  <tr className="border-b-2 border-primary/30 bg-muted/40">
+                    <th className="text-center py-2 px-2 font-medium w-10">SN</th>
+                    <th className="text-left py-2 px-2 font-medium min-w-[200px]">Description of Goods</th>
+                    <th className="text-right py-2 px-2 font-medium w-16">Wt (KG)</th>
+                    <th className="text-right py-2 px-2 font-medium w-14">CBM</th>
+                    <th className="text-right py-2 px-2 font-medium w-20">Qty</th>
+                    <th className="text-right py-2 px-2 font-medium w-24">Rate (AED)</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">Taxable Amount</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">VAT ({vatPct}%) Amount</th>
+                    <th className="text-right py-2 px-2 font-medium w-28">Amount (AED)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {q.items?.map((item, i) => (
+                    <tr key={item._id || i} className="border-b border-border/60 align-top">
+                      <td className="py-2.5 px-2 text-center text-muted-foreground">{i + 1}</td>
+                      <td className="py-2.5 px-2">
+                        <p className="font-medium">{item.equipmentType}</p>
+                        {item.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                        )}
+                        {item.specifications && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{item.specifications}</p>
+                        )}
+                        {item.size && (
+                          <p className="text-xs text-muted-foreground mt-0.5">Size: {item.size}</p>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.weight || 0).toFixed(3)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.cbm || 0).toFixed(3)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap">
+                        {item.quantity} {item.unit || "Nos"}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.ratePerUnit || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.taxableAmount ?? item.subtotal ?? 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right tabular-nums">
+                        {Number(item.vatAmount || 0).toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-2 text-right font-medium tabular-nums">
+                        {itemAmountWithVat(item, vatPct).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <Separator className="my-4" />
+            <div className="flex flex-col items-end gap-2 text-sm">
+              <div className="flex gap-8 w-full max-w-sm justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="tabular-nums">{displaySubtotal.toFixed(2)}</span>
+              </div>
+              {q.deliveryCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className="tabular-nums">{Number(q.deliveryCharges).toFixed(2)}</span>
+                </div>
+              )}
+              {q.installationCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Installation</span>
+                  <span className="tabular-nums">{Number(q.installationCharges).toFixed(2)}</span>
+                </div>
+              )}
+              {q.pickupCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Pickup</span>
+                  <span className="tabular-nums">{Number(q.pickupCharges).toFixed(2)}</span>
+                </div>
+              )}
+              {q.discount > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between text-emerald-600">
+                  <span>
+                    Discount
+                    {q.discountType === "percentage" ? ` (${q.discount}%)` : ""}
+                  </span>
+                  <span className="tabular-nums">
+                    -{" "}
+                    {q.discountType === "percentage"
+                      ? ((q.subtotal * q.discount) / 100).toFixed(2)
+                      : Number(q.discount).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div className="flex gap-8 w-full max-w-sm justify-between">
+                <span className="text-muted-foreground">VAT ({vatPct}%)</span>
+                <span className="tabular-nums">{Number(q.vatAmount || 0).toFixed(2)}</span>
+              </div>
+              <Separator className="w-full max-w-sm" />
+              <div className="flex gap-8 w-full max-w-sm justify-between font-bold text-base">
+                <span>Total ({q.currency || "AED"})</span>
+                <span className="text-primary tabular-nums">
+                  {Number(q.totalAmount || 0).toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Quote Type</span><span className="capitalize">{q.quoteType}</span></div>
-              {q.paymentTerms && <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span>{q.paymentTerms}</span></div>}
-              {q.deliveryTerms && <div className="flex justify-between"><span className="text-muted-foreground">Delivery Terms</span><span className="text-right max-w-[150px]">{q.deliveryTerms}</span></div>}
-              {q.salesExecutive && <div className="flex justify-between"><span className="text-muted-foreground">Sales Executive</span><span>{q.salesExecutive}</span></div>}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
+        {q.termsAndConditions && (
           <Card>
-            <CardHeader><CardTitle className="text-base">Customer</CardTitle></CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p className="font-medium">{q.customerName}</p>
-              {q.customerEmail && <p className="text-muted-foreground">{q.customerEmail}</p>}
-              {q.customerPhone && <p className="text-muted-foreground">{q.customerPhone}</p>}
-              {q.customerAddress && <p className="text-muted-foreground text-xs">{q.customerAddress}</p>}
+            <CardHeader>
+              <CardTitle className="text-base">Terms &amp; Conditions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{q.termsAndConditions}</p>
             </CardContent>
           </Card>
+        )}
 
-          {q.bankDetails?.accountNumber && (
-            <Card>
-              <CardHeader><CardTitle className="text-base">Bank Details</CardTitle></CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                {q.bankDetails.bankName && <div className="flex justify-between"><span className="text-muted-foreground">Bank</span><span>{q.bankDetails.bankName}</span></div>}
-                {q.bankDetails.accountName && <div className="flex justify-between"><span className="text-muted-foreground">Account</span><span>{q.bankDetails.accountName}</span></div>}
-                {q.bankDetails.accountNumber && <div className="flex justify-between"><span className="text-muted-foreground">Acc No.</span><span>{q.bankDetails.accountNumber}</span></div>}
-                {q.bankDetails.iban && <div className="flex justify-between"><span className="text-muted-foreground">IBAN</span><span className="text-xs">{q.bankDetails.iban}</span></div>}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {q.notes && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Notes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground whitespace-pre-line">{q.notes}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Bank Details</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <InfoRowAlways label="Bank details" value={bank.accountName} />
+            <InfoRowAlways label="Bank name" value={bank.bankName} />
+            <InfoRowAlways label="Account no" value={bank.accountNumber} />
+            <InfoRowAlways label="IBAN" value={bank.iban} />
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
@@ -245,7 +355,12 @@ export function QuotationDetail({ id }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMut.mutate()} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => deleteMut.mutate()}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

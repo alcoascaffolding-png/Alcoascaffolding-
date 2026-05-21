@@ -45,7 +45,7 @@ export function SalesInvoicesClient() {
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["sales-invoices"],
-    queryFn: () => fetchInvoices(),
+    queryFn: () => fetchInvoices({ limit: "200" }),
     refetchInterval: 60 * 1000,
   });
 

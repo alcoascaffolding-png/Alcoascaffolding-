@@ -8,6 +8,7 @@ export const SALES_ORDER_STATUS_OPTIONS = [
   { value: "in_progress", label: "In Progress", dotClassName: "bg-amber-500" },
   { value: "delivered", label: "Delivered", dotClassName: "bg-emerald-500" },
   { value: "completed", label: "Completed", dotClassName: "bg-emerald-700" },
+  { value: "invoiced", label: "Invoiced", dotClassName: "bg-primary" },
   { value: "cancelled", label: "Cancelled", dotClassName: "bg-destructive" },
 ];
 
@@ -29,7 +30,19 @@ export function SalesOrderStatusChanger({
       detailQueryKey={detailQueryKey}
       listQueryKey={listQueryKey}
       statsQueryKey={statsQueryKey}
-      extraInvalidateQueryKeys={[["sales-orders", "sales-invoice-form"]]}
+      extraInvalidateQueryKeys={[
+        ["sales-orders", "sales-invoice-form"],
+        ["sales-invoices"],
+        ["sales-invoices-stats"],
+      ]}
+      getSuccessMessage={(data) => {
+        const c = data?.invoicing;
+        if (!c?.invoiceNumber) return "Status updated";
+        if (c.created) {
+          return `Invoiced — sales invoice ${c.invoiceNumber} created`;
+        }
+        return `Invoiced — linked to sales invoice ${c.invoiceNumber}`;
+      }}
     />
   );
 }

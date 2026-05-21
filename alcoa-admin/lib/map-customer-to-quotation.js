@@ -2,6 +2,20 @@
  * Maps a Customer document (as returned from `/api/customers`, lean) onto quotation form fields.
  */
 
+/** Normalize quotation `customer` ref (ObjectId string or populated doc) for form select value. */
+export function getLinkedCustomerId(customerRef) {
+  if (customerRef == null || customerRef === "") return "__none__";
+  if (typeof customerRef === "string") {
+    const id = customerRef.trim();
+    return id || "__none__";
+  }
+  if (typeof customerRef === "object") {
+    if (customerRef._id != null) return String(customerRef._id);
+    if (customerRef.id != null) return String(customerRef.id);
+  }
+  return "__none__";
+}
+
 export function getPrimaryContact(customer) {
   if (!customer?.contactPersons?.length) return null;
   return customer.contactPersons.find((p) => p.isPrimary) || customer.contactPersons[0];

@@ -30,7 +30,19 @@ export function QuotationStatusChanger({
       detailQueryKey={detailQueryKey}
       listQueryKey={listQueryKey}
       statsQueryKey={statsQueryKey}
-      extraInvalidateQueryKeys={[["quotations", "sales-order-form"]]}
+      extraInvalidateQueryKeys={[
+        ["quotations", "sales-order-form"],
+        ["sales-orders"],
+        ["sales-orders-stats"],
+      ]}
+      getSuccessMessage={(data) => {
+        const c = data?.conversion;
+        if (!c?.orderNumber) return "Status updated";
+        if (c.created) {
+          return `Converted — sales order ${c.orderNumber} created`;
+        }
+        return `Converted — linked to sales order ${c.orderNumber}`;
+      }}
     />
   );
 }

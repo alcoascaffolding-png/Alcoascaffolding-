@@ -32,7 +32,11 @@ export const GET = withErrorHandler(async () => {
         },
         fulfilled: {
           $sum: {
-            $cond: [{ $in: ["$status", ["delivered", "completed"]] }, 1, 0],
+            $cond: [
+              { $in: ["$status", ["delivered", "completed", "invoiced"]] },
+              1,
+              0,
+            ],
           },
         },
         totalValue: { $sum: "$total" },

@@ -3,8 +3,13 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import SalesOrder from "@/models/SalesOrder";
+import SalesOrder, { SALES_ORDER_STATUS_VALUES } from "@/models/SalesOrder";
+import Quotation from "@/models/Quotation";
 import { syncQuotationsAfterSalesOrderPatch, revertQuotationFromConvertedToApproved } from "@/lib/sync-quotation-sales-order";
+import {
+  ensureSalesInvoiceFromSalesOrder,
+  SALES_ORDER_INVOICE_STATUS,
+} from "@/lib/convert-sales-order-to-invoice";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -24,7 +29,7 @@ export const GET = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const doc = await SalesOrder.findById(params.id)
-    .populate("customer", "companyName")
+    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
   if (!doc) throw new AppError("Sales Order not found", 404);
@@ -46,25 +51,90 @@ export const PATCH = withErrorHandler(async (request, context) => {
   const prev = await SalesOrder.findById(params.id).lean();
   if (!prev) throw new AppError("Sales Order not found", 404);
 
+  const prevStatus = prev.status;
   const patch = { ...body };
+
+  if (
+    Object.prototype.hasOwnProperty.call(patch, "status") &&
+    patch.status != null &&
+    !SALES_ORDER_STATUS_VALUES.includes(patch.status)
+  ) {
+    throw new AppError(
+      `Invalid status "${patch.status}". Restart the dev server (npm run dev) after code updates.`,
+      400
+    );
+  }
+
   if (Object.prototype.hasOwnProperty.call(body, "quotation")) {
     const qid = toObjectId(body.quotation);
     patch.quotation = qid ?? null;
+    if (qid) {
+      const q = await Quotation.findById(qid).select("quoteNumber").lean();
+      if (q?.quoteNumber) {
+        const conflict = await SalesOrder.exists({
+          orderNumber: q.quoteNumber,
+          _id: { $ne: params.id },
+        });
+        if (conflict) {
+          throw new AppError(
+            `Quotation ${q.quoteNumber} is already linked to another sales order.`,
+            400
+          );
+        }
+        patch.orderNumber = q.quoteNumber;
+      }
+    }
   }
 
-  const doc = await SalesOrder.findByIdAndUpdate(params.id, patch, {
-    new: true,
-    runValidators: true,
-  });
+  let doc;
+  try {
+    doc = await SalesOrder.findByIdAndUpdate(params.id, patch, {
+      new: true,
+      runValidators: true,
+    });
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      const first = Object.values(err.errors || {})[0]?.message;
+      throw new AppError(first || err.message || "Sales order validation failed", 400);
+    }
+    throw err;
+  }
   if (!doc) throw new AppError("Sales Order not found", 404);
 
   await syncQuotationsAfterSalesOrderPatch(prev, doc);
 
+  const nextStatus = doc.status;
+  let invoicing = null;
+
+  if (nextStatus === SALES_ORDER_INVOICE_STATUS && prevStatus !== SALES_ORDER_INVOICE_STATUS) {
+    try {
+      const result = await ensureSalesInvoiceFromSalesOrder(doc._id, session.user.id);
+      invoicing = {
+        created: result.created,
+        invoiceNumber: result.invoiceNumber,
+        salesInvoiceId: String(result.salesInvoice._id),
+      };
+    } catch (err) {
+      await SalesOrder.findByIdAndUpdate(doc._id, { $set: { status: prevStatus } });
+      throw err instanceof AppError
+        ? err
+        : new AppError(err.message || "Could not create sales invoice from order", 400);
+    }
+  } else if (nextStatus === SALES_ORDER_INVOICE_STATUS) {
+    const result = await ensureSalesInvoiceFromSalesOrder(doc._id, session.user.id);
+    invoicing = {
+      created: result.created,
+      invoiceNumber: result.invoiceNumber,
+      salesInvoiceId: String(result.salesInvoice._id),
+    };
+  }
+
   const populated = await SalesOrder.findById(doc._id)
-    .populate("customer", "companyName")
+    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
-  return apiSuccess(populated);
+
+  return apiSuccess(invoicing ? { ...populated, invoicing } : populated);
 });
 
 export const DELETE = withErrorHandler(async (request, context) => {

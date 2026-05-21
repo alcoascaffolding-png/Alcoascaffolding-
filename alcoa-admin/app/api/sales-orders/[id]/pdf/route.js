@@ -20,7 +20,9 @@ export const GET = withErrorHandler(async (request, context) => {
   if (!id) return apiError("Missing id", 400);
 
   await connectDB();
-  const order = await SalesOrder.findById(id).lean();
+  const order = await SalesOrder.findById(id)
+    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
+    .lean();
   if (!order) throw new AppError("Sales Order not found", 404);
 
   const pdfBuffer = await generateSalesOrderPDF(order);

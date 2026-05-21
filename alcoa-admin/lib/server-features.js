@@ -40,12 +40,31 @@ function combinedFeatureNames() {
   return names;
 }
 
+/** Code default when env WHATSAPP_UI_AND_API_ENABLED is unset */
+const WHATSAPP_UI_AND_API_ENABLED_DEFAULT = true;
+
+/**
+ * Master switch for WhatsApp UI + APIs.
+ * Set in .env / Vercel: WHATSAPP_UI_AND_API_ENABLED=true
+ * Or change WHATSAPP_UI_AND_API_ENABLED_DEFAULT above.
+ */
+function isWhatsAppMasterSwitchOn() {
+  const env = process.env.WHATSAPP_UI_AND_API_ENABLED;
+  if (env !== undefined && env !== null && String(env).trim() !== "") {
+    return isEnvTruthy(env);
+  }
+  return WHATSAPP_UI_AND_API_ENABLED_DEFAULT;
+}
+
 /**
  * True when WhatsApp send should be allowed (UI + API).
+ * - Master: WHATSAPP_UI_AND_API_ENABLED (env or default above)
  * - Explicit: `whatsapp` in FEATURES, SERVER_FEATURES, or NEXT_PUBLIC_FEATURES; or
  * - Inferred: Twilio mode → Twilio + Blob; wa.me mode (WHATSAPP_USE_TWILIO=false) → Blob only.
  */
 export function isWhatsAppFeatureAvailable() {
+  if (!isWhatsAppMasterSwitchOn()) return false;
+
   if (combinedFeatureNames().has("whatsapp")) return true;
   if (isWhatsAppTwilioMode()) {
     return (

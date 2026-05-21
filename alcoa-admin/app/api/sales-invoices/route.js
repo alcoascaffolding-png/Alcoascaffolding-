@@ -2,9 +2,12 @@ import mongoose from "mongoose";
 import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
-import { withErrorHandler } from "@/lib/api-error";
+import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
+import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import SalesInvoice from "@/models/SalesInvoice";
+import SalesOrder from "@/models/SalesOrder";
+import Quotation from "@/models/Quotation";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -25,8 +28,13 @@ export const GET = withErrorHandler(async (request) => {
 
   const filter = {};
   if (searchParams.get("paymentStatus")) filter.paymentStatus = searchParams.get("paymentStatus");
-  if (searchParams.get("search")) {
-    filter.$text = { $search: searchParams.get("search") };
+  const searchTerm = (searchParams.get("search") || "").trim();
+  if (searchTerm) {
+    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { invoiceNumber: { $regex: escaped, $options: "i" } },
+      { customerName: { $regex: escaped, $options: "i" } },
+    ];
   }
 
   const [items, total] = await Promise.all([
@@ -89,10 +97,17 @@ export const POST = withErrorHandler(async (request) => {
   const soid = toObjectId(salesOrderRef);
   if (soid) payload.salesOrder = soid;
 
-  if (invoiceNumber && String(invoiceNumber).trim()) {
-    payload.invoiceNumber = String(invoiceNumber).trim();
-  } else {
-    payload.invoiceNumber = await SalesInvoice.generateInvoiceNumber();
+  try {
+    payload.invoiceNumber = await resolveInvoiceNumberForCreate(
+      {
+        salesOrderId: soid,
+        invoiceDate: payload.invoiceDate,
+        invoiceNumber,
+      },
+      { Quotation, SalesOrder, SalesInvoice }
+    );
+  } catch (err) {
+    throw new AppError(err.message || "Could not assign invoice number", 400);
   }
 
   const doc = await SalesInvoice.create({ ...payload, createdBy: session.user.id });

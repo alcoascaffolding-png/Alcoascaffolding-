@@ -45,7 +45,7 @@ export function SalesOrdersClient() {
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["sales-orders"],
-    queryFn: () => fetchOrders(),
+    queryFn: () => fetchOrders({ limit: "200" }),
     refetchInterval: 60 * 1000,
   });
 

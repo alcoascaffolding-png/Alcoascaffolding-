@@ -27,6 +27,7 @@ import {
  * @param {Array<unknown>} props.listQueryKey
  * @param {Array<unknown>} [props.statsQueryKey]
  * @param {Array<unknown>[]} [props.extraInvalidateQueryKeys]  Additional query keys to invalidate (e.g. form pickers).
+ * @param {(data: unknown) => string} [props.getSuccessMessage]  Optional toast message from API response.
  */
 export function DocumentStatusChanger({
   id,
@@ -40,6 +41,7 @@ export function DocumentStatusChanger({
   statsQueryKey,
   successMessage = "Status updated",
   extraInvalidateQueryKeys = [],
+  getSuccessMessage,
 }) {
   const qc = useQueryClient();
 
@@ -52,19 +54,25 @@ export function DocumentStatusChanger({
       });
       const d = await res.json();
       if (!d.success) {
-        const msg = typeof d.error === "string" ? d.error : d.error?.message || "Failed";
-        throw new Error(msg);
+        const msg =
+          typeof d.error === "string"
+            ? d.error
+            : d.error?.message || "Failed";
+        const detail =
+          Array.isArray(d.details) && d.details.length ? `: ${d.details.join("; ")}` : "";
+        throw new Error(`${msg}${detail}`);
       }
       return d.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       if (detailQueryKey) qc.invalidateQueries({ queryKey: detailQueryKey });
       if (listQueryKey) qc.invalidateQueries({ queryKey: listQueryKey });
       if (statsQueryKey) qc.invalidateQueries({ queryKey: statsQueryKey });
       for (const key of extraInvalidateQueryKeys) {
         if (key?.length) qc.invalidateQueries({ queryKey: key });
       }
-      toast.success(successMessage);
+      const msg = getSuccessMessage?.(data) ?? successMessage;
+      toast.success(msg);
     },
     onError: (e) => toast.error(e.message),
   });

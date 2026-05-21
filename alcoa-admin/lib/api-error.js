@@ -31,7 +31,7 @@ export function withErrorHandler(handler) {
       // Mongoose validation errors
       if (err.name === "ValidationError") {
         const details = Object.values(err.errors).map((e) => e.message);
-        return apiError("Validation failed", 400, details);
+        return apiError(details[0] || "Validation failed", 400, details);
       }
 
       // Mongoose duplicate key

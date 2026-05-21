@@ -23,7 +23,15 @@ const salesOrderSchema = new mongoose.Schema(
     deliveryDate: { type: Date },
     status: {
       type: String,
-      enum: ["draft", "confirmed", "in_progress", "delivered", "completed", "cancelled"],
+      enum: [
+        "draft",
+        "confirmed",
+        "in_progress",
+        "delivered",
+        "completed",
+        "invoiced",
+        "cancelled",
+      ],
       default: "draft",
       index: true,
     },
@@ -71,19 +79,31 @@ salesOrderSchema.pre("save", function (next) {
   next();
 });
 
-function escapeRegex(s) {
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-salesOrderSchema.statics.generateOrderNumber = async function generateOrderNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `SO-${year}-`;
-  const last = await this.findOne({ orderNumber: new RegExp(`^${escapeRegex(prefix)}`) })
-    .sort({ orderNumber: -1 })
-    .select("orderNumber")
-    .lean();
-  const n = last ? parseInt(String(last.orderNumber).split("-")[2], 10) + 1 : 1;
-  return `${prefix}${String(n).padStart(4, "0")}`;
+/** @param {Date|string|number} [baseDate] */
+salesOrderSchema.statics.generateOrderNumber = async function generateOrderNumber(baseDate = new Date()) {
+  const { generateNewDocumentNumber, DOCUMENT_PREFIX } = await import("@/lib/document-number");
+  const Quotation = (await import("@/models/Quotation")).default;
+  const SalesInvoice = (await import("@/models/SalesInvoice")).default;
+  return generateNewDocumentNumber(
+    { Quotation, SalesOrder: this, SalesInvoice },
+    DOCUMENT_PREFIX.SALES_ORDER,
+    baseDate
+  );
 };
 
-export default mongoose.models.SalesOrder || mongoose.model("SalesOrder", salesOrderSchema);
+/** Re-register so enum changes (e.g. `invoiced`) apply under Next.js hot reload. */
+if (mongoose.models.SalesOrder) {
+  delete mongoose.models.SalesOrder;
+}
+
+export default mongoose.model("SalesOrder", salesOrderSchema);
+
+export const SALES_ORDER_STATUS_VALUES = [
+  "draft",
+  "confirmed",
+  "in_progress",
+  "delivered",
+  "completed",
+  "invoiced",
+  "cancelled",
+];
