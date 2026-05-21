@@ -8,6 +8,13 @@ const nextConfig = {
   // Monorepo / Vercel: trace files from repo root so serverless output includes deps correctly.
   outputFileTracingRoot: path.join(__dirname, ".."),
 
+  // Include quotation PDF header/footer art + logo in serverless bundles (Vercel production).
+  outputFileTracingIncludes: {
+    "/api/quotations/**": ["./assets/**", "./public/brand/**"],
+    "/api/sales-orders/**": ["./assets/**", "./public/brand/**"],
+    "/api/sales-invoices/**": ["./assets/**", "./public/brand/**"],
+  },
+
   // External packages that should not be bundled for server components
   // Needed for mongoose, playwright-core, twilio, etc.
   serverExternalPackages: [

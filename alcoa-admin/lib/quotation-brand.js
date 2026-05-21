@@ -105,6 +105,10 @@ export function getQuotationLogoDataUri() {
 export function getQuotationHeaderDataUri() {
   const cwd = process.cwd();
   return getDataUriFromCandidates([
+    path.join(_adminRoot, "assets", "3.png"),
+    path.join(_adminRoot, "assets", "nw_qnt_hdr_png.png"),
+    path.join(_adminRoot, "assets", "quotation-header.png"),
+    path.join(_adminRoot, "assets", "QuotationHeader.png"),
     path.join(cwd, "assets", "3.png"),
     path.join(cwd, "public", "assets", "3.png"),
     path.join(cwd, "assets", "nw_qnt_hdr_png.png"),
@@ -116,6 +120,10 @@ export function getQuotationHeaderDataUri() {
 export function getQuotationFooterDataUri() {
   const cwd = process.cwd();
   return getDataUriFromCandidates([
+    path.join(_adminRoot, "assets", "2.png"),
+    path.join(_adminRoot, "assets", "nw_qtn_ftr_png.png"),
+    path.join(_adminRoot, "assets", "quotation-footer.png"),
+    path.join(_adminRoot, "assets", "QuotationFooter.png"),
     path.join(cwd, "assets", "2.png"),
     path.join(cwd, "public", "assets", "2.png"),
     path.join(cwd, "assets", "nw_qtn_ftr_png.png"),
