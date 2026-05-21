@@ -27,6 +27,10 @@ services:
         value: sales@alcoascaffolding.com
       - key: MONGODB_URI
         sync: false
+      - key: MONGODB_DB_NAME
+        value: alcoa-admin-prod
+      - key: APP_ENV
+        value: production
       - key: JWT_SECRET
         sync: false
       - key: FRONTEND_URL

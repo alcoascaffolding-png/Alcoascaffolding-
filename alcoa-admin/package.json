@@ -9,7 +9,14 @@
     "dev": "node --require ./dns-fix.cjs ./node_modules/next/dist/bin/next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "seed": "node --require ./dns-fix.cjs scripts/seed.mjs"
+    "seed": "node --require ./dns-fix.cjs scripts/seed.mjs",
+    "seed:dummy-quotations": "node --require ./dns-fix.cjs scripts/seed-dummy-quotations.mjs",
+    "seed:prod-sample": "node --require ./dns-fix.cjs scripts/seed-prod-sample.mjs",
+    "create:prod-admin": "node --require ./dns-fix.cjs scripts/create-prod-admin.mjs",
+    "seed:prod-dummy": "node --require ./dns-fix.cjs scripts/seed-prod-dummy-data.mjs",
+    "migrate:document-numbers": "node --require ./dns-fix.cjs scripts/migrate-document-numbers.mjs",
+    "db:test": "node --require ./dns-fix.cjs scripts/test-mongo-connection.mjs",
+    "db:migrate-rename": "node --require ./dns-fix.cjs scripts/migrate-rename-database.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -57,14 +64,14 @@
     "sharp": "^0.34.5",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
     "twilio": "^5.3.5",
     "vaul": "^1.1.2",
     "zod": "^3.25.30"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.80.2",
-    "dotenv": "^17.4.2",
-    "tailwindcss": "^4"
+    "dotenv": "^17.4.2"
   }
 }

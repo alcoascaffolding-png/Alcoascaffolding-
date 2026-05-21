@@ -11,7 +11,7 @@ import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
-import { getMongoDbName } from "../lib/db.js";
+import { getMongoDbName, validateMongoEnvironment } from "../lib/mongodb-config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env.local") });
@@ -302,6 +302,18 @@ const CONTACT_MESSAGES_DATA = [
 
 async function seed() {
   const dbName = getMongoDbName(MONGODB_URI);
+  if (dbName.endsWith("-prod")) {
+    console.error(
+      `❌ Refusing to run full seed on production database "${dbName}". Use: npm run seed:prod-sample -- --confirm`
+    );
+    process.exit(1);
+  }
+  try {
+    validateMongoEnvironment({ strict: false });
+  } catch (e) {
+    console.error(`❌ ${e.message}`);
+    process.exit(1);
+  }
   console.log("\n🚀 Connecting to MongoDB Atlas...");
   console.log(`   Database: ${dbName}`);
   await mongoose.connect(MONGODB_URI, { dbName, family: 4 });

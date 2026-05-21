@@ -16,6 +16,8 @@ const salesInvoiceSchema = new mongoose.Schema(
     invoiceNumber: { type: String, required: true, unique: true, trim: true, index: true },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", index: true },
     customerName: { type: String, required: true, trim: true },
+    customerEmail: { type: String, trim: true },
+    customerPhone: { type: String, trim: true },
     salesOrder: { type: mongoose.Schema.Types.ObjectId, ref: "SalesOrder" },
     invoiceDate: { type: Date, default: Date.now },
     dueDate: { type: Date },
@@ -33,6 +35,23 @@ const salesInvoiceSchema = new mongoose.Schema(
     balance: { type: Number, default: 0 },
     currency: { type: String, default: "AED" },
     notes: { type: String, trim: true },
+    sentDate: { type: Date },
+    emailsSent: [
+      {
+        sentAt: Date,
+        sentTo: String,
+        subject: String,
+        status: { type: String, enum: ["sent", "failed", "bounced"] },
+      },
+    ],
+    whatsappSent: [
+      {
+        sentAt: Date,
+        sentTo: String,
+        messageSid: String,
+        status: { type: String, enum: ["sent", "failed", "delivered", "read"] },
+      },
+    ],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
@@ -41,5 +60,33 @@ const salesInvoiceSchema = new mongoose.Schema(
 salesInvoiceSchema.index({ customerName: "text", invoiceNumber: "text" });
 salesInvoiceSchema.index({ paymentStatus: 1, dueDate: 1 });
 salesInvoiceSchema.index({ createdAt: -1 });
+
+salesInvoiceSchema.methods.recalculateTotals = function recalculateTotals() {
+  const sub = (this.items || []).reduce((sum, row) => sum + Number(row.total || 0), 0);
+  this.subtotal = sub;
+  const gross = sub + Number(this.vatAmount || 0);
+  this.total = gross;
+  this.balance = Math.max(0, gross - Number(this.paidAmount || 0));
+  return this.total;
+};
+
+salesInvoiceSchema.pre("save", function (next) {
+  if (this.items?.length) this.recalculateTotals();
+  next();
+});
+
+/** @param {Date|string|number} [baseDate] */
+salesInvoiceSchema.statics.generateInvoiceNumber = async function generateInvoiceNumber(
+  baseDate = new Date()
+) {
+  const { generateNewDocumentNumber, DOCUMENT_PREFIX } = await import("@/lib/document-number");
+  const Quotation = (await import("@/models/Quotation")).default;
+  const SalesOrder = (await import("@/models/SalesOrder")).default;
+  return generateNewDocumentNumber(
+    { Quotation, SalesOrder, SalesInvoice: this },
+    DOCUMENT_PREFIX.SALES_INVOICE,
+    baseDate
+  );
+};
 
 export default mongoose.models.SalesInvoice || mongoose.model("SalesInvoice", salesInvoiceSchema);

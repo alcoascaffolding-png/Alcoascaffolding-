@@ -5,15 +5,19 @@
 
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
+const { getMongoDbName, validateMongoEnvironment } = require('./mongodb');
 
 const connectDB = async () => {
   try {
+    const { dbName, appEnv } = validateMongoEnvironment();
+
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      dbName,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
     });
 
-    logger.info(`MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`MongoDB Connected: ${conn.connection.host} (APP_ENV=${appEnv}, db=${dbName})`);
     
     // Handle connection events
     mongoose.connection.on('connected', () => {

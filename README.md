@@ -174,8 +174,10 @@ npm install
 PORT=5000
 NODE_ENV=development
 
-# MongoDB
-MONGODB_URI=mongodb://localhost:27017/alcoa-admin
+# MongoDB (see docs/mongodb-dev-prod.md)
+APP_ENV=development
+MONGODB_URI=mongodb+srv://USER:PASS@cluster.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DB_NAME=alcoa-admin-dev
 
 # JWT
 JWT_SECRET=your-super-secret-jwt-key-change-in-production

@@ -4,27 +4,25 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
-import {
-  MoreHorizontal, Eye, Pencil, Trash2, Download, Mail,
-} from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
+import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
+import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
+import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
 
-const STATUS_COLORS = {
-  draft: "outline", sent: "info", viewed: "secondary", approved: "success",
-  rejected: "destructive", expired: "warning", converted: "success",
-};
+const API_QUOTATIONS = "/api/quotations";
 
 async function fetchQuotations(params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -44,8 +42,6 @@ export function QuotationsClient() {
   const router = useRouter();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
-  /** Quotation id currently running email / WhatsApp (string for stable compare) */
-  const [sendingId, setSendingId] = useState(null);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["quotations"],
@@ -55,21 +51,12 @@ export function QuotationsClient() {
 
   const { data: stats } = useQuery({ queryKey: ["quotations-stats"], queryFn: fetchStats });
 
-  /* WhatsApp menu disabled — uncomment with handleSendWhatsApp + dropdown item below
-  const { data: uiFeatures } = useQuery({
-    queryKey: ["ui-features"],
-    queryFn: async () => {
-      const res = await fetch("/api/config/features");
-      const d = await res.json();
-      if (!d.success) return { whatsapp: false, pdfEmail: false };
-      return d.data;
-    },
-    staleTime: 60_000,
-  });
-
-  const showWhatsApp =
-    uiFeatures !== undefined ? Boolean(uiFeatures.whatsapp) : isFeatureEnabled("whatsapp");
-  */
+  const { showWhatsApp, sendingId, downloadPdf, sendEmail, sendWhatsApp, copyWhatsAppLink } =
+    useDocumentListOutbound({
+      apiBase: API_QUOTATIONS,
+      listQueryKey: ["quotations"],
+      statsQueryKey: ["quotations-stats"],
+    });
 
   const deleteMut = useMutation({
     mutationFn: async (id) => {
@@ -77,72 +64,39 @@ export function QuotationsClient() {
       const d = await res.json();
       if (!d.success) throw new Error(d.error);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["quotations"] }); setDeleteId(null); toast.success("Quotation deleted"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quotations"] });
+      qc.invalidateQueries({ queryKey: ["quotations-stats"] });
+      setDeleteId(null);
+      toast.success("Quotation deleted");
+    },
     onError: (e) => toast.error(e.message),
   });
 
-  async function handleDownloadPDF(id, quoteNumber) {
-    toast.info("Generating PDF…");
-    try {
-      const res = await fetch(`/api/quotations/${id}/pdf`);
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${quoteNumber}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("PDF downloaded");
-    } catch (e) {
-      toast.error("Failed to generate PDF: " + e.message);
-    }
-  }
-
-  async function handleSendEmail(id) {
-    const sid = String(id);
-    setSendingId(sid);
-    try {
-      const res = await fetch(`/api/quotations/${sid}/send-email`, { method: "POST" });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-      toast.success("Quotation emailed successfully");
-      qc.invalidateQueries({ queryKey: ["quotations"] });
-    } catch (e) {
-      toast.error("Failed to send email: " + e.message);
-    } finally {
-      setSendingId(null);
-    }
-  }
-
-  /* WhatsApp — restore with uiFeatures block + menu item
-  async function handleSendWhatsApp(id) {
-    const sid = String(id);
-    setSendingId(sid);
-    try {
-      const res = await fetch(`/api/quotations/${sid}/send-whatsapp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-      toast.success("WhatsApp message sent");
-      qc.invalidateQueries({ queryKey: ["quotations"] });
-    } catch (e) {
-      const msg = String(e?.message || "");
-      toast.error("Failed to send WhatsApp: " + msg);
-    } finally {
-      setSendingId(null);
-    }
-  }
-  */
+  const statItems =
+    stats &&
+    [
+      { label: "Total", value: stats.total },
+      {
+        label: "Pending",
+        value: (stats.draft || 0) + (stats.sent || 0),
+        valueClassName: "text-2xl text-chart-2",
+      },
+      { label: "Approved", value: stats.approved, valueClassName: "text-2xl text-emerald-500" },
+      {
+        label: "Total Value",
+        value: formatCurrency(stats.totalValue),
+        valueClassName: "text-lg",
+      },
+    ];
 
   const columns = [
     {
       accessorKey: "quoteNumber",
       header: "Quote #",
-      cell: ({ row }) => <span className="font-mono font-medium text-sm">{row.original.quoteNumber}</span>,
+      cell: ({ row }) => (
+        <span className="font-mono font-medium text-sm">{row.original.quoteNumber}</span>
+      ),
       size: 130,
     },
     {
@@ -176,18 +130,24 @@ export function QuotationsClient() {
     {
       accessorKey: "totalAmount",
       header: "Amount",
-      cell: ({ row }) => <span className="font-medium">{formatCurrency(row.original.totalAmount || 0)}</span>,
+      cell: ({ row }) => (
+        <span className="font-medium">{formatCurrency(row.original.totalAmount || 0)}</span>
+      ),
       size: 130,
     },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge variant={STATUS_COLORS[row.original.status] || "outline"}>
-          {row.original.status}
-        </Badge>
+        <div onClick={(e) => e.stopPropagation()}>
+          <QuotationStatusChanger
+            id={String(row.original._id)}
+            value={row.original.status}
+            size="sm"
+          />
+        </div>
       ),
-      size: 90,
+      size: 160,
     },
     {
       id: "actions",
@@ -197,42 +157,19 @@ export function QuotationsClient() {
         const qid = String(q._id);
         const busy = sendingId === qid;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/quotations/${qid}`); }}>
-                <Eye className="mr-2 h-4 w-4" /> View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/quotations/${qid}/edit`); }}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownloadPDF(qid, q.quoteNumber); }}>
-                <Download className="mr-2 h-4 w-4" /> Download PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleSendEmail(qid); }} disabled={busy || !q.customerEmail}>
-                <Mail className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send Email"}
-              </DropdownMenuItem>
-              {/* Send WhatsApp — uncomment with handleSendWhatsApp + uiFeatures block above
-              {showWhatsApp && (
-                <DropdownMenuItem
-                  onClick={(e) => { e.stopPropagation(); handleSendWhatsApp(qid); }}
-                  disabled={busy || !q.customerPhone}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send WhatsApp"}
-                </DropdownMenuItem>
-              )}
-              */}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(qid); }} disabled={busy}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DocumentRowActionMenu
+            showWhatsApp={showWhatsApp}
+            busy={busy}
+            hasEmail={!!q.customerEmail}
+            hasPhone={!!q.customerPhone}
+            onView={() => router.push(`/quotations/${qid}`)}
+            onEdit={() => router.push(`/quotations/${qid}/edit`)}
+            onDownloadPdf={() => downloadPdf(qid, q.quoteNumber)}
+            onSendEmail={() => sendEmail(qid)}
+            onSendWhatsApp={() => sendWhatsApp(qid)}
+            onCopyWhatsAppLink={() => copyWhatsAppLink(qid)}
+            onDelete={() => setDeleteId(qid)}
+          />
         );
       },
       size: 50,
@@ -241,15 +178,7 @@ export function QuotationsClient() {
 
   return (
     <>
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Pending</p><p className="text-2xl font-bold text-chart-2">{(stats.draft || 0) + (stats.sent || 0)}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Approved</p><p className="text-2xl font-bold text-emerald-500">{stats.approved}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Value</p><p className="text-lg font-bold">{formatCurrency(stats.totalValue)}</p></CardContent></Card>
-        </div>
-      )}
-
+      <StatsCardsGrid items={statItems || []} />
       <DataTable
         columns={columns}
         data={data?.items || []}
@@ -260,11 +189,18 @@ export function QuotationsClient() {
         emptyMessage="No quotations yet. Create your first quotation."
       />
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open && !deleteMut.isPending) setDeleteId(null); }}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => {
+          if (!open && !deleteMut.isPending) setDeleteId(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete quotation?</AlertDialogTitle>
-            <AlertDialogDescription>This will permanently delete the quotation. This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This will permanently delete the quotation. This action cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteMut.isPending}>Cancel</AlertDialogCancel>

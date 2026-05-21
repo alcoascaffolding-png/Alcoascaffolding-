@@ -61,7 +61,7 @@ export const POST = withErrorHandler(async (request) => {
   };
 
   if (!payload.quoteNumber) {
-    payload.quoteNumber = await Quotation.generateQuoteNumber();
+    payload.quoteNumber = await Quotation.generateQuoteNumber(quoteDate);
   }
 
   const quotation = await Quotation.create({ ...payload, createdBy: session.user.id });

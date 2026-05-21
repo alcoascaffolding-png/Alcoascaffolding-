@@ -1,11 +1,25 @@
 import { launchBrowser } from "./chromium";
+import { quotationPdfStyles } from "./quotation-pdf-styles.js";
 import {
-  QUOTATION_BRAND,
   getQuotationCompanyName,
-  getQuotationTagline,
   getQuotationCompanyEmail,
   getQuotationLogoDataUri,
+  getQuotationHeaderDataUri,
+  getQuotationFooterDataUri,
 } from "@/lib/quotation-brand";
+
+/** Company bank details printed on every quotation PDF. */
+const DEFAULT_QUOTATION_BANK_DETAILS = {
+  accountName: "Alcoa aluminium scaffolding L.L.C - S.P.C",
+  bankName: "ADCB, Musaffah branch, Abu Dhabi",
+  accountNumber: "14262375920001",
+  iban: "AE42 0030 0142 6237 5920 001",
+};
+
+/** Quotation PDF always uses company bank details (not per-quotation DB overrides). */
+function getQuotationPdfBankDetails() {
+  return { ...DEFAULT_QUOTATION_BANK_DETAILS };
+}
 
 function formatDate(date) {
   if (!date) return "N/A";
@@ -18,6 +32,15 @@ function formatDate(date) {
 
 function formatCurrency(amount, currency = "AED") {
   return `${currency} ${Number(amount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Line total including VAT for PDF amount column. */
+function itemAmountWithVat(item, defaultVatPct = 5) {
+  const taxable = Number(item.taxableAmount ?? item.subtotal ?? 0);
+  const vat = Number(item.vatAmount ?? 0);
+  if (vat > 0) return taxable + vat;
+  const pct = Number(item.vatPercentage ?? defaultVatPct ?? 5);
+  return taxable * (1 + pct / 100);
 }
 
 function numberToWords(num) {
@@ -42,25 +65,376 @@ function numberToWords(num) {
   return result;
 }
 
-function buildQuotationHTML(quotation, options = {}) {
-  const { logoDataUri = "" } = options;
-  const b = QUOTATION_BRAND;
+/** A4 height in CSS px (~96dpi), used to detect overflow on a `.pdf-page` probe. */
+const QUOTATION_PDF_A4_HEIGHT_PX = (297 / 25.4) * 96;
+const QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX = 3;
+
+/** 15-item quotes: keep table page clean; render all closing sections on following page(s). */
+const QUOTATION_FORCE_CLOSING_NEXT_PAGE_ITEM_COUNT = 15;
+
+/**
+ * @param {import("playwright").Page} playwrightPage
+ * @param {string} bodyHtml single section or fragment containing `[data-pdf-page]`
+ */
+async function quotationPdfPageProbeFits(playwrightPage, bodyHtml) {
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotation measure</title>
+  <style>${quotationPdfStyles()}</style>
+</head>
+<body>${bodyHtml}</body>
+</html>`;
+  await playwrightPage.setContent(html, { waitUntil: "domcontentloaded" });
+  return playwrightPage.evaluate(
+    ([limit, tol]) => {
+      const page = document.querySelector("[data-pdf-page]");
+      if (!page) return false;
+      /*
+       * Use footer bottom vs page top — fill.scrollHeight already includes footer
+       * padding reserve; adding footer height again caused premature page breaks.
+       */
+      const foot = page.querySelector(".pdf-running-foot");
+      const pageTop = page.getBoundingClientRect().top;
+      const used = foot
+        ? foot.getBoundingClientRect().bottom - pageTop
+        : page.scrollHeight;
+      return used <= limit + tol;
+    },
+    [QUOTATION_PDF_A4_HEIGHT_PX, QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX]
+  );
+}
+
+async function maxRowsThatFit(playwrightPage, loInclusive, hiInclusive, buildHtmlForCount) {
+  let lo = loInclusive;
+  let hi = hiInclusive;
+  let best = loInclusive - 1;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const ok = await quotationPdfPageProbeFits(playwrightPage, await buildHtmlForCount(mid));
+    if (ok) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return best;
+}
+
+/** Add rows one-by-one until the next full row would overflow (uses actual DOM row heights). */
+async function countRowsThatFit(playwrightPage, maxCount, buildHtmlForCount) {
+  let best = 0;
+  for (let count = 1; count <= maxCount; count++) {
+    const html = await buildHtmlForCount(count);
+    if (await quotationPdfPageProbeFits(playwrightPage, html)) {
+      best = count;
+    } else {
+      break;
+    }
+  }
+  return best;
+}
+
+/** Drop empty item pages (can appear after bad splits). */
+function sanitizeItemPages(pages) {
+  return pages.filter((p) => p.chunk && p.chunk.length > 0);
+}
+
+/**
+ * Split line items into pages by measuring real DOM height (variable row heights).
+ * @param {import("playwright").Page} playwrightPage
+ * @param {object} layout layout from {@link buildQuotationPdfLayout}
+ * @returns {Promise<{ chunk: unknown[]; startIndex: number }[]>}
+ */
+export async function computeQuotationItemPages(playwrightPage, layout) {
+  const { items, rowHtmls, probeFirstNoTotals, probeFirstWithTotals, probeContNoTotals, probeContWithTotals } =
+    layout;
+  const n = items.length;
+  if (n === 0) return [{ chunk: [], startIndex: 0 }];
+
+  const FALLBACK_PER_PAGE = 5;
+
+  const chunks = [];
+  let idx = 0;
+
+  while (idx < n) {
+    const rem = n - idx;
+    const sliceRows = (count) => rowHtmls.slice(idx, idx + count).join("");
+    const isOpening = chunks.length === 0;
+
+    if (isOpening) {
+      const allFitFirstWithTotals = await quotationPdfPageProbeFits(
+        playwrightPage,
+        probeFirstWithTotals(sliceRows(rem))
+      );
+      if (allFitFirstWithTotals) {
+        chunks.push({ chunk: items.slice(idx, idx + rem), startIndex: idx });
+        break;
+      }
+      if (rem === 1) {
+        chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx });
+        break;
+      }
+      let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeFirstNoTotals(sliceRows(c)));
+      if (maxMid < 1) maxMid = 1;
+      chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
+      idx += maxMid;
+      continue;
+    }
+
+    const allFitContWithTotals = await quotationPdfPageProbeFits(
+      playwrightPage,
+      probeContWithTotals(sliceRows(rem))
+    );
+    if (allFitContWithTotals) {
+      chunks.push({ chunk: items.slice(idx, idx + rem), startIndex: idx });
+      break;
+    }
+    if (rem === 1) {
+      chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx });
+      break;
+    }
+    let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeContNoTotals(sliceRows(c)));
+    if (maxMid < 1) maxMid = 1;
+    if (maxMid > rem) maxMid = rem;
+    chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
+    idx += maxMid;
+  }
+
+  if (!chunks.length) return [{ chunk: [], startIndex: 0 }];
+
+  const totalRows = chunks.reduce((a, p) => a + p.chunk.length, 0);
+  if (totalRows !== n) {
+    const out = [];
+    let cursor = 0;
+    while (cursor < n) {
+      const chunk = items.slice(cursor, cursor + FALLBACK_PER_PAGE);
+      out.push({ chunk, startIndex: cursor });
+      cursor += chunk.length;
+    }
+    return out;
+  }
+
+  return sanitizeItemPages(chunks);
+}
+
+/**
+ * @param {{ type: string; lines?: string[]; html?: string }} block
+ * @returns {string}
+ */
+function renderClosingBlockHtml(block) {
+  if (block.type === "terms") {
+    const lines = block.lines || [];
+    const title = block.showTitle
+      ? '<div class="terms-plain-title">Terms &amp; Conditions</div>'
+      : "";
+    const body = lines.map((line) => line.replace(/</g, "&lt;")).join("<br>");
+    return `<div class="lower-grid"><div class="terms-plain">${title}<div class="terms-plain-body">${body}</div></div></div>`;
+  }
+  return block.html || "";
+}
+
+/**
+ * @param {{ html?: string; type?: string; lines?: string[]; showTitle?: boolean }[]} blocks
+ */
+function renderClosingTailHtml(blocks) {
+  if (!blocks.length) return "";
+  const inner = blocks.map((b) => renderClosingBlockHtml(b)).join("");
+  return `<div class="closing-tail-flow">${inner}</div>`;
+}
+
+
+/**
+ * @param {import("playwright").Page} playwrightPage
+ * @param {(blocks: object[]) => string} buildItemsProbeHtml
+ * @param {(blocks: object[]) => string} buildClosingProbeHtml
+ * @param {object[]} sourceBlocks
+ */
+async function flowClosingBlocks(
+  playwrightPage,
+  buildItemsProbeHtml,
+  buildClosingProbeHtml,
+  sourceBlocks,
+  { closingPagesOnly = false } = {}
+) {
+  const segments = [{ blocks: [], onItemsPage: !closingPagesOnly }];
+
+  const probeBlocks = async (blocks, onItemsPage) => {
+    const html = onItemsPage ? buildItemsProbeHtml(blocks) : buildClosingProbeHtml(blocks);
+    return quotationPdfPageProbeFits(playwrightPage, html);
+  };
+
+  for (const block of sourceBlocks) {
+    if (block.type === "terms") {
+      const lines = block.lines || [];
+      let offset = 0;
+      let showTitle = true;
+
+      while (offset < lines.length) {
+        let seg = segments[segments.length - 1];
+        const remaining = lines.length - offset;
+        let linesThisPage = 0;
+
+        for (let i = 0; i < remaining; i++) {
+          const trial = [
+            ...seg.blocks,
+            {
+              type: "terms",
+              lines: lines.slice(offset, offset + i + 1),
+              showTitle: i === 0 && showTitle,
+            },
+          ];
+          if (await probeBlocks(trial, seg.onItemsPage)) {
+            linesThisPage = i + 1;
+          } else {
+            break;
+          }
+        }
+
+        if (linesThisPage < 1) {
+          if (seg.blocks.length > 0) {
+            segments.push({ blocks: [], onItemsPage: false });
+            continue;
+          }
+          linesThisPage = 1;
+        }
+
+        seg = segments[segments.length - 1];
+        seg.blocks.push({
+          type: "terms",
+          lines: lines.slice(offset, offset + linesThisPage),
+          showTitle,
+        });
+        offset += linesThisPage;
+        showTitle = false;
+
+        if (offset < lines.length) {
+          segments.push({ blocks: [], onItemsPage: false });
+        }
+      }
+      continue;
+    }
+
+    let placed = false;
+    while (!placed) {
+      const seg = segments[segments.length - 1];
+      const trial = [...seg.blocks, block];
+
+      if (await probeBlocks(trial, seg.onItemsPage)) {
+        seg.blocks = trial;
+        placed = true;
+      } else if (seg.blocks.length > 0) {
+        segments.push({ blocks: [], onItemsPage: false });
+      } else {
+        seg.blocks = trial;
+        placed = true;
+      }
+    }
+  }
+
+  return segments;
+}
+
+/**
+ * Split item rows so the last page fits; then flow terms/notes/bank/sign block-by-block.
+ * @param {import("playwright").Page} playwrightPage
+ * @param {ReturnType<typeof buildQuotationPdfLayout>} layout
+ * @param {{ chunk: unknown[]; startIndex: number }[]} itemPages
+ */
+export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPages) {
+  const { items, rowHtmls, probeLastItemsPage, probeClosingOnlyPage, buildClosingBlocks } = layout;
+  const pages = sanitizeItemPages(
+    itemPages.length ? [...itemPages.map((p) => ({ ...p }))] : []
+  );
+  if (!pages.length) {
+    pages.push({ chunk: [], startIndex: 0 });
+  }
+
+  const buildClosingProbeHtml = (blocks) => probeClosingOnlyPage(renderClosingTailHtml(blocks));
+
+  if (items.length === QUOTATION_FORCE_CLOSING_NEXT_PAGE_ITEM_COUNT) {
+    const segments = await flowClosingBlocks(
+      playwrightPage,
+      buildClosingProbeHtml,
+      buildClosingProbeHtml,
+      buildClosingBlocks(),
+      { closingPagesOnly: true }
+    );
+    const followUpClosingPages = segments
+      .filter((s) => s.blocks.length > 0)
+      .map((s) => s.blocks);
+
+    return {
+      itemPages: pages,
+      lastPageClosingBlocks: [],
+      followUpClosingPages,
+    };
+  }
+
+  /*
+   * Item row splits are handled only in computeQuotationItemPages.
+   * Re-splitting here (old n-1 cap) caused 15-item quotes to become 14+1 with a sparse
+   * page and a near-blank continuation sheet.
+   */
+
+  const lastIdx = pages.length - 1;
+  const isFirst = lastIdx === 0;
+  const last = pages[lastIdx];
+  const tbodyRowsHtml = rowHtmls
+    .slice(last.startIndex, last.startIndex + last.chunk.length)
+    .join("");
+
+  const buildItemsProbeHtml = (blocks) =>
+    probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
+
+  const segments = await flowClosingBlocks(
+    playwrightPage,
+    buildItemsProbeHtml,
+    buildClosingProbeHtml,
+    buildClosingBlocks()
+  );
+
+  const itemsSegment = segments.find((s) => s.onItemsPage) || { blocks: [] };
+  const followUpClosingPages = segments
+    .filter((s) => !s.onItemsPage && s.blocks.length > 0)
+    .map((s) => s.blocks);
+
+  return {
+    itemPages: pages,
+    lastPageClosingBlocks: itemsSegment.blocks,
+    followUpClosingPages,
+  };
+}
+
+/**
+ * Shared layout fragments for measurement + final HTML (keeps probes in sync with print markup).
+ * @param {Record<string, unknown>} quotation
+ * @param {{ logoDataUri?: string; headerDataUri?: string; footerDataUri?: string }} options
+ */
+function buildQuotationPdfLayout(quotation, options = {}) {
+  const { logoDataUri = "", headerDataUri = "", footerDataUri = "", docKind = "quotation" } =
+    options;
+  const isSalesOrder = docKind === "salesOrder";
+  const isSalesInvoice = docKind === "salesInvoice";
   const {
     quoteNumber = "",
     customerName = "",
     customerAddress = "",
+    customerPhone = "",
     customerTRN = "",
     contactPersonName = "",
-    contactPersonDesignation = "",
-    quoteDate,
-    validUntil,
-    quoteType = "rental",
     subject = "",
     salesExecutive = "",
     preparedBy = "",
     paymentTerms = "Cash/CDC",
     deliveryTerms = "7-10 days from date of order",
-    projectDuration = "",
+    status = "",
+    paymentStatus = "",
+    paidAmount = 0,
+    balance,
     items = [],
     subtotal = 0,
     deliveryCharges = 0,
@@ -74,14 +448,60 @@ function buildQuotationHTML(quotation, options = {}) {
     currency = "AED",
     notes = "",
     termsAndConditions = "",
-    bankDetails = {},
+    quoteDate,
+    validUntil,
   } = quotation;
 
   const companyName = getQuotationCompanyName();
   const companyEmail = getQuotationCompanyEmail();
-  const tagline = getQuotationTagline();
-  const logoBlock = logoDataUri
-    ? `<img class="header-logo" src="${logoDataUri}" alt="" crossorigin="anonymous" />`
+  const companyTRN = process.env.COMPANY_TRN || "100123456700003";
+  const safeSubject =
+    subject ||
+    (isSalesOrder
+      ? `Sales Order ${quoteNumber}`
+      : isSalesInvoice
+        ? `Sales Invoice ${quoteNumber}`
+        : `Quotation ${quoteNumber}`);
+  const docTitle = isSalesOrder
+    ? "SALES ORDER"
+    : isSalesInvoice
+      ? "SALES INVOICE"
+      : "QUOTATION";
+  const displayBalance =
+    balance != null
+      ? Number(balance)
+      : Math.max(0, Number(totalAmount || 0) - Number(paidAmount || 0));
+  const rightMetaRows = isSalesOrder
+    ? `
+              <tr><td class="mini-label">Order No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Order Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Status</td><td>${String(status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Delivery Date</td><td>${formatDate(validUntil)}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>`
+    : isSalesInvoice
+      ? `
+              <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>
+              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Paid</td><td>${Number(paidAmount || 0).toFixed(2)}</td></tr>
+              <tr><td class="mini-label">Balance</td><td>${displayBalance.toFixed(2)}</td></tr>`
+      : `
+              <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
+              <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>`;
+  const pdfBank = getQuotationPdfBankDetails();
+  const headerImageBlock = headerDataUri
+    ? `<img class="header-art" src="${headerDataUri}" alt="Quotation header" crossorigin="anonymous" />`
+    : `<div class="header-fallback">${logoDataUri ? `<img class="header-logo-fallback" src="${logoDataUri}" alt="" />` : ""}<div class="header-fallback-title">${companyName.toUpperCase()}</div></div>`;
+  const footerImageBlock = footerDataUri
+    ? `<img class="footer-art" src="${footerDataUri}" alt="Quotation footer" crossorigin="anonymous" />`
+    : `<div class="footer-fallback">For inquiries contact ${companyEmail}.</div>`;
+
+  const watermarkBlock = logoDataUri
+    ? `<div class="pdf-page-watermark" aria-hidden="true"><img src="${logoDataUri}" alt="" crossorigin="anonymous" /></div>`
     : "";
 
   const defaultTerms = `
@@ -94,208 +514,370 @@ function buildQuotationHTML(quotation, options = {}) {
 7. Any damage to equipment will be charged to the client.
 8. ${companyName} reserves the right to withdraw or revise this quotation without prior notice.`;
 
-  const itemRows = items
-    .map(
-      (item, i) => `
-    <tr class="${i % 2 === 0 ? "row-even" : "row-odd"}">
-      <td class="center">${i + 1}</td>
-      <td>
-        <strong>${item.equipmentType || ""}</strong>
-        ${item.description ? `<br><span class="text-sm text-gray">${item.description}</span>` : ""}
-        ${item.specifications ? `<br><span class="text-sm text-gray">${item.specifications}</span>` : ""}
-        ${item.size ? `<br><span class="text-sm text-gray">Size: ${item.size}</span>` : ""}
-      </td>
-      <td class="center">${item.quantity} ${item.unit || "Nos"}</td>
-      <td class="right">${formatCurrency(item.ratePerUnit, currency)}</td>
-      <td class="right">${formatCurrency(item.subtotal, currency)}</td>
-    </tr>`
-    )
-    .join("");
+  const discountValue =
+    discountType === "percentage" ? (subtotal * discount) / 100 : discount;
+  const beforeVAT =
+    subtotal +
+    Number(deliveryCharges || 0) +
+    Number(installationCharges || 0) +
+    Number(pickupCharges || 0) -
+    Number(discountValue || 0);
+  const displaySubtotal = Math.max(0, Number(beforeVAT || 0));
 
-  const chargesRows = [
-    deliveryCharges > 0 ? `<tr><td colspan="4" class="right">Delivery Charges:</td><td class="right">${formatCurrency(deliveryCharges, currency)}</td></tr>` : "",
-    installationCharges > 0 ? `<tr><td colspan="4" class="right">Installation Charges:</td><td class="right">${formatCurrency(installationCharges, currency)}</td></tr>` : "",
-    pickupCharges > 0 ? `<tr><td colspan="4" class="right">Pickup Charges:</td><td class="right">${formatCurrency(pickupCharges, currency)}</td></tr>` : "",
-    discount > 0 ? `<tr><td colspan="4" class="right text-green">Discount${discountType === "percentage" ? ` (${discount}%)` : ""}:</td><td class="right text-green">- ${formatCurrency(discountType === "percentage" ? (subtotal * discount) / 100 : discount, currency)}</td></tr>` : "",
-  ]
-    .filter(Boolean)
-    .join("");
+  const renderRows = (pageItems, start) =>
+    pageItems
+      .map(
+        (item, idx) => `
+      <tr>
+        <td class="center">${start + idx + 1}</td>
+        <td class="desc-col">
+          <div class="item-title">${item.equipmentType || ""}</div>
+          ${item.description ? `<div class="item-sub">${item.description}</div>` : ""}
+          ${item.specifications ? `<div class="item-sub">${item.specifications}</div>` : ""}
+          ${item.size ? `<div class="item-sub">Size: ${item.size}</div>` : ""}
+        </td>
+        <td class="center">${Number(item.weight || 0).toFixed(3)}</td>
+        <td class="center">${Number(item.cbm || 0).toFixed(3)}</td>
+        <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
+        <td class="right">${Number(item.ratePerUnit || 0).toFixed(2)}</td>
+        <td class="right">${Number(item.taxableAmount ?? item.subtotal ?? 0).toFixed(2)}</td>
+        <td class="right">${Number(item.vatAmount || 0).toFixed(2)}</td>
+        <td class="right strong">${itemAmountWithVat(item, vatPercentage).toFixed(2)}</td>
+      </tr>`
+      )
+      .join("");
 
-  const bankSection = bankDetails?.accountNumber ? `
-  <div class="section">
-    <div class="section-title">Bank Details</div>
-    <table class="details-table">
-      ${bankDetails.bankName ? `<tr><td class="detail-label">Bank Name:</td><td>${bankDetails.bankName}</td></tr>` : ""}
-      ${bankDetails.accountName ? `<tr><td class="detail-label">Account Name:</td><td>${bankDetails.accountName}</td></tr>` : ""}
-      ${bankDetails.accountNumber ? `<tr><td class="detail-label">Account Number:</td><td>${bankDetails.accountNumber}</td></tr>` : ""}
-      ${bankDetails.iban ? `<tr><td class="detail-label">IBAN:</td><td>${bankDetails.iban}</td></tr>` : ""}
-      ${bankDetails.swiftCode ? `<tr><td class="detail-label">Swift Code:</td><td>${bankDetails.swiftCode}</td></tr>` : ""}
-      ${bankDetails.branch ? `<tr><td class="detail-label">Branch:</td><td>${bankDetails.branch}</td></tr>` : ""}
-    </table>
-  </div>` : "";
+  const renderTotalsTfoot = () => {
+    const invoicePaymentRows = isSalesInvoice
+      ? `
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Paid</td>
+          <td colspan="3" class="totals-value right">${Number(paidAmount || 0).toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Balance</td>
+          <td colspan="3" class="totals-value right strong">${displayBalance.toFixed(2)}</td>
+        </tr>`
+      : "";
+    return `
+      <tfoot class="items-totals-foot">
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">Subtotal</td>
+          <td colspan="3" class="totals-value right strong">${displaySubtotal.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label">VAT (${vatPercentage}%)</td>
+          <td colspan="3" class="totals-value right">${Number(vatAmount || 0).toFixed(2)}</td>
+        </tr>
+        <tr class="totals-grand">
+          <td colspan="2" class="totals-spacer"></td>
+          <td colspan="4" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
+          <td colspan="3" class="totals-value right strong">${Number(totalAmount || 0).toFixed(2)}</td>
+        </tr>${invoicePaymentRows}
+      </tfoot>`;
+  };
 
-  return `<!DOCTYPE html>
+  const renderTable = (rows, withTotals = false) => `
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:3%;">SN</th>
+          <th class="desc-col" style="width:52%;">Description of Goods</th>
+          <th style="width:5%;">Wt (KG)</th>
+          <th style="width:4%;">CBM</th>
+          <th style="width:5%;">Qty</th>
+          <th style="width:9%;">Rate<br>(AED)</th>
+          <th style="width:8%;">Taxable Amount</th>
+          <th style="width:7%;">VAT (${vatPercentage}%)<br>AMOUNT</th>
+          <th style="width:7%;">Amount<br>(AED)</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      ${withTotals ? renderTotalsTfoot() : ""}
+    </table>`;
+
+  const docHeadingBlock = `
+        <div class="doc-heading">
+          <div class="doc-title">${docTitle}</div>
+          <div class="doc-trn"><strong>TRN:</strong> ${companyTRN}</div>
+        </div>`;
+
+  const runningHeadBlock = `
+        <div class="pdf-running-head">
+          <div class="top-brand">${headerImageBlock}</div>
+          ${docHeadingBlock}
+        </div>`;
+
+  const runningFootBlock = `
+        <div class="pdf-running-foot">
+          <div class="footer-main">${footerImageBlock}</div>
+        </div>`;
+
+  const closingTailHtml = `
+        <div class="closing-tail-flow">
+          <div class="lower-grid">
+            <div class="terms-plain">
+              <div class="terms-plain-title">Terms &amp; Conditions</div>
+              <div class="terms-plain-body">${(termsAndConditions || defaultTerms).replace(/\n/g, "<br>")}</div>
+            </div>
+          </div>
+          ${notes ? `<div class="notes-plain"><strong>Notes:</strong> ${notes.replace(/\n/g, "<br>")}</div>` : ""}
+          <div class="bank-block">
+            <div class="bank-title-main">BANK DETAILS</div>
+            <div class="bank-table-wrap">
+              <table class="bank-table-full">
+                <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
+                <tr><td class="mini-label">Bank name</td><td>${pdfBank.bankName}</td></tr>
+                <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
+                <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="sign-row">
+            <div class="sign-box"><div>For ALCOA ALUMINIUM SCAFFOLDING</div><div class="sign-line"></div></div>
+            <div class="sign-box"><div>CUSTOMER'S SIGNATURE</div><div class="sign-line"></div></div>
+          </div>
+        </div>`;
+
+  function buildClosingBlocks() {
+    const termsText = (termsAndConditions || defaultTerms).trim();
+    const lines = termsText.split(/\n/).map((line) => line.trim()).filter(Boolean);
+    const blocks = [{ type: "terms", lines }];
+    if (notes) {
+      blocks.push({
+        type: "notes",
+        html: `<div class="notes-plain"><strong>Notes:</strong> ${notes.replace(/\n/g, "<br>")}</div>`,
+      });
+    }
+    blocks.push({
+      type: "bank",
+      html: `<div class="bank-block">
+            <div class="bank-title-main">BANK DETAILS</div>
+            <div class="bank-table-wrap">
+              <table class="bank-table-full">
+                <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
+                <tr><td class="mini-label">Bank name</td><td>${pdfBank.bankName}</td></tr>
+                <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
+                <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
+              </table>
+            </div>
+          </div>`,
+    });
+    blocks.push({
+      type: "sign",
+      html: `<div class="sign-row">
+            <div class="sign-box"><div>For ALCOA ALUMINIUM SCAFFOLDING</div><div class="sign-line"></div></div>
+            <div class="sign-box"><div>CUSTOMER'S SIGNATURE</div><div class="sign-line"></div></div>
+          </div>`,
+    });
+    return blocks;
+  }
+
+  const headGridHtml = `
+        <div class="head-grid">
+          <div class="box">
+            <table class="mini-table head-mini-table">
+              <tr><td class="mini-label">Customer Name</td><td>${customerName || "-"}</td></tr>
+              <tr><td class="mini-label">Address</td><td>${customerAddress || "-"}</td></tr>
+              <tr><td class="mini-label">Mobile No</td><td>${customerPhone || "-"}</td></tr>
+              <tr><td class="mini-label">TRN</td><td>${customerTRN || "-"}</td></tr>
+              <tr><td class="mini-label">Contact Person</td><td>${contactPersonName || "-"}</td></tr>
+            </table>
+          </div>
+          <div class="box">
+            <table class="mini-table head-mini-table">
+              ${rightMetaRows}
+            </table>
+          </div>
+        </div>`;
+
+  const rowHtmls = items.map((item, gi) => renderRows([item], gi).trim());
+
+  /* Totals probes omit closingTailHtml — terms/bank/signatures follow in the same section and may
+   * paginate; including them in height checks forced too-small row chunks (e.g. 2 + 1 items). */
+  const probeFirstNoTotals = (tbodyRowsHtml) => `
+      <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        ${renderTable(tbodyRowsHtml)}
+        </div>
+        </div>
+        ${runningFootBlock}
+      </section>`;
+
+  const probeFirstWithTotals = (tbodyRowsHtml) => `
+      <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        ${renderTable(tbodyRowsHtml, true)}
+        </div>
+        </div>
+        ${runningFootBlock}
+      </section>`;
+
+  const probeContNoTotals = (tbodyRowsHtml) => `
+      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${renderTable(tbodyRowsHtml)}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+
+  const probeContWithTotals = (tbodyRowsHtml) => `
+      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${renderTable(tbodyRowsHtml, true)}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+
+  const probeLastItemsPage = (isFirst, tbodyRowsHtml, closingHtml = "") => {
+    const firstBody = `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        ${renderTable(tbodyRowsHtml, true)}
+        </div>`;
+    return `
+      <section class="pdf-page pdf-page-measure ${isFirst ? "first-page " : ""}page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${isFirst ? firstBody : renderTable(tbodyRowsHtml, true)}
+        ${closingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+  };
+
+  const probeClosingOnlyPage = (closingHtml = "") => `
+      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
+        ${runningHeadBlock}
+        <div class="pdf-page-fill pdf-page-fill-closing">
+        ${closingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+
+  function buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages) {
+    const pages = sanitizeItemPages(itemPages);
+    return pages
+      .map(({ chunk, startIndex }, pageIndex) => {
+        const isFirst = pageIndex === 0;
+        const isLastItemsPage = pageIndex === pages.length - 1;
+        const closingHtml =
+          isLastItemsPage && lastPageClosingBlocks.length
+            ? renderClosingTailHtml(lastPageClosingBlocks)
+            : "";
+        const pageBreakAfter = !isLastItemsPage || followUpClosingPages.length > 0;
+        return `
+      <section class="pdf-page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}">
+        ${watermarkBlock}
+        ${runningHeadBlock}
+        <div class="pdf-page-fill">
+        ${isFirst ? `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
+        </div>
+        ` : renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
+        ${closingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+      })
+      .join("");
+  }
+
+  function buildFollowUpClosingSections(blocksPerPage) {
+    return blocksPerPage
+      .filter((blocks) => blocks && blocks.length > 0)
+      .map((blocks, pageIndex, arr) => {
+        const pageBreakAfter = pageIndex < arr.length - 1;
+        const closingHtml = renderClosingTailHtml(blocks);
+        if (!closingHtml.trim()) return "";
+        return `
+      <section class="pdf-page ${pageBreakAfter ? "page-break" : ""}">
+        ${watermarkBlock}
+        ${runningHeadBlock}
+        <div class="pdf-page-fill pdf-page-fill-closing">
+        ${closingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`;
+      })
+      .join("");
+  }
+
+  function buildCompleteHtml(pagePlan) {
+    const itemPages = Array.isArray(pagePlan) ? pagePlan : pagePlan.itemPages;
+    const lastPageClosingBlocks = Array.isArray(pagePlan)
+      ? []
+      : pagePlan.lastPageClosingBlocks || [];
+    const followUpClosingPages = Array.isArray(pagePlan) ? [] : pagePlan.followUpClosingPages || [];
+    const itemSections = buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages);
+    const closingSections = buildFollowUpClosingSections(followUpClosingPages);
+    return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quotation ${quoteNumber}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 13px; color: ${b.text}; background: white; }
-    .page { width: 210mm; min-height: 297mm; padding: 15mm; }
-    .header-bar { background: ${b.headerGradient}; color: white; padding: 18px 22px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-    .header-brand { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; }
-    .header-logo { height: 52px; width: auto; max-width: 160px; object-fit: contain; flex-shrink: 0; }
-    .company-name { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.2; }
-    .company-sub { font-size: 11px; opacity: 0.9; margin-top: 4px; font-weight: 500; }
-    .quote-badge { background: rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; text-align: right; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; }
-    .quote-badge .label { font-size: 10px; opacity: 0.9; letter-spacing: 0.12em; font-weight: 600; }
-    .quote-badge .number { font-size: 17px; font-weight: 700; margin-top: 2px; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    .info-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; }
-    .info-box-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 8px; font-weight: bold; }
-    .info-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px; }
-    .info-label { color: #6b7280; }
-    .info-value { font-weight: 500; color: #111827; text-align: right; max-width: 60%; }
-    .customer-name { font-size: 15px; font-weight: bold; color: #111827; margin-bottom: 4px; }
-    .customer-sub { font-size: 12px; color: #6b7280; }
-    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .items-table th { background: ${b.primary}; color: white; padding: 9px 10px; font-size: 12px; text-align: left; }
-    .items-table th.center, .items-table td.center { text-align: center; }
-    .items-table th.right, .items-table td.right { text-align: right; }
-    .row-even { background: #ffffff; }
-    .row-odd { background: #fafafa; }
-    .items-table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-    .text-sm { font-size: 11px; }
-    .text-gray { color: #6b7280; }
-    .text-green { color: #059669; }
-    .totals-section { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-    .totals-table { width: 300px; }
-    .totals-table tr td { padding: 6px 10px; font-size: 13px; }
-    .total-row { background: ${b.totalBar}; color: white; font-weight: bold; font-size: 15px; }
-    .total-row td { padding: 10px; }
-    .amount-words { background: ${b.accentWash}; border: 1px solid ${b.accentBorder}; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 12px; }
-    .amount-words strong { color: ${b.primary}; }
-    .section { margin-bottom: 15px; }
-    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: ${b.primary}; border-bottom: 2px solid ${b.primary}; padding-bottom: 4px; margin-bottom: 10px; }
-    .details-table { width: 100%; }
-    .details-table td { padding: 4px 8px; font-size: 12px; }
-    .detail-label { color: #6b7280; width: 150px; }
-    .terms-list { font-size: 11px; color: #4b5563; line-height: 1.8; white-space: pre-line; }
-    .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
-    .signature-box { text-align: center; }
-    .signature-line { border-bottom: 2px solid #374151; margin-bottom: 8px; height: 50px; }
-    .signature-label { font-size: 11px; color: #6b7280; }
-    .footer-bar { background: ${b.footerBg}; color: white; padding: 12px 20px; border-radius: 6px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-    .footer-bar a { color: #c7d2fe; text-decoration: none; }
-  </style>
+  <style>${quotationPdfStyles()}</style>
 </head>
 <body>
-<div class="page">
-  <div class="header-bar">
-    <div class="header-brand">
-      ${logoBlock}
-      <div>
-        <div class="company-name">${companyName}</div>
-        <div class="company-sub">${tagline}</div>
-      </div>
-    </div>
-    <div class="quote-badge">
-      <div class="label">QUOTATION</div>
-      <div class="number">${quoteNumber}</div>
-    </div>
-  </div>
-
-  <div class="info-grid">
-    <div class="info-box">
-      <div class="info-box-title">Bill To</div>
-      <div class="customer-name">${customerName}</div>
-      ${customerAddress ? `<div class="customer-sub">${customerAddress}</div>` : ""}
-      ${customerTRN ? `<div class="customer-sub">TRN: ${customerTRN}</div>` : ""}
-      ${contactPersonName ? `<div class="customer-sub">Attn: ${contactPersonName}${contactPersonDesignation ? ` (${contactPersonDesignation})` : ""}</div>` : ""}
-    </div>
-    <div class="info-box">
-      <div class="info-box-title">Quote Details</div>
-      <div class="info-row"><span class="info-label">Quote Date:</span><span class="info-value">${formatDate(quoteDate)}</span></div>
-      <div class="info-row"><span class="info-label">Valid Until:</span><span class="info-value" style="color:#dc2626;">${formatDate(validUntil)}</span></div>
-      <div class="info-row"><span class="info-label">Quote Type:</span><span class="info-value" style="text-transform:capitalize;">${quoteType}</span></div>
-      ${salesExecutive ? `<div class="info-row"><span class="info-label">Sales Executive:</span><span class="info-value">${salesExecutive}</span></div>` : ""}
-      ${preparedBy ? `<div class="info-row"><span class="info-label">Prepared By:</span><span class="info-value">${preparedBy}</span></div>` : ""}
-      ${projectDuration ? `<div class="info-row"><span class="info-label">Duration:</span><span class="info-value">${projectDuration}</span></div>` : ""}
-    </div>
-  </div>
-
-  ${subject ? `<div style="background:${b.accentWash};border-left:4px solid ${b.primary};padding:10px 15px;border-radius:6px;margin-bottom:15px;font-size:13px;color:${b.text};"><strong>Subject:</strong> ${subject}</div>` : ""}
-
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th style="width:40px;">#</th>
-        <th>Description</th>
-        <th class="center" style="width:80px;">Qty</th>
-        <th class="right" style="width:120px;">Rate</th>
-        <th class="right" style="width:130px;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${itemRows}
-    </tbody>
-  </table>
-
-  <div class="totals-section">
-    <table class="totals-table">
-      <tr><td style="color:#6b7280;">Subtotal:</td><td style="text-align:right;">${formatCurrency(subtotal, currency)}</td></tr>
-      ${chargesRows}
-      <tr><td style="color:#6b7280;">VAT (${vatPercentage}%):</td><td style="text-align:right;">${formatCurrency(vatAmount, currency)}</td></tr>
-      <tr class="total-row"><td>TOTAL (${currency}):</td><td style="text-align:right;">${formatCurrency(totalAmount, currency)}</td></tr>
-    </table>
-  </div>
-
-  <div class="amount-words">
-    <strong>Amount in Words: </strong>${numberToWords(totalAmount)} Only.
-  </div>
-
-  <div class="info-grid">
-    <div class="section">
-      <div class="section-title">Terms</div>
-      <table class="details-table">
-        <tr><td class="detail-label">Payment Terms:</td><td>${paymentTerms}</td></tr>
-        <tr><td class="detail-label">Delivery Terms:</td><td>${deliveryTerms}</td></tr>
-      </table>
-    </div>
-    ${bankSection || `<div></div>`}
-  </div>
-
-  ${notes ? `<div class="section"><div class="section-title">Notes</div><p style="font-size:12px;color:#374151;line-height:1.6;">${notes.replace(/\n/g, "<br>")}</p></div>` : ""}
-
-  <div class="section">
-    <div class="section-title">Terms & Conditions</div>
-    <div class="terms-list">${(termsAndConditions || defaultTerms).replace(/\n/g, "<br>")}</div>
-  </div>
-
-  <div class="signatures">
-    <div class="signature-box">
-      <div class="signature-line"></div>
-      <div class="signature-label">Authorized Signature<br>${companyName}</div>
-    </div>
-    <div class="signature-box">
-      <div class="signature-line"></div>
-      <div class="signature-label">Customer Signature & Stamp<br>${customerName}</div>
-    </div>
-  </div>
-
-  <div class="footer-bar">
-    <span>${companyName}</span>
-    <span><a href="mailto:${companyEmail}">${companyEmail}</a></span>
-    <span>Document generated on ${formatDate(new Date())}</span>
-  </div>
-</div>
+  ${itemSections}${closingSections}
 </body>
 </html>`;
+  }
+
+  return {
+    items,
+    rowHtmls,
+    probeFirstNoTotals,
+    probeFirstWithTotals,
+    probeContNoTotals,
+    probeContWithTotals,
+    probeLastItemsPage,
+    probeClosingOnlyPage,
+    buildClosingBlocks,
+    buildCompleteHtml,
+  };
+}
+
+function buildQuotationHTML(quotation, options = {}) {
+  const layout = buildQuotationPdfLayout(quotation, options);
+  const { items } = layout;
+  let itemPages = options.itemPages;
+  if (!Array.isArray(itemPages) || itemPages.length === 0) {
+    itemPages = [];
+    if (!items.length) {
+      itemPages.push({ chunk: [], startIndex: 0 });
+    } else {
+      const FALLBACK_ITEMS_PER_PAGE = 6;
+      let cursor = 0;
+      let startIndex = 0;
+      while (cursor < items.length) {
+        const chunk = items.slice(cursor, cursor + FALLBACK_ITEMS_PER_PAGE);
+        itemPages.push({ chunk, startIndex });
+        cursor += chunk.length;
+        startIndex += chunk.length;
+      }
+    }
+  }
+  return layout.buildCompleteHtml({ itemPages, lastPageClosingBlocks: [], followUpClosingPages: [] });
 }
 
 /**
@@ -303,21 +885,29 @@ function buildQuotationHTML(quotation, options = {}) {
  * @param {Object} quotation - Mongoose document or plain object
  * @returns {Promise<Buffer>} PDF buffer
  */
-export async function generateQuotationPDF(quotation) {
+export async function generateQuotationPDF(quotation, pdfOptions = {}) {
   const logoDataUri = getQuotationLogoDataUri();
-  const html = buildQuotationHTML(quotation, { logoDataUri });
+  const headerDataUri = getQuotationHeaderDataUri();
+  const footerDataUri = getQuotationFooterDataUri();
+  const brandOpts = { logoDataUri, headerDataUri, footerDataUri, ...pdfOptions };
 
   const browser = await launchBrowser();
   let page;
   try {
     page = await browser.newPage();
-    // Avoid "networkidle" on serverless: Google Fonts and other subresources can prevent
-    // idle from ever settling, causing timeouts on Vercel.
+    // Match A4 width so line wrapping / row heights match the final PDF layout.
+    await page.setViewportSize({ width: 794, height: 1123 });
+
+    const layout = buildQuotationPdfLayout(quotation, brandOpts);
+    const itemPages = await computeQuotationItemPages(page, layout);
+    const pagePlan = await resolveQuotationPdfPagePlan(page, layout, itemPages);
+    const html = layout.buildCompleteHtml(pagePlan);
+
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "10mm", bottom: "10mm", left: "10mm", right: "10mm" },
+      margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
     return Buffer.from(pdfBuffer);
   } finally {

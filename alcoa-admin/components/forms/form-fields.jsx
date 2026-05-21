@@ -73,27 +73,40 @@ export function FormSelectField({ control, name, label, placeholder = "Select…
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
-        <FormItem className={className}>
-          {label && <FormLabel>{label}</FormLabel>}
-          <Select onValueChange={field.onChange} value={field.value || ""} disabled={disabled}>
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder={placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {options.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        const raw =
+          field.value === null || field.value === undefined || field.value === ""
+            ? ""
+            : String(field.value);
+        const matched = options.find((o) => o.value === raw);
+        const selectValue = matched ? matched.value : undefined;
+        return (
+          <FormItem className={className}>
+            {label && <FormLabel>{label}</FormLabel>}
+            <Select
+              key={`${name}-${options.length}-${raw}`}
+              onValueChange={field.onChange}
+              value={selectValue}
+              disabled={disabled}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder={placeholder} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {options.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {description && <FormDescription>{description}</FormDescription>}
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }
