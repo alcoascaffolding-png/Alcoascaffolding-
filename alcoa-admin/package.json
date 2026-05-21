@@ -16,7 +16,8 @@
     "seed:prod-dummy": "node --require ./dns-fix.cjs scripts/seed-prod-dummy-data.mjs",
     "migrate:document-numbers": "node --require ./dns-fix.cjs scripts/migrate-document-numbers.mjs",
     "db:test": "node --require ./dns-fix.cjs scripts/test-mongo-connection.mjs",
-    "db:migrate-rename": "node --require ./dns-fix.cjs scripts/migrate-rename-database.mjs"
+    "db:migrate-rename": "node --require ./dns-fix.cjs scripts/migrate-rename-database.mjs",
+    "backfill:converted": "node --require ./dns-fix.cjs scripts/backfill-converted-quotations.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

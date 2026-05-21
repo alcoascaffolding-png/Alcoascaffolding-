@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { formatDate, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import Link from "next/link";
+import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
   QUOTATION_PDF_BANK_DETAILS,
   itemAmountWithVat,
@@ -143,6 +144,56 @@ export function QuotationDetail({ id }) {
       </div>
 
       <div className="space-y-6">
+        {q.status === "converted" && (
+          <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Linked sales documents</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-2 text-sm">
+              {q.linked?.salesOrder ? (
+                <p>
+                  <span className="text-muted-foreground">Sales order: </span>
+                  <Link
+                    href={`/sales-orders/${q.linked.salesOrder._id}`}
+                    className="font-mono font-medium text-primary hover:underline"
+                  >
+                    {q.linked.salesOrder.orderNumber}
+                  </Link>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    ({q.linked.salesOrder.status}) — {formatCurrency(q.linked.salesOrder.total)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-amber-700 dark:text-amber-400">
+                  No sales order linked yet. Change status to Approved, then to Converted again after
+                  deploying the latest admin build — or run the production backfill script.
+                </p>
+              )}
+              {q.linked?.salesInvoice ? (
+                <p>
+                  <span className="text-muted-foreground">Sales invoice: </span>
+                  <Link
+                    href={`/sales-invoices/${q.linked.salesInvoice._id}`}
+                    className="font-mono font-medium text-primary hover:underline"
+                  >
+                    {q.linked.salesInvoice.invoiceNumber}
+                  </Link>
+                  <span className="text-muted-foreground">
+                    {" "}
+                    ({q.linked.salesInvoice.status}) — {formatCurrency(q.linked.salesInvoice.total)}
+                  </span>
+                </p>
+              ) : q.linked?.salesOrder ? (
+                <p className="text-muted-foreground">
+                  No invoice yet. Open the sales order and set status to <strong>Invoiced</strong> to
+                  create a sales invoice.
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        )}
+
         {/* PDF-style header info — above line items */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>

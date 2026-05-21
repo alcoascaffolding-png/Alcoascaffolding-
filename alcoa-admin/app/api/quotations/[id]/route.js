@@ -9,6 +9,7 @@ import {
   revertQuotationFromConvertedToApproved,
 } from "@/lib/sync-quotation-sales-order";
 import Quotation from "@/models/Quotation";
+import { getLinkedDocumentsForQuotation } from "@/lib/quotation-linked-documents";
 
 export const GET = withErrorHandler(async (request, { params }) => {
   const session = await auth();
@@ -17,7 +18,8 @@ export const GET = withErrorHandler(async (request, { params }) => {
   await connectDB();
   const q = await Quotation.findById(params.id).populate("customer", "companyName primaryEmail primaryPhone").lean();
   if (!q) throw new AppError("Quotation not found", 404);
-  return apiSuccess(q);
+  const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);
+  return apiSuccess({ ...q, linked });
 });
 
 export const PATCH = withErrorHandler(async (request, { params }) => {
@@ -71,7 +73,11 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
     .populate("customer", "companyName primaryEmail primaryPhone")
     .lean();
 
-  return apiSuccess(conversion ? { ...q, conversion } : q);
+  const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);
+  const payload = { ...q, linked };
+  if (conversion) payload.conversion = conversion;
+
+  return apiSuccess(payload);
 });
 
 export const DELETE = withErrorHandler(async (request, { params }) => {
