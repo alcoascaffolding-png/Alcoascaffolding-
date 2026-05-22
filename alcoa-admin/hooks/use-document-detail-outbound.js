@@ -48,14 +48,18 @@ export function useDocumentDetailOutbound({
   const docNo = document?.[numberField];
 
   const downloadPdf = useCallback(async () => {
-    if (!docNo) return;
+    if (!docNo) {
+      toast.error("Document is still loading — try again in a moment.");
+      return;
+    }
     setSending("pdf");
     try {
+      toast.info("Generating PDF…");
       const blob = await fetchDocumentPdfBlob(apiBase, id);
       saveBlobAsPdfDownload(blob, docNo);
       toast.success("PDF downloaded");
     } catch (e) {
-      toast.error("Failed: " + e.message);
+      toast.error("PDF failed: " + (e?.message || "Unknown error"));
     } finally {
       setSending(null);
     }

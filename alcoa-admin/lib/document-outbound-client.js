@@ -5,10 +5,30 @@
 
 export async function fetchDocumentPdfBlob(apiBase, id) {
   const res = await fetch(`${apiBase}/${id}/pdf`);
+  const contentType = res.headers.get("content-type") || "";
+
   if (!res.ok) {
-    const d = await res.json().catch(() => ({}));
-    throw new Error(d.error || `HTTP ${res.status}`);
+    let message = `HTTP ${res.status}`;
+    if (contentType.includes("application/json")) {
+      const d = await res.json().catch(() => ({}));
+      message =
+        typeof d.error === "string"
+          ? d.error
+          : d.error?.message || message;
+      if (Array.isArray(d.details) && d.details.length) {
+        message += `: ${d.details.join("; ")}`;
+      }
+    } else {
+      const text = await res.text().catch(() => "");
+      if (text) message = text.slice(0, 240);
+    }
+    throw new Error(message);
   }
+
+  if (!contentType.includes("application/pdf")) {
+    throw new Error("Server did not return a PDF. Try again or contact support.");
+  }
+
   return res.blob();
 }
 

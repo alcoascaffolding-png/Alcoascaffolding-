@@ -24,6 +24,12 @@ export const GET = withErrorHandler(async (request, context) => {
     .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
     .lean();
   if (!invoice) throw new AppError("Sales Invoice not found", 404);
+  if (!invoice.items?.length) {
+    throw new AppError(
+      "Add at least one line item to the sales invoice before downloading PDF.",
+      400
+    );
+  }
 
   const pdfBuffer = await generateSalesInvoicePDF(invoice);
 

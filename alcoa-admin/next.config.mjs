@@ -10,9 +10,19 @@ const nextConfig = {
 
   // Include quotation PDF header/footer art + logo in serverless bundles (Vercel production).
   outputFileTracingIncludes: {
-    "/api/quotations/**": ["./assets/**", "./public/brand/**"],
-    "/api/sales-orders/**": ["./assets/**", "./public/brand/**"],
-    "/api/sales-invoices/**": ["./assets/**", "./public/brand/**"],
+    "/api/quotations/**": ["./assets/**", "./public/brand/**", "./lib/pdf/**"],
+    "/api/sales-orders/**": [
+      "./assets/**",
+      "./public/brand/**",
+      "./lib/pdf/**",
+      "./lib/map-sales-order-for-quotation-pdf.js",
+    ],
+    "/api/sales-invoices/**": [
+      "./assets/**",
+      "./public/brand/**",
+      "./lib/pdf/**",
+      "./lib/map-sales-order-for-quotation-pdf.js",
+    ],
   },
 
   // External packages that should not be bundled for server components
