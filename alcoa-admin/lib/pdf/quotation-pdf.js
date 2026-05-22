@@ -34,6 +34,11 @@ function formatCurrency(amount, currency = "AED") {
   return `${currency} ${Number(amount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+/** PDF table numbers — always 2 decimal places (e.g. 85.00 not 85.000). */
+function formatPdfAmount(value) {
+  return Number(value || 0).toFixed(2);
+}
+
 /** Line total including VAT for PDF amount column. */
 function itemAmountWithVat(item, defaultVatPct = 5) {
   const taxable = Number(item.taxableAmount ?? item.subtotal ?? 0);
@@ -484,8 +489,8 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
               <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>
               <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
-              <tr><td class="mini-label">Paid</td><td>${Number(paidAmount || 0).toFixed(2)}</td></tr>
-              <tr><td class="mini-label">Balance</td><td>${displayBalance.toFixed(2)}</td></tr>`
+              <tr><td class="mini-label">Paid</td><td>${formatPdfAmount(paidAmount)}</td></tr>
+              <tr><td class="mini-label">Balance</td><td>${formatPdfAmount(displayBalance)}</td></tr>`
       : `
               <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
@@ -536,13 +541,13 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           ${item.specifications ? `<div class="item-sub">${item.specifications}</div>` : ""}
           ${item.size ? `<div class="item-sub">Size: ${item.size}</div>` : ""}
         </td>
-        <td class="center">${Number(item.weight || 0).toFixed(3)}</td>
-        <td class="center">${Number(item.cbm || 0).toFixed(3)}</td>
+        <td class="center">${formatPdfAmount(item.weight)}</td>
+        <td class="center">${formatPdfAmount(item.cbm)}</td>
         <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
-        <td class="right">${Number(item.ratePerUnit || 0).toFixed(2)}</td>
-        <td class="right">${Number(item.taxableAmount ?? item.subtotal ?? 0).toFixed(2)}</td>
-        <td class="right">${Number(item.vatAmount || 0).toFixed(2)}</td>
-        <td class="right strong">${itemAmountWithVat(item, vatPercentage).toFixed(2)}</td>
+        <td class="right">${formatPdfAmount(item.ratePerUnit)}</td>
+        <td class="right">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
+        <td class="right">${formatPdfAmount(item.vatAmount)}</td>
+        <td class="right strong">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
       </tr>`
       )
       .join("");
@@ -553,12 +558,12 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">Paid</td>
-          <td colspan="3" class="totals-value right">${Number(paidAmount || 0).toFixed(2)}</td>
+          <td colspan="3" class="totals-value right">${formatPdfAmount(paidAmount)}</td>
         </tr>
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">Balance</td>
-          <td colspan="3" class="totals-value right strong">${displayBalance.toFixed(2)}</td>
+          <td colspan="3" class="totals-value right strong">${formatPdfAmount(displayBalance)}</td>
         </tr>`
       : "";
     return `
@@ -566,17 +571,17 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">Subtotal</td>
-          <td colspan="3" class="totals-value right strong">${displaySubtotal.toFixed(2)}</td>
+          <td colspan="3" class="totals-value right strong">${formatPdfAmount(displaySubtotal)}</td>
         </tr>
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">VAT (${vatPercentage}%)</td>
-          <td colspan="3" class="totals-value right">${Number(vatAmount || 0).toFixed(2)}</td>
+          <td colspan="3" class="totals-value right">${formatPdfAmount(vatAmount)}</td>
         </tr>
         <tr class="totals-grand">
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
-          <td colspan="3" class="totals-value right strong">${Number(totalAmount || 0).toFixed(2)}</td>
+          <td colspan="3" class="totals-value right strong">${formatPdfAmount(totalAmount)}</td>
         </tr>${invoicePaymentRows}
       </tfoot>`;
   };
