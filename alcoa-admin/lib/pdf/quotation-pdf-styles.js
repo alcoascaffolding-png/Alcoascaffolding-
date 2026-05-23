@@ -1,8 +1,12 @@
 import { getQuotationPdfEmbeddedFontCss, QUOTATION_PDF_FONT_STACK } from "./quotation-pdf-fonts.js";
 
-export function quotationPdfStyles() {
+let quotationPdfFullCssCache = null;
+let quotationPdfProbeCssCache = null;
+
+function buildQuotationPdfCss(embedFonts) {
+  const embeddedFonts = embedFonts ? getQuotationPdfEmbeddedFontCss() : "";
   return `
-    ${getQuotationPdfEmbeddedFontCss()}
+    ${embeddedFonts}
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -689,4 +693,20 @@ export function quotationPdfStyles() {
       }
     }
   `;
+}
+
+/** Full CSS for final PDF render (includes embedded serif fonts). */
+export function quotationPdfStyles() {
+  if (quotationPdfFullCssCache === null) {
+    quotationPdfFullCssCache = buildQuotationPdfCss(true);
+  }
+  return quotationPdfFullCssCache;
+}
+
+/** Lightweight CSS for layout probes — avoids shipping ~150KB fonts on every measure pass (Vercel timeout). */
+export function quotationPdfProbeStyles() {
+  if (quotationPdfProbeCssCache === null) {
+    quotationPdfProbeCssCache = buildQuotationPdfCss(false);
+  }
+  return quotationPdfProbeCssCache;
 }

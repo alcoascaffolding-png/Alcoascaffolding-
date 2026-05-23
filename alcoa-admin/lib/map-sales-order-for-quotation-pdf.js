@@ -52,7 +52,8 @@ export function mapSalesOrderForQuotationPdf(order) {
 }
 
 function mapLineItemsForPdf(doc, vatPct) {
-  return (doc.items || []).map((it) => {
+  const rawItems = Array.isArray(doc.items) ? doc.items : [];
+  return rawItems.map((it) => {
     const lineTotal = Number(it.total ?? Number(it.quantity || 0) * Number(it.unitPrice || 0));
     const lineVat = (lineTotal * vatPct) / 100;
     return {
