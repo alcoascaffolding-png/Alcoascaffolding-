@@ -1,3 +1,687 @@
 export function quotationPdfStyles() {
-  return "@page { size: A4; margin: 0; }\n    * { box-sizing: border-box; margin: 0; padding: 0; }\n    :root {\n      --layout-blue: #235aa0;\n      --layout-blue-soft: #edf4fc;\n      --layout-blue-wash: #dbe8f6;\n      --table-border-outer: 2px solid var(--layout-blue);\n      --table-border-cell: 1px solid var(--layout-blue);\n    }\n    body {\n      font-family: \"Times New Roman\", Times, serif;\n      font-size: 10px;\n      font-weight: 400;\n      font-style: normal;\n      color: #111;\n      line-height: 1.35;\n    }\n    /* Bleed header art to the inner edge of the page frame (matches .footer-main).\n       flex-shrink: 0 — on continuation pages a tall table must not compress the header image. */\n    .top-brand {\n      width: 100%;\n      margin-left: 0;\n      margin-right: 0;\n      margin-bottom: 6px;\n      flex-shrink: 0;\n    }\n    /* One block per sheet: header image + QUOTATION/TRN — never shrink or split. */\n    .pdf-running-head {\n      flex-shrink: 0;\n      break-inside: avoid;\n      page-break-inside: avoid;\n    }\n    /* Middle column grows; footer runner stays at bottom of A4 flex page. */\n    .pdf-page-fill {\n      flex: 1 1 auto;\n      min-height: 0;\n      display: flex;\n      flex-direction: column;\n      padding-bottom: 88px;\n    }\n    .pdf-page-fill-closing {\n      flex: 1 1 auto;\n      padding-bottom: 88px;\n    }\n    .pdf-running-foot {\n      position: absolute;\n      left: calc(6mm + 3px);\n      right: calc(6mm + 3px);\n      bottom: calc(6mm + 3px);\n      margin-top: 0;\n      flex-shrink: 0;\n      break-inside: avoid;\n      page-break-inside: avoid;\n    }\n    .header-art, .footer-art { width: 100%; height: auto; display: block; object-fit: contain; }\n    .header-fallback { border-bottom: 2px solid #2a5f9e; min-height: 56px; position: relative; padding: 6px 0; text-align: center; }\n    .header-fallback-title { font-family: \"Times New Roman\", Times, serif; font-size: 19px; font-weight: 700; font-style: normal; }\n    .header-logo-fallback { position: absolute; left: 0; top: 4px; height: 48px; max-width: 165px; object-fit: contain; }\n    .footer-fallback { border: 1px solid #9ca3af; padding: 5px 6px; text-align: center; }\n    /* Every printed A4 page gets an inset frame border via ::before.\n       Outer space (page edge -> frame) = 6mm.\n       Inner padding (frame -> content) = 6mm. Total page padding = 12mm. */\n    .pdf-page {\n      min-height: 297mm;\n      padding-top: 12mm;\n      padding-right: calc(6mm + 3px);\n      padding-bottom: calc(6mm + 3px);\n      padding-left: calc(6mm + 3px);\n      position: relative;\n      display: flex;\n      flex-direction: column;\n    }\n    /* Probes measure true content height — not the 297mm min-height print box. */\n    .pdf-page-measure {\n      min-height: auto !important;\n    }\n    .pdf-page-measure .pdf-page-fill,\n    .pdf-page-measure .pdf-page-fill-closing {\n      padding-bottom: 0;\n    }\n    .pdf-page-measure .pdf-running-foot {\n      position: relative;\n      left: auto;\n      right: auto;\n      bottom: auto;\n      margin-top: 8px;\n    }\n    .pdf-page::before {\n      content: \"\";\n      position: absolute;\n      top: 6mm;\n      left: 6mm;\n      right: 6mm;\n      bottom: 6mm;\n      border: 3px solid var(--layout-blue);\n      pointer-events: none;\n      z-index: 2;\n    }\n    .pdf-page-watermark {\n      position: absolute;\n      top: 6mm;\n      left: 6mm;\n      right: 6mm;\n      bottom: 6mm;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      z-index: 0;\n      pointer-events: none;\n      overflow: hidden;\n    }\n    .pdf-page-watermark img {\n      width: 72%;\n      max-width: 560px;\n      height: auto;\n      object-fit: contain;\n      opacity: 0.11;\n      filter: grayscale(60%) brightness(1.1);\n    }\n    .pdf-running-head,\n    .pdf-page-fill {\n      position: relative;\n      z-index: 1;\n    }\n    .pdf-running-foot {\n      z-index: 1;\n    }\n    /* Top inset only; left/right align with blue frame inner edge (6mm + 3px border). */\n    .first-page { padding-top: 7mm; }\n    .first-page .top-brand {\n      margin-top: 0;\n      margin-bottom: 2px;\n    }\n    /* Same top spacing as first page so running header + frame align on every sheet. */\n    .pdf-page:not(.first-page) {\n      padding-top: 7mm;\n    }\n    .page-break { page-break-after: always; break-after: page; }\n    /* QUOTATION + TRN title block; body uses Times New Roman throughout. */\n    .doc-heading {\n      text-align: center;\n      margin: 6px 0 8px;\n      flex-shrink: 0;\n      font-family: \"Times New Roman\", Times, serif;\n      font-style: normal;\n      font-weight: normal;\n    }\n    .doc-title {\n      margin: 0;\n      font-size: 30px;\n      font-weight: 700;\n      font-style: normal;\n      letter-spacing: 0.4px;\n      color: #111;\n      line-height: 1;\n    }\n    .doc-trn {\n      margin-top: 4px;\n      font-size: 12px;\n      font-weight: normal;\n      font-style: normal;\n      color: #111;\n      line-height: 1.1;\n    }\n    .doc-trn strong { font-weight: 700; font-style: normal; }\n    .head-grid {\n      display: grid;\n      grid-template-columns: 1.15fr 0.85fr;\n      gap: 8px;\n      margin-bottom: 5px;\n      align-items: start;\n      flex-shrink: 0;\n    }\n    .box { border: 1px solid var(--layout-blue); }\n    .head-grid .box {\n      border: 0; /* outer border comes from the table so we never get a double line under the last row */\n      min-height: 0;\n    }\n    /* Larger header info tables (customer + quotation) — only these two blocks */\n    .head-mini-table {\n      width: 100%;\n      border: 2px solid var(--layout-blue);\n      border-collapse: collapse;\n      table-layout: auto;\n    }\n    .head-mini-table td {\n      border: 1px solid var(--layout-blue);\n      padding: 8px 10px;\n      font-size: 12px;\n      line-height: 1.25;\n      vertical-align: top;\n      white-space: normal;\n      overflow-wrap: anywhere;\n      word-break: break-word;\n    }\n    .head-mini-table .mini-label {\n      width: 128px;\n      min-width: 128px;\n      font-weight: 700;\n      background: #fff;\n      text-transform: uppercase;\n      letter-spacing: normal;\n      padding: 8px 10px;\n      white-space: nowrap;\n    }\n    .head-grid > .box:first-child .head-mini-table {\n      border-left: none;\n    }\n    .head-grid > .box:first-child .head-mini-table td:first-child {\n      border-left: none;\n    }\n    .head-grid > .box:last-child .head-mini-table {\n      border-right: none;\n    }\n    .head-grid > .box:last-child .head-mini-table td:last-child {\n      border-right: none;\n    }\n    .mini-table { width: 100%; border-collapse: collapse; }\n    .mini-table td { border: 1px solid var(--layout-blue); padding: 4px 5px; font-size: 9px; vertical-align: top; }\n    .mini-table .mini-label { width: 110px; font-weight: 700; background: #fff; text-transform: uppercase; font-size: 8.5px; }\n    /* Outer frame for subject + line items (same 2px as header tables) */\n    .doc-lines-shell {\n      border: none;\n      margin-top: 2px;\n      flex-shrink: 0;\n    }\n    .doc-lines-shell .subject-bar {\n      border: none;\n      border-bottom: 1px solid var(--layout-blue);\n      padding: 4px 10px 6px;\n      font-size: 12px;\n      font-weight: 700;\n      font-style: italic;\n      color: #111;\n      margin: 0;\n    }\n    .doc-lines-shell .items-table {\n      border: none;\n    }\n    .subject-bar { border: 2px solid var(--layout-blue); border-bottom: none; padding: 4px 10px 6px; font-size: 12px; font-weight: 700; font-style: italic; color: #111; margin-top: 0; }\n    .items-table {\n      width: 100%;\n      border-collapse: collapse;\n      table-layout: fixed;\n      border: 2px solid var(--layout-blue);\n      border-left: none;\n      border-right: none;\n      border-bottom: none;\n    }\n    .items-table thead { display: table-header-group; }\n    .items-table th, .items-table td { border: 1px solid var(--layout-blue); padding: 3px 4px; font-size: 8.7px; vertical-align: top; }\n    .items-table th:not(.desc-col),\n    .items-table td:not(.desc-col) {\n      font-weight: 700;\n      font-style: normal;\n      color: #111;\n    }\n    .items-table th.desc-col,\n    .items-table td.desc-col {\n      font-family: \"Times New Roman\", Times, serif;\n      font-size: 12px;\n      line-height: 1.45;\n      letter-spacing: 0.02em;\n      padding: 6px 8px;\n      font-weight: 700;\n      font-style: italic;\n      color: #111;\n      word-break: break-word;\n      overflow-wrap: anywhere;\n    }\n    .items-table td.desc-col .item-title {\n      font-weight: 700;\n      font-style: italic;\n      color: #111;\n      margin-bottom: 3px;\n    }\n    .items-table td.desc-col .item-sub {\n      font-weight: 700;\n      font-style: italic;\n      color: #111;\n      line-height: 1.45;\n      letter-spacing: 0.02em;\n    }\n    .items-table th { font-weight: 700; background: #fff; text-align: center; }\n    .items-table td.center { text-align: center; } .items-table td.right { text-align: right; } .items-table td.strong { font-weight: 700; }\n    .items-table th:first-child,\n    .items-table td:first-child { border-left: none; }\n    .items-table th:last-child,\n    .items-table td:last-child { border-right: none; }\n    .items-totals-foot td.totals-spacer {\n      border: none !important;\n      padding: 0;\n      background: transparent;\n    }\n    .items-totals-foot td.totals-label,\n    .items-totals-foot td.totals-value {\n      border: 1px solid var(--layout-blue);\n      padding: 5px 8px;\n      font-size: 8.7px;\n      font-weight: 700;\n      vertical-align: middle;\n    }\n    .items-totals-foot tr:first-child td.totals-label,\n    .items-totals-foot tr:first-child td.totals-value {\n      border-top: 2px solid var(--layout-blue);\n    }\n    .items-totals-foot tr.totals-grand td.totals-label,\n    .items-totals-foot tr.totals-grand td.totals-value {\n      border-bottom: 2px solid var(--layout-blue);\n    }\n    .items-totals-foot td.totals-label {\n      text-transform: uppercase;\n      font-size: 8.5px;\n      text-align: right;\n      border-left: 2px solid var(--layout-blue);\n      padding: 5px 12px 5px 8px;\n      line-height: 1.3;\n    }\n    .items-totals-foot td.totals-label-total {\n      font-size: 8.5px;\n      line-height: 1.2;\n    }\n    .items-totals-foot .totals-currency {\n      font-size: 8px;\n      font-style: normal;\n      font-weight: 600;\n    }\n    .items-totals-foot td.totals-value {\n      text-align: right;\n      padding: 5px 10px 5px 6px;\n    }\n    .items-totals-foot td.totals-value:last-child { border-right: none; }\n    .items-totals-foot tr.totals-grand td { background: transparent; }\n    .item-title { font-weight: 700; font-style: italic; color: #111; }\n    .item-sub { font-weight: 700; font-style: italic; color: #111; }\n    .totals-align-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 6px; }\n    .totals-align-spacer { border: none; padding: 0; }\n    .totals-align-cell { border: none; padding: 0; vertical-align: top; }\n    .totals-wrap { border: none; page-break-inside: avoid; }\n    .totals-table { width: 100%; border-collapse: collapse; border: 2px solid var(--layout-blue); border-right: none; }\n    .totals-table td:last-child { border-right: none; }\n    .totals-table td { border: 1px solid var(--layout-blue); padding: 3px 4px; font-size: 8.7px; white-space: nowrap; }\n    .totals-table .label { font-weight: 700; text-transform: uppercase; font-size: 8.5px; }\n    .totals-table .value { text-align: right; }\n    .totals-table .grand td { font-weight: 700; background: transparent; }\n    /* .amount-words — hidden on quotation PDF */\n    .closing-tail-flow { margin-top: 10px; flex-shrink: 0; padding-left: 5mm; padding-right: 3mm; }\n    .lower-grid { display: block; margin-top: 4px; }\n    .terms-plain { padding-top: 2px; }\n    .terms-plain-title { font-size: 16px; font-weight: 700; color: var(--layout-blue); text-decoration: underline; margin-bottom: 6px; }\n    .terms-plain-body { font-size: 11px; line-height: 1.55; white-space: pre-line; }\n    .terms-plain + .terms-plain .terms-plain-body { margin-top: 0; }\n    .notes-plain { margin-top: 6px; border-top: 1px solid #d1d5db; padding-top: 4px; font-size: 11px; line-height: 1.5; }\n    .notes-plain strong { color: var(--layout-blue); text-decoration: underline; }\n    /* Bank details — centered medium-sized table with its own header bar */\n    .bank-block { margin-top: 12px; width: 100%; text-align: center; }\n    .bank-title-main { text-align: center; font-size: 16px; color: #111; text-decoration: underline; font-weight: 700; margin-bottom: 8px; }\n    .bank-table-wrap { display: flex; justify-content: center; width: 100%; }\n    .bank-table-full {\n      width: max-content;\n      max-width: 100%;\n      margin-left: auto;\n      margin-right: auto;\n      border-collapse: collapse;\n      border: 2px solid var(--layout-blue);\n      table-layout: auto;\n    }\n    .bank-table-full td { font-size: 11px; padding: 5px 8px; border: 1px solid var(--layout-blue); vertical-align: middle; line-height: 1.3; }\n    .bank-table-full td:not(.mini-label) { white-space: nowrap; }\n    .bank-table-full .mini-label {\n      width: auto;\n      white-space: nowrap;\n      font-weight: 700;\n      background: #fff;\n      text-transform: none;\n      font-size: 10px;\n      white-space: nowrap;\n    }\n    @media print {\n      .items-table td.desc-col,\n      .items-table td.desc-col .item-title,\n      .items-table td.desc-col .item-sub,\n      .subject-bar {\n        -webkit-print-color-adjust: exact;\n        print-color-adjust: exact;\n      }\n    }\n    /* Signature row */\n    .sign-row { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }\n    .sign-box { text-align: center; font-size: 10px; color: var(--layout-blue); font-weight: 700; }\n    .sign-line { width: 65%; margin: 10px auto 0; height: 38px; border-bottom: 1px solid var(--layout-blue); }\n    /* Bleed footer art to the inner edge of the page frame (::before is inset 6mm; content padding 12mm). */\n    .footer-main {\n      width: 100%;\n      margin-left: 0;\n      margin-right: 0;\n      margin-top: 0;\n      margin-bottom: 0;\n      line-height: 0;\n      font-size: 0;\n      flex-shrink: 0;\n    }";
+  return `
+    @page { size: A4; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --layout-blue: #235aa0;
+      --layout-blue-soft: #edf4fc;
+      --layout-blue-wash: #dbe8f6;
+      --table-border-outer: 2px solid var(--layout-blue);
+      --table-border-cell: 1px solid var(--layout-blue);
+      --pdf-page-height: 297mm;
+      --pdf-page-width: 210mm;
+      /* Horizontal inset from page edge to inner blue frame (6mm margin + 3px border). */
+      --pdf-frame-inset-x: calc(6mm + 3px);
+      /* One bank table body row (matches .bank-table-full td padding + line-height) */
+      --bank-table-row-height: 27px;
+    }
+    html, body {
+      width: var(--pdf-page-width);
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 10px;
+      font-weight: 400;
+      font-style: normal;
+      color: #111;
+      line-height: 1.35;
+    }
+
+    /*
+     * One sheet = .page / .pdf-page (exactly A4).
+     * Side padding aligns content with the inner edge of the blue ::before frame.
+     */
+    .page,
+    .pdf-page {
+      width: var(--pdf-page-width);
+      max-width: var(--pdf-page-width);
+      height: var(--pdf-page-height);
+      max-height: var(--pdf-page-height);
+      min-height: var(--pdf-page-height);
+      padding-top: 12mm;
+      padding-right: var(--pdf-frame-inset-x);
+      padding-bottom: var(--pdf-frame-inset-x);
+      padding-left: var(--pdf-frame-inset-x);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      box-sizing: border-box;
+    }
+    .page:last-child,
+    .pdf-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    .header,
+    .pdf-running-head {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+      break-after: avoid;
+      position: relative;
+      z-index: 1;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .content,
+    .pdf-page-fill,
+    .pdf-page-fill-closing {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+      box-sizing: border-box;
+    }
+
+    .footer,
+    .pdf-running-foot {
+      flex: 0 0 auto;
+      flex-shrink: 0;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      margin-top: auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+      break-before: avoid;
+      position: relative;
+      z-index: 1;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .top-brand {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 0 6px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .header-art,
+    .footer-art {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .header-fallback {
+      border-bottom: 2px solid #2a5f9e;
+      min-height: 56px;
+      position: relative;
+      padding: 6px 0;
+      text-align: center;
+    }
+    .header-fallback-title {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 19px;
+      font-weight: 700;
+      font-style: normal;
+    }
+    .header-logo-fallback {
+      position: absolute;
+      left: 0;
+      top: 4px;
+      height: 48px;
+      max-width: 165px;
+      object-fit: contain;
+    }
+    .footer-fallback {
+      border: 1px solid #9ca3af;
+      padding: 5px 6px;
+      text-align: center;
+    }
+
+    .pdf-page::before {
+      content: "";
+      position: absolute;
+      top: 6mm;
+      left: 6mm;
+      right: 6mm;
+      bottom: 6mm;
+      border: 3px solid var(--layout-blue);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .pdf-page-watermark {
+      position: absolute;
+      top: 6mm;
+      left: 6mm;
+      right: 6mm;
+      bottom: 6mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .pdf-page-watermark img {
+      width: 72%;
+      max-width: 560px;
+      height: auto;
+      object-fit: contain;
+      opacity: 0.11;
+      filter: grayscale(60%) brightness(1.1);
+    }
+
+    .first-page { padding-top: 7mm; }
+    .first-page .top-brand {
+      margin-top: 0;
+      margin-bottom: 2px;
+    }
+    .pdf-page:not(.first-page) {
+      padding-top: 7mm;
+    }
+
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+    }
+
+    .doc-heading {
+      text-align: center;
+      margin: 6px 0 8px;
+      flex-shrink: 0;
+      font-family: "Times New Roman", Times, serif;
+      font-style: normal;
+      font-weight: normal;
+    }
+    .doc-title {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+      font-style: normal;
+      letter-spacing: 0.4px;
+      color: #111;
+      line-height: 1;
+    }
+    .doc-trn {
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: normal;
+      font-style: normal;
+      color: #111;
+      line-height: 1.1;
+    }
+    .doc-trn strong { font-weight: 700; font-style: normal; }
+
+    .head-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 8px;
+      margin-bottom: 5px;
+      align-items: start;
+      flex-shrink: 0;
+    }
+    .box { border: 1px solid var(--layout-blue); }
+    .head-grid .box {
+      border: 0;
+      min-height: 0;
+    }
+    .head-mini-table {
+      width: 100%;
+      border: 2px solid var(--layout-blue);
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    .head-mini-table td {
+      border: 1px solid var(--layout-blue);
+      padding: 8px 10px;
+      font-size: 12px;
+      line-height: 1.25;
+      vertical-align: top;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .head-mini-table .mini-label {
+      width: 128px;
+      min-width: 128px;
+      font-weight: 700;
+      background: #fff;
+      text-transform: uppercase;
+      letter-spacing: normal;
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+    .head-grid > .box:first-child .head-mini-table { border-left: none; }
+    .head-grid > .box:first-child .head-mini-table td:first-child { border-left: none; }
+    .head-grid > .box:last-child .head-mini-table { border-right: none; }
+    .head-grid > .box:last-child .head-mini-table td:last-child { border-right: none; }
+
+    .mini-table { width: 100%; border-collapse: collapse; }
+    .mini-table td {
+      border: 1px solid var(--layout-blue);
+      padding: 4px 5px;
+      font-size: 9px;
+      vertical-align: top;
+    }
+    .mini-table .mini-label {
+      width: 110px;
+      font-weight: 700;
+      background: #fff;
+      text-transform: uppercase;
+      font-size: 8.5px;
+    }
+
+    .doc-lines-shell {
+      border: none;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    .doc-lines-shell .subject-bar {
+      border: none;
+      border-bottom: 1px solid var(--layout-blue);
+      padding: 4px 10px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      font-style: italic;
+      color: #111;
+      margin: 0;
+    }
+    .doc-lines-shell .items-table { border: none; }
+
+    .subject-bar {
+      border: 2px solid var(--layout-blue);
+      border-bottom: none;
+      padding: 4px 10px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      font-style: italic;
+      color: #111;
+      margin-top: 0;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      border: 2px solid var(--layout-blue);
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+    }
+    .items-table thead {
+      display: table-header-group;
+    }
+    .items-table tbody tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .items-table th,
+    .items-table td {
+      border: 1px solid var(--layout-blue);
+      padding: 3px 4px;
+      font-size: 8.7px;
+      vertical-align: top;
+    }
+    .items-table th:not(.desc-col),
+    .items-table td:not(.desc-col) {
+      font-weight: 700;
+      font-style: normal;
+      color: #111;
+    }
+    .items-table th.desc-col,
+    .items-table td.desc-col {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12px;
+      line-height: 1.45;
+      letter-spacing: 0.02em;
+      padding: 6px 8px;
+      font-weight: 700;
+      font-style: italic;
+      color: #111;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .items-table td.desc-col .item-title {
+      font-weight: 700;
+      font-style: italic;
+      color: #111;
+      margin-bottom: 3px;
+    }
+    .items-table td.desc-col .item-sub {
+      font-weight: 700;
+      font-style: italic;
+      color: #111;
+      line-height: 1.45;
+      letter-spacing: 0.02em;
+    }
+    .items-table th {
+      font-weight: 700;
+      background: #fff;
+      text-align: center;
+    }
+    .items-table td.center { text-align: center; }
+    .items-table td.right { text-align: right; }
+    .items-table td.strong { font-weight: 700; }
+    .items-table th:first-child,
+    .items-table td:first-child { border-left: none; }
+    .items-table th:last-child,
+    .items-table td:last-child { border-right: none; }
+
+    .items-totals-foot {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .items-totals-foot td.totals-spacer {
+      border: none !important;
+      padding: 0;
+      background: transparent;
+    }
+    .items-totals-foot td.totals-label,
+    .items-totals-foot td.totals-value {
+      border: 1px solid var(--layout-blue);
+      padding: 5px 8px;
+      font-size: 8.7px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+    .items-totals-foot tr:first-child td.totals-label,
+    .items-totals-foot tr:first-child td.totals-value {
+      border-top: 2px solid var(--layout-blue);
+    }
+    .items-totals-foot tr.totals-grand td.totals-label,
+    .items-totals-foot tr.totals-grand td.totals-value {
+      border-bottom: 2px solid var(--layout-blue);
+    }
+    .items-totals-foot td.totals-label {
+      text-transform: uppercase;
+      font-size: 8.5px;
+      text-align: right;
+      border-left: 2px solid var(--layout-blue);
+      padding: 5px 12px 5px 8px;
+      line-height: 1.3;
+    }
+    .items-totals-foot td.totals-label-total {
+      font-size: 8.5px;
+      line-height: 1.2;
+    }
+    .items-totals-foot .totals-currency {
+      font-size: 8px;
+      font-style: normal;
+      font-weight: 600;
+    }
+    .items-totals-foot td.totals-value {
+      text-align: right;
+      padding: 5px 10px 5px 6px;
+    }
+    .items-totals-foot td.totals-value:last-child { border-right: none; }
+    .items-totals-foot tr.totals-grand td { background: transparent; }
+
+    .item-title { font-weight: 700; font-style: italic; color: #111; }
+    .item-sub { font-weight: 700; font-style: italic; color: #111; }
+
+    .totals-align-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-top: 6px;
+    }
+    .totals-align-spacer { border: none; padding: 0; }
+    .totals-align-cell { border: none; padding: 0; vertical-align: top; }
+    .totals-wrap { border: none; page-break-inside: avoid; break-inside: avoid; }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid var(--layout-blue);
+      border-right: none;
+    }
+    .totals-table td:last-child { border-right: none; }
+    .totals-table td {
+      border: 1px solid var(--layout-blue);
+      padding: 3px 4px;
+      font-size: 8.7px;
+      white-space: nowrap;
+    }
+    .totals-table .label {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 8.5px;
+    }
+    .totals-table .value { text-align: right; }
+    .totals-table .grand td { font-weight: 700; background: transparent; }
+
+    .closing-tail-flow {
+      margin-top: 10px;
+      flex-shrink: 0;
+      padding-left: 5mm;
+      padding-right: 3mm;
+      padding-bottom: 4px;
+    }
+    .lower-grid { display: block; margin-top: 4px; }
+    .terms-plain { padding-top: 2px; }
+    .terms-plain-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--layout-blue);
+      text-decoration: underline;
+      margin-bottom: 6px;
+    }
+    .terms-plain-body {
+      font-size: 11px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+    .terms-plain + .terms-plain .terms-plain-body { margin-top: 0; }
+    .notes-plain {
+      margin-top: 6px;
+      border-top: 1px solid #d1d5db;
+      padding-top: 4px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .notes-plain strong {
+      color: var(--layout-blue);
+      text-decoration: underline;
+    }
+
+    /* Title row 1; table + signatures row 2 — sign labels align with IBAN (4th table row) */
+    .bank-signatures-wrap {
+      margin-top: 12px;
+      margin-left: -5mm;
+      margin-right: -3mm;
+      width: calc(100% + 5mm + 3mm);
+      padding: 0 2mm;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      align-items: start;
+      column-gap: 10px;
+      row-gap: 6px;
+    }
+    .bank-signatures-wrap .bank-title-main {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: center;
+      align-self: center;
+      margin-bottom: 0;
+    }
+    .bank-signatures-wrap .bank-table-wrap {
+      grid-column: 2;
+      grid-row: 2;
+      justify-self: center;
+      display: flex;
+      justify-content: center;
+      width: auto;
+    }
+    .bank-title-main {
+      text-align: center;
+      font-size: 16px;
+      color: #111;
+      text-decoration: underline;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .bank-table-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    .bank-table-full {
+      width: max-content;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+      border-collapse: collapse;
+      border: 2px solid var(--layout-blue);
+      table-layout: auto;
+    }
+    .bank-table-full td {
+      font-size: 11px;
+      padding: 5px 8px;
+      border: 1px solid var(--layout-blue);
+      vertical-align: middle;
+      line-height: 1.3;
+    }
+    .bank-table-full td:not(.mini-label) { white-space: nowrap; }
+    .bank-table-full .mini-label {
+      width: auto;
+      white-space: nowrap;
+      font-weight: 700;
+      background: #fff;
+      text-transform: none;
+      font-size: 10px;
+    }
+
+    .bank-signatures-wrap .sign-box {
+      font-size: 10px;
+      color: var(--layout-blue);
+      font-weight: 700;
+      grid-row: 2;
+      align-self: start;
+      max-width: 100%;
+      /* Skip rows 1–3 (Bank details, Bank name, Account no); label sits on IBAN row */
+      padding-top: calc(3 * var(--bank-table-row-height));
+      padding-bottom: 0;
+    }
+    .bank-signatures-wrap .sign-box-company {
+      grid-column: 1;
+      justify-self: start;
+      text-align: left;
+      padding-right: 6px;
+    }
+    .bank-signatures-wrap .sign-box-customer {
+      grid-column: 3;
+      justify-self: end;
+      text-align: right;
+      padding-left: 6px;
+    }
+    .sign-line {
+      width: 220px;
+      max-width: 100%;
+      margin-top: 4px;
+      height: 28px;
+      border-bottom: 1px solid var(--layout-blue);
+    }
+    .sign-box-company .sign-line {
+      margin-left: 0;
+      margin-right: auto;
+    }
+    .sign-box-customer .sign-line {
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    .footer-main {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      line-height: 0;
+      font-size: 0;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    @media print {
+      @page { size: A4; margin: 0; }
+      html, body {
+        width: var(--pdf-page-width);
+        max-width: var(--pdf-page-width);
+        margin: 0;
+        padding: 0;
+      }
+      .page,
+      .pdf-page {
+        width: var(--pdf-page-width);
+        max-width: var(--pdf-page-width);
+        height: var(--pdf-page-height);
+        max-height: var(--pdf-page-height);
+        min-height: var(--pdf-page-height);
+        overflow: hidden;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .header,
+      .pdf-running-head,
+      .footer,
+      .pdf-running-foot {
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        overflow: hidden;
+        position: relative;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .footer,
+      .pdf-running-foot {
+        page-break-before: avoid;
+        break-before: avoid;
+      }
+      .header-art,
+      .footer-art {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+      }
+      .content,
+      .pdf-page-fill,
+      .pdf-page-fill-closing {
+        overflow: hidden;
+      }
+      .items-table tbody tr,
+      .items-totals-foot,
+      .closing-tail-flow,
+      .bank-signatures-wrap {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .items-table td.desc-col,
+      .items-table td.desc-col .item-title,
+      .items-table td.desc-col .item-sub,
+      .subject-bar {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  `;
 }

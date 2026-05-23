@@ -35,13 +35,31 @@ export async function getChromiumPath() {
   return localExecutablePathCache;
 }
 
+/** Dev launch flags — avoid --single-process on Windows (crashes / instant exit). */
+function devChromiumLaunchOptions() {
+  const isWin = process.platform === "win32";
+  return {
+    headless: true,
+    args: isWin
+      ? ["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"]
+      : [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--disable-gpu",
+        ],
+  };
+}
+
 /**
  * Launch a Chromium browser instance
  */
 export async function launchBrowser() {
   const { chromium } = await import("playwright-core");
-  const useSparticuz =
-    process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+  // Sparticuz pack is Linux-only (Vercel). Do not use NODE_ENV=production on local Windows.
+  const useSparticuz = Boolean(process.env.VERCEL);
 
   if (useSparticuz) {
     const chromiumMod = await import("@sparticuz/chromium-min");
@@ -77,48 +95,36 @@ export async function launchBrowser() {
     }
   }
 
-  const baseOptions = {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu",
-    ],
-  };
-
+  const baseOptions = devChromiumLaunchOptions();
   const executablePath = await getChromiumPath();
+  const attempts = [];
 
   if (executablePath) {
-    try {
-      return await chromium.launch({
-        ...baseOptions,
-        executablePath,
-      });
-    } catch (err) {
-      console.warn(
-        "[PDF] Launch with executablePath failed, trying system browser channel:",
-        err?.message
-      );
-    }
+    attempts.push(() =>
+      chromium.launch({ ...baseOptions, executablePath })
+    );
+  }
+  for (const channel of ["chrome", "msedge"]) {
+    attempts.push(() => chromium.launch({ ...baseOptions, channel }));
   }
 
-  for (const channel of ["chrome", "msedge"]) {
+  let lastErr;
+  for (const tryLaunch of attempts) {
     try {
-      return await chromium.launch({
-        ...baseOptions,
-        channel,
-      });
-    } catch {
-      // Try the next channel.
+      const browser = await tryLaunch();
+      if (!browser.isConnected()) {
+        await browser.close().catch(() => {});
+        throw new Error("Chromium exited immediately after launch");
+      }
+      return browser;
+    } catch (err) {
+      lastErr = err;
+      console.warn("[PDF] Chromium launch attempt failed:", err?.message);
     }
   }
 
   throw new Error(
-    "Chromium not found for PDF generation. Run `npx playwright install chromium` or set CHROMIUM_EXECUTABLE_PATH."
+    lastErr?.message ||
+      "Chromium not found for PDF generation. Install Google Chrome, run `npx playwright install chromium`, or set CHROMIUM_EXECUTABLE_PATH."
   );
 }
