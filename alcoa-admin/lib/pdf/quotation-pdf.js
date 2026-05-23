@@ -1,5 +1,5 @@
 import { launchBrowser } from "./chromium";
-import { quotationPdfStyles } from "./quotation-pdf-styles.js";
+import { quotationPdfStyles, quotationPdfProbeStyles } from "./quotation-pdf-styles.js";
 import {
   getQuotationCompanyName,
   getQuotationCompanyEmail,
@@ -21,9 +21,18 @@ function getQuotationPdfBankDetails() {
   return { ...DEFAULT_QUOTATION_BANK_DETAILS };
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function formatDate(date) {
   if (!date) return "N/A";
   const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "N/A";
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
@@ -109,7 +118,7 @@ async function quotationPdfPageProbeFits(playwrightPage, bodyHtml) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quotation measure</title>
-  <style>${quotationPdfStyles()}</style>
+  <style>${quotationPdfProbeStyles()}</style>
 </head>
 <body>${bodyHtml}</body>
 </html>`;
@@ -599,8 +608,18 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     ? `<div class="pdf-page-watermark" aria-hidden="true"><img src="${logoDataUri}" alt="" crossorigin="anonymous" /></div>`
     : "";
 
-  const defaultTerms = `
-1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
+  const defaultTerms = isSalesOrder
+    ? `1. All prices are in AED unless otherwise stated.
+2. Payment terms: ${paymentTerms}.
+3. Delivery as per the dates shown above.
+4. Equipment remains the property of ${companyName} until full payment is received.
+5. Standard rental terms and damage charges apply as per signed agreement.`
+    : isSalesInvoice
+      ? `1. All amounts are in AED unless otherwise stated.
+2. Payment is due by the date shown above (${paymentTerms}).
+3. Please quote invoice number on all remittances.
+4. Late payment may incur charges per our credit terms.`
+      : `1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
 2. This quotation is valid for 30 days from the date of issue.
 3. Payment terms: ${paymentTerms}.
 4. Delivery terms: ${deliveryTerms}.
@@ -626,10 +645,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       <tr>
         <td class="center">${start + idx + 1}</td>
         <td class="desc-col">
-          <div class="item-title">${item.equipmentType || ""}</div>
-          ${item.description ? `<div class="item-sub">${item.description}</div>` : ""}
-          ${item.specifications ? `<div class="item-sub">${item.specifications}</div>` : ""}
-          ${item.size ? `<div class="item-sub">Size: ${item.size}</div>` : ""}
+          <div class="item-title">${escapeHtml(item.equipmentType || "")}</div>
+          ${item.description ? `<div class="item-sub">${escapeHtml(item.description)}</div>` : ""}
+          ${item.specifications ? `<div class="item-sub">${escapeHtml(item.specifications)}</div>` : ""}
+          ${item.size ? `<div class="item-sub">Size: ${escapeHtml(item.size)}</div>` : ""}
         </td>
         <td class="center">${formatPdfAmount(item.weight)}</td>
         <td class="center">${formatPdfAmount(item.cbm)}</td>
@@ -766,11 +785,11 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <div class="head-grid">
           <div class="box">
             <table class="mini-table head-mini-table">
-              <tr><td class="mini-label">Customer Name</td><td>${customerName || "-"}</td></tr>
-              <tr><td class="mini-label">Address</td><td>${customerAddress || "-"}</td></tr>
-              <tr><td class="mini-label">Mobile No</td><td>${customerPhone || "-"}</td></tr>
-              <tr><td class="mini-label">TRN</td><td>${customerTRN || "-"}</td></tr>
-              <tr><td class="mini-label">Contact Person</td><td>${contactPersonName || "-"}</td></tr>
+              <tr><td class="mini-label">Customer Name</td><td>${escapeHtml(customerName || "-")}</td></tr>
+              <tr><td class="mini-label">Address</td><td>${escapeHtml(customerAddress || "-")}</td></tr>
+              <tr><td class="mini-label">Mobile No</td><td>${escapeHtml(customerPhone || "-")}</td></tr>
+              <tr><td class="mini-label">TRN</td><td>${escapeHtml(customerTRN || "-")}</td></tr>
+              <tr><td class="mini-label">Contact Person</td><td>${escapeHtml(contactPersonName || "-")}</td></tr>
             </table>
           </div>
           <div class="box">
@@ -792,7 +811,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       body: `
         ${headGridHtml}
         <div class="doc-lines-shell">
-        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
         ${renderTable(tbodyRowsHtml)}
         </div>`,
     });
@@ -805,7 +824,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       body: `
         ${headGridHtml}
         <div class="doc-lines-shell">
-        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
         ${renderTable(tbodyRowsHtml, true)}
         </div>`,
     });
@@ -828,7 +847,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     const firstBody = `
         ${headGridHtml}
         <div class="doc-lines-shell">
-        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
         ${renderTable(tbodyRowsHtml, true)}
         </div>`;
     return wrapQuotationPdfPage({
@@ -862,7 +881,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           ? `
         ${headGridHtml}
         <div class="doc-lines-shell">
-        <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
         ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
         </div>
         ${closingHtml}`
@@ -998,7 +1017,9 @@ async function renderQuotationPdfBuffer(quotation, brandOpts) {
 
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await waitForDocumentImages(page);
-    await page.evaluate(() => document.fonts.ready);
+    await page
+      .evaluate(() => document.fonts.ready)
+      .catch(() => {});
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,

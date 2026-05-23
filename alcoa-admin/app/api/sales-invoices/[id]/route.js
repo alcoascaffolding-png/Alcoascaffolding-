@@ -3,8 +3,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import SalesInvoice from "@/models/SalesInvoice";
-import SalesOrder from "@/models/SalesOrder";
+import { SalesInvoice, SalesOrder, Quotation } from "@/lib/mongoose-models";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
