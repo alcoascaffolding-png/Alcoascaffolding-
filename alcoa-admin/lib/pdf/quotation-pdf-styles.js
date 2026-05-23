@@ -1,5 +1,8 @@
+import { getQuotationPdfEmbeddedFontCss, QUOTATION_PDF_FONT_STACK } from "./quotation-pdf-fonts.js";
+
 export function quotationPdfStyles() {
   return `
+    ${getQuotationPdfEmbeddedFontCss()}
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -14,6 +17,7 @@ export function quotationPdfStyles() {
       --pdf-frame-inset-x: calc(6mm + 3px);
       /* One bank table body row (matches .bank-table-full td padding + line-height) */
       --bank-table-row-height: 27px;
+      --pdf-font-stack: ${QUOTATION_PDF_FONT_STACK};
     }
     html, body {
       width: var(--pdf-page-width);
@@ -21,7 +25,7 @@ export function quotationPdfStyles() {
       padding: 0;
     }
     body {
-      font-family: "Times New Roman", Times, serif;
+      font-family: var(--pdf-font-stack);
       font-size: 10px;
       font-weight: 400;
       font-style: normal;
@@ -137,7 +141,7 @@ export function quotationPdfStyles() {
       text-align: center;
     }
     .header-fallback-title {
-      font-family: "Times New Roman", Times, serif;
+      font-family: var(--pdf-font-stack);
       font-size: 19px;
       font-weight: 700;
       font-style: normal;
@@ -207,7 +211,7 @@ export function quotationPdfStyles() {
       text-align: center;
       margin: 6px 0 8px;
       flex-shrink: 0;
-      font-family: "Times New Roman", Times, serif;
+      font-family: var(--pdf-font-stack);
       font-style: normal;
       font-weight: normal;
     }
@@ -338,6 +342,7 @@ export function quotationPdfStyles() {
       border: 1px solid var(--layout-blue);
       padding: 3px 4px;
       font-size: 8.7px;
+      font-family: var(--pdf-font-stack);
       vertical-align: top;
     }
     .items-table th:not(.desc-col),
@@ -348,7 +353,7 @@ export function quotationPdfStyles() {
     }
     .items-table th.desc-col,
     .items-table td.desc-col {
-      font-family: "Times New Roman", Times, serif;
+      font-family: var(--pdf-font-stack);
       font-size: 12px;
       line-height: 1.45;
       letter-spacing: 0.02em;

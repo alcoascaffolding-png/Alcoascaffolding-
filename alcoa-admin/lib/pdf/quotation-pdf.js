@@ -998,6 +998,7 @@ async function renderQuotationPdfBuffer(quotation, brandOpts) {
 
     await page.setContent(html, { waitUntil: "domcontentloaded" });
     await waitForDocumentImages(page);
+    await page.evaluate(() => document.fonts.ready);
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
