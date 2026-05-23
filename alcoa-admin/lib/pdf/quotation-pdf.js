@@ -72,14 +72,35 @@ function numberToWords(num) {
 
 /** A4 height in CSS px (~96dpi), used to detect overflow on a `.pdf-page` probe. */
 const QUOTATION_PDF_A4_HEIGHT_PX = (297 / 25.4) * 96;
-const QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX = 3;
+const QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX = 2;
+/** Extra gap required between body content and footer (avoids clipped terms). */
+const QUOTATION_PDF_FOOTER_CLEARANCE_PX = 4;
 
-/** 15-item quotes: keep table page clean; render all closing sections on following page(s). */
-const QUOTATION_FORCE_CLOSING_NEXT_PAGE_ITEM_COUNT = 15;
+/**
+ * Wrap probe/final markup in a single A4 sheet (same flex layout as print output).
+ * @param {{ head: string; body: string; foot: string; first?: boolean; pageBreak?: boolean }} parts
+ */
+function wrapQuotationPdfPage({
+  head,
+  body,
+  foot,
+  first = false,
+  pageBreak = true,
+  fillClass = "pdf-page-fill",
+}) {
+  const firstCls = first ? "first-page " : "";
+  const breakCls = pageBreak ? "page-break " : "";
+  return `
+      <section class="pdf-page page ${firstCls}${breakCls}" data-pdf-page>
+        ${head}
+        <div class="${fillClass} content">${body}</div>
+        ${foot}
+      </section>`;
+}
 
 /**
  * @param {import("playwright").Page} playwrightPage
- * @param {string} bodyHtml single section or fragment containing `[data-pdf-page]`
+ * @param {string} bodyHtml single section containing `[data-pdf-page]`
  */
 async function quotationPdfPageProbeFits(playwrightPage, bodyHtml) {
   const html = `<!DOCTYPE html>
@@ -94,22 +115,99 @@ async function quotationPdfPageProbeFits(playwrightPage, bodyHtml) {
 </html>`;
   await playwrightPage.setContent(html, { waitUntil: "domcontentloaded" });
   return playwrightPage.evaluate(
-    ([limit, tol]) => {
+    ([limit, tol, footerGap]) => {
       const page = document.querySelector("[data-pdf-page]");
       if (!page) return false;
-      /*
-       * Use footer bottom vs page top — fill.scrollHeight already includes footer
-       * padding reserve; adding footer height again caused premature page breaks.
-       */
+      const pageH = page.getBoundingClientRect().height;
+      if (pageH > limit + tol) return false;
+
       const foot = page.querySelector(".pdf-running-foot");
-      const pageTop = page.getBoundingClientRect().top;
-      const used = foot
-        ? foot.getBoundingClientRect().bottom - pageTop
-        : page.scrollHeight;
-      return used <= limit + tol;
+      const footTop = foot
+        ? foot.getBoundingClientRect().top
+        : page.getBoundingClientRect().bottom;
+      const maxContentBottom = footTop - footerGap;
+
+      const fill = page.querySelector(".pdf-page-fill, .pdf-page-fill-closing");
+      if (fill) {
+        if (fill.scrollHeight > fill.clientHeight + tol) return false;
+        for (const child of fill.children) {
+          const bottom = child.getBoundingClientRect().bottom;
+          if (bottom > maxContentBottom) return false;
+        }
+      }
+
+      const closing = page.querySelector(".closing-tail-flow");
+      if (closing && closing.getBoundingClientRect().bottom > maxContentBottom) return false;
+
+      const head = page.querySelector(".pdf-running-head");
+      if (head && foot) {
+        const headBottom = head.getBoundingClientRect().bottom;
+        if (footTop < headBottom - tol) return false;
+      }
+      return true;
     },
-    [QUOTATION_PDF_A4_HEIGHT_PX, QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX]
+    [
+      QUOTATION_PDF_A4_HEIGHT_PX,
+      QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX,
+      QUOTATION_PDF_FOOTER_CLEARANCE_PX,
+    ]
   );
+}
+
+/** Split stored terms into one array entry per numbered line. */
+function splitTermsIntoLines(termsText) {
+  const normalized = String(termsText || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/<br\s*\/?>/gi, "\n");
+  return normalized
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/**
+ * @param {object[]} segBlocks blocks already on segment
+ * @param {string[]} lines all term lines
+ * @param {number} offset start index in lines
+ * @param {boolean} showTitle
+ */
+function buildTermsTrialBlock(segBlocks, lines, offset, lineCount, showTitle) {
+  return [
+    ...segBlocks,
+    {
+      type: "terms",
+      lines: lines.slice(offset, offset + lineCount),
+      showTitle: lineCount > 0 && showTitle,
+    },
+  ];
+}
+
+/** Max term lines that fit; binary search + trim until footer clearance passes. */
+async function maxTermLinesThatFit(playwrightPage, probeBlocks, segBlocks, lines, offset, showTitle, onItemsPage) {
+  const remaining = lines.length - offset;
+  if (remaining < 1) return 0;
+
+  let lo = 1;
+  let hi = remaining;
+  let best = 0;
+  while (lo <= hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    const trial = buildTermsTrialBlock(segBlocks, lines, offset, mid, showTitle);
+    if (await probeBlocks(trial, onItemsPage)) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+
+  while (best > 0) {
+    const trial = buildTermsTrialBlock(segBlocks, lines, offset, best, showTitle);
+    if (await probeBlocks(trial, onItemsPage)) break;
+    best--;
+  }
+
+  return best;
 }
 
 async function maxRowsThatFit(playwrightPage, loInclusive, hiInclusive, buildHtmlForCount) {
@@ -129,18 +227,11 @@ async function maxRowsThatFit(playwrightPage, loInclusive, hiInclusive, buildHtm
   return best;
 }
 
-/** Add rows one-by-one until the next full row would overflow (uses actual DOM row heights). */
+/** Binary-search max rows that fit (fewer Chromium loads than linear scan). */
 async function countRowsThatFit(playwrightPage, maxCount, buildHtmlForCount) {
-  let best = 0;
-  for (let count = 1; count <= maxCount; count++) {
-    const html = await buildHtmlForCount(count);
-    if (await quotationPdfPageProbeFits(playwrightPage, html)) {
-      best = count;
-    } else {
-      break;
-    }
-  }
-  return best;
+  if (maxCount < 1) return 0;
+  const best = await maxRowsThatFit(playwrightPage, 1, maxCount, buildHtmlForCount);
+  return Math.max(best, 0);
 }
 
 /** Drop empty item pages (can appear after bad splits). */
@@ -280,24 +371,15 @@ async function flowClosingBlocks(
 
       while (offset < lines.length) {
         let seg = segments[segments.length - 1];
-        const remaining = lines.length - offset;
-        let linesThisPage = 0;
-
-        for (let i = 0; i < remaining; i++) {
-          const trial = [
-            ...seg.blocks,
-            {
-              type: "terms",
-              lines: lines.slice(offset, offset + i + 1),
-              showTitle: i === 0 && showTitle,
-            },
-          ];
-          if (await probeBlocks(trial, seg.onItemsPage)) {
-            linesThisPage = i + 1;
-          } else {
-            break;
-          }
-        }
+        let linesThisPage = await maxTermLinesThatFit(
+          playwrightPage,
+          probeBlocks,
+          seg.blocks,
+          lines,
+          offset,
+          showTitle,
+          seg.onItemsPage
+        );
 
         if (linesThisPage < 1) {
           if (seg.blocks.length > 0) {
@@ -360,31 +442,6 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
 
   const buildClosingProbeHtml = (blocks) => probeClosingOnlyPage(renderClosingTailHtml(blocks));
 
-  if (items.length === QUOTATION_FORCE_CLOSING_NEXT_PAGE_ITEM_COUNT) {
-    const segments = await flowClosingBlocks(
-      playwrightPage,
-      buildClosingProbeHtml,
-      buildClosingProbeHtml,
-      buildClosingBlocks(),
-      { closingPagesOnly: true }
-    );
-    const followUpClosingPages = segments
-      .filter((s) => s.blocks.length > 0)
-      .map((s) => s.blocks);
-
-    return {
-      itemPages: pages,
-      lastPageClosingBlocks: [],
-      followUpClosingPages,
-    };
-  }
-
-  /*
-   * Item row splits are handled only in computeQuotationItemPages.
-   * Re-splitting here (old n-1 cap) caused 15-item quotes to become 14+1 with a sparse
-   * page and a near-blank continuation sheet.
-   */
-
   const lastIdx = pages.length - 1;
   const isFirst = lastIdx === 0;
   const last = pages[lastIdx];
@@ -403,13 +460,46 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
   );
 
   const itemsSegment = segments.find((s) => s.onItemsPage) || { blocks: [] };
-  const followUpClosingPages = segments
+  let lastPageClosingBlocks = itemsSegment.blocks;
+  let followUpClosingPages = segments
     .filter((s) => !s.onItemsPage && s.blocks.length > 0)
     .map((s) => s.blocks);
 
+  const buildItemsClosingProbe = (blocks) =>
+    probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
+
+  while (
+    lastPageClosingBlocks.length > 0 &&
+    !(await quotationPdfPageProbeFits(playwrightPage, buildItemsClosingProbe(lastPageClosingBlocks)))
+  ) {
+    const termsBlock = lastPageClosingBlocks.find((b) => b.type === "terms");
+    if (!termsBlock || termsBlock.lines.length === 0) break;
+
+    const overflow = termsBlock.lines.pop();
+    if (!overflow) break;
+
+    const carry = {
+      type: "terms",
+      lines: [overflow],
+      showTitle: false,
+    };
+    if (
+      followUpClosingPages.length > 0 &&
+      followUpClosingPages[0][0]?.type === "terms"
+    ) {
+      followUpClosingPages[0][0].lines.unshift(overflow);
+    } else {
+      followUpClosingPages.unshift([carry]);
+    }
+
+    if (termsBlock.lines.length === 0) {
+      lastPageClosingBlocks = lastPageClosingBlocks.filter((b) => b.type !== "terms");
+    }
+  }
+
   return {
     itemPages: pages,
-    lastPageClosingBlocks: itemsSegment.blocks,
+    lastPageClosingBlocks,
     followUpClosingPages,
   };
 }
@@ -612,15 +702,36 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         </div>`;
 
   const runningHeadBlock = `
-        <div class="pdf-running-head">
+        <div class="pdf-running-head header">
           <div class="top-brand">${headerImageBlock}</div>
           ${docHeadingBlock}
         </div>`;
 
   const runningFootBlock = `
-        <div class="pdf-running-foot">
+        <div class="pdf-running-foot footer">
           <div class="footer-main">${footerImageBlock}</div>
         </div>`;
+
+  const bankSignaturesHtml = `
+          <div class="bank-signatures-wrap">
+            <div class="bank-title-main">BANK DETAILS</div>
+            <div class="sign-box sign-box-company">
+              <div>For ALCOA ALUMINIUM SCAFFOLDING</div>
+              <div class="sign-line"></div>
+            </div>
+            <div class="bank-table-wrap">
+              <table class="bank-table-full">
+                <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
+                <tr><td class="mini-label">Bank name</td><td>${pdfBank.bankName}</td></tr>
+                <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
+                <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
+              </table>
+            </div>
+            <div class="sign-box sign-box-customer">
+              <div>CUSTOMER'S SIGNATURE</div>
+              <div class="sign-line"></div>
+            </div>
+          </div>`;
 
   const closingTailHtml = `
         <div class="closing-tail-flow">
@@ -631,26 +742,12 @@ function buildQuotationPdfLayout(quotation, options = {}) {
             </div>
           </div>
           ${notes ? `<div class="notes-plain"><strong>Notes:</strong> ${notes.replace(/\n/g, "<br>")}</div>` : ""}
-          <div class="bank-block">
-            <div class="bank-title-main">BANK DETAILS</div>
-            <div class="bank-table-wrap">
-              <table class="bank-table-full">
-                <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
-                <tr><td class="mini-label">Bank name</td><td>${pdfBank.bankName}</td></tr>
-                <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
-                <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
-              </table>
-            </div>
-          </div>
-          <div class="sign-row">
-            <div class="sign-box"><div>For ALCOA ALUMINIUM SCAFFOLDING</div><div class="sign-line"></div></div>
-            <div class="sign-box"><div>CUSTOMER'S SIGNATURE</div><div class="sign-line"></div></div>
-          </div>
+          ${bankSignaturesHtml}
         </div>`;
 
   function buildClosingBlocks() {
     const termsText = (termsAndConditions || defaultTerms).trim();
-    const lines = termsText.split(/\n/).map((line) => line.trim()).filter(Boolean);
+    const lines = splitTermsIntoLines(termsText);
     const blocks = [{ type: "terms", lines }];
     if (notes) {
       blocks.push({
@@ -659,25 +756,8 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       });
     }
     blocks.push({
-      type: "bank",
-      html: `<div class="bank-block">
-            <div class="bank-title-main">BANK DETAILS</div>
-            <div class="bank-table-wrap">
-              <table class="bank-table-full">
-                <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
-                <tr><td class="mini-label">Bank name</td><td>${pdfBank.bankName}</td></tr>
-                <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
-                <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
-              </table>
-            </div>
-          </div>`,
-    });
-    blocks.push({
-      type: "sign",
-      html: `<div class="sign-row">
-            <div class="sign-box"><div>For ALCOA ALUMINIUM SCAFFOLDING</div><div class="sign-line"></div></div>
-            <div class="sign-box"><div>CUSTOMER'S SIGNATURE</div><div class="sign-line"></div></div>
-          </div>`,
+      type: "bank-signatures",
+      html: bankSignaturesHtml,
     });
     return blocks;
   }
@@ -704,49 +784,45 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 
   /* Totals probes omit closingTailHtml — terms/bank/signatures follow in the same section and may
    * paginate; including them in height checks forced too-small row chunks (e.g. 2 + 1 items). */
-  const probeFirstNoTotals = (tbodyRowsHtml) => `
-      <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
+  const probeFirstNoTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: true,
+      body: `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(tbodyRowsHtml)}
-        </div>
-        </div>
-        ${runningFootBlock}
-      </section>`;
+        </div>`,
+    });
 
-  const probeFirstWithTotals = (tbodyRowsHtml) => `
-      <section class="pdf-page pdf-page-measure first-page page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
+  const probeFirstWithTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: true,
+      body: `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(tbodyRowsHtml, true)}
-        </div>
-        </div>
-        ${runningFootBlock}
-      </section>`;
+        </div>`,
+    });
 
-  const probeContNoTotals = (tbodyRowsHtml) => `
-      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
-        ${renderTable(tbodyRowsHtml)}
-        </div>
-        ${runningFootBlock}
-      </section>`;
+  const probeContNoTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      body: renderTable(tbodyRowsHtml),
+    });
 
-  const probeContWithTotals = (tbodyRowsHtml) => `
-      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
-        ${renderTable(tbodyRowsHtml, true)}
-        </div>
-        ${runningFootBlock}
-      </section>`;
+  const probeContWithTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      body: renderTable(tbodyRowsHtml, true),
+    });
 
   const probeLastItemsPage = (isFirst, tbodyRowsHtml, closingHtml = "") => {
     const firstBody = `
@@ -755,25 +831,21 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(tbodyRowsHtml, true)}
         </div>`;
-    return `
-      <section class="pdf-page pdf-page-measure ${isFirst ? "first-page " : ""}page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
-        ${isFirst ? firstBody : renderTable(tbodyRowsHtml, true)}
-        ${closingHtml}
-        </div>
-        ${runningFootBlock}
-      </section>`;
+    return wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirst,
+      body: `${isFirst ? firstBody : renderTable(tbodyRowsHtml, true)}${closingHtml}`,
+    });
   };
 
-  const probeClosingOnlyPage = (closingHtml = "") => `
-      <section class="pdf-page pdf-page-measure page-break" data-pdf-page>
-        ${runningHeadBlock}
-        <div class="pdf-page-fill pdf-page-fill-closing">
-        ${closingHtml}
-        </div>
-        ${runningFootBlock}
-      </section>`;
+  const probeClosingOnlyPage = (closingHtml = "") =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      fillClass: "pdf-page-fill pdf-page-fill-closing",
+      body: closingHtml,
+    });
 
   function buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages) {
     const pages = sanitizeItemPages(itemPages);
@@ -786,20 +858,20 @@ function buildQuotationPdfLayout(quotation, options = {}) {
             ? renderClosingTailHtml(lastPageClosingBlocks)
             : "";
         const pageBreakAfter = !isLastItemsPage || followUpClosingPages.length > 0;
-        return `
-      <section class="pdf-page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}">
-        ${watermarkBlock}
-        ${runningHeadBlock}
-        <div class="pdf-page-fill">
-        ${isFirst ? `
+        const body = isFirst
+          ? `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${safeSubject}</div>
         ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
         </div>
-        ` : renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
-        ${closingHtml}
-        </div>
+        ${closingHtml}`
+          : `${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}${closingHtml}`;
+        return `
+      <section class="pdf-page page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}" data-pdf-page>
+        ${watermarkBlock}
+        ${runningHeadBlock}
+        <div class="pdf-page-fill content">${body}</div>
         ${runningFootBlock}
       </section>`;
       })
@@ -814,12 +886,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         const closingHtml = renderClosingTailHtml(blocks);
         if (!closingHtml.trim()) return "";
         return `
-      <section class="pdf-page ${pageBreakAfter ? "page-break" : ""}">
+      <section class="pdf-page page ${pageBreakAfter ? "page-break" : ""}" data-pdf-page>
         ${watermarkBlock}
         ${runningHeadBlock}
-        <div class="pdf-page-fill pdf-page-fill-closing">
-        ${closingHtml}
-        </div>
+        <div class="pdf-page-fill pdf-page-fill-closing content">${closingHtml}</div>
         ${runningFootBlock}
       </section>`;
       })
@@ -890,17 +960,35 @@ function buildQuotationHTML(quotation, options = {}) {
  * @param {Object} quotation - Mongoose document or plain object
  * @returns {Promise<Buffer>} PDF buffer
  */
-export async function generateQuotationPDF(quotation, pdfOptions = {}) {
-  const logoDataUri = getQuotationLogoDataUri();
-  const headerDataUri = getQuotationHeaderDataUri();
-  const footerDataUri = getQuotationFooterDataUri();
-  const brandOpts = { logoDataUri, headerDataUri, footerDataUri, ...pdfOptions };
+async function waitForDocumentImages(page) {
+  await page.evaluate(() =>
+    Promise.all(
+      Array.from(document.images)
+        .filter((img) => !img.src.startsWith("data:"))
+        .map(
+          (img) =>
+            new Promise((resolve) => {
+              if (img.complete) resolve();
+              else {
+                img.addEventListener("load", resolve, { once: true });
+                img.addEventListener("error", resolve, { once: true });
+              }
+            })
+        )
+    )
+  );
+}
 
+function isBrowserClosedError(err) {
+  const msg = String(err?.message || err || "");
+  return /has been closed|Target page, context or browser/i.test(msg);
+}
+
+async function renderQuotationPdfBuffer(quotation, brandOpts) {
   const browser = await launchBrowser();
   let page;
   try {
     page = await browser.newPage();
-    // Match A4 width so line wrapping / row heights match the final PDF layout.
     await page.setViewportSize({ width: 794, height: 1123 });
 
     const layout = buildQuotationPdfLayout(quotation, brandOpts);
@@ -909,6 +997,7 @@ export async function generateQuotationPDF(quotation, pdfOptions = {}) {
     const html = layout.buildCompleteHtml(pagePlan);
 
     await page.setContent(html, { waitUntil: "domcontentloaded" });
+    await waitForDocumentImages(page);
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
@@ -916,7 +1005,22 @@ export async function generateQuotationPDF(quotation, pdfOptions = {}) {
     });
     return Buffer.from(pdfBuffer);
   } finally {
-    if (page) await page.close();
-    await browser.close();
+    if (page) await page.close().catch(() => {});
+    await browser.close().catch(() => {});
+  }
+}
+
+export async function generateQuotationPDF(quotation, pdfOptions = {}) {
+  const logoDataUri = getQuotationLogoDataUri();
+  const headerDataUri = getQuotationHeaderDataUri();
+  const footerDataUri = getQuotationFooterDataUri();
+  const brandOpts = { logoDataUri, headerDataUri, footerDataUri, ...pdfOptions };
+
+  try {
+    return await renderQuotationPdfBuffer(quotation, brandOpts);
+  } catch (err) {
+    if (!isBrowserClosedError(err)) throw err;
+    console.warn("[PDF] Browser closed during generation, retrying once:", err?.message);
+    return await renderQuotationPdfBuffer(quotation, brandOpts);
   }
 }
