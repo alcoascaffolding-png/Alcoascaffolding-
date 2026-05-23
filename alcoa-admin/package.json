@@ -20,6 +20,7 @@
     "backfill:converted": "node --require ./dns-fix.cjs scripts/backfill-converted-quotations.mjs"
   },
   "dependencies": {
+    "@fontsource/tinos": "^5.2.7",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -39,6 +40,7 @@
     "@radix-ui/react-toggle": "^1.1.9",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@sparticuz/chromium-min": "^147.0.2",
+    "@tailwindcss/postcss": "^4",
     "@tanstack/react-query": "^5.80.2",
     "@tanstack/react-table": "^8.21.3",
     "@upstash/ratelimit": "^2.0.8",
@@ -65,7 +67,6 @@
     "sharp": "^0.34.5",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
-    "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4",
     "twilio": "^5.3.5",
     "vaul": "^1.1.2",
