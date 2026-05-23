@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import SalesInvoice from "@/models/SalesInvoice";
+import { SalesInvoice } from "@/lib/mongoose-models";
 import { generateSalesInvoicePDF } from "@/lib/pdf/sales-document-pdf";
 
 export const GET = withErrorHandler(async (request, context) => {

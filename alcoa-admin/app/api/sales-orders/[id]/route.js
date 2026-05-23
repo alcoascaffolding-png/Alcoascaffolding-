@@ -3,8 +3,8 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import SalesOrder, { SALES_ORDER_STATUS_VALUES } from "@/models/SalesOrder";
-import Quotation from "@/models/Quotation";
+import { SalesOrder, Quotation } from "@/lib/mongoose-models";
+import { SALES_ORDER_STATUS_VALUES } from "@/models/SalesOrder";
 import { syncQuotationsAfterSalesOrderPatch, revertQuotationFromConvertedToApproved } from "@/lib/sync-quotation-sales-order";
 import {
   ensureSalesInvoiceFromSalesOrder,
