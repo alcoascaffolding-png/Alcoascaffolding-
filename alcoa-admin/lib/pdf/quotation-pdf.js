@@ -79,8 +79,12 @@ function numberToWords(num) {
   return result;
 }
 
-/** A4 height in CSS px (~96dpi), used to detect overflow on a `.pdf-page` probe. */
-const QUOTATION_PDF_A4_HEIGHT_PX = (297 / 25.4) * 96;
+/** A4 viewport at 96 CSS dpi (210mm × 297mm). */
+const PDF_VIEWPORT_WIDTH = 794;
+const PDF_VIEWPORT_HEIGHT = 1123;
+/** 2× device pixel ratio for sharper text, borders, and raster logos in print PDF. */
+const PDF_DEVICE_SCALE_FACTOR = 2;
+const QUOTATION_PDF_A4_HEIGHT_PX = PDF_VIEWPORT_HEIGHT;
 const QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX = 2;
 /** Extra gap required between body content and footer (avoids clipped terms). */
 const QUOTATION_PDF_FOOTER_CLEARANCE_PX = 4;
@@ -587,9 +591,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
               <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>
-              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
-              <tr><td class="mini-label">Paid</td><td>${formatPdfAmount(paidAmount)}</td></tr>
-              <tr><td class="mini-label">Balance</td><td>${formatPdfAmount(displayBalance)}</td></tr>`
+              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>`
       : `
               <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
@@ -1005,10 +1007,14 @@ function isBrowserClosedError(err) {
 
 async function renderQuotationPdfBuffer(quotation, brandOpts) {
   const browser = await launchBrowser();
+  const context = await browser.newContext({
+    viewport: { width: PDF_VIEWPORT_WIDTH, height: PDF_VIEWPORT_HEIGHT },
+    deviceScaleFactor: PDF_DEVICE_SCALE_FACTOR,
+  });
   let page;
   try {
-    page = await browser.newPage();
-    await page.setViewportSize({ width: 794, height: 1123 });
+    page = await context.newPage();
+    await page.emulateMedia({ media: "print" });
 
     const layout = buildQuotationPdfLayout(quotation, brandOpts);
     const itemPages = await computeQuotationItemPages(page, layout);
@@ -1023,11 +1029,14 @@ async function renderQuotationPdfBuffer(quotation, brandOpts) {
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
+      preferCSSPageSize: true,
+      scale: 1,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
     return Buffer.from(pdfBuffer);
   } finally {
     if (page) await page.close().catch(() => {});
+    await context.close().catch(() => {});
     await browser.close().catch(() => {});
   }
 }

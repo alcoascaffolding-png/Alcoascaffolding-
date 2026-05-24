@@ -1,7 +1,6 @@
 import { Resend } from "resend";
 import {
   getQuotationLogoBuffer,
-  getQuotationLogoDataUri,
   getQuotationLogoPublicUrl,
   getQuotationCompanyName,
   QUOTATION_EMAIL_LOGO_CID,
@@ -132,12 +131,22 @@ export async function sendQuotationEmail(quotation, pdfBuffer, options = {}) {
 
 export async function sendSalesOrderEmail(order, pdfBuffer) {
   const { default: salesOrderEmailTemplate } = await import("./templates/sales-order-email");
-  const logoDataUri = getQuotationLogoDataUri();
-  const html = salesOrderEmailTemplate(order, { logoDataUri });
+  const logoBuffer = getQuotationLogoBuffer();
+  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
+  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
+  const html = salesOrderEmailTemplate(order, { logoCid, logoUrl });
   const brandName = getQuotationCompanyName();
-  const attachments = pdfBuffer
-    ? [{ filename: `${order.orderNumber}.pdf`, content: pdfBuffer }]
-    : [];
+  const attachments = [];
+  if (pdfBuffer) {
+    attachments.push({ filename: `${order.orderNumber}.pdf`, content: pdfBuffer });
+  }
+  if (logoBuffer) {
+    attachments.push({
+      filename: "quotation-logo.png",
+      content: logoBuffer,
+      contentId: QUOTATION_EMAIL_LOGO_CID,
+    });
+  }
   return sendEmail({
     from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
     to: [order.customerEmail],
@@ -151,12 +160,22 @@ export async function sendSalesOrderEmail(order, pdfBuffer) {
 
 export async function sendSalesInvoiceEmail(invoice, pdfBuffer) {
   const { default: salesInvoiceEmailTemplate } = await import("./templates/sales-invoice-email");
-  const logoDataUri = getQuotationLogoDataUri();
-  const html = salesInvoiceEmailTemplate(invoice, { logoDataUri });
+  const logoBuffer = getQuotationLogoBuffer();
+  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
+  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
+  const html = salesInvoiceEmailTemplate(invoice, { logoCid, logoUrl });
   const brandName = getQuotationCompanyName();
-  const attachments = pdfBuffer
-    ? [{ filename: `${invoice.invoiceNumber}.pdf`, content: pdfBuffer }]
-    : [];
+  const attachments = [];
+  if (pdfBuffer) {
+    attachments.push({ filename: `${invoice.invoiceNumber}.pdf`, content: pdfBuffer });
+  }
+  if (logoBuffer) {
+    attachments.push({
+      filename: "quotation-logo.png",
+      content: logoBuffer,
+      contentId: QUOTATION_EMAIL_LOGO_CID,
+    });
+  }
   return sendEmail({
     from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
     to: [invoice.customerEmail],

@@ -9,6 +9,10 @@ function buildQuotationPdfCss(embedFonts) {
     ${embeddedFonts}
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
     :root {
       --layout-blue: #235aa0;
       --layout-blue-soft: #edf4fc;
@@ -35,6 +39,9 @@ function buildQuotationPdfCss(embedFonts) {
       font-style: normal;
       color: #111;
       line-height: 1.35;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: geometricPrecision;
     }
 
     /*
@@ -136,6 +143,8 @@ function buildQuotationPdfCss(embedFonts) {
       margin: 0;
       padding: 0;
       border: 0;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
     .header-fallback {
       border-bottom: 2px solid #2a5f9e;
