@@ -1,3 +1,4 @@
+import { getQuotationCompanyName } from "@/lib/quotation-brand";
 import {
   buildDocumentCoverEmail,
   formatEmailCurrency,
@@ -9,7 +10,7 @@ import {
  * Cover email for a sales invoice — same layout as quotation email; details in PDF only.
  */
 export default function salesInvoiceEmailTemplate(invoice, options = {}) {
-  const { logoCid = "", logoUrl = "", logoDataUri = "" } = options;
+  const { logoSrc = "" } = options;
   const {
     invoiceNumber,
     customerName,
@@ -27,18 +28,25 @@ export default function salesInvoiceEmailTemplate(invoice, options = {}) {
       ? Number(balance)
       : Math.max(0, Number(total || 0) - Number(paidAmount || 0));
 
+  const safeInvoice = escapeEmailHtml(invoiceNumber);
+  const safeCompany = escapeEmailHtml(getQuotationCompanyName());
+
   return buildDocumentCoverEmail({
-    docTypeLabel: "INVOICE",
+    docTypeLabel: "TAX INVOICE",
     docNumber: invoiceNumber,
     pageTitle: `Invoice ${invoiceNumber}`,
     customerName,
-    logoCid,
-    logoUrl,
-    logoDataUri,
-    introHtml: `<p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.65;">
-        Please find attached invoice <strong>${escapeEmailHtml(invoiceNumber)}</strong> in PDF format for your review and payment.
+    logoSrc,
+    introHtml: `<p style="margin:0 0 16px;font-size:15px;color:#0f172a;line-height:1.7;">
+        Please find attached the tax invoice from <strong>${safeCompany}</strong>
+        for your attention and payment processing.
+      </p>`,
+    bodyHtml: `<p style="margin:0 0 16px;font-size:15px;color:#0f172a;line-height:1.7;">
+        Invoice <strong>${safeInvoice}</strong> is issued in accordance with our agreement. Kindly quote the
+        invoice number on all remittances. Bank details and full particulars are shown in the attached PDF.
       </p>`,
     summaryRows: [
+      { label: "Invoice no.", value: safeInvoice },
       { label: "Invoice date", value: formatEmailDate(invoiceDate) },
       { label: "Due date", value: formatEmailDate(dueDate) },
       {
@@ -50,7 +58,7 @@ export default function salesInvoiceEmailTemplate(invoice, options = {}) {
         value: formatEmailCurrency(total, currency),
         valueStyle: "color:#1D3A6C;font-size:14px;font-weight:700;",
       },
-      { label: "Paid", value: formatEmailCurrency(paidAmount, currency) },
+      { label: "Amount paid", value: formatEmailCurrency(paidAmount, currency) },
       {
         label: "Balance due",
         value: formatEmailCurrency(displayBalance, currency),

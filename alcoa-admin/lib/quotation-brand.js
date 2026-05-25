@@ -83,15 +83,66 @@ export function getQuotationLogoBuffer() {
   }
 }
 
-/** Public URL for logo (fallback when CID is unavailable). */
+/** Public URL for logo (optional; set EMAIL_LOGO_URL for a fixed CDN/admin URL). */
 export function getQuotationLogoPublicUrl() {
+  const explicit = process.env.EMAIL_LOGO_URL?.trim();
+  if (explicit) return explicit;
+
   const raw =
+    process.env.PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
   if (!raw) return "";
   const origin = raw.startsWith("http") ? raw : `https://${raw}`;
   return `${origin.replace(/\/$/, "")}/brand/quotation-logo.png`;
+}
+
+/** True when the logo URL can be loaded by recipients (not localhost). */
+export function isReachableEmailLogoUrl(url) {
+  if (!url?.trim()) return false;
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host !== "localhost" && host !== "127.0.0.1" && !host.endsWith(".local");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Branding for quotation / sales order / sales invoice emails.
+ * Prefers a public HTTPS logo URL in HTML (no extra attachment).
+ * Falls back to Resend CID inline (base64) when only a local file exists.
+ *
+ * @returns {{ logoSrc: string; inlineAttachments: object[] }}
+ */
+export function buildDocumentEmailBranding() {
+  const publicUrl = getQuotationLogoPublicUrl();
+  if (isReachableEmailLogoUrl(publicUrl)) {
+    return { logoSrc: publicUrl, inlineAttachments: [] };
+  }
+
+  const logoBuffer = getQuotationLogoBuffer();
+  if (logoBuffer) {
+    return {
+      logoSrc: `cid:${QUOTATION_EMAIL_LOGO_CID}`,
+      inlineAttachments: [
+        {
+          filename: "quotation-logo.png",
+          content: Buffer.from(logoBuffer).toString("base64"),
+          contentId: QUOTATION_EMAIL_LOGO_CID,
+          contentType: "image/png",
+        },
+      ],
+    };
+  }
+
+  const dataUri = getQuotationLogoDataUri();
+  return {
+    logoSrc: dataUri || "",
+    inlineAttachments: [],
+  };
 }
 
 /**
@@ -131,8 +182,13 @@ export function getQuotationFooterDataUri() {
   ]);
 }
 
+/** Legal / customer-facing company name (emails, PDFs, WhatsApp). */
 export function getQuotationCompanyName() {
-  return process.env.NEXT_PUBLIC_APP_NAME || "ALCOA Aluminium Scaffolding";
+  return (
+    process.env.COMPANY_NAME ||
+    process.env.NEXT_PUBLIC_COMPANY_NAME ||
+    "Alcoa Aluminium scaffolding L.L.C"
+  );
 }
 
 export function getQuotationTagline() {
@@ -144,6 +200,11 @@ export function getQuotationTagline() {
 
 export function getQuotationCompanyEmail() {
   return process.env.COMPANY_EMAIL || "sales@alcoascaffolding.com";
+}
+
+/** Company TRN printed on quotation, sales order, and sales invoice PDFs. */
+export function getQuotationCompanyTRN() {
+  return process.env.COMPANY_TRN || "105075887700001";
 }
 
 /**

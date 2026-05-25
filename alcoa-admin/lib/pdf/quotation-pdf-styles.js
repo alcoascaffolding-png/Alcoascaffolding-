@@ -34,11 +34,11 @@ function buildQuotationPdfCss(embedFonts) {
     }
     body {
       font-family: var(--pdf-font-stack);
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 400;
       font-style: normal;
       color: #111;
-      line-height: 1.35;
+      line-height: 1.45;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: geometricPrecision;
@@ -143,8 +143,7 @@ function buildQuotationPdfCss(embedFonts) {
       margin: 0;
       padding: 0;
       border: 0;
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
+      image-rendering: auto;
     }
     .header-fallback {
       border-bottom: 2px solid #2a5f9e;
@@ -295,7 +294,7 @@ function buildQuotationPdfCss(embedFonts) {
     .mini-table td {
       border: 1px solid var(--layout-blue);
       padding: 4px 5px;
-      font-size: 9px;
+      font-size: 11px;
       vertical-align: top;
     }
     .mini-table .mini-label {
@@ -303,7 +302,7 @@ function buildQuotationPdfCss(embedFonts) {
       font-weight: 700;
       background: #fff;
       text-transform: uppercase;
-      font-size: 8.5px;
+      font-size: 10.5px;
     }
 
     .doc-lines-shell {
@@ -354,15 +353,22 @@ function buildQuotationPdfCss(embedFonts) {
     .items-table td {
       border: 1px solid var(--layout-blue);
       padding: 3px 4px;
-      font-size: 8.7px;
       font-family: var(--pdf-font-stack);
-      vertical-align: top;
+      vertical-align: middle;
     }
-    .items-table th:not(.desc-col),
-    .items-table td:not(.desc-col) {
+    .items-table th:not(.desc-col) {
+      font-size: 8.7px;
       font-weight: 700;
       font-style: normal;
       color: #111;
+      text-align: center;
+    }
+    .items-table td:not(.desc-col) {
+      font-size: 10.5px;
+      font-weight: 400;
+      font-style: normal;
+      color: #111;
+      text-align: center;
     }
     .items-table th.desc-col,
     .items-table td.desc-col {
@@ -374,6 +380,8 @@ function buildQuotationPdfCss(embedFonts) {
       font-weight: 700;
       font-style: italic;
       color: #111;
+      text-align: left;
+      vertical-align: top;
       word-break: break-word;
       overflow-wrap: anywhere;
     }
@@ -394,9 +402,13 @@ function buildQuotationPdfCss(embedFonts) {
       font-weight: 700;
       background: #fff;
       text-align: center;
+      vertical-align: middle;
     }
-    .items-table td.center { text-align: center; }
-    .items-table td.right { text-align: right; }
+    .items-table td.center,
+    .items-table td.right,
+    .items-table td.strong {
+      text-align: center;
+    }
     .items-table td.strong { font-weight: 700; }
     .items-table th:first-child,
     .items-table td:first-child { border-left: none; }
@@ -430,7 +442,7 @@ function buildQuotationPdfCss(embedFonts) {
     }
     .items-totals-foot td.totals-label {
       text-transform: uppercase;
-      font-size: 8.5px;
+      font-size: 10.5px;
       text-align: right;
       border-left: 2px solid var(--layout-blue);
       padding: 5px 12px 5px 8px;
@@ -474,13 +486,13 @@ function buildQuotationPdfCss(embedFonts) {
     .totals-table td {
       border: 1px solid var(--layout-blue);
       padding: 3px 4px;
-      font-size: 8.7px;
+      font-size: 9.5px;
       white-space: nowrap;
     }
     .totals-table .label {
       font-weight: 700;
       text-transform: uppercase;
-      font-size: 8.5px;
+      font-size: 9.5px;
     }
     .totals-table .value { text-align: right; }
     .totals-table .grand td { font-weight: 700; background: transparent; }
@@ -502,8 +514,8 @@ function buildQuotationPdfCss(embedFonts) {
       margin-bottom: 6px;
     }
     .terms-plain-body {
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 13.5px;
+      line-height: 1.7;
       white-space: pre-line;
     }
     .terms-plain + .terms-plain .terms-plain-body { margin-top: 0; }

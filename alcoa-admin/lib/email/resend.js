@@ -1,9 +1,7 @@
 import { Resend } from "resend";
 import {
-  getQuotationLogoBuffer,
-  getQuotationLogoPublicUrl,
+  buildDocumentEmailBranding,
   getQuotationCompanyName,
-  QUOTATION_EMAIL_LOGO_CID,
 } from "@/lib/quotation-brand";
 import {
   contactCompanyTemplate,
@@ -28,6 +26,11 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 const COMPANY_EMAIL = process.env.COMPANY_EMAIL || "sales@alcoascaffolding.com";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || COMPANY_EMAIL;
 
+function emailFromLine() {
+  const name = getQuotationCompanyName();
+  return `${name} <${FROM_EMAIL}>`;
+}
+
 async function sendEmail(options, retries = 3) {
   let lastError;
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -44,6 +47,31 @@ async function sendEmail(options, retries = 3) {
     }
   }
   throw lastError;
+}
+
+/** PDF attachment + optional Resend inline logo (contentId + base64 — not a separate file). */
+function documentEmailAttachments(filename, pdfBuffer, inlineAttachments = []) {
+  const attachments = [];
+
+  for (const att of inlineAttachments) {
+    if (!att?.contentId) continue;
+    attachments.push({
+      filename: att.filename || "quotation-logo.png",
+      content: att.content,
+      contentId: att.contentId,
+      contentType: att.contentType || "image/png",
+    });
+  }
+
+  if (pdfBuffer) {
+    attachments.push({
+      filename,
+      content: pdfBuffer,
+      contentType: "application/pdf",
+    });
+  }
+
+  return attachments;
 }
 
 export async function sendContactFormEmail(data) {
@@ -98,91 +126,63 @@ export async function sendQuoteRequestEmail(data) {
 
 export async function sendQuotationEmail(quotation, pdfBuffer, options = {}) {
   const { default: quotationEmailTemplate } = await import("./templates/quotation-email");
-  const logoBuffer = getQuotationLogoBuffer();
-  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
-  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
-  const html = quotationEmailTemplate(quotation, { logoCid, logoUrl });
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = quotationEmailTemplate(quotation, { logoSrc, ...options });
+
   const brandName = getQuotationCompanyName();
-
-  const attachments = [];
-  if (pdfBuffer) {
-    attachments.push({ filename: `${quotation.quoteNumber}.pdf`, content: pdfBuffer });
-  }
-  if (logoBuffer) {
-    attachments.push({
-      filename: "quotation-logo.png",
-      content: logoBuffer,
-      contentId: QUOTATION_EMAIL_LOGO_CID,
-    });
-  }
-
-  const result = await sendEmail({
-    from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
+  return sendEmail({
+    from: emailFromLine(),
     to: [quotation.customerEmail],
     cc: [COMPANY_EMAIL],
     subject: `Quotation ${quotation.quoteNumber} — ${brandName}`,
     html,
-    attachments,
+    attachments: documentEmailAttachments(
+      `${quotation.quoteNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
     reply_to: COMPANY_EMAIL,
   });
-
-  return result;
 }
 
 export async function sendSalesOrderEmail(order, pdfBuffer) {
   const { default: salesOrderEmailTemplate } = await import("./templates/sales-order-email");
-  const logoBuffer = getQuotationLogoBuffer();
-  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
-  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
-  const html = salesOrderEmailTemplate(order, { logoCid, logoUrl });
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = salesOrderEmailTemplate(order, { logoSrc });
+
   const brandName = getQuotationCompanyName();
-  const attachments = [];
-  if (pdfBuffer) {
-    attachments.push({ filename: `${order.orderNumber}.pdf`, content: pdfBuffer });
-  }
-  if (logoBuffer) {
-    attachments.push({
-      filename: "quotation-logo.png",
-      content: logoBuffer,
-      contentId: QUOTATION_EMAIL_LOGO_CID,
-    });
-  }
   return sendEmail({
-    from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
+    from: emailFromLine(),
     to: [order.customerEmail],
     cc: [COMPANY_EMAIL],
     subject: `Sales Order ${order.orderNumber} — ${brandName}`,
     html,
-    attachments,
+    attachments: documentEmailAttachments(
+      `${order.orderNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
     reply_to: COMPANY_EMAIL,
   });
 }
 
 export async function sendSalesInvoiceEmail(invoice, pdfBuffer) {
   const { default: salesInvoiceEmailTemplate } = await import("./templates/sales-invoice-email");
-  const logoBuffer = getQuotationLogoBuffer();
-  const logoCid = logoBuffer ? QUOTATION_EMAIL_LOGO_CID : "";
-  const logoUrl = logoCid ? "" : getQuotationLogoPublicUrl();
-  const html = salesInvoiceEmailTemplate(invoice, { logoCid, logoUrl });
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = salesInvoiceEmailTemplate(invoice, { logoSrc });
+
   const brandName = getQuotationCompanyName();
-  const attachments = [];
-  if (pdfBuffer) {
-    attachments.push({ filename: `${invoice.invoiceNumber}.pdf`, content: pdfBuffer });
-  }
-  if (logoBuffer) {
-    attachments.push({
-      filename: "quotation-logo.png",
-      content: logoBuffer,
-      contentId: QUOTATION_EMAIL_LOGO_CID,
-    });
-  }
   return sendEmail({
-    from: `Alcoa Scaffolding <${FROM_EMAIL}>`,
+    from: emailFromLine(),
     to: [invoice.customerEmail],
     cc: [COMPANY_EMAIL],
-    subject: `Invoice ${invoice.invoiceNumber} — ${brandName}`,
+    subject: `Tax Invoice ${invoice.invoiceNumber} — ${brandName}`,
     html,
-    attachments,
+    attachments: documentEmailAttachments(
+      `${invoice.invoiceNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
     reply_to: COMPANY_EMAIL,
   });
 }

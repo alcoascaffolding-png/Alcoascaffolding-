@@ -3,6 +3,7 @@ import { quotationPdfStyles, quotationPdfProbeStyles } from "./quotation-pdf-sty
 import {
   getQuotationCompanyName,
   getQuotationCompanyEmail,
+  getQuotationCompanyTRN,
   getQuotationLogoDataUri,
   getQuotationHeaderDataUri,
   getQuotationFooterDataUri,
@@ -82,8 +83,8 @@ function numberToWords(num) {
 /** A4 viewport at 96 CSS dpi (210mm × 297mm). */
 const PDF_VIEWPORT_WIDTH = 794;
 const PDF_VIEWPORT_HEIGHT = 1123;
-/** 2× device pixel ratio for sharper text, borders, and raster logos in print PDF. */
-const PDF_DEVICE_SCALE_FACTOR = 2;
+/** Device pixel ratio for print PDF (3× ≈ 288dpi raster detail; HTML text stays vector in Chrome PDF). */
+const PDF_DEVICE_SCALE_FACTOR = Number(process.env.PDF_DEVICE_SCALE_FACTOR) || 4;
 const QUOTATION_PDF_A4_HEIGHT_PX = PDF_VIEWPORT_HEIGHT;
 const QUOTATION_PDF_PAGE_FIT_TOLERANCE_PX = 2;
 /** Extra gap required between body content and footer (avoids clipped terms). */
@@ -562,7 +563,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 
   const companyName = getQuotationCompanyName();
   const companyEmail = getQuotationCompanyEmail();
-  const companyTRN = process.env.COMPANY_TRN || "100123456700003";
+  const companyTRN = getQuotationCompanyTRN();
   const safeSubject =
     subject ||
     (isSalesOrder
@@ -655,10 +656,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <td class="center">${formatPdfAmount(item.weight)}</td>
         <td class="center">${formatPdfAmount(item.cbm)}</td>
         <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
-        <td class="right">${formatPdfAmount(item.ratePerUnit)}</td>
-        <td class="right">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
-        <td class="right">${formatPdfAmount(item.vatAmount)}</td>
-        <td class="right strong">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
+        <td class="center">${formatPdfAmount(item.ratePerUnit)}</td>
+        <td class="center">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
+        <td class="center">${formatPdfAmount(item.vatAmount)}</td>
+        <td class="center strong">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
       </tr>`
       )
       .join("");
@@ -1014,23 +1015,24 @@ async function renderQuotationPdfBuffer(quotation, brandOpts) {
   let page;
   try {
     page = await context.newPage();
-    await page.emulateMedia({ media: "print" });
 
     const layout = buildQuotationPdfLayout(quotation, brandOpts);
     const itemPages = await computeQuotationItemPages(page, layout);
     const pagePlan = await resolveQuotationPdfPagePlan(page, layout, itemPages);
     const html = layout.buildCompleteHtml(pagePlan);
 
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    await page.setContent(html, { waitUntil: "networkidle", timeout: 60_000 });
     await waitForDocumentImages(page);
     await page
       .evaluate(() => document.fonts.ready)
       .catch(() => {});
+    await page.emulateMedia({ media: "print" });
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
       scale: 1,
+      tagged: true,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
     return Buffer.from(pdfBuffer);
