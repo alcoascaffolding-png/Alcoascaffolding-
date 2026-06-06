@@ -50,6 +50,7 @@ const Navbar = () => {
         { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
         { name: 'Ladders', path: '/products/ladders' },
         { name: 'Steel Cuplock Scaffolding', path: '/products/steel-cuplock-scaffolding' },
+        { name: 'Couplers & Clamps', path: '/products/couplers' },
       ]
     },
     {
@@ -78,6 +79,7 @@ const Navbar = () => {
       ]
     },
     { name: 'Projects', path: '/projects', hasDropdown: false },
+    { name: 'Blog', path: '/blog', hasDropdown: false },
     { name: 'Branches', path: '/branches', hasDropdown: false },
     { name: 'Safety', path: '/safety', hasDropdown: false },
     { name: 'About Us', path: '/about-us', hasDropdown: false },
@@ -125,8 +127,10 @@ const Navbar = () => {
               <Link to="/safety" className="hover:text-brand-accent-400 transition-colors">
                 Safety Standards
               </Link>
-              {/* <span className="text-brand-secondary-400">|</span> */}
-              {/* <DarkModeToggle size="sm" /> */}
+              {/* <span className="text-brand-secondary-400">|</span>
+              <Link to="/ar" className="hover:text-brand-accent-400 transition-colors" hrefLang="ar">
+                العربية
+              </Link> */}
             </div>
           </div>
         </div>

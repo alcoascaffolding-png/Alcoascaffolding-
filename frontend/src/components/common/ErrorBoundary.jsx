@@ -7,13 +7,13 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
     this.setState({
-      error: error,
-      errorInfo: errorInfo
+      error,
+      errorInfo,
     });
     
     // Log error to console or external service
@@ -66,19 +66,22 @@ class ErrorBoundary extends React.Component {
                 </button>
               </div>
               
-              {process.env.NODE_ENV === 'development' && (
+              {import.meta.env.DEV && (
                 <details className="mt-6 text-left">
                   <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700">
                     Error Details (Development Only)
                   </summary>
                   <div className="mt-2 p-4 bg-gray-100 rounded text-xs text-gray-700 font-mono overflow-auto">
                     <div className="mb-2">
-                      <strong>Error:</strong> {this.state.error && this.state.error.toString()}
+                      <strong>Error:</strong>{' '}
+                      {this.state.error?.toString() ?? 'Unknown error'}
                     </div>
                     <div>
                       <strong>Stack Trace:</strong>
                       <pre className="whitespace-pre-wrap">
-                        {this.state.errorInfo.componentStack}
+                        {this.state.errorInfo?.componentStack ??
+                          this.state.error?.stack ??
+                          'No stack trace available'}
                       </pre>
                     </div>
                   </div>

@@ -1,9 +1,23 @@
 User-agent: *
 Allow: /
+Disallow: /*?location=
+Disallow: /*?service=
+Disallow: /*?product=
+Disallow: /*?type=
 
-# Sitemap
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://alcoascaffolding.com/sitemap.xml
-
-# Crawl-delay
-Crawl-delay: 10
-

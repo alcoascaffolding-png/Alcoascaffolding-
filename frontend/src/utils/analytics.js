@@ -3,20 +3,12 @@
  * Requires GA4 gtag.js loaded in index.html
  */
 
-/**
- * Track a custom GA4 event
- * @param {string} eventName - GA4 event name
- * @param {object} params - Additional event parameters
- */
 export const trackEvent = (eventName, params = {}) => {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     window.gtag('event', eventName, params);
   }
 };
 
-/**
- * Track WhatsApp button click with page context
- */
 export const trackWhatsAppClick = () => {
   trackEvent('whatsapp_click', {
     event_category: 'engagement',
@@ -26,10 +18,6 @@ export const trackWhatsAppClick = () => {
   });
 };
 
-/**
- * Track phone call click
- * @param {string} phoneNumber
- */
 export const trackPhoneClick = (phoneNumber = '+971581375601') => {
   trackEvent('phone_click', {
     event_category: 'engagement',
@@ -38,10 +26,6 @@ export const trackPhoneClick = (phoneNumber = '+971581375601') => {
   });
 };
 
-/**
- * Track quote request form submission
- * @param {string} service - Service name requested
- */
 export const trackQuoteRequest = (service = '') => {
   trackEvent('quote_request', {
     event_category: 'conversion',
@@ -50,13 +34,37 @@ export const trackQuoteRequest = (service = '') => {
   });
 };
 
-/**
- * Track email click
- */
+export const trackFormSubmit = (params = {}) => {
+  trackEvent('form_submit', {
+    event_category: 'conversion',
+    event_label: 'contact_form',
+    page_path: window.location.pathname,
+    ...params,
+  });
+};
+
 export const trackEmailClick = () => {
   trackEvent('email_click', {
     event_category: 'engagement',
     event_label: 'email_cta',
     page_path: window.location.pathname,
+  });
+};
+
+/** Delegated click tracking for tel: and mailto: links sitewide */
+export const initAnalyticsClickTracking = () => {
+  if (typeof document === 'undefined') return;
+
+  document.addEventListener('click', (event) => {
+    const telLink = event.target.closest('a[href^="tel:"]');
+    if (telLink) {
+      trackPhoneClick(telLink.getAttribute('href')?.replace('tel:', '') || '');
+      return;
+    }
+
+    const mailLink = event.target.closest('a[href^="mailto:"]');
+    if (mailLink) {
+      trackEmailClick();
+    }
   });
 };

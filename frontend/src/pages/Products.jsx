@@ -6,6 +6,7 @@ import {
   FiTruck, 
   FiShield, 
   FiLayers,
+  FiLink,
   FiArrowRight,
   FiCheck,
   FiInfo
@@ -121,6 +122,37 @@ const Products = () => {
       ],
       price: 'Quote on request',
       category: 'steel'
+    },
+    {
+      id: 'couplers',
+      title: 'Scaffolding Couplers & Clamps',
+      description: 'Double couplers, swivel couplers, putlog couplers, spigot pins, and full clamp range for tube-and-fitting systems.',
+      icon: FiLink,
+      image: 'couplers',
+      features: [
+        'Double & swivel couplers',
+        'Board retaining & beam couplers',
+        'Spigot pins & joint pins',
+        'Pressed steel variants',
+        'Galvanized finish',
+        'Rent or buy per piece'
+      ],
+      specifications: {
+        'Material': 'Galvanized / Pressed Steel',
+        'Types': 'Double, Swivel, Putlog, Sleeve, Beam',
+        'Standards': 'BS EN 74, AS/NZS 1576.2',
+        'Finish': 'Hot-dip galvanized',
+        'Pricing': 'From AED 3/piece/day'
+      },
+      applications: [
+        'Tube and fitting scaffolding',
+        'Cuplock compatibility',
+        'Formwork connections',
+        'Façade access systems',
+        'Industrial maintenance'
+      ],
+      price: 'From AED 3/day',
+      category: 'couplers'
     }
   ];
 
@@ -128,7 +160,8 @@ const Products = () => {
     { id: 'all', name: 'All Products', icon: FiTool },
     { id: 'aluminium', name: 'Aluminium Scaffolding', icon: FiTool },
     { id: 'ladders', name: 'Ladders', icon: FiLayers },
-    { id: 'steel', name: 'Steel Cuplock', icon: FiShield }
+    { id: 'steel', name: 'Steel Cuplock', icon: FiShield },
+    { id: 'couplers', name: 'Couplers & Clamps', icon: FiLink }
   ];
 
   const [activeCategory, setActiveCategory] = React.useState('all');

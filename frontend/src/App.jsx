@@ -1,36 +1,40 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Layout Components
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
 import BackToTop from './components/common/BackToTop';
 import WhatsAppButton from './components/common/WhatsAppButton';
-
-// Pages
-import Home from './pages/Home';
-import Products from './pages/Products';
-import Services from './pages/Services';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
-import ProjectGallery from './pages/ProjectGallery';
-import ProjectDetails from './pages/ProjectDetails';
-import SafetyStandards from './pages/SafetyStandards';
-import Branches from './pages/Branches';
-
-// Product Pages - Dynamic Component
-import ProductDetail from './pages/products/ProductDetail';
-
-// Service Detail Pages - Dynamic Component
-import ServiceDetail from './pages/services/ServiceDetail';
-
-// Error Boundary
 import ErrorBoundary from './components/common/ErrorBoundary';
+
+import Home from './pages/Home';
+import ArabicPage from './pages/ArabicPage';
+
+const Products = lazy(() => import('./pages/Products'));
+const Services = lazy(() => import('./pages/Services'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+const ProjectGallery = lazy(() => import('./pages/ProjectGallery'));
+const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
+const SafetyStandards = lazy(() => import('./pages/SafetyStandards'));
+const Branches = lazy(() => import('./pages/Branches'));
+const LocationPage = lazy(() => import('./pages/LocationPage'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
+const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
+const ServiceDetail = lazy(() => import('./pages/services/ServiceDetail'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 function App() {
   return (
@@ -40,39 +44,37 @@ function App() {
           <div className="min-h-screen flex flex-col bg-white">
             <ScrollToTop />
             <Navbar />
-            
             <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/scaffolding-rental-dubai" element={<Home />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/aluminum-scaffolding-dubai" element={<Products />} />
-                {/* Dynamic route for all product detail pages */}
-                <Route path="/products/:productId" element={<ProductDetail />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/construction-scaffolding-uae" element={<Services />} />
-                {/* Dynamic route for all service detail pages */}
-                <Route path="/services/:serviceId" element={<ServiceDetail />} />
-                <Route path="/about-us" element={<AboutUs />} />
-                <Route path="/alcoa-scaffolding" element={<AboutUs />} />
-                <Route path="/contact-us" element={<ContactUs />} />
-                <Route path="/scaffolding-near-me-uae" element={<ContactUs />} />
-                <Route path="/projects" element={<ProjectGallery />} />
-                <Route path="/project-details/:id" element={<ProjectDetails />} />
-                <Route path="/safety" element={<SafetyStandards />} />
-                <Route path="/branches" element={<Branches />} />
-                <Route path="/scaffolding-rental-abu-dhabi" element={<Branches />} />
-                {/* Catch-all route for 404 */}
-                <Route path="*" element={<div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">404 - Page Not Found</h1>
-                    <p className="text-gray-600 mb-8">The page you're looking for doesn't exist.</p>
-                    <a href="/" className="btn-primary">Return Home</a>
-                  </div>
-                </div>} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/ar" element={<ArabicPage pageKey="home" />} />
+                  <Route path="/ar/products" element={<ArabicPage pageKey="products" />} />
+                  <Route path="/ar/services" element={<ArabicPage pageKey="services" />} />
+                  <Route path="/ar/contact-us" element={<ArabicPage pageKey="contact" />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/aluminum-scaffolding-dubai" element={<Products />} />
+                  <Route path="/products/:productId" element={<ProductDetail />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/construction-scaffolding-uae" element={<Services />} />
+                  <Route path="/services/:serviceId" element={<ServiceDetail />} />
+                  <Route path="/about-us" element={<AboutUs />} />
+                  <Route path="/contact-us" element={<ContactUs />} />
+                  <Route path="/projects" element={<ProjectGallery />} />
+                  <Route path="/project-details/:id" element={<ProjectDetails />} />
+                  <Route path="/safety" element={<SafetyStandards />} />
+                  <Route path="/branches" element={<Branches />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/scaffolding-rental-dubai" element={<LocationPage locationKey="dubai" />} />
+                  <Route path="/scaffolding-rental-abu-dhabi" element={<LocationPage locationKey="abu-dhabi" />} />
+                  <Route path="/scaffolding-rental-musaffah" element={<LocationPage locationKey="musaffah" />} />
+                  <Route path="/scaffolding-near-me-uae" element={<LocationPage locationKey="near-me" />} />
+                  <Route path="/alcoa-scaffolding" element={<AboutUs />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </main>
-            
             <Footer />
             <WhatsAppButton />
             <BackToTop />

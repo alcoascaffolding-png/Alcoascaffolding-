@@ -563,6 +563,146 @@ export const servicesData = {
       'Span': 'Long Distance'
     }
   },
+  'gi-pipe': {
+    title: 'GI Pipe',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Hot-dipped galvanized steel pipe for durable scaffolding and structural applications across UAE construction projects.',
+    image: steelStandard,
+    highlights: [
+      'Hot-dipped galvanized finish',
+      'Corrosion-resistant',
+      'High structural strength',
+      'Multiple diameter options',
+      'Suitable for cuplock systems',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Galvanized Steel Pipe',
+      'Material': 'GI Steel',
+      'Finish': 'Hot-Dipped Galvanized',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'ms-pipe': {
+    title: 'MS Pipe',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Mild steel pipe for heavy-duty scaffolding and construction support systems in Dubai and Abu Dhabi.',
+    image: steelStandard,
+    highlights: [
+      'Heavy-duty mild steel',
+      'High load capacity',
+      'Compatible with cuplock fittings',
+      'UAE-wide delivery',
+      'Multiple lengths available',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Mild Steel Pipe',
+      'Material': 'MS Steel',
+      'Application': 'Scaffolding Support',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'u-head-jack': {
+    title: 'U-Head Jack',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Adjustable U-head jacks for supporting beams and distributing loads on uneven surfaces.',
+    image: baseJacks,
+    highlights: [
+      'Adjustable U-head design',
+      'Supports beams and slabs',
+      'Heavy-duty construction',
+      'Fine height adjustment',
+      'Stable load distribution',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'U-Head Adjustable Jack',
+      'Material': 'Steel',
+      'Adjustment': 'Threaded',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'swivel-base-jack': {
+    title: 'Swivel Base Jack',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Swivel base plate jacks for leveling scaffolding on uneven ground with enhanced stability.',
+    image: baseJacks,
+    highlights: [
+      'Swivel base plate',
+      'Leveling on uneven surfaces',
+      'Anti-slip base design',
+      'Heavy-duty steel',
+      'Quick adjustment',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Swivel Base Jack',
+      'Material': 'Steel',
+      'Base': 'Swivel Plate',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'beam-ladder': {
+    title: 'Beam Ladder',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Steel ladder beam for bridging spans and creating wide working platforms in cuplock scaffolding systems.',
+    image: latticeBeam,
+    highlights: [
+      'Long-span bridging capability',
+      'Ladder beam profile',
+      'Compatible with cuplock fittings',
+      'High load distribution',
+      'Ideal for platform support',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Ladder Beam',
+      'Material': 'Steel',
+      'Application': 'Bridging & Platforms',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'fixed-base-plate-jack': {
+    title: 'Fixed Base Plate Jack',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Fixed base plate jack with welded stub for stable scaffolding support on firm ground surfaces.',
+    image: baseJacks,
+    highlights: [
+      'Fixed base plate design',
+      'Welded stub connection',
+      'Stable ground support',
+      'Heavy-duty steel plate',
+      'Quick setup',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Fixed Base Plate Jack',
+      'Material': 'Steel',
+      'Base': 'Fixed Plate',
+      'Options': 'Rent / Buy'
+    }
+  },
+  'standard-wood-plank': {
+    title: 'Standard Wood Plank',
+    category: 'Steel Cuplock Scaffolding',
+    description: 'Standard wooden scaffold boards for safe working platforms on cuplock and tube-and-fitting systems.',
+    image: woodenPlanks,
+    highlights: [
+      'Standard scaffold board size',
+      'Natural wood construction',
+      'Safe walking surface',
+      'Compatible with cuplock ledgers',
+      'UAE-wide delivery',
+      'Rent or buy available'
+    ],
+    quickDetails: {
+      'Type': 'Scaffold Board',
+      'Material': 'Wood',
+      'Application': 'Working Platform',
+      'Options': 'Rent / Buy'
+    }
+  },
 
   // Couplers Category
   'double-coupler': {

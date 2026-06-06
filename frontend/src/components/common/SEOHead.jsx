@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
 
 const SITE_NAME = 'Alcoa Aluminium Scaffolding';
 const DEFAULT_IMAGE = 'https://alcoascaffolding.com/logo.jpeg';
@@ -13,17 +14,21 @@ const SEOHead = ({
   ogImage = DEFAULT_IMAGE,
   ogType = 'website',
   jsonLd,
+  jsonLdExtra = [],
   breadcrumbs,
+  faq,
+  alternates = [],
+  noindex = false,
 }) => {
+  const location = useLocation();
+
   const fullTitle = title
     ? `${title} | ${SITE_NAME}`
     : `Scaffolding Rental & Sale Dubai, Abu Dhabi, Musaffah | ${SITE_NAME}`;
 
-  const canonicalUrl = canonical
-    ? `${BASE_URL}${canonical}`
-    : BASE_URL;
+  const canonicalPath = canonical ?? location.pathname;
+  const canonicalUrl = `${BASE_URL}${canonicalPath === '/' ? '' : canonicalPath}`;
 
-  // Build BreadcrumbList JSON-LD if provided
   const breadcrumbSchema = breadcrumbs
     ? {
         '@context': 'https://schema.org',
@@ -37,15 +42,37 @@ const SEOHead = ({
       }
     : null;
 
+  const faqSchema =
+    faq?.length > 0
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faq.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }
+      : null;
+
+  const schemas = [
+    ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []),
+    breadcrumbSchema,
+    faqSchema,
+    ...(Array.isArray(jsonLdExtra) ? jsonLdExtra : []),
+  ].filter(Boolean);
+
   return (
     <Helmet>
-      {/* Primary */}
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={canonicalUrl} />
+      {alternates.map((alt) => (
+        <link key={alt.hrefLang} rel="alternate" hrefLang={alt.hrefLang} href={alt.href} />
+      ))}
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-      {/* Open Graph */}
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:title" content={fullTitle} />
@@ -54,25 +81,16 @@ const SEOHead = ({
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_AE" />
 
-      {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       {description && <meta name="twitter:description" content={description} />}
       <meta name="twitter:image" content={ogImage} />
 
-      {/* JSON-LD: custom schema */}
-      {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
+      {schemas.map((schema, index) => (
+        <script key={index} type="application/ld+json">
+          {JSON.stringify(schema)}
         </script>
-      )}
-
-      {/* JSON-LD: breadcrumbs */}
-      {breadcrumbSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-      )}
+      ))}
     </Helmet>
   );
 };

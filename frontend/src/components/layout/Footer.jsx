@@ -27,9 +27,8 @@ const Footer = () => {
       links: [
         { name: 'About Us', path: '/about-us' },
         { name: 'Our Team', path: '/about-us#team' },
-        { name: 'Careers', path: '/careers' },
-        { name: 'News & Updates', path: '/news' },
-        { name: 'Testimonials', path: '/testimonials' },
+        { name: 'Project Gallery', path: '/projects' },
+        { name: 'Branches', path: '/branches' },
       ]
     },
     services: {
@@ -48,16 +47,17 @@ const Footer = () => {
         { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
         { name: 'Ladders', path: '/products/ladders' },
         { name: 'Steel Cuplock Scaffolding', path: '/products/steel-cuplock-scaffolding' },
+        { name: 'Couplers & Clamps', path: '/products/couplers' },
       ]
     },
     resources: {
       title: 'Resources',
       links: [
+        { name: 'Blog & Guides', path: '/blog' },
         { name: 'Safety Standards', path: '/safety' },
         { name: 'Project Gallery', path: '/projects' },
-        { name: 'Technical Specs', path: '/resources/specs' },
-        { name: 'Installation Guides', path: '/resources/guides' },
-        { name: 'FAQs', path: '/resources/faq' },
+        { name: 'Contact Us', path: '/contact-us' },
+        { name: 'Branches', path: '/branches' },
       ]
     }
   };

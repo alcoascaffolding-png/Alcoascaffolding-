@@ -2,61 +2,16 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiCheck, FiInfo, FiPackage } from 'react-icons/fi';
+import { productCategories } from '../../data/productCategories';
 import { servicesData } from '../../data/servicesData';
+import ProductImageDisplay from '../../components/common/ProductImageDisplay';
+import Breadcrumbs from '../../components/common/Breadcrumbs';
+import { getCategoryIcon } from '../../data/productImageMap';
+import { getServicePricing } from '../../utils/serviceRichContent';
 import SEOHead from '../../components/common/SEOHead';
 
 const ProductDetail = () => {
   const { productId } = useParams();
-
-  // Product category mappings
-  const productCategories = {
-    'aluminium-scaffolding': {
-      title: 'Aluminium Scaffolding Products',
-      description: 'Explore our complete range of lightweight, durable aluminium scaffolding systems',
-      category: 'Aluminium Scaffolding',
-      serviceKeys: [
-        'single-width-scaffolding',
-        'double-width-scaffolding',
-        'stairway-scaffolding',
-        'folding-tower',
-        'combination-scaffolding',
-        'bridge-scaffolding',
-        'cantilever-scaffolding'
-      ]
-    },
-    'ladders': {
-      title: 'Professional Ladders',
-      description: 'High-quality aluminium and fiberglass ladders for industrial and commercial applications',
-      category: 'Ladders',
-      serviceKeys: [
-        'aluminium-a-type-dual',
-        'aluminium-a-type-2way',
-        'aluminium-straight-ladder',
-        'aluminium-extension-ladder',
-        'aluminium-multi-purpose',
-        'aluminium-combination',
-        'aluminium-rolling-platform',
-        'fiberglass-a-type-oneway',
-        'fiberglass-a-type-twoway'
-      ]
-    },
-    'steel-cuplock-scaffolding': {
-      title: 'Steel Cuplock Scaffolding Systems',
-      description: 'Heavy-duty steel scaffolding components for large-scale construction projects',
-      category: 'Steel Cuplock Scaffolding',
-      serviceKeys: [
-        'cuplock-standard',
-        'cuplock-ledger',
-        'intermediate-transom',
-        'base-jacks',
-        'prop-jacks',
-        'steel-planks',
-        'aluminium-beam',
-        'wooden-planks',
-        'lattice-beam'
-      ]
-    }
-  };
 
   const productCategory = productCategories[productId];
 
@@ -75,10 +30,22 @@ const ProductDetail = () => {
     );
   }
 
-  // Get all products in this category
-  const categoryProducts = productCategory.serviceKeys
-    .map(key => servicesData[key])
-    .filter(product => product !== undefined);
+  // Get all products in this category (with keys for product-image lookup)
+  const categoryItems = productCategory.serviceKeys
+    .map((key) => ({ key, product: servicesData[key] }))
+    .filter((item) => item.product !== undefined);
+
+  const categoryPricing = getServicePricing({ category: productCategory.category });
+  const categoryFaq = [
+    {
+      q: `How much does ${productCategory.category.toLowerCase()} cost in Dubai?`,
+      a: `Rental from AED ${categoryPricing.daily[0]}–${categoryPricing.daily[1]} per ${categoryPricing.unit} per day. Monthly packages from AED ${categoryPricing.monthly?.[0] ?? categoryPricing.daily[0] * 20}.`,
+    },
+    {
+      q: `Do you deliver ${productCategory.category.toLowerCase()} across UAE?`,
+      a: 'Yes — Dubai, Abu Dhabi, Musaffah, Sharjah, and Al Ain with same-day dispatch on in-stock items.',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
@@ -87,10 +54,22 @@ const ProductDetail = () => {
         description={`Buy or rent premium ${productCategory.category.toLowerCase()} in Dubai & Abu Dhabi. High-quality scaffolding systems with fast delivery. Contact us today!`}
         keywords={`${productCategory.category} UAE, ${productCategory.category} Dubai, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
         canonical={`/products/${productId}`}
+        faq={categoryFaq}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Products', path: '/products' },
+          { name: productCategory.title, path: `/products/${productId}` },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-20 transition-theme">
         <div className="container-custom">
+          <Breadcrumbs
+            items={[
+              { name: 'Products', path: '/products' },
+              { name: productCategory.title, path: `/products/${productId}` },
+            ]}
+          />
           <Link
             to="/products"
             className="inline-flex items-center text-brand-primary-600 dark:text-brand-primary-400 hover:text-brand-primary-700 dark:hover:text-brand-primary-300 mb-6 transition-colors"
@@ -108,7 +87,7 @@ const ProductDetail = () => {
               {productCategory.title} in <span className="text-gradient">Dubai & Abu Dhabi</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
-              {productCategory.description}
+              {productCategory.description} Rental from AED {categoryPricing.daily[0]}–{categoryPricing.daily[1]}/day.
             </p>
           </motion.div>
         </div>
@@ -118,23 +97,23 @@ const ProductDetail = () => {
       <section className="section-padding">
         <div className="container-custom">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categoryProducts.map((product, index) => (
+            {categoryItems.map(({ key, product }, index) => {
+              return (
               <motion.div
-                key={product.title}
+                key={key}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="card overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                {/* Product Image */}
+                {/* Product Image — only when a photo exists in product images folder */}
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-                  {/* <img 
-                    src={product.image} 
-                    alt={product.title}
-                    className="w-full h-full object-contain"
-                  /> */}
-                  <FiPackage className="w-20 h-20 text-brand-primary-600 dark:text-brand-primary-400 opacity-50" />
+                  <ProductImageDisplay
+                    productId={key}
+                    alt={`${product.title} for rent and sale in Dubai and Abu Dhabi`}
+                    fallbackEmoji={getCategoryIcon(product.category)}
+                  />
                 </div>
 
                 {/* Content */}
@@ -190,7 +169,8 @@ const ProductDetail = () => {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

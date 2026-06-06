@@ -24,6 +24,7 @@ import {
   selectContactForm
 } from '../redux/slices/formSlice';
 import ENV_CONFIG, { getContactFormApiUrls } from '../config/env';
+import { trackFormSubmit, trackQuoteRequest } from '../utils/analytics';
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
@@ -715,6 +716,10 @@ const ContactUs = () => {
 
       if (response.ok) {
         dispatch(setContactFormSubmitted(true));
+        trackFormSubmit({
+          project_type: contactForm.projectType || '',
+        });
+        trackQuoteRequest(contactForm.projectType || 'contact_form');
         toast.success('🎉 Your message has been submitted successfully! We will get back to you within 2 hours.', {
           position: "top-right",
           autoClose: 5000,
