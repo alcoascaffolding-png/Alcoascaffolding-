@@ -79,7 +79,7 @@ const Navbar = () => {
       ]
     },
     { name: 'Projects', path: '/projects', hasDropdown: false },
-    { name: 'Blog', path: '/blog', hasDropdown: false },
+    // { name: 'Blog', path: '/blog', hasDropdown: false },
     { name: 'Branches', path: '/branches', hasDropdown: false },
     { name: 'Safety', path: '/safety', hasDropdown: false },
     { name: 'About Us', path: '/about-us', hasDropdown: false },
