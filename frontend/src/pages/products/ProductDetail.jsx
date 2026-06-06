@@ -38,12 +38,12 @@ const ProductDetail = () => {
   const categoryPricing = getServicePricing({ category: productCategory.category });
   const categoryFaq = [
     {
-      q: `How much does ${productCategory.category.toLowerCase()} cost in Dubai?`,
+      q: `How much does ${productCategory.category.toLowerCase()} cost in Abu Dhabi?`,
       a: `Rental from AED ${categoryPricing.daily[0]}–${categoryPricing.daily[1]} per ${categoryPricing.unit} per day. Monthly packages from AED ${categoryPricing.monthly?.[0] ?? categoryPricing.daily[0] * 20}.`,
     },
     {
       q: `Do you deliver ${productCategory.category.toLowerCase()} across UAE?`,
-      a: 'Yes — Dubai, Abu Dhabi, Musaffah, Sharjah, and Al Ain with same-day dispatch on in-stock items.',
+      a: 'Yes — Abu Dhabi, United Arab Emirates and Musaffah with same-day dispatch on in-stock items.',
     },
   ];
 
@@ -51,8 +51,8 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title={`${productCategory.title} | Buy or Rent in UAE | Alcoa Scaffold`}
-        description={`Buy or rent premium ${productCategory.category.toLowerCase()} in Dubai & Abu Dhabi. High-quality scaffolding systems with fast delivery. Contact us today!`}
-        keywords={`${productCategory.category} UAE, ${productCategory.category} Dubai, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
+        description={`Buy or rent premium ${productCategory.category.toLowerCase()} in Abu Dhabi, United Arab Emirates. High-quality scaffolding systems with fast delivery. Contact us today!`}
+        keywords={`${productCategory.category} UAE, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
         canonical={`/products/${productId}`}
         faq={categoryFaq}
         breadcrumbs={[
@@ -84,7 +84,7 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
-              {productCategory.title} in <span className="text-gradient">Dubai & Abu Dhabi</span>
+              {productCategory.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
               {productCategory.description} Rental from AED {categoryPricing.daily[0]}–{categoryPricing.daily[1]}/day.
@@ -111,7 +111,7 @@ const ProductDetail = () => {
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
                   <ProductImageDisplay
                     productId={key}
-                    alt={`${product.title} for rent and sale in Dubai and Abu Dhabi`}
+                    alt={`${product.title} for rent and sale in Abu Dhabi, United Arab Emirates`}
                     fallbackEmoji={getCategoryIcon(product.category)}
                   />
                 </div>

@@ -471,8 +471,8 @@ const ServicesPage = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Construction Scaffolding UAE | Scaffolding Equipment UAE | Alcoa Scaffold"
-        description="Construction scaffolding UAE for rental, sale, installation, and delivery in Dubai, Abu Dhabi, and Musaffah. Contact Alcoa Scaffolding for reliable scaffolding equipment and fast support."
-        keywords="construction scaffolding UAE, scaffolding equipment UAE, scaffold rental price Dubai, scaffolding for construction Dubai, scaffolding rental Abu Dhabi, scaffolding rental Dubai, scaffolding supplier Dubai, scaffolding supplier Abu Dhabi"
+        description="Construction scaffolding UAE for rental, sale, installation, and delivery in Abu Dhabi, United Arab Emirates and Musaffah. Contact Alcoa Scaffolding for reliable scaffolding equipment and fast support."
+        keywords="construction scaffolding UAE, scaffolding equipment UAE, scaffold rental price Abu Dhabi, scaffolding for construction Abu Dhabi, scaffolding rental Abu Dhabi, scaffolding supplier Abu Dhabi"
         canonical="/construction-scaffolding-uae"
       />
       {/* Hero Section */}
@@ -486,7 +486,7 @@ const ServicesPage = () => {
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
                Construction Scaffolding UAE for
-              <span className="text-gradient"> Dubai & Abu Dhabi</span>
+              <span className="text-gradient"> Abu Dhabi, UAE</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Construction scaffolding UAE from Alcoa Scaffolding covers rental, sale, installation, delivery, and maintenance.

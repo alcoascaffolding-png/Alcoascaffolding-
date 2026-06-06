@@ -1,30 +1,30 @@
 export const blogPosts = [
   {
-    slug: 'scaffolding-rental-cost-dubai-2026',
-    title: 'Scaffolding Rental Cost in Dubai 2026 — Complete Pricing Guide',
+    slug: 'scaffolding-rental-cost-abu-dhabi-2026',
+    title: 'Scaffolding Rental Cost in Abu Dhabi 2026 — Complete Pricing Guide',
     excerpt:
-      'Daily, weekly, and monthly scaffolding hire rates in Dubai. Aluminium towers from AED 35/day, cuplock systems, delivery zones, and what affects your quote.',
+      'Daily, weekly, and monthly scaffolding hire rates in Abu Dhabi, United Arab Emirates. Aluminium towers from AED 35/day, cuplock systems, delivery zones, and what affects your quote.',
     date: '2026-06-01',
     readTime: '8 min',
-    keywords: 'scaffolding rental price Dubai, scaffolding cost UAE, scaffolding hire rates',
+    keywords: 'scaffolding rental price Abu Dhabi, scaffolding cost UAE, scaffolding hire rates',
     faq: [
       {
-        q: 'How much does scaffolding rental cost per day in Dubai?',
-        a: 'Aluminium mobile tower rental in Dubai typically ranges from AED 35 to AED 60 per day depending on tower height and width. Steel cuplock systems range from AED 40 to AED 75 per bay per day.',
+        q: 'How much does scaffolding rental cost per day in Abu Dhabi?',
+        a: 'Aluminium mobile tower rental in Abu Dhabi, United Arab Emirates typically ranges from AED 35 to AED 60 per day depending on tower height and width. Steel cuplock systems range from AED 40 to AED 75 per bay per day.',
       },
       {
         q: 'Is delivery included in scaffolding rental price?',
-        a: 'Delivery is quoted separately. Dubai metro delivery usually costs AED 150–350 depending on zone. Musaffah pickup from our warehouse is free.',
+        a: 'Delivery is quoted separately. Abu Dhabi and Musaffah delivery typically costs AED 150–350 depending on zone. Musaffah pickup from our warehouse is free.',
       },
     ],
     sections: [
       {
-        heading: 'Average daily scaffolding rental rates in Dubai (2026)',
-        body: 'Based on Alcoa Aluminium Scaffolding fleet rates across Dubai metro projects: single-width aluminium towers AED 35–45/day; double-width towers AED 45–60/day; steel cuplock vertical standards AED 8–15/piece/day; full cuplock bay sets AED 40–75/day; A-type ladders AED 25–40/day. Weekly hires reduce the effective daily rate by 15–25%. Monthly contracts from AED 600 for standard towers.',
+        heading: 'Average daily scaffolding rental rates in Abu Dhabi (2026)',
+        body: 'Based on Alcoa Aluminium Scaffolding fleet rates across Abu Dhabi projects: single-width aluminium towers AED 35–45/day; double-width towers AED 45–60/day; steel cuplock vertical standards AED 8–15/piece/day; full cuplock bay sets AED 40–75/day; A-type ladders AED 25–40/day. Weekly hires reduce the effective daily rate by 15–25%. Monthly contracts from AED 600 for standard towers.',
       },
       {
-        heading: 'What affects your scaffolding quote in Dubai?',
-        body: 'Height and deck area drive the base rate. Access constraints (Marina high-rise vs ground-level Al Quoz) affect erection labour. Duration discounts apply after 7 and 28 days. JAFZA and Dubai South may incur higher delivery than central Dubai. Optional services — erection, inspection, night delivery — are line-item quoted.',
+        heading: 'What affects your scaffolding quote in Abu Dhabi?',
+        body: 'Height and deck area drive the base rate. Access constraints (high-rise vs ground-level industrial sites) affect erection labour. Duration discounts apply after 7 and 28 days. Yas Island and KIZAD may incur different delivery than central Musaffah. Optional services — erection, inspection, night delivery — are line-item quoted.',
       },
       {
         heading: 'How to get the best scaffolding rental price',
@@ -36,7 +36,7 @@ export const blogPosts = [
     slug: 'aluminium-vs-steel-scaffolding-uae',
     title: 'Aluminium vs Steel Scaffolding — Which Is Right for Your UAE Project?',
     excerpt:
-      'Compare weight, cost, height limits, and UAE climate performance. When to choose aluminium mobile towers vs steel cuplock for Dubai and Abu Dhabi sites.',
+      'Compare weight, cost, height limits, and UAE climate performance. When to choose aluminium mobile towers vs steel cuplock for Abu Dhabi, United Arab Emirates sites.',
     date: '2026-06-04',
     readTime: '7 min',
     keywords: 'aluminium vs steel scaffolding, cuplock vs aluminium tower UAE',
@@ -46,14 +46,14 @@ export const blogPosts = [
         a: 'Yes for most access and maintenance work up to standard manufacturer height limits. Heavy structural loading and long-span bridging typically require steel cuplock systems.',
       },
       {
-        q: 'Which scaffolding type is cheaper to rent in Dubai?',
+        q: 'Which scaffolding type is cheaper to rent in Abu Dhabi?',
         a: 'Aluminium mobile towers are usually cheaper for short-duration interior and façade access. Steel cuplock has a higher daily rate but lower per-square-metre cost on large perimeter scaffolding.',
       },
     ],
     sections: [
       {
         heading: 'When aluminium scaffolding wins in the UAE',
-        body: 'Aluminium mobile towers excel for MEP, painting, signage, and light maintenance. They are 3–4× lighter than steel tube systems — faster to move on Dubai sites with manual handling rules. Corrosion resistance suits coastal Marina and JLT projects. Typical hire from AED 35/day with 10-minute setup for trained crews.',
+        body: 'Aluminium mobile towers excel for MEP, painting, signage, and light maintenance. They are 3–4× lighter than steel tube systems — faster to move on Abu Dhabi sites with manual handling rules. Corrosion resistance suits coastal Yas Island and Reem Island projects. Typical hire from AED 35/day with 10-minute setup for trained crews.',
       },
       {
         heading: 'When steel cuplock is the better choice',
@@ -69,24 +69,24 @@ export const blogPosts = [
     slug: 'scaffolding-near-me-uae-guide',
     title: 'Scaffolding Near Me in UAE — How to Find & Book Fast',
     excerpt:
-      'Searching scaffolding near me in UAE? How to check stock, get same-day delivery, and compare quotes in Dubai, Abu Dhabi, and Musaffah.',
+      'Searching scaffolding near me in UAE? How to check stock, get same-day delivery, and compare quotes in Abu Dhabi, United Arab Emirates and Musaffah.',
     date: '2026-06-05',
     readTime: '6 min',
-    keywords: 'scaffolding near me UAE, scaffolding near me Dubai, scaffolding hire near me',
+    keywords: 'scaffolding near me UAE, scaffolding near me Abu Dhabi, scaffolding hire near me',
     faq: [
       {
         q: 'How do I find scaffolding near me in UAE?',
         a: 'Contact Alcoa with your map pin on WhatsApp (+971 58 137 5601). We check Musaffah warehouse stock and quote delivery ETA to your location.',
       },
       {
-        q: 'Can I get same-day scaffolding delivery in Dubai?',
+        q: 'Can I get same-day scaffolding delivery in Abu Dhabi?',
         a: 'Yes for in-stock aluminium towers and couplers when orders are confirmed before 2 PM on business days.',
       },
     ],
     sections: [
       {
         heading: 'Why "near me" matters for scaffolding hire',
-        body: 'Scaffolding is heavy and time-sensitive — proximity to warehouse stock determines delivery cost and speed. Alcoa operates from Musaffah Abu Dhabi with daily Dubai runs. Sharing your exact project pin avoids wrong quotes and delays.',
+        body: 'Scaffolding is heavy and time-sensitive — proximity to warehouse stock determines delivery cost and speed. Alcoa operates from Musaffah Abu Dhabi, United Arab Emirates. Sharing your exact project pin avoids wrong quotes and delays.',
       },
       {
         heading: 'What to tell your supplier for a fast quote',
@@ -127,13 +127,13 @@ export const blogPosts = [
     slug: 'uae-scaffolding-safety-regulations',
     title: 'UAE Scaffolding Safety Regulations — What Contractors Must Know',
     excerpt:
-      'Dubai Municipality scaffolding rules, inspection requirements, and best practices for safe erection on UAE construction sites.',
+      'Abu Dhabi and UAE scaffolding rules, inspection requirements, and best practices for safe erection on construction sites.',
     date: '2026-06-07',
     readTime: '8 min',
-    keywords: 'UAE scaffolding safety, Dubai Municipality scaffolding, scaffolding inspection UAE',
+    keywords: 'UAE scaffolding safety, Abu Dhabi scaffolding regulations, scaffolding inspection UAE',
     faq: [
       {
-        q: 'Do I need inspection before using rental scaffolding in Dubai?',
+        q: 'Do I need inspection before using rental scaffolding in Abu Dhabi?',
         a: 'Yes. Competent persons must inspect scaffolding before first use, after alterations, and following adverse weather. Alcoa offers safety inspection services on request.',
       },
       {
@@ -163,7 +163,7 @@ export const blogPosts = [
     faq: [
       {
         q: 'Can I erect a mobile tower without training?',
-        a: 'Only trained and competent persons should erect towers. Alcoa offers training and can supply erection crews for Dubai and Abu Dhabi sites.',
+        a: 'Only trained and competent persons should erect towers. Alcoa offers training and can supply erection crews for Abu Dhabi, United Arab Emirates sites.',
       },
       {
         q: 'What is the maximum height for a mobile aluminium tower?',

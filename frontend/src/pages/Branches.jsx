@@ -266,7 +266,7 @@ const Branches = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Scaffolding Rental Abu Dhabi | Scaffolding Contractor Abu Dhabi | Alcoa Scaffold"
-        description="Find scaffolding rental Abu Dhabi and Musaffah locations with Alcoa Scaffolding. Serving Dubai, Abu Dhabi, Musaffah, and the UAE with professional scaffolding contractor support."
+        description="Find scaffolding rental Abu Dhabi and Musaffah locations with Alcoa Scaffolding. Serving Abu Dhabi, United Arab Emirates and Musaffah with professional scaffolding contractor support."
         keywords="scaffolding rental abu dhabi, scaffolding contractor abu dhabi, scaffolding near me uae, scaffolding musaffah, scaffolding supplier abu dhabi, alcoa scaffolding"
         canonical="/scaffolding-rental-abu-dhabi"
       />

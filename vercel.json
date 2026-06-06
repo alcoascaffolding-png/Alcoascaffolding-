@@ -10,8 +10,30 @@
   },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|llms\\.txt|llms-full\\.txt|logo\\.jpeg|assets/).*)",
       "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/alcoa-scaffolding",
+      "destination": "/about-us",
+      "permanent": true
+    },
+    {
+      "source": "/scaffolding-rental-dubai",
+      "destination": "/scaffolding-rental-abu-dhabi",
+      "permanent": true
+    },
+    {
+      "source": "/aluminum-scaffolding-dubai",
+      "destination": "/aluminum-scaffolding-abu-dhabi",
+      "permanent": true
+    },
+    {
+      "source": "/blog/scaffolding-rental-cost-dubai-2026",
+      "destination": "/blog/scaffolding-rental-cost-abu-dhabi-2026",
+      "permanent": true
     }
   ],
   "headers": [

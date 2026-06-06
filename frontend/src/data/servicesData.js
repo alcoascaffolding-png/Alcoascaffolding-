@@ -586,7 +586,7 @@ export const servicesData = {
   'ms-pipe': {
     title: 'MS Pipe',
     category: 'Steel Cuplock Scaffolding',
-    description: 'Mild steel pipe for heavy-duty scaffolding and construction support systems in Dubai and Abu Dhabi.',
+    description: 'Mild steel pipe for heavy-duty scaffolding and construction support systems in Abu Dhabi, United Arab Emirates.',
     image: steelStandard,
     highlights: [
       'Heavy-duty mild steel',

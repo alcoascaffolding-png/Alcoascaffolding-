@@ -797,8 +797,8 @@ const ContactUs = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Scaffolding Near Me UAE | Contact Alcoa Scaffolding"
-        description="Search scaffolding near me UAE and contact Alcoa Scaffolding for quotes, supplier support, and fast delivery in Dubai, Abu Dhabi, and Musaffah."
-        keywords="scaffolding near me uae, scaffolding supplier dubai, scaffolding supplier abu dhabi, scaffolding quote dubai, scaffolding quote abu dhabi, alcoa scaffolding"
+        description="Search scaffolding near me UAE and contact Alcoa Scaffolding for quotes, supplier support, and fast delivery in Abu Dhabi, United Arab Emirates and Musaffah."
+        keywords="scaffolding near me uae, scaffolding supplier abu dhabi, scaffolding quote abu dhabi, alcoa scaffolding"
         canonical="/scaffolding-near-me-uae"
       />
       {/* Hero Section */}

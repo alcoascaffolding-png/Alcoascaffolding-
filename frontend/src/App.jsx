@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
 import { ToastContainer } from 'react-toastify';
@@ -53,7 +53,8 @@ function App() {
                   <Route path="/ar/services" element={<ArabicPage pageKey="services" />} />
                   <Route path="/ar/contact-us" element={<ArabicPage pageKey="contact" />} />
                   <Route path="/products" element={<Products />} />
-                  <Route path="/aluminum-scaffolding-dubai" element={<Products />} />
+                  <Route path="/aluminum-scaffolding-abu-dhabi" element={<Products />} />
+                  <Route path="/aluminum-scaffolding-dubai" element={<Navigate to="/aluminum-scaffolding-abu-dhabi" replace />} />
                   <Route path="/products/:productId" element={<ProductDetail />} />
                   <Route path="/services" element={<Services />} />
                   <Route path="/construction-scaffolding-uae" element={<Services />} />
@@ -66,7 +67,8 @@ function App() {
                   <Route path="/branches" element={<Branches />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
-                  <Route path="/scaffolding-rental-dubai" element={<LocationPage locationKey="dubai" />} />
+                  <Route path="/scaffolding-rental-dubai" element={<Navigate to="/scaffolding-rental-abu-dhabi" replace />} />
+                  <Route path="/blog/scaffolding-rental-cost-dubai-2026" element={<Navigate to="/blog/scaffolding-rental-cost-abu-dhabi-2026" replace />} />
                   <Route path="/scaffolding-rental-abu-dhabi" element={<LocationPage locationKey="abu-dhabi" />} />
                   <Route path="/scaffolding-rental-musaffah" element={<LocationPage locationKey="musaffah" />} />
                   <Route path="/scaffolding-near-me-uae" element={<LocationPage locationKey="near-me" />} />

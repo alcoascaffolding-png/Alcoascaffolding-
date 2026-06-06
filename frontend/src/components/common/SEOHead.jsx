@@ -24,7 +24,7 @@ const SEOHead = ({
 
   const fullTitle = title
     ? `${title} | ${SITE_NAME}`
-    : `Scaffolding Rental & Sale Dubai, Abu Dhabi, Musaffah | ${SITE_NAME}`;
+    : `Scaffolding Rental & Sale Abu Dhabi, United Arab Emirates | ${SITE_NAME}`;
 
   const canonicalPath = canonical ?? location.pathname;
   const canonicalUrl = `${BASE_URL}${canonicalPath === '/' ? '' : canonicalPath}`;

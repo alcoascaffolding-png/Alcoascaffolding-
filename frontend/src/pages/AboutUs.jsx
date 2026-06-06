@@ -120,8 +120,8 @@ const AboutUs = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Alcoa Scaffolding | UAE Scaffolding Company | Alcoa UAE"
-        description="Learn about Alcoa Scaffolding, the UAE scaffolding company trusted since 2008 for certified aluminum scaffolding across Dubai and Abu Dhabi."
-        keywords="alcoa scaffolding, scaffolding company uae, scaffolding company abu dhabi, scaffolding company dubai, aluminium scaffolding manufacturer uae"
+        description="Learn about Alcoa Scaffolding, the UAE scaffolding company trusted since 2008 for certified aluminum scaffolding in Abu Dhabi, United Arab Emirates."
+        keywords="alcoa scaffolding, scaffolding company uae, scaffolding company abu dhabi, aluminium scaffolding manufacturer uae"
         canonical="/alcoa-scaffolding"
       />
       {/* Hero Section */}

@@ -84,10 +84,10 @@ const Hero = () => {
               className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-gray-900 dark:text-white leading-tight"
             >
               <span className="text-slate-800 dark:text-slate-200">Scaffolding Rental </span>
-              <span className="text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-600 to-slate-600 bg-clip-text text-transparent">Dubai </span>
+              <span className="text-blue-600 dark:text-blue-400 bg-gradient-to-r from-blue-600 to-slate-600 bg-clip-text text-transparent">Abu Dhabi </span>
               <br />
-              <span className="text-slate-800 dark:text-slate-200">for </span>
-              <span className="text-blue-500 dark:text-blue-300">Dubai & Abu Dhabi</span>
+              <span className="text-slate-800 dark:text-slate-200">in </span>
+              <span className="text-blue-500 dark:text-blue-300">United Arab Emirates</span>
             </motion.h1>
 
             {/* Subtitle */}
@@ -97,7 +97,7 @@ const Hero = () => {
               transition={{ delay: 0.4 }}
               className="text-xs xs:text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl mx-auto lg:mx-0"
             >
-              Alcoa Scaffolding is a scaffolding company UAE offering rental, hire, and delivery across Dubai, Abu Dhabi, and Musaffah.
+              Alcoa Scaffolding is a scaffolding company in Abu Dhabi, United Arab Emirates offering rental, hire, and delivery across Abu Dhabi and Musaffah.
               We provide strong, safe scaffolding for all your building projects.
               Our aluminium scaffolding is light, strong, and easy to use.
             </motion.p>

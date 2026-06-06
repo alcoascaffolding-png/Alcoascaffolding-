@@ -49,8 +49,8 @@ const ServiceDetail = () => {
     <article className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title={`${service.title} in UAE | Rental & Sale | Alcoa Scaffold`}
-        description={`Rent or buy ${service.title} in Dubai & Abu Dhabi from AED ${pricing.daily[0]}/day. Fast UAE delivery, certified ${service.category.toLowerCase()}, free quote.`}
-        keywords={`${service.title} UAE, ${service.title} Dubai, ${service.title} Abu Dhabi, ${service.category} UAE, scaffolding ${service.title.toLowerCase()} Musaffah, ${service.title} price AED`}
+        description={`Rent or buy ${service.title} in Abu Dhabi, United Arab Emirates from AED ${pricing.daily[0]}/day. Fast delivery, certified ${service.category.toLowerCase()}, free quote.`}
+        keywords={`${service.title} UAE, ${service.title} Abu Dhabi, ${service.category} UAE, scaffolding ${service.title.toLowerCase()} Musaffah, ${service.title} price AED`}
         canonical={`/services/${serviceId}`}
         jsonLd={serviceJsonLd}
         jsonLdExtra={jsonLdExtra}
@@ -68,7 +68,7 @@ const ServiceDetail = () => {
             {service.category}
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-4 sm:mb-6">
-            {service.title} in <span className="text-gradient">Dubai & Abu Dhabi</span>
+            {service.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
             {service.description} Rental from AED {pricing.daily[0]}–{pricing.daily[1]}/day. Sale and hire across UAE.
@@ -90,7 +90,7 @@ const ServiceDetail = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md flex items-center justify-center py-8 px-4">
               <ProductImageDisplay
                 productId={serviceId}
-                alt={`${service.title} for rent and sale in Dubai and Abu Dhabi`}
+                alt={`${service.title} for rent and sale in Abu Dhabi, United Arab Emirates`}
                 className="max-h-96 w-full object-contain"
                 fallbackEmoji={getCategoryIcon(service.category)}
                 emojiClassName="text-8xl sm:text-9xl select-none"

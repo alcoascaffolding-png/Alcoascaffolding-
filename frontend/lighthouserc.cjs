@@ -5,8 +5,8 @@ module.exports = {
       url: [
         'http://localhost/index.html',
         'http://localhost/products/couplers/index.html',
-        'http://localhost/scaffolding-rental-dubai/index.html',
-        'http://localhost/blog/scaffolding-rental-cost-dubai-2026/index.html',
+        'http://localhost/scaffolding-rental-abu-dhabi/index.html',
+        'http://localhost/blog/scaffolding-rental-cost-abu-dhabi-2026/index.html',
       ],
       numberOfRuns: 1,
     },

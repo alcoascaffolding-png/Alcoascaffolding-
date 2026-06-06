@@ -6,15 +6,13 @@ import { FiMapPin, FiTool } from 'react-icons/fi';
 const ServiceCategories = () => {
   const categories = [
     { title: 'Aluminium Scaffolding', link: '/services/aluminium-scaffolding', type: 'service' },
-    { title: 'Aluminium Scaffolding Dubai', link: '/aluminum-scaffolding-dubai', type: 'location' },
-    { title: 'Aluminium Scaffolding Abu Dhabi', link: '/scaffolding-rental-abu-dhabi', type: 'location' },
+    { title: 'Aluminium Scaffolding Abu Dhabi', link: '/aluminum-scaffolding-abu-dhabi', type: 'location' },
     { title: 'Aluminium Scaffolding Musaffah', link: '/scaffolding-rental-musaffah', type: 'location' },
     { title: 'Aluminium Scaffolding UAE', link: '/products/aluminium-scaffolding', type: 'service' },
     { title: 'Scaffolding Near Me UAE', link: '/scaffolding-near-me-uae', type: 'location' },
     { title: 'Aluminium Scaffolding Supplier', link: '/products/aluminium-scaffolding', type: 'service' },
 
     { title: 'A Type Ladder', link: '/services/a-type-ladder', type: 'service' },
-    { title: 'A Type Ladder Dubai', link: '/scaffolding-rental-dubai', type: 'location' },
     { title: 'A Type Ladder Abu Dhabi', link: '/scaffolding-rental-abu-dhabi', type: 'location' },
     { title: 'A Type Ladder Musaffah', link: '/scaffolding-rental-musaffah', type: 'location' },
     { title: 'Ladder Manufacturers UAE', link: '/services/ladder-manufacturers', type: 'service' },
@@ -23,9 +21,6 @@ const ServiceCategories = () => {
     { title: 'Scaffolding Services UAE', link: '/services', type: 'service' },
     { title: 'Scaffolding Abu Dhabi', link: '/scaffolding-rental-abu-dhabi', type: 'location' },
     { title: 'Scaffolding Musaffah', link: '/scaffolding-rental-musaffah', type: 'location' },
-    { title: 'Scaffolding Dubai', link: '/scaffolding-rental-dubai', type: 'location' },
-
-    { title: 'Scaffolding Rental Dubai', link: '/scaffolding-rental-dubai', type: 'location' },
     { title: 'Scaffolding Rental Abu Dhabi', link: '/scaffolding-rental-abu-dhabi', type: 'location' },
     { title: 'Scaffolding Rental Musaffah', link: '/scaffolding-rental-musaffah', type: 'location' },
     { title: 'Scaffolding Rental Near Me', link: '/scaffolding-near-me-uae', type: 'location' },
@@ -100,7 +95,7 @@ const ServiceCategories = () => {
           className="text-center mt-8 sm:mt-12"
         >
           <p className="text-sm sm:text-base text-text-secondary dark:text-text-secondary-dark mb-4 sm:mb-6">
-            Can&apos;t find your location? We serve all areas across UAE!
+            Can&apos;t find your location? We serve Abu Dhabi, United Arab Emirates and Musaffah!
           </p>
           <Link
             to="/contact-us"

@@ -9,8 +9,8 @@ const Blog = () => (
   <div className="min-h-screen bg-surface-light dark:bg-surface-dark">
     <SEOHead
       title="Scaffolding Blog UAE — Guides, Pricing & Safety"
-      description="Expert scaffolding guides for Dubai and Abu Dhabi contractors. Rental pricing, equipment comparisons, and UAE safety tips from Alcoa Scaffolding."
-      keywords="scaffolding blog UAE, scaffolding guide Dubai, scaffolding rental tips"
+      description="Expert scaffolding guides for Abu Dhabi, United Arab Emirates contractors. Rental pricing, equipment comparisons, and UAE safety tips from Alcoa Scaffolding."
+      keywords="scaffolding blog UAE, scaffolding guide Abu Dhabi, scaffolding rental tips"
       canonical="/blog"
     />
     <section className="section-padding py-12 sm:py-16">

@@ -171,8 +171,8 @@ const ProjectGallery = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Scaffolding Projects Gallery — UAE Construction Projects by Alcoa"
-        description="View Alcoa's portfolio of successful scaffolding projects across UAE. Heritage buildings, commercial towers, industrial facilities, and residential projects in Dubai, Abu Dhabi and Musaffah."
-        keywords="scaffolding projects UAE, scaffolding portfolio Dubai, scaffolding case studies Abu Dhabi, construction scaffolding gallery UAE, Alcoa projects UAE"
+        description="View Alcoa's portfolio of successful scaffolding projects across UAE. Heritage buildings, commercial towers, industrial facilities, and residential projects in Abu Dhabi, United Arab Emirates and Musaffah."
+        keywords="scaffolding projects UAE, scaffolding portfolio Abu Dhabi, scaffolding case studies Abu Dhabi, construction scaffolding gallery UAE, Alcoa projects UAE"
         canonical="/projects"
       />
       {/* Hero Section */}

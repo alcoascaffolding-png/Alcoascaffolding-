@@ -4,7 +4,7 @@ const CATEGORY_PRICING = {
     weekly: [200, 350],
     monthly: [600, 1100],
     unit: 'tower / set',
-    note: 'Rates vary by tower height, width, and rental duration. Delivery within Dubai metro typically AED 150–350.',
+    note: 'Rates vary by tower height, width, and rental duration. Delivery within Abu Dhabi and Musaffah typically AED 150–350.',
   },
   Ladders: {
     daily: [25, 45],
@@ -60,7 +60,7 @@ export const getServiceIntro = (serviceId, service) => {
   const variant = hash(serviceId) % 3;
 
   const intros = [
-    `${service.title} from Alcoa Aluminium Scaffolding is built for UAE construction, maintenance, and industrial access. ${service.description} Typical specifications include ${specs}. Key advantage: ${highlight.toLowerCase()}. We deliver across Dubai, Abu Dhabi, Musaffah, and Sharjah with same-day dispatch on in-stock ${service.category.toLowerCase()} equipment.`,
+    `${service.title} from Alcoa Aluminium Scaffolding is built for UAE construction, maintenance, and industrial access. ${service.description} Typical specifications include ${specs}. Key advantage: ${highlight.toLowerCase()}. We deliver across Abu Dhabi, United Arab Emirates and Musaffah with same-day dispatch on in-stock ${service.category.toLowerCase()} equipment.`,
     `When your project needs reliable ${service.title.toLowerCase()}, Alcoa supplies rental and sale options with documented safety compliance. ${service.description} Our ${service.category.toLowerCase()} inventory covers ${specs}. Clients choose us for ${highlight.toLowerCase()} plus 24/7 WhatsApp quotes and Musaffah warehouse pickup.`,
     `Alcoa Aluminium Scaffolding stocks ${service.title.toLowerCase()} for contractors, facility managers, and MEP teams across the UAE. ${service.description} Equipment details: ${specs}. Every order includes ${highlight.toLowerCase()}, optional erection crews, and flexible daily, weekly, or monthly hire terms.`,
   ];
@@ -75,12 +75,12 @@ export const getServiceFaq = (serviceId, service) => {
 
   return [
     {
-      q: `How much does ${title.toLowerCase()} cost in Dubai?`,
-      a: `Typical ${cat.toLowerCase()} rental for ${title.toLowerCase()} ranges from AED ${pricing.daily[0]}–${pricing.daily[1]} per ${pricing.unit} per day. Weekly and monthly rates reduce the daily equivalent. Contact us for a site-specific quote including delivery to your Dubai location.`,
+      q: `How much does ${title.toLowerCase()} cost in Abu Dhabi?`,
+      a: `Typical ${cat.toLowerCase()} rental for ${title.toLowerCase()} ranges from AED ${pricing.daily[0]}–${pricing.daily[1]} per ${pricing.unit} per day. Weekly and monthly rates reduce the daily equivalent. Contact us for a site-specific quote including delivery to your Abu Dhabi, United Arab Emirates location.`,
     },
     {
       q: `Do you deliver ${title.toLowerCase()} to Abu Dhabi and Musaffah?`,
-      a: `Yes. We deliver ${title.toLowerCase()} across Dubai, Abu Dhabi, Musaffah Industrial Area, Sharjah, and Al Ain. Musaffah customers can collect from our warehouse or schedule delivery. Emergency and weekend dispatch is available on request.`,
+      a: `Yes. We deliver ${title.toLowerCase()} across Abu Dhabi, United Arab Emirates and Musaffah Industrial Area. Musaffah customers can collect from our warehouse or schedule delivery. Emergency and weekend dispatch is available on request.`,
     },
     {
       q: `Can I rent and buy ${title.toLowerCase()} from Alcoa?`,
@@ -178,7 +178,6 @@ export const buildEnhancedServiceSchema = (serviceId, service, pricing) => ({
     },
   },
   areaServed: [
-    { '@type': 'City', name: 'Dubai' },
     { '@type': 'City', name: 'Abu Dhabi' },
     { '@type': 'Place', name: 'Musaffah' },
     { '@type': 'Country', name: 'United Arab Emirates' },
@@ -202,7 +201,7 @@ export const buildHowToSchema = (serviceId, service) => ({
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: `How to order and install ${service.title} in UAE`,
-  description: `Step-by-step process for hiring ${service.title.toLowerCase()} from Alcoa Scaffolding in Dubai and Abu Dhabi.`,
+  description: `Step-by-step process for hiring ${service.title.toLowerCase()} from Alcoa Scaffolding in Abu Dhabi, United Arab Emirates.`,
   step: getHowToSteps(service),
   url: `https://alcoascaffolding.com/services/${serviceId}`,
 });
