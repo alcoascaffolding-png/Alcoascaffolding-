@@ -14,17 +14,32 @@ const homeJsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    name: 'Alcoa Scaffolding UAE',
-    description: 'Scaffolding sale and rental in Abu Dhabi, United Arab Emirates',
+    name: 'Alcoa Aluminium Scaffolding',
+    legalName: 'Alcoa Aluminium Scaffolding L.L.C - S.P.C',
+    description: 'Scaffolding rental service in Abu Dhabi, United Arab Emirates. Aluminium scaffolding, cuplock systems, ladders, and erection crews. Musaffah 37 warehouse with same-day delivery.',
     url: 'https://alcoascaffolding.com',
-    telephone: '+971 58 137 5601',
+    telephone: '+971581375601',
+    email: 'Sales@alcoascaffolding.com',
     address: {
       '@type': 'PostalAddress',
-      addressLocality: 'Musaffah, Abu Dhabi',
+      streetAddress: "Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinai'yah 1 Street, Office 11, 1st Floor",
+      addressLocality: 'Musaffah',
+      addressRegion: 'Abu Dhabi',
       addressCountry: 'AE',
     },
-    areaServed: ['Abu Dhabi', 'Musaffah', 'United Arab Emirates'],
-    serviceType: 'Scaffolding Rental and Sales',
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 24.3570,
+      longitude: 54.5080,
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.6',
+      reviewCount: '5',
+      bestRating: '5',
+    },
+    areaServed: ['Abu Dhabi', 'Musaffah', 'Yas Island', 'KIZAD', 'United Arab Emirates'],
+    serviceType: 'Scaffolding Rental Service',
     priceRange: 'AED 35–1100',
   },
   {
@@ -73,9 +88,9 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       <SEOHead
-        title="Scaffolding Rental Abu Dhabi | Alcoa Scaffolding UAE"
-        description="Scaffolding rental Abu Dhabi, UAE from Alcoa Scaffolding. Same-day Musaffah delivery. Cuplock, mobile towers, ladders from AED 35/day. Erection crews available."
-        keywords="scaffolding rental Abu Dhabi, scaffolding hire Abu Dhabi, scaffolding company UAE, scaffolding sale UAE, scaffolding erection Abu Dhabi, scaffolding installation Abu Dhabi, industrial scaffolding Abu Dhabi, alcoa scaffolding, scaffolding near me UAE, scaffolding Musaffah, scaffolding Abu Dhabi UAE, weekly scaffolding rental, monthly scaffolding hire UAE"
+        title="Scaffolding Rental Service Abu Dhabi | Alcoa Aluminium Scaffolding UAE"
+        description="Alcoa Aluminium Scaffolding — 4.6★ scaffolding rental service in Abu Dhabi, UAE. Musaffah 37 warehouse. Cuplock, mobile towers, ladders from AED 35/day. Erection crews available."
+        keywords="scaffolding rental service Abu Dhabi, scaffolding rental Abu Dhabi, scaffolding hire Abu Dhabi, Alcoa Aluminium Scaffolding LLC, scaffolding company UAE, scaffolding erection Abu Dhabi, scaffolding installation Abu Dhabi, industrial scaffolding Abu Dhabi, scaffolding Musaffah 37, alcoa scaffolding, scaffolding near me UAE, scaffolding Musaffah, weekly scaffolding rental, monthly scaffolding hire UAE, scaffolding Abu Dhabi UAE"
         canonical="/"
         jsonLd={homeJsonLd}
         faq={homeFaq}

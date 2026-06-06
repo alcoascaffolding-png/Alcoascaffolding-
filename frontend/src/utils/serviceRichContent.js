@@ -190,13 +190,26 @@ export const buildEnhancedServiceSchema = (serviceId, service, pricing) => ({
   provider: {
     '@type': 'LocalBusiness',
     name: 'Alcoa Aluminium Scaffolding',
+    legalName: 'Alcoa Aluminium Scaffolding L.L.C - S.P.C',
     url: 'https://alcoascaffolding.com',
     telephone: '+971581375601',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: "Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinai'yah 1 Street, Office 11, 1st Floor",
       addressLocality: 'Musaffah',
       addressRegion: 'Abu Dhabi',
       addressCountry: 'AE',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 24.3570,
+      longitude: 54.5080,
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.6',
+      reviewCount: '5',
+      bestRating: '5',
     },
   },
   areaServed: [

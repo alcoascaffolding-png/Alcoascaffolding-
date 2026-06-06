@@ -119,9 +119,9 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="About Alcoa Scaffolding — Best Scaffolding Company Abu Dhabi Since 2008"
-        description="Alcoa Scaffolding is Abu Dhabi's trusted scaffolding company since 2008. Certified aluminium scaffolding, cuplock systems, and ladders for UAE contractors. ISO 9001:2015 certified."
-        keywords="alcoa scaffolding, best scaffolding company abu dhabi, scaffolding company uae, scaffolding company since 2008 uae, scaffolding company abu dhabi, aluminium scaffolding manufacturer uae"
+        title="About Alcoa Aluminium Scaffolding LLC — Scaffolding Rental Service Abu Dhabi Since 2008"
+        description="Alcoa Aluminium Scaffolding L.L.C - S.P.C is Abu Dhabi's trusted scaffolding rental service since 2008. 4.6★ Google rated. Musaffah 37 warehouse. ISO 9001:2015 certified."
+        keywords="Alcoa Aluminium Scaffolding LLC, alcoa scaffolding, best scaffolding company abu dhabi, scaffolding rental service abu dhabi, scaffolding company uae, scaffolding Musaffah 37, scaffolding company since 2008 uae, scaffolding company abu dhabi, aluminium scaffolding manufacturer uae"
         canonical="/about-us"
       />
       {/* Hero Section */}

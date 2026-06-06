@@ -24,23 +24,23 @@ export const locationPages = {
   musaffah: {
     slug: 'scaffolding-rental-musaffah',
     city: 'Musaffah',
-    title: 'Scaffolding Rental Musaffah',
-    h1: 'Scaffolding Rental Musaffah Industrial Area',
+    title: 'Scaffolding Rental Musaffah 37 — Walk-In Warehouse Abu Dhabi',
+    h1: 'Scaffolding Rental Musaffah 37, Abu Dhabi',
     description:
-      'Scaffolding rental Musaffah M-40 & M-45 — Alcoa walk-in warehouse, same-day pickup. Scaffolding supplier near ICAD. Cuplock, aluminium towers, ladders. Call +971 58 137 5601.',
+      'Scaffolding rental Musaffah 37, Abu Dhabi — Alcoa walk-in warehouse at Ar Rahmah 4 St., Al Mantaqah As Sinai\'yah. Same-day pickup, cuplock & aluminium towers. Call +971 58 137 5601.',
     keywords:
-      'scaffolding Musaffah, scaffolding rental Musaffah, scaffolding warehouse Abu Dhabi, scaffolding near me Musaffah, scaffolding pickup Musaffah, scaffolding supplier Musaffah, cuplock Musaffah, scaffolding ICAD Abu Dhabi, Musaffah M-40 scaffolding',
-    intro: `Musaffah is home to Alcoa Aluminium Scaffolding's main warehouse — the fastest way to get scaffolding in Abu Dhabi's industrial heart. Our walk-in facility in Musaffah M-40 means zero transfer delays: fabricators, mechanical contractors, and facility teams collect towers, ledgers, couplers, and ladders directly or schedule same-day local delivery within M-40, M-45, and ICAD. If you are searching "scaffolding near me" in Musaffah, we are the closest major supplier. Our inventory covers single-width aluminium towers, full cuplock sets, GI/MS pipe, prop jacks, and wooden planks with transparent AED pricing from AED 35/day. Weekly and monthly hire packages reduce the daily rate by up to 25%.`,
+      'scaffolding Musaffah, scaffolding rental Musaffah, scaffolding Musaffah 37, scaffolding warehouse Abu Dhabi, scaffolding near me Musaffah, scaffolding pickup Musaffah, scaffolding supplier Musaffah, cuplock Musaffah, scaffolding Al Mantaqah As Sinai\'yah, Musaffah 37 scaffolding supplier',
+    intro: `Alcoa Aluminium Scaffolding's walk-in warehouse is located at Musaffah 37, Al Mantaqah As Sinai'yah, Abu Dhabi — the closest major scaffolding supplier if you are searching "scaffolding near me" in Musaffah. Fabricators, mechanical contractors, and facility teams collect aluminium towers, ledgers, couplers, and ladders directly from our Ar Rahmah 4 St. facility, or schedule same-day local delivery within Musaffah 37 and surrounding industrial zones. Zero transfer delays — our stock is on-site. Inventory covers single-width aluminium towers, full cuplock sets, GI/MS pipe, prop jacks, and wooden planks with transparent AED pricing from AED 35/day. Weekly and monthly hire packages reduce the daily rate by up to 25%.`,
     zones: [
-      'Musaffah M-40 industrial sector',
-      'Musaffah M-45 workshop zone',
-      'ICAD & adjacent industrial parks',
-      'Khalifa Industrial Zone (KIZAD)',
-      'Abu Dhabi mainland contractors',
+      'Musaffah 37 — Ar Rahmah St. (HQ warehouse)',
+      'Al Mantaqah As Sinai\'yah industrial area',
+      'Musaffah 38 & 39 adjacent zones',
+      'ICAD & Khalifa Industrial Zone (KIZAD)',
+      'Abu Dhabi mainland & island deliveries',
     ],
-    delivery: 'Walk-in warehouse pickup during business hours. Musaffah delivery runs multiple times daily. No transfer from another depot.',
+    delivery: 'Walk-in warehouse pickup, Mon–Sat 8am–6pm. Musaffah 37 same-day delivery multiple runs daily. No inter-depot transfers.',
     testimonial:
-      'Fatima Hassan, Musaffah workshop owner: "We pick up ladders and base jacks from Alcoa same morning — local M-40 warehouse means no waiting and transparent pricing."',
+      'Fatima Hassan, Musaffah 37 workshop owner: "We pick up ladders and base jacks from Alcoa same morning — local Musaffah warehouse, no transfers, and pricing is always transparent."',
   },
   kizad: {
     slug: 'scaffolding-rental-kizad',

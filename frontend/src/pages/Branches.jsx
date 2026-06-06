@@ -265,9 +265,9 @@ const Branches = () => {
    
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Alcoa Scaffolding Branches — Musaffah Warehouse Abu Dhabi"
-        description="Find Alcoa Scaffolding's Musaffah warehouse in Abu Dhabi, United Arab Emirates. Walk-in hire, same-day collection, scaffolding contractor support. Address, hours, and directions."
-        keywords="scaffolding warehouse musaffah, alcoa scaffolding address abu dhabi, scaffolding contractor abu dhabi, scaffolding supplier musaffah, alcoa scaffolding branches"
+        title="Alcoa Scaffolding Warehouse — Musaffah 37 Abu Dhabi | Address & Hours"
+        description="Alcoa Aluminium Scaffolding warehouse: Ar Rahmah 4 St., Musaffah 37, Abu Dhabi. Walk-in hire Mon–Sat 8am–6pm. Same-day collection. 4.6★ rated scaffolding rental service."
+        keywords="scaffolding warehouse Musaffah 37, alcoa scaffolding address abu dhabi, alcoa scaffolding Musaffah, scaffolding supplier Musaffah 37, scaffolding near me Musaffah, scaffolding contractor abu dhabi, alcoa scaffolding branches"
         canonical="/branches"
       />
       {/* Hero Section */}
