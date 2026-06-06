@@ -71,6 +71,8 @@ function App() {
                   <Route path="/blog/scaffolding-rental-cost-dubai-2026" element={<Navigate to="/blog/scaffolding-rental-cost-abu-dhabi-2026" replace />} />
                   <Route path="/scaffolding-rental-abu-dhabi" element={<LocationPage locationKey="abu-dhabi" />} />
                   <Route path="/scaffolding-rental-musaffah" element={<LocationPage locationKey="musaffah" />} />
+                  <Route path="/scaffolding-rental-kizad" element={<LocationPage locationKey="kizad" />} />
+                  <Route path="/scaffolding-hire-yas-island" element={<LocationPage locationKey="yas-island" />} />
                   <Route path="/scaffolding-near-me-uae" element={<LocationPage locationKey="near-me" />} />
                   <Route path="/alcoa-scaffolding" element={<AboutUs />} />
                   <Route path="*" element={<NotFound />} />

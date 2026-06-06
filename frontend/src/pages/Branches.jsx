@@ -265,10 +265,10 @@ const Branches = () => {
    
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Rental Abu Dhabi | Scaffolding Contractor Abu Dhabi | Alcoa Scaffold"
-        description="Find scaffolding rental Abu Dhabi and Musaffah locations with Alcoa Scaffolding. Serving Abu Dhabi, United Arab Emirates and Musaffah with professional scaffolding contractor support."
-        keywords="scaffolding rental abu dhabi, scaffolding contractor abu dhabi, scaffolding near me uae, scaffolding musaffah, scaffolding supplier abu dhabi, alcoa scaffolding"
-        canonical="/scaffolding-rental-abu-dhabi"
+        title="Alcoa Scaffolding Branches — Musaffah Warehouse Abu Dhabi"
+        description="Find Alcoa Scaffolding's Musaffah warehouse in Abu Dhabi, United Arab Emirates. Walk-in hire, same-day collection, scaffolding contractor support. Address, hours, and directions."
+        keywords="scaffolding warehouse musaffah, alcoa scaffolding address abu dhabi, scaffolding contractor abu dhabi, scaffolding supplier musaffah, alcoa scaffolding branches"
+        canonical="/branches"
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 section-padding-sm transition-theme">

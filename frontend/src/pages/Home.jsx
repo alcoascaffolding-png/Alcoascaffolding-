@@ -43,15 +43,23 @@ const homeJsonLd = [
 const homeFaq = [
   {
     q: 'How much does scaffolding rental cost in Abu Dhabi?',
-    a: 'Aluminium mobile tower rental in Abu Dhabi, United Arab Emirates starts from AED 35–60 per day. Weekly and monthly packages reduce the daily rate. Contact Alcoa for a site-specific quote including delivery.',
+    a: 'Aluminium mobile tower rental in Abu Dhabi, United Arab Emirates starts from AED 35–60 per day. Weekly packages from AED 200 and monthly from AED 600. Contact Alcoa for a site-specific quote including delivery.',
+  },
+  {
+    q: 'Does Alcoa provide scaffolding erection and installation in Abu Dhabi?',
+    a: 'Yes. Our certified erection crews install, inspect, and dismantle scaffolding on site across Abu Dhabi and Musaffah. Installation is quoted per site visit based on tower height, access complexity, and duration.',
   },
   {
     q: 'Does Alcoa deliver scaffolding to Abu Dhabi and Musaffah?',
-    a: 'Yes. Our Musaffah warehouse dispatches across Abu Dhabi and Musaffah industrial zones. Same-day delivery available on in-stock items.',
+    a: 'Yes. Our Musaffah warehouse dispatches across Abu Dhabi industrial zones, Yas Island, Saadiyat, KIZAD, and Reem Island. Same-day delivery on in-stock items when confirmed before 2 PM.',
+  },
+  {
+    q: 'What is the best scaffolding company in Abu Dhabi?',
+    a: 'Alcoa Aluminium Scaffolding has served Abu Dhabi contractors since 2008 with certified equipment, 24/7 WhatsApp support, and on-site erection crews. ISO 9001:2015 certified with zero major incidents on record.',
   },
   {
     q: 'What scaffolding types does Alcoa supply in UAE?',
-    a: 'Aluminium mobile towers, steel cuplock systems, ladders (aluminium and fiberglass), couplers, prop jacks, GI/MS pipe, and wooden planks — for rent and sale.',
+    a: 'Aluminium mobile towers, steel cuplock systems, ladders (aluminium and fiberglass), couplers, prop jacks, GI/MS pipe, and wooden planks — for rent and sale. Weekly and monthly hire rates reduce the daily cost.',
   },
 ];
 
@@ -66,8 +74,8 @@ const Home = () => {
     <div className="min-h-screen">
       <SEOHead
         title="Scaffolding Rental Abu Dhabi | Alcoa Scaffolding UAE"
-        description="Scaffolding rental Abu Dhabi, United Arab Emirates from Alcoa Scaffolding, a trusted scaffolding company serving Abu Dhabi and Musaffah. Towers from AED 35/day. Fast delivery."
-        keywords="scaffolding rental Abu Dhabi, scaffolding company UAE, scaffolding sale UAE, scaffolding hire UAE, alcoa scaffolding, scaffolding near me UAE, scaffolding Musaffah, scaffolding Abu Dhabi UAE"
+        description="Scaffolding rental Abu Dhabi, UAE from Alcoa Scaffolding. Same-day Musaffah delivery. Cuplock, mobile towers, ladders from AED 35/day. Erection crews available."
+        keywords="scaffolding rental Abu Dhabi, scaffolding hire Abu Dhabi, scaffolding company UAE, scaffolding sale UAE, scaffolding erection Abu Dhabi, scaffolding installation Abu Dhabi, industrial scaffolding Abu Dhabi, alcoa scaffolding, scaffolding near me UAE, scaffolding Musaffah, scaffolding Abu Dhabi UAE, weekly scaffolding rental, monthly scaffolding hire UAE"
         canonical="/"
         jsonLd={homeJsonLd}
         faq={homeFaq}

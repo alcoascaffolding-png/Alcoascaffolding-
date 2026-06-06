@@ -796,10 +796,10 @@ const ContactUs = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Near Me UAE | Contact Alcoa Scaffolding"
-        description="Search scaffolding near me UAE and contact Alcoa Scaffolding for quotes, supplier support, and fast delivery in Abu Dhabi, United Arab Emirates and Musaffah."
-        keywords="scaffolding near me uae, scaffolding supplier abu dhabi, scaffolding quote abu dhabi, alcoa scaffolding"
-        canonical="/scaffolding-near-me-uae"
+        title="Contact Alcoa Scaffolding Abu Dhabi | Get a Free Quote"
+        description="Contact Alcoa Scaffolding for scaffolding rental quotes in Abu Dhabi, United Arab Emirates and Musaffah. Call, WhatsApp, or email — quotes returned in under 30 minutes."
+        keywords="scaffolding quote abu dhabi, contact alcoa scaffolding, scaffolding supplier abu dhabi, scaffolding near me uae, scaffolding hire abu dhabi"
+        canonical="/contact-us"
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
