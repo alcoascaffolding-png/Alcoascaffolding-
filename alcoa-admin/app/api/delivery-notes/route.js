@@ -5,10 +5,12 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveDeliveryNoteNumberForCreate } from "@/lib/document-number";
-import DeliveryNote from "@/models/DeliveryNote";
-import Quotation from "@/models/Quotation";
-import SalesOrder from "@/models/SalesOrder";
-import SalesInvoice from "@/models/SalesInvoice";
+import {
+  DeliveryNote,
+  Quotation,
+  SalesOrder,
+  SalesInvoice,
+} from "@/lib/mongoose-models";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;

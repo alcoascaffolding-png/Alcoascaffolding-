@@ -2,8 +2,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import DeliveryNote from "@/models/DeliveryNote";
-import SalesOrder from "@/models/SalesOrder";
+import { DeliveryNote, SalesOrder } from "@/lib/mongoose-models";
 
 export const GET = withErrorHandler(async (request, context) => {
   const session = await auth();
