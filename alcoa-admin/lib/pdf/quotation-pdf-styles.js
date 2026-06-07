@@ -23,6 +23,9 @@ function buildQuotationPdfCss(embedFonts) {
       --pdf-page-width: 210mm;
       /* Horizontal inset from page edge to inner blue frame (6mm margin + 3px border). */
       --pdf-frame-inset-x: calc(6mm + 3px);
+      /* Horizontal bleed that extends header/footer under the frame border on each side,
+         covering the sub-pixel rounding gap that appears on the right side in Chromium PDF. */
+      --pdf-edge-bleed: 2px;
       /* One bank table body row (matches .bank-table-full td padding + line-height) */
       --bank-table-row-height: 27px;
       --pdf-font-stack: ${QUOTATION_PDF_FONT_STACK};
@@ -79,9 +82,11 @@ function buildQuotationPdfCss(embedFonts) {
     .pdf-running-head {
       flex: 0 0 auto;
       flex-shrink: 0;
-      width: 100%;
-      max-width: 100%;
-      margin: 0;
+      /* Bleed 2px under the frame border on both sides to eliminate the sub-pixel rounding
+         gap that Chromium produces between the header image edge and the ::before frame. */
+      width: calc(100% + 2 * var(--pdf-edge-bleed));
+      max-width: none;
+      margin: 0 calc(-1 * var(--pdf-edge-bleed));
       break-inside: avoid;
       page-break-inside: avoid;
       page-break-after: avoid;
@@ -111,10 +116,12 @@ function buildQuotationPdfCss(embedFonts) {
     .pdf-running-foot {
       flex: 0 0 auto;
       flex-shrink: 0;
-      width: 100%;
-      max-width: 100%;
-      margin: 0;
+      /* Same horizontal bleed as the header — covers the rounding gap on the right. */
+      width: calc(100% + 2 * var(--pdf-edge-bleed));
+      max-width: none;
       margin-top: auto;
+      margin-left: calc(-1 * var(--pdf-edge-bleed));
+      margin-right: calc(-1 * var(--pdf-edge-bleed));
       break-inside: avoid;
       page-break-inside: avoid;
       page-break-before: avoid;
@@ -673,10 +680,11 @@ function buildQuotationPdfCss(embedFonts) {
       .pdf-running-head,
       .footer,
       .pdf-running-foot {
-        width: 100%;
-        max-width: 100%;
-        margin-left: 0;
-        margin-right: 0;
+        /* Preserve the horizontal bleed defined in the base rules. */
+        width: calc(100% + 2 * var(--pdf-edge-bleed));
+        max-width: none;
+        margin-left: calc(-1 * var(--pdf-edge-bleed));
+        margin-right: calc(-1 * var(--pdf-edge-bleed));
         overflow: hidden;
         position: relative;
         break-inside: avoid;
