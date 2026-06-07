@@ -18,7 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Truck } from "lucide-react";
+import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import {
   QUOTATION_PDF_BANK_DETAILS,
@@ -65,6 +66,17 @@ export function SalesOrderDetail({ id }) {
       if (!d.success) throw new Error(d.error);
       return d.data;
     },
+  });
+
+  const { data: linkedDeliveryNotes } = useQuery({
+    queryKey: ["sales-orders", "delivery-notes", id],
+    queryFn: async () => {
+      const res = await fetch(`/api/sales-orders/${id}/delivery-notes`);
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled: !!id,
   });
 
   const {
@@ -129,18 +141,26 @@ export function SalesOrderDetail({ id }) {
             detailQueryKey={["sales-orders", "detail", id]}
           />
         </div>
-        <DocumentDetailToolbar
-          sending={sending}
-          showWhatsApp={showWhatsApp}
-          hasEmail={!!o.customerEmail}
-          hasPhone={!!o.customerPhone}
-          onDownloadPdf={downloadPdf}
-          onSendEmail={sendEmail}
-          onSendWhatsApp={sendWhatsApp}
-          onCopyWhatsAppLink={copyWhatsAppLink}
-          onEdit={() => router.push(`/sales-orders/${id}/edit`)}
-          onDelete={() => setShowDelete(true)}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/delivery-notes/new?salesOrder=${id}`}>
+            <Button variant="outline" size="sm">
+              <Truck className="h-4 w-4 mr-1" />
+              Create Delivery Note
+            </Button>
+          </Link>
+          <DocumentDetailToolbar
+            sending={sending}
+            showWhatsApp={showWhatsApp}
+            hasEmail={!!o.customerEmail}
+            hasPhone={!!o.customerPhone}
+            onDownloadPdf={downloadPdf}
+            onSendEmail={sendEmail}
+            onSendWhatsApp={sendWhatsApp}
+            onCopyWhatsAppLink={copyWhatsAppLink}
+            onEdit={() => router.push(`/sales-orders/${id}/edit`)}
+            onDelete={() => setShowDelete(true)}
+          />
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -295,6 +315,48 @@ export function SalesOrderDetail({ id }) {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Linked Delivery Notes</CardTitle>
+            <Link href={`/delivery-notes/new?salesOrder=${id}`}>
+              <Button variant="outline" size="sm">
+                <Truck className="h-4 w-4 mr-1" />
+                New
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {linkedDeliveryNotes?.items?.length ? (
+              <ul className="space-y-2">
+                {linkedDeliveryNotes.items.map((dn) => (
+                  <li
+                    key={dn._id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-border/60 last:border-0"
+                  >
+                    <button
+                      type="button"
+                      className="font-mono text-sm font-medium hover:underline text-left"
+                      onClick={() => router.push(`/delivery-notes/${String(dn._id)}`)}
+                    >
+                      {dn.deliveryNoteNumber}
+                    </button>
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {String(dn.status || "").replace(/_/g, " ")}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {dn.deliveryDate ? formatDate(dn.deliveryDate) : "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No delivery notes linked yet. Create one when goods are ready to dispatch.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

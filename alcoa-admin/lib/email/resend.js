@@ -166,6 +166,27 @@ export async function sendSalesOrderEmail(order, pdfBuffer) {
   });
 }
 
+export async function sendDeliveryNoteEmail(note, pdfBuffer) {
+  const { default: deliveryNoteEmailTemplate } = await import("./templates/delivery-note-email");
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = deliveryNoteEmailTemplate(note, { logoSrc });
+
+  const brandName = getQuotationCompanyName();
+  return sendEmail({
+    from: emailFromLine(),
+    to: [note.customerEmail],
+    cc: [COMPANY_EMAIL],
+    subject: `Delivery Note ${note.deliveryNoteNumber} — ${brandName}`,
+    html,
+    attachments: documentEmailAttachments(
+      `${note.deliveryNoteNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
+    reply_to: COMPANY_EMAIL,
+  });
+}
+
 export async function sendSalesInvoiceEmail(invoice, pdfBuffer) {
   const { default: salesInvoiceEmailTemplate } = await import("./templates/sales-invoice-email");
   const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();

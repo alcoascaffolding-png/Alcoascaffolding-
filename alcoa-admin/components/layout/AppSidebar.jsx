@@ -44,6 +44,7 @@ const navigation = [
       { name: "Quotations", href: "/quotations", icon: FileText },
       { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
       { name: "Sales Invoices", href: "/sales-invoices", icon: Receipt },
+      { name: "Delivery Notes", href: "/delivery-notes", icon: Truck },
     ],
   },
   /* ─── Temporarily hidden — restore Purchases / Inventory / Accounts when ready ───

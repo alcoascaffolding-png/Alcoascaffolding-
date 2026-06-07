@@ -267,6 +267,32 @@ export function buildWhatsAppSalesOrderBody(
   return lines.join("\n");
 }
 
+/** Plain text for WhatsApp — delivery note PDF (no pricing). */
+export function buildWhatsAppDeliveryNoteBody(
+  note,
+  { attachmentLine = true, devNoPdfNote = "" } = {}
+) {
+  const brand = getQuotationCompanyName();
+  const salesOrderNumber =
+    note.salesOrder && typeof note.salesOrder === "object"
+      ? note.salesOrder.orderNumber
+      : note.salesOrderNumber || "";
+  const lines = [
+    `*${note.deliveryNoteNumber}* — ${brand}`,
+    `Delivery note for ${note.customerName}.`,
+  ];
+  if (devNoPdfNote) lines.push(devNoPdfNote);
+  else if (attachmentLine) lines.push("Please find the delivery note attached (PDF).");
+  if (salesOrderNumber) lines.push(`Order ref: ${salesOrderNumber}`);
+  if (note.deliveryDate) {
+    lines.push(`Delivery date: ${new Date(note.deliveryDate).toLocaleDateString("en-GB")}`);
+  }
+  if (note.driverName) lines.push(`Driver: ${note.driverName}`);
+  if (note.vehicleNumber) lines.push(`Vehicle: ${note.vehicleNumber}`);
+  lines.push("", `Questions? Reply here or email ${getQuotationCompanyEmail()}.`);
+  return lines.join("\n");
+}
+
 /** Plain text for WhatsApp — sales invoice PDF is attached or linked separately. */
 export function buildWhatsAppSalesInvoiceBody(
   invoice,

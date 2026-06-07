@@ -8,5 +8,6 @@ import Customer from "@/models/Customer";
 import Quotation from "@/models/Quotation";
 import SalesOrder from "@/models/SalesOrder";
 import SalesInvoice from "@/models/SalesInvoice";
+import DeliveryNote from "@/models/DeliveryNote";
 
-export { Customer, Quotation, SalesOrder, SalesInvoice };
+export { Customer, Quotation, SalesOrder, SalesInvoice, DeliveryNote };

@@ -10,12 +10,13 @@ export const DOCUMENT_PREFIX = {
   QUOTATION: "QT",
   SALES_ORDER: "SO",
   SALES_INVOICE: "SI",
+  DELIVERY_NOTE: "DN",
 };
 
 const VALID_PREFIXES = Object.values(DOCUMENT_PREFIX);
 
 /** @type {RegExp} */
-export const DOCUMENT_NUMBER_REGEX = /^(QT|SO|SI)\d{11}$/;
+export const DOCUMENT_NUMBER_REGEX = /^(QT|SO|SI|DN)\d{11}$/;
 
 export function formatDocumentNumber(prefix, baseDate, randomSuffix) {
   const p = String(prefix || "").toUpperCase();
@@ -51,19 +52,23 @@ export async function generateUniqueDocumentNumber(prefix, isAvailable, baseDate
 }
 
 export async function isDocumentNumberTaken(candidate, models, exclude = {}) {
-  const { Quotation, SalesOrder, SalesInvoice } = models;
+  const { Quotation, SalesOrder, SalesInvoice, DeliveryNote } = models;
   const filter = (field, excludeId) => {
     const q = { [field]: candidate };
     if (excludeId) q._id = { $ne: excludeId };
     return q;
   };
 
-  const [q, o, i] = await Promise.all([
+  const checks = [
     Quotation.exists(filter("quoteNumber", exclude.quotationId)),
     SalesOrder.exists(filter("orderNumber", exclude.salesOrderId)),
     SalesInvoice.exists(filter("invoiceNumber", exclude.salesInvoiceId)),
-  ]);
-  return Boolean(q || o || i);
+  ];
+  if (DeliveryNote) {
+    checks.push(DeliveryNote.exists(filter("deliveryNoteNumber", exclude.deliveryNoteId)));
+  }
+  const results = await Promise.all(checks);
+  return results.some(Boolean);
 }
 
 export async function createDocumentNumberAvailabilityChecker(models, exclude = {}) {
@@ -146,5 +151,20 @@ export async function resolveInvoiceNumberForCreate(
     models,
     DOCUMENT_PREFIX.SALES_INVOICE,
     invoiceDate || new Date()
+  );
+}
+
+/** Delivery note: always DNYYMMDD### (never reuse SO number). */
+export async function resolveDeliveryNoteNumberForCreate(
+  { deliveryDate, deliveryNoteNumber },
+  models
+) {
+  if (deliveryNoteNumber && String(deliveryNoteNumber).trim()) {
+    return String(deliveryNoteNumber).trim();
+  }
+  return generateNewDocumentNumber(
+    models,
+    DOCUMENT_PREFIX.DELIVERY_NOTE,
+    deliveryDate || new Date()
   );
 }
