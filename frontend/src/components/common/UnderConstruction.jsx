@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiTool, FiMail, FiPhone, FiArrowLeft } from 'react-icons/fi';
+import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 
 const UnderConstruction = ({ 
   title = "Page Under Construction",
@@ -58,7 +59,8 @@ const UnderConstruction = ({
                 </div>
                 <div className="text-left">
                   <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm">Sales@alcoascaffolding.com</p>
+                  <a href={`mailto:${EMAIL_SALES}`} className="block font-semibold text-gray-900 dark:text-white text-sm hover:underline">{EMAIL_SALES}</a>
+                  <a href={`mailto:${EMAIL_INFO}`} className="block font-semibold text-gray-900 dark:text-white text-sm hover:underline">{EMAIL_INFO}</a>
                 </div>
               </div>
             </div>

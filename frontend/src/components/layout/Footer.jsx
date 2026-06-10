@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 import {
   FiPhone,
   FiMail,
@@ -72,8 +73,8 @@ const Footer = () => {
     {
       icon: FiMail,
       title: 'Email',
-      details: ['Sales@alcoascaffolding.com'],
-      link: 'mailto:Sales@alcoascaffolding.com'
+      details: [EMAIL_SALES, EMAIL_INFO],
+      link: `mailto:${EMAIL_SALES}`
     },
     {
       icon: FiMapPin,
@@ -182,8 +183,11 @@ const Footer = () => {
                     <FiMail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <a href="mailto:Sales@alcoascaffolding.com" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium break-all">
-                      Sales@alcoascaffolding.com
+                    <a href={`mailto:${EMAIL_SALES}`} className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium break-all">
+                      {EMAIL_SALES}
+                    </a>
+                    <a href={`mailto:${EMAIL_INFO}`} className="block text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium break-all">
+                      {EMAIL_INFO}
                     </a>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">24/7 Response</p>
                   </div>

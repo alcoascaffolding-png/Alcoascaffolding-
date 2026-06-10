@@ -194,7 +194,7 @@ const quotationEmailTemplate = (quotation) => {
                   <td style="padding-top: 15px;">
                     <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
                       📞 Phone: +971 58 137 5601 | +971 50 926 8038<br/>
-                      📧 Email: Sales@alcoascaffolding.com<br/>
+                      📧 Email: sales@alcoascaffolding.com<br/>
                       🌐 Website: www.alcoascaffolding.com<br/>
                       📍 Musaffah, Abu Dhabi, UAE
                     </p>

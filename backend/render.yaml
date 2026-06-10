@@ -14,7 +14,7 @@ services:
       - key: RESEND_API_KEY
         value: re_CvdzT36t_7KHxdymvBesH1qdDRJ2a4yzm
       - key: RESEND_FROM_EMAIL
-        value: Sales@alcoascaffolding.com
+        value: sales@alcoascaffolding.com
       - key: COMPANY_EMAIL
         value: sales@alcoascaffolding.com
       - key: SUPPORT_EMAIL

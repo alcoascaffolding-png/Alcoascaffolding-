@@ -20,7 +20,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM_EMAIL
-        value: Sales@alcoascaffolding.com
+        value: sales@alcoascaffolding.com
       - key: COMPANY_EMAIL
         value: sales@alcoascaffolding.com
       - key: SUPPORT_EMAIL

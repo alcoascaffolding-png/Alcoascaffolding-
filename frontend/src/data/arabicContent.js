@@ -37,7 +37,8 @@ export const arabicPages = {
     intro:
       'للحصول على عرض سعر سريع، اتصل أو راسلنا عبر واتساب على +971 58 137 5601. فريقنا يرد خلال 30 دقيقة في ساعات العمل. نخدم المصفح M-40 وM-45 وأبوظبي وياس آيلاند وKIZAD.',
     phone: '+971 58 137 5601',
-    email: 'Sales@alcoascaffolding.com',
+    email: 'sales@alcoascaffolding.com',
+    emailInfo: 'info@alcoascaffolding.com',
     keywords: 'عرض سعر سقالات أبوظبي، تواصل شركة سقالات الإمارات، سقالات المصفح، Alcoa أبوظبي',
   },
   services: {

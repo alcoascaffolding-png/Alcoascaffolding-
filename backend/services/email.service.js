@@ -119,7 +119,7 @@ class EmailService {
         html: contactCustomerTemplate(data),
         replyTo: recipients.primary, // Customer can reply to company
         // Add text version for better deliverability
-        text: `Dear ${data.name},\n\nThank you for contacting Alcoa Aluminium Scaffolding. We have received your message and our team will get back to you within 2 hours.\n\nYour Message:\n${data.message}\n\nNeed Immediate Assistance?\nPhone: +971 58 137 5601\nEmail: Sales@alcoascaffolding.com\nAddress: Musaffah, Abu Dhabi, UAE\n\nBest Regards,\nAlcoa Aluminium Scaffolding Team`,
+        text: `Dear ${data.name},\n\nThank you for contacting Alcoa Aluminium Scaffolding. We have received your message and our team will get back to you within 2 hours.\n\nYour Message:\n${data.message}\n\nNeed Immediate Assistance?\nPhone: +971 58 137 5601\nEmail: sales@alcoascaffolding.com\nAddress: Musaffah, Abu Dhabi, UAE\n\nBest Regards,\nAlcoa Aluminium Scaffolding Team`,
         headers: {
           'X-Auto-Response-Suppress': 'OOF, AutoReply',
           'Auto-Submitted': 'auto-replied',
@@ -187,7 +187,7 @@ class EmailService {
         html: quoteCustomerTemplate(data),
         replyTo: recipients.primary, // Customer can reply to company
         // Add text version for better deliverability
-        text: `Dear ${data.name},\n\nThank you for your quote request. We have received your project details and our team is reviewing them.\n\nYou will receive a detailed quotation within 24 hours.\n\nNeed Immediate Assistance?\nPhone: +971 58 137 5601\nEmail: Sales@alcoascaffolding.com\nAddress: Musaffah, Abu Dhabi, UAE\nBusiness Hours: Mon-Fri 7AM-6PM, Sat 8AM-4PM\n\nBest Regards,\nAlcoa Aluminium Scaffolding Team`,
+        text: `Dear ${data.name},\n\nThank you for your quote request. We have received your project details and our team is reviewing them.\n\nYou will receive a detailed quotation within 24 hours.\n\nNeed Immediate Assistance?\nPhone: +971 58 137 5601\nEmail: sales@alcoascaffolding.com\nAddress: Musaffah, Abu Dhabi, UAE\nBusiness Hours: Mon-Fri 7AM-6PM, Sat 8AM-4PM\n\nBest Regards,\nAlcoa Aluminium Scaffolding Team`,
         headers: {
           'X-Auto-Response-Suppress': 'OOF, AutoReply',
           'Auto-Submitted': 'auto-replied',

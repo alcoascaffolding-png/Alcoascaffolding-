@@ -66,8 +66,8 @@ const ArabicPage = ({ pageKey }) => {
             </ul>
           )}
 
-          {(page.phone || page.cta) && (
-            <div className="flex flex-wrap gap-4">
+          {(page.phone || page.email || page.cta) && (
+            <div className="flex flex-wrap gap-4 items-center">
               {page.cta && (
                 <Link to="/contact-us" className="btn-primary">
                   {page.cta}
@@ -76,6 +76,16 @@ const ArabicPage = ({ pageKey }) => {
               {page.phone && (
                 <a href="tel:+971581375601" className="btn-secondary">
                   {page.call ?? page.phone}
+                </a>
+              )}
+              {page.email && (
+                <a href={`mailto:${page.email}`} className="text-blue-600 hover:underline">
+                  {page.email}
+                </a>
+              )}
+              {page.emailInfo && (
+                <a href={`mailto:${page.emailInfo}`} className="text-blue-600 hover:underline">
+                  {page.emailInfo}
                 </a>
               )}
             </div>

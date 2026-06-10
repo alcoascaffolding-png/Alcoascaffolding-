@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -112,7 +113,9 @@ const Navbar = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <FiMail className="w-4 h-4" />
-                <span>Sales@alcoascaffolding.com</span>
+                <a href={`mailto:${EMAIL_SALES}`} className="hover:text-brand-accent-400 transition-colors">{EMAIL_SALES}</a>
+                <span className="text-brand-secondary-400">|</span>
+                <a href={`mailto:${EMAIL_INFO}`} className="hover:text-brand-accent-400 transition-colors">{EMAIL_INFO}</a>
               </div>
               <div className="flex items-center space-x-2">
                 <FiMapPin className="w-4 h-4" />

@@ -25,6 +25,7 @@ import {
 } from '../redux/slices/formSlice';
 import ENV_CONFIG, { getContactFormApiUrls } from '../config/env';
 import { trackFormSubmit, trackQuoteRequest } from '../utils/analytics';
+import { EMAIL_SALES, EMAIL_INFO } from '../data/contactInfo';
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
@@ -568,10 +569,10 @@ const ContactUs = () => {
     {
       icon: FiMail,
       title: 'Email',
-      primary: 'Sales@alcoascaffolding.com',
-      // secondary: 'Sales@alcoascaffolding.com',
+      primary: EMAIL_SALES,
+      secondary: EMAIL_INFO,
       description: '24/7 response within 2 hours',
-      action: 'mailto:Sales@alcoascaffolding.com'
+      action: `mailto:${EMAIL_SALES}`
     },
     {
       icon: FiMapPin,
@@ -597,7 +598,8 @@ const ContactUs = () => {
       address: 'Musaffah, Abu Dhabi, UAE',
       phone: '+971 58 137 5601',
       phone2: '+971 50 926 8038',
-      email: 'Sales@alcoascaffolding.com',
+      email: EMAIL_SALES,
+      email2: EMAIL_INFO,
       isHeadquarters: true
     }
   ];
@@ -988,6 +990,14 @@ const ContactUs = () => {
                           {office.email}
                         </a>
                       </p>
+                      {office.email2 && (
+                        <p>
+                          <FiMail className="w-4 h-4 inline mr-2" />
+                          <a href={`mailto:${office.email2}`} className="hover:text-primary-600 dark:hover:text-primary-400">
+                            {office.email2}
+                          </a>
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

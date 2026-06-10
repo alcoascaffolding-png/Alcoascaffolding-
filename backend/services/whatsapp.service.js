@@ -164,7 +164,7 @@ class WhatsAppService {
         `Please review the attached PDF for complete details.\n\n` +
         `For any queries, contact us:\n` +
         `📞 +971 58 137 5601\n` +
-        `📧 Sales@alcoascaffolding.com\n\n` +
+        `📧 sales@alcoascaffolding.com\n\n` +
         `Best Regards,\n` +
         `*ALCOA ALUMINIUM SCAFFOLDING*`;
 

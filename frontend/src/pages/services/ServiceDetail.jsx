@@ -17,6 +17,7 @@ import {
 import { getRelatedServices, getRelatedProductCategory } from '../../utils/serviceRelatedLinks';
 import { FiCheck, FiPhone, FiMail, FiChevronDown } from 'react-icons/fi';
 import SEOHead from '../../components/common/SEOHead';
+import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 
 const ServiceDetail = () => {
   const { serviceId } = useParams();
@@ -268,7 +269,10 @@ const ServiceDetail = () => {
                 </div>
                 <div className="flex items-start space-x-3">
                   <FiMail className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <div>Sales@alcoascaffolding.com</div>
+                  <div>
+                    <a href={`mailto:${EMAIL_SALES}`} className="block hover:underline">{EMAIL_SALES}</a>
+                    <a href={`mailto:${EMAIL_INFO}`} className="block hover:underline">{EMAIL_INFO}</a>
+                  </div>
                 </div>
               </div>
             </div>

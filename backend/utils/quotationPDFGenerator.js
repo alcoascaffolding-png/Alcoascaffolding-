@@ -541,7 +541,7 @@ const generateQuotationPDFBuffer = (quotation) => {
       
       // Contact details - Centered format matching admin panel
       doc.fontSize(8).fillColor(darkGray).font('Helvetica');
-      const contactLine = 'Tel: +971 58 137 5601 | +971 50 926 8038  |  Email: Sales@alcoascaffolding.com  |  Web: www.alcoascaffolding.com';
+      const contactLine = 'Tel: +971 58 137 5601 | +971 50 926 8038  |  Email: sales@alcoascaffolding.com  |  Web: www.alcoascaffolding.com';
       doc.text(contactLine, 40, footerY + 5, { width: 515, align: 'center' });
       
       // Address - centered

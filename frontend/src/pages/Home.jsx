@@ -19,7 +19,20 @@ const homeJsonLd = [
     description: 'Scaffolding rental service in Abu Dhabi, United Arab Emirates. Aluminium scaffolding, cuplock systems, ladders, and erection crews. Musaffah 37 warehouse with same-day delivery.',
     url: 'https://alcoascaffolding.com',
     telephone: '+971581375601',
-    email: 'Sales@alcoascaffolding.com',
+    email: 'sales@alcoascaffolding.com',
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'sales',
+        email: 'sales@alcoascaffolding.com',
+        telephone: '+971581375601',
+      },
+      {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: 'info@alcoascaffolding.com',
+      },
+    ],
     address: {
       '@type': 'PostalAddress',
       streetAddress: "Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinai'yah 1 Street, Office 11, 1st Floor",

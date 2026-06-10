@@ -1,5 +1,7 @@
 // Branch data for Alcoa Aluminium Scaffolding locations
 // Updated for Abu Dhabi, UAE operations
+import { EMAIL_SALES, EMAIL_INFO } from './contactInfo';
+
 export const branchesData = [
   {
     id: 'abu-dhabi-hq',
@@ -16,7 +18,8 @@ export const branchesData = [
       phone: '+971 58 137 5601',
       phone2: '+971 50 926 8038',
       fax: '+971 58 137 5602',
-      email: 'Sales@alcoascaffolding.com',
+      email: EMAIL_SALES,
+      email2: EMAIL_INFO,
       manager: 'Syed Tawakal',
       managerTitle: 'Regional Director'
     },

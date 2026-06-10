@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 import { 
   FiPhone, 
   FiMail, 
@@ -34,8 +35,10 @@ const ContactCTA = () => {
       icon: FiMail,
       title: 'Email Us',
       description: 'Get a detailed quote',
-      action: 'Sales@alcoascaffolding.com',
-      link: 'mailto:Sales@alcoascaffolding.com',
+      links: [
+        { label: EMAIL_SALES, href: `mailto:${EMAIL_SALES}` },
+        { label: EMAIL_INFO, href: `mailto:${EMAIL_INFO}` },
+      ],
       available: '24/7 Response'
     },
     {
@@ -161,14 +164,28 @@ const ContactCTA = () => {
                     <div className="flex-1">
                       <h4 className="text-base sm:text-lg font-semibold mb-1 text-gray-900 dark:text-white">{method.title}</h4>
                       <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-2">{method.description}</p>
-                      <a 
-                        href={method.link}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors text-xs sm:text-sm"
-                        target={method.link.startsWith('http') ? '_blank' : undefined}
-                        rel={method.link.startsWith('http') ? 'noopener noreferrer' : undefined}
-                      >
-                        {method.action}
-                      </a>
+                      {method.links ? (
+                        <div className="space-y-1">
+                          {method.links.map((item) => (
+                            <a
+                              key={item.label}
+                              href={item.href}
+                              className="block text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors text-xs sm:text-sm break-all"
+                            >
+                              {item.label}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <a 
+                          href={method.link}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors text-xs sm:text-sm"
+                          target={method.link.startsWith('http') ? '_blank' : undefined}
+                          rel={method.link.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        >
+                          {method.action}
+                        </a>
+                      )}
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {method.available}
                       </div>
