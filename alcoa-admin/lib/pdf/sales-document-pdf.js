@@ -16,7 +16,7 @@ export async function generateSalesOrderPDF(order) {
 /** Sales invoice PDF — same branded layout as quotations. */
 export async function generateSalesInvoicePDF(invoice) {
   if (!invoice?.items?.length) {
-    throw new Error("Sales invoice has no line items — add items before downloading PDF.");
+    throw new Error("Tax invoice has no line items — add items before downloading PDF.");
   }
   const mapped = mapSalesInvoiceForQuotationPdf(invoice);
   return generateQuotationPDF(mapped, { docKind: "salesInvoice" });

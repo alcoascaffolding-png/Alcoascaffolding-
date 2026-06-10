@@ -436,16 +436,18 @@ function buildQuotationPdfCss(embedFonts) {
       border: 1px solid var(--layout-blue);
       padding: 5px 8px;
       font-size: 8.7px;
-      font-weight: 700;
+      font-weight: 400;
       vertical-align: middle;
     }
     .items-totals-foot tr:first-child td.totals-label,
     .items-totals-foot tr:first-child td.totals-value {
       border-top: 2px solid var(--layout-blue);
+      font-weight: 700;
     }
     .items-totals-foot tr.totals-grand td.totals-label,
     .items-totals-foot tr.totals-grand td.totals-value {
       border-bottom: 2px solid var(--layout-blue);
+      font-weight: 700;
     }
     .items-totals-foot td.totals-label {
       text-transform: uppercase;

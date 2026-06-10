@@ -16,6 +16,11 @@ function quotationItemsToOrderItems(items) {
       "Line item";
     return {
       description: desc,
+      equipmentType: it.equipmentType || undefined,
+      specifications: it.specifications || undefined,
+      size: it.size || undefined,
+      weight: it.weight != null ? Number(it.weight) : undefined,
+      cbm: it.cbm != null ? Number(it.cbm) : undefined,
       quantity: qty,
       unit: it.unit || "Nos",
       unitPrice: rate,

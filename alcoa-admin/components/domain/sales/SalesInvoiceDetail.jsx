@@ -18,7 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Truck } from "lucide-react";
+import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import {
   QUOTATION_PDF_BANK_DETAILS,
@@ -67,6 +68,24 @@ export function SalesInvoiceDetail({ id }) {
     },
   });
 
+  const salesOrderId =
+    invoice?.salesOrder && typeof invoice.salesOrder === "object" && invoice.salesOrder._id != null
+      ? String(invoice.salesOrder._id)
+      : invoice?.salesOrder != null
+        ? String(invoice.salesOrder)
+        : null;
+
+  const { data: linkedDeliveryNotes } = useQuery({
+    queryKey: ["sales-orders", "delivery-notes", salesOrderId],
+    queryFn: async () => {
+      const res = await fetch(`/api/sales-orders/${salesOrderId}/delivery-notes`);
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled: !!salesOrderId,
+  });
+
   const {
     showWhatsApp,
     sending,
@@ -93,7 +112,7 @@ export function SalesInvoiceDetail({ id }) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["sales-invoices"] });
       qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
-      toast.success("Invoice deleted");
+      toast.success("Tax invoice deleted");
       router.push("/sales-invoices");
     },
     onError: (e) => toast.error(e.message),
@@ -108,7 +127,7 @@ export function SalesInvoiceDetail({ id }) {
   const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
   const displayItems = mapSalesInvoiceItemsForDisplay(inv);
   const bank = QUOTATION_PDF_BANK_DETAILS;
-  const subject = `Sales Invoice ${inv.invoiceNumber}`;
+  const subject = `Tax Invoice ${inv.invoiceNumber}`;
   const customer = inv.customer && typeof inv.customer === "object" ? inv.customer : null;
   const customerAddress = inv.customerAddress || formatCustomerAddressFromRecord(customer);
   const paid = Number(inv.paidAmount || 0);
@@ -132,18 +151,38 @@ export function SalesInvoiceDetail({ id }) {
             detailQueryKey={["sales-invoices", "detail", id]}
           />
         </div>
-        <DocumentDetailToolbar
-          sending={sending}
-          showWhatsApp={showWhatsApp}
-          hasEmail={!!inv.customerEmail}
-          hasPhone={!!inv.customerPhone}
-          onDownloadPdf={downloadPdf}
-          onSendEmail={sendEmail}
-          onSendWhatsApp={sendWhatsApp}
-          onCopyWhatsAppLink={copyWhatsAppLink}
-          onEdit={() => router.push(`/sales-invoices/${id}/edit`)}
-          onDelete={() => setShowDelete(true)}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {salesOrderId ? (
+            <Link href={`/delivery-notes/new?salesOrder=${salesOrderId}`}>
+              <Button variant="outline" size="sm">
+                <Truck className="h-4 w-4 mr-1" />
+                Create Delivery Note
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled
+              title="Link a sales order to create a delivery note"
+            >
+              <Truck className="h-4 w-4 mr-1" />
+              Create Delivery Note
+            </Button>
+          )}
+          <DocumentDetailToolbar
+            sending={sending}
+            showWhatsApp={showWhatsApp}
+            hasEmail={!!inv.customerEmail}
+            hasPhone={!!inv.customerPhone}
+            onDownloadPdf={downloadPdf}
+            onSendEmail={sendEmail}
+            onSendWhatsApp={sendWhatsApp}
+            onCopyWhatsAppLink={copyWhatsAppLink}
+            onEdit={() => router.push(`/sales-invoices/${id}/edit`)}
+            onDelete={() => setShowDelete(true)}
+          />
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -162,7 +201,7 @@ export function SalesInvoiceDetail({ id }) {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Sales Invoice</CardTitle>
+              <CardTitle className="text-base">Tax Invoice</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <InfoRowAlways label="Invoice No" value={inv.invoiceNumber} />
@@ -307,6 +346,54 @@ export function SalesInvoiceDetail({ id }) {
             </CardContent>
           </Card>
         )}
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Linked Delivery Notes</CardTitle>
+            {salesOrderId ? (
+              <Link href={`/delivery-notes/new?salesOrder=${salesOrderId}`}>
+                <Button variant="outline" size="sm">
+                  <Truck className="h-4 w-4 mr-1" />
+                  New
+                </Button>
+              </Link>
+            ) : null}
+          </CardHeader>
+          <CardContent>
+            {!salesOrderId ? (
+              <p className="text-sm text-muted-foreground">
+                Link a sales order to this invoice to create and view delivery notes.
+              </p>
+            ) : linkedDeliveryNotes?.items?.length ? (
+              <ul className="space-y-2">
+                {linkedDeliveryNotes.items.map((dn) => (
+                  <li
+                    key={dn._id}
+                    className="flex flex-wrap items-center justify-between gap-2 py-2 border-b border-border/60 last:border-0"
+                  >
+                    <button
+                      type="button"
+                      className="font-mono text-sm font-medium hover:underline text-left"
+                      onClick={() => router.push(`/delivery-notes/${String(dn._id)}`)}
+                    >
+                      {dn.deliveryNoteNumber}
+                    </button>
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {String(dn.status || "").replace(/_/g, " ")}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {dn.deliveryDate ? formatDate(dn.deliveryDate) : "—"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No delivery notes linked yet. Create one when goods are ready to dispatch.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

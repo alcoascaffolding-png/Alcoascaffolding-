@@ -22,12 +22,22 @@ import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { formatCurrency } from "@/lib/utils";
 import { customerSnapshotToQuotationFormPatch } from "@/lib/map-customer-to-quotation";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
+import {
+  buildLineItemSavePayload,
+  mapExistingLineItemToForm,
+  pickStructuredLineItemFields,
+} from "@/lib/sales-line-item-structured";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
   quantity: z.coerce.number().min(0.01),
   unit: z.string().default("Nos"),
   unitPrice: z.coerce.number().min(0),
+  equipmentType: z.string().optional(),
+  specifications: z.string().optional(),
+  size: z.string().optional(),
+  weight: z.coerce.number().optional(),
+  cbm: z.coerce.number().optional(),
 });
 
 const orderSchema = z.object({
@@ -136,12 +146,7 @@ export function SalesOrderFormPage({ id }) {
       status: existing.status || "draft",
       items:
         existing.items?.length > 0
-          ? existing.items.map((it) => ({
-              description: it.description || "",
-              quantity: it.quantity,
-              unit: it.unit || "Nos",
-              unitPrice: it.unitPrice,
-            }))
+          ? existing.items.map(mapExistingLineItemToForm)
           : [{ ...defaultItem }],
       vatPercentage: vatPctVal,
       notes: existing.notes || "",
@@ -260,6 +265,13 @@ export function SalesOrderFormPage({ id }) {
           quantity: Number(it.quantity) || 1,
           unit: it.unit || "Nos",
           unitPrice: Number(it.ratePerUnit) || 0,
+          ...pickStructuredLineItemFields({
+            equipmentType: it.equipmentType,
+            specifications: it.specifications,
+            size: it.size,
+            weight: it.weight,
+            cbm: it.cbm,
+          }),
         };
       });
       form.setValue("items", lines, { shouldDirty: true });
@@ -326,17 +338,7 @@ export function SalesOrderFormPage({ id }) {
 
   const saveMut = useMutation({
     mutationFn: async (values) => {
-      const items = values.items.map((item) => {
-        const qty = Number(item.quantity) || 0;
-        const rate = Number(item.unitPrice) || 0;
-        return {
-          description: item.description,
-          quantity: qty,
-          unit: item.unit || "Nos",
-          unitPrice: rate,
-          total: qty * rate,
-        };
-      });
+      const items = values.items.map(buildLineItemSavePayload);
       const lineSubtotal = items.reduce((s, it) => s + it.total, 0);
       const vat = (lineSubtotal * Number(values.vatPercentage ?? 5)) / 100;
 

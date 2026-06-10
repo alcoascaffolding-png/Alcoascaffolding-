@@ -118,7 +118,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
       await SalesOrder.findByIdAndUpdate(doc._id, { $set: { status: prevStatus } });
       throw err instanceof AppError
         ? err
-        : new AppError(err.message || "Could not create sales invoice from order", 400);
+        : new AppError(err.message || "Could not create tax invoice from order", 400);
     }
   } else if (nextStatus === SALES_ORDER_INVOICE_STATUS) {
     const result = await ensureSalesInvoiceFromSalesOrder(doc._id, session.user.id);

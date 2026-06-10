@@ -51,16 +51,54 @@ export function mapSalesOrderForQuotationPdf(order) {
   };
 }
 
+/** Resolve PDF line-item display fields from structured or legacy flat description. */
+function resolveStructuredLineItemForPdf(it) {
+  if (it.equipmentType) {
+    const title = String(it.equipmentType).trim();
+    let subDesc = String(it.description || "").trim();
+    const prefix = `${title} — `;
+    if (subDesc.startsWith(prefix)) {
+      subDesc = subDesc.slice(prefix.length).trim();
+    }
+    if (subDesc.toLowerCase() === title.toLowerCase()) {
+      subDesc = "";
+    }
+    return {
+      equipmentType: title,
+      description: subDesc,
+      specifications: it.specifications || "",
+      size: it.size || "",
+      weight: Number(it.weight) || 0,
+      cbm: Number(it.cbm) || 0,
+    };
+  }
+
+  const flat = String(it.description || "").trim();
+  const parts = flat.split(" — ").map((s) => s.trim()).filter(Boolean);
+  const title = parts[0] || flat;
+  const sub =
+    parts.length > 1 && parts[1].toLowerCase() !== title.toLowerCase()
+      ? parts.slice(1).join(" — ")
+      : "";
+
+  return {
+    equipmentType: title,
+    description: sub,
+    specifications: "",
+    size: "",
+    weight: 0,
+    cbm: 0,
+  };
+}
+
 function mapLineItemsForPdf(doc, vatPct) {
   const rawItems = Array.isArray(doc.items) ? doc.items : [];
   return rawItems.map((it) => {
     const lineTotal = Number(it.total ?? Number(it.quantity || 0) * Number(it.unitPrice || 0));
     const lineVat = (lineTotal * vatPct) / 100;
+    const structured = resolveStructuredLineItemForPdf(it);
     return {
-      equipmentType: it.description || "",
-      description: "",
-      weight: 0,
-      cbm: 0,
+      ...structured,
       quantity: it.quantity,
       unit: it.unit || "Nos",
       ratePerUnit: it.unitPrice,
@@ -117,7 +155,7 @@ export function mapSalesInvoiceForQuotationPdf(invoice) {
     customerPhone: invoice.customerPhone || cust?.primaryPhone,
     customerTRN: invoice.customerTRN || cust?.vatRegistrationNumber || "",
     contactPersonName: "",
-    subject: `Sales Invoice ${invoice.invoiceNumber}`,
+    subject: `Tax Invoice ${invoice.invoiceNumber}`,
     salesExecutive: "",
     preparedBy: "",
     paymentTerms: "Cash/CDC",

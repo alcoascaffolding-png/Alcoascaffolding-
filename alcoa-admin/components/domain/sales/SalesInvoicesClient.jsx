@@ -71,7 +71,7 @@ export function SalesInvoicesClient() {
       qc.invalidateQueries({ queryKey: ["sales-invoices"] });
       qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
       setDeleteId(null);
-      toast.success("Invoice deleted");
+      toast.success("Tax invoice deleted");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -181,9 +181,9 @@ export function SalesInvoicesClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search invoices…"
+        searchPlaceholder="Search tax invoices…"
         onRowClick={(row) => router.push(`/sales-invoices/${String(row._id)}`)}
-        emptyMessage="No invoices yet. Create your first invoice."
+        emptyMessage="No tax invoices yet. Create your first tax invoice."
       />
 
       <AlertDialog
@@ -194,9 +194,9 @@ export function SalesInvoicesClient() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete invoice?</AlertDialogTitle>
+            <AlertDialogTitle>Delete tax invoice?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the invoice. This action cannot be undone.
+              This will permanently delete the tax invoice. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

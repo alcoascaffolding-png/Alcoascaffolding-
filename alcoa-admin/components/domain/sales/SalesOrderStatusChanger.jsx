@@ -39,9 +39,9 @@ export function SalesOrderStatusChanger({
         const c = data?.invoicing;
         if (!c?.invoiceNumber) return "Status updated";
         if (c.created) {
-          return `Invoiced — sales invoice ${c.invoiceNumber} created`;
+          return `Invoiced — tax invoice ${c.invoiceNumber} created`;
         }
-        return `Invoiced — linked to sales invoice ${c.invoiceNumber}`;
+        return `Invoiced — linked to tax invoice ${c.invoiceNumber}`;
       }}
     />
   );

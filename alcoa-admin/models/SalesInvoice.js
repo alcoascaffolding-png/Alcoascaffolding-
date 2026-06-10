@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 const lineItemSchema = new mongoose.Schema(
   {
     description: { type: String, required: true, trim: true },
+    equipmentType: { type: String, trim: true },
+    specifications: { type: String, trim: true },
+    size: { type: String, trim: true },
+    weight: { type: Number, min: 0 },
+    cbm: { type: Number, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
     unit: { type: String, default: "Nos", trim: true },
     unitPrice: { type: Number, required: true, min: 0 },

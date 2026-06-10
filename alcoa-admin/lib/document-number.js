@@ -140,7 +140,7 @@ export async function resolveInvoiceNumberForCreate(
           String(existingInv.salesOrder) === String(salesOrderId);
         if (!sameOrder) {
           throw new Error(
-            `Document ${linked} is already used by another sales invoice. Open that invoice or unlink the order.`
+            `Document ${linked} is already used by another tax invoice. Open that invoice or unlink the order.`
           );
         }
       }

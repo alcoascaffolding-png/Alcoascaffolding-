@@ -26,7 +26,7 @@ export const GET = withErrorHandler(async (request, context) => {
     .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
-  if (!doc) throw new AppError("Sales Invoice not found", 404);
+  if (!doc) throw new AppError("Tax Invoice not found", 404);
   return apiSuccess(doc);
 });
 
@@ -60,7 +60,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
         });
         if (conflict) {
           throw new AppError(
-            `Document ${linked} is already used by another sales invoice.`,
+            `Document ${linked} is already used by another tax invoice.`,
             400
           );
         }
@@ -73,7 +73,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
     new: true,
     runValidators: true,
   });
-  if (!doc) throw new AppError("Sales Invoice not found", 404);
+  if (!doc) throw new AppError("Tax Invoice not found", 404);
 
   const populated = await SalesInvoice.findById(doc._id)
     .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
@@ -93,6 +93,6 @@ export const DELETE = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const doc = await SalesInvoice.findByIdAndDelete(params.id);
-  if (!doc) throw new AppError("Sales Invoice not found", 404);
+  if (!doc) throw new AppError("Tax Invoice not found", 404);
   return apiSuccess({ deleted: true });
 });

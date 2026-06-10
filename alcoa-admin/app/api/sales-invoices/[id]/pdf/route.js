@@ -24,10 +24,10 @@ export const GET = withErrorHandler(async (request, context) => {
   const invoice = await SalesInvoice.findById(id)
     .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
     .lean();
-  if (!invoice) throw new AppError("Sales Invoice not found", 404);
+  if (!invoice) throw new AppError("Tax Invoice not found", 404);
   if (!invoice.items?.length) {
     throw new AppError(
-      "Add at least one line item to the sales invoice before downloading PDF.",
+      "Add at least one line item to the tax invoice before downloading PDF.",
       400
     );
   }

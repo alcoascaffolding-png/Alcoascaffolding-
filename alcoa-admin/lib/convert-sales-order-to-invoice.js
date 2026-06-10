@@ -26,7 +26,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
 
   if (!order.items?.length) {
     throw new AppError(
-      "Add at least one line item to the sales order before converting to a sales invoice.",
+      "Add at least one line item to the sales order before converting to a tax invoice.",
       400
     );
   }
@@ -58,6 +58,11 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
       const total = Number(it.total ?? qty * rate);
       return {
         description: it.description || "Line item",
+        equipmentType: it.equipmentType || undefined,
+        specifications: it.specifications || undefined,
+        size: it.size || undefined,
+        weight: it.weight != null ? Number(it.weight) : undefined,
+        cbm: it.cbm != null ? Number(it.cbm) : undefined,
         quantity: qty,
         unit: it.unit || "Nos",
         unitPrice: rate,
@@ -117,7 +122,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
         };
       }
       throw new AppError(
-        `Invoice number ${invoiceNumber} already exists. Open the existing sales invoice.`,
+        `Invoice number ${invoiceNumber} already exists. Open the existing tax invoice.`,
         409
       );
     }

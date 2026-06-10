@@ -22,12 +22,21 @@ import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { formatCurrency } from "@/lib/utils";
 import { customerSnapshotToQuotationFormPatch } from "@/lib/map-customer-to-quotation";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
+import {
+  buildLineItemSavePayload,
+  mapExistingLineItemToForm,
+} from "@/lib/sales-line-item-structured";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
   quantity: z.coerce.number().min(0.01),
   unit: z.string().default("Nos"),
   unitPrice: z.coerce.number().min(0),
+  equipmentType: z.string().optional(),
+  specifications: z.string().optional(),
+  size: z.string().optional(),
+  weight: z.coerce.number().optional(),
+  cbm: z.coerce.number().optional(),
 });
 
 const invoiceSchema = z.object({
@@ -130,12 +139,7 @@ export function SalesInvoiceFormPage({ id }) {
       paidAmount: existing.paidAmount ?? 0,
       items:
         existing.items?.length > 0
-          ? existing.items.map((it) => ({
-              description: it.description || "",
-              quantity: it.quantity,
-              unit: it.unit || "Nos",
-              unitPrice: it.unitPrice,
-            }))
+          ? existing.items.map(mapExistingLineItemToForm)
           : [{ ...defaultItem }],
       vatPercentage: vatPctVal,
       notes: existing.notes || "",
@@ -244,17 +248,7 @@ export function SalesInvoiceFormPage({ id }) {
 
   const saveMut = useMutation({
     mutationFn: async (values) => {
-      const items = values.items.map((item) => {
-        const qty = Number(item.quantity) || 0;
-        const rate = Number(item.unitPrice) || 0;
-        return {
-          description: item.description,
-          quantity: qty,
-          unit: item.unit || "Nos",
-          unitPrice: rate,
-          total: qty * rate,
-        };
-      });
+      const items = values.items.map(buildLineItemSavePayload);
       const lineSubtotal = items.reduce((s, it) => s + it.total, 0);
       const vat = (lineSubtotal * Number(values.vatPercentage ?? 5)) / 100;
       const paid = Number(values.paidAmount) || 0;
@@ -298,7 +292,7 @@ export function SalesInvoiceFormPage({ id }) {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["sales-invoices"] });
       qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
-      toast.success(isEdit ? "Invoice updated" : "Invoice created");
+      toast.success(isEdit ? "Tax invoice updated" : "Tax invoice created");
       const iid = data._id ?? data.id;
       router.push(`/sales-invoices/${iid}`);
     },
@@ -318,7 +312,7 @@ export function SalesInvoiceFormPage({ id }) {
       >
         {saveMut.isPending && (
           <BlockingSaveOverlay
-            title={isEdit ? "Updating invoice…" : "Creating invoice…"}
+            title={isEdit ? "Updating tax invoice…" : "Creating tax invoice…"}
             description="Saving line items and totals."
           />
         )}
@@ -328,7 +322,7 @@ export function SalesInvoiceFormPage({ id }) {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isEdit ? "Edit Sales Invoice" : "New Sales Invoice"}
+              {isEdit ? "Edit Tax Invoice" : "New Tax Invoice"}
             </h1>
             {isEdit && existing && (
               <p className="text-sm text-muted-foreground font-mono">{existing.invoiceNumber}</p>
@@ -349,7 +343,7 @@ export function SalesInvoiceFormPage({ id }) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Invoice</CardTitle>
+            <CardTitle className="text-base">Tax Invoice</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormTextField control={form.control} name="invoiceDate" label="Invoice date" type="date" />
@@ -454,7 +448,7 @@ export function SalesInvoiceFormPage({ id }) {
 
         <div className="flex gap-2">
           <Button type="submit" disabled={saveMut.isPending}>
-            {isEdit ? "Save changes" : "Create invoice"}
+            {isEdit ? "Save changes" : "Create tax invoice"}
           </Button>
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel

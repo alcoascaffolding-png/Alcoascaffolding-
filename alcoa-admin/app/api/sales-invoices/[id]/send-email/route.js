@@ -22,7 +22,7 @@ export const POST = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const invoice = await SalesInvoice.findById(id).lean();
-  if (!invoice) throw new AppError("Sales Invoice not found", 404);
+  if (!invoice) throw new AppError("Tax Invoice not found", 404);
   if (!invoice.customerEmail) throw new AppError("Invoice has no customer email", 400);
 
   const pdfBuffer = await generateSalesInvoicePDF(invoice);

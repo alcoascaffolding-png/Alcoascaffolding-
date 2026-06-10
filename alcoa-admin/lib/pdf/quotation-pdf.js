@@ -569,12 +569,12 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     (isSalesOrder
       ? `Sales Order ${quoteNumber}`
       : isSalesInvoice
-        ? `Sales Invoice ${quoteNumber}`
+        ? `Tax Invoice ${quoteNumber}`
         : `Quotation ${quoteNumber}`);
   const docTitle = isSalesOrder
     ? "SALES ORDER"
     : isSalesInvoice
-      ? "SALES INVOICE"
+      ? "TAX INVOICE"
       : "QUOTATION";
   const displayBalance =
     balance != null
@@ -659,7 +659,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <td class="center">${formatPdfAmount(item.ratePerUnit)}</td>
         <td class="center">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
         <td class="center">${formatPdfAmount(item.vatAmount)}</td>
-        <td class="center strong">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
+        <td class="center">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
       </tr>`
       )
       .join("");
@@ -675,7 +675,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">Balance</td>
-          <td colspan="3" class="totals-value right strong">${formatPdfAmount(displayBalance)}</td>
+          <td colspan="3" class="totals-value right">${formatPdfAmount(displayBalance)}</td>
         </tr>`
       : "";
     return `
@@ -683,7 +683,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <tr>
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label">Subtotal</td>
-          <td colspan="3" class="totals-value right strong">${formatPdfAmount(displaySubtotal)}</td>
+          <td colspan="3" class="totals-value right">${formatPdfAmount(displaySubtotal)}</td>
         </tr>
         <tr>
           <td colspan="2" class="totals-spacer"></td>
@@ -693,7 +693,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <tr class="totals-grand">
           <td colspan="2" class="totals-spacer"></td>
           <td colspan="4" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
-          <td colspan="3" class="totals-value right strong">${formatPdfAmount(totalAmount)}</td>
+          <td colspan="3" class="totals-value right">${formatPdfAmount(totalAmount)}</td>
         </tr>${invoicePaymentRows}
       </tfoot>`;
   };

@@ -34,7 +34,7 @@ export default function salesInvoiceEmailTemplate(invoice, options = {}) {
   return buildDocumentCoverEmail({
     docTypeLabel: "TAX INVOICE",
     docNumber: invoiceNumber,
-    pageTitle: `Invoice ${invoiceNumber}`,
+    pageTitle: `Tax Invoice ${invoiceNumber}`,
     customerName,
     logoSrc,
     introHtml: `<p style="margin:0 0 16px;font-size:15px;color:#0f172a;line-height:1.7;">

@@ -85,7 +85,7 @@ export const POST = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const invoice = await SalesInvoice.findById(invoiceId).lean();
-  if (!invoice) throw new AppError("Sales Invoice not found", 404);
+  if (!invoice) throw new AppError("Tax Invoice not found", 404);
 
   const body = await request.json().catch(() => ({}));
   const toPhone = body.phone || invoice.customerPhone;

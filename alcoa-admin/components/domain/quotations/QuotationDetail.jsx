@@ -172,7 +172,7 @@ export function QuotationDetail({ id }) {
               )}
               {q.linked?.salesInvoice ? (
                 <p>
-                  <span className="text-muted-foreground">Sales invoice: </span>
+                  <span className="text-muted-foreground">Tax invoice: </span>
                   <Link
                     href={`/sales-invoices/${q.linked.salesInvoice._id}`}
                     className="font-mono font-medium text-primary hover:underline"
@@ -186,8 +186,8 @@ export function QuotationDetail({ id }) {
                 </p>
               ) : q.linked?.salesOrder ? (
                 <p className="text-muted-foreground">
-                  No invoice yet. Open the sales order and set status to <strong>Invoiced</strong> to
-                  create a sales invoice.
+                  No tax invoice yet. Open the sales order and set status to <strong>Invoiced</strong> to
+                  create a tax invoice.
                 </p>
               ) : null}
             </CardContent>

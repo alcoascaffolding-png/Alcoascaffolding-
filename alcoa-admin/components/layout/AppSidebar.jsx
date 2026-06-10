@@ -43,7 +43,7 @@ const navigation = [
     items: [
       { name: "Quotations", href: "/quotations", icon: FileText },
       { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
-      { name: "Sales Invoices", href: "/sales-invoices", icon: Receipt },
+      { name: "Tax Invoices", href: "/sales-invoices", icon: Receipt },
       { name: "Delivery Notes", href: "/delivery-notes", icon: Truck },
     ],
   },

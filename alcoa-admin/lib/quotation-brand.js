@@ -304,7 +304,7 @@ export function buildWhatsAppSalesInvoiceBody(
     `Dear ${invoice.customerName},`,
   ];
   if (devNoPdfNote) lines.push(devNoPdfNote);
-  else if (attachmentLine) lines.push("Please find your invoice attached (PDF).");
+  else if (attachmentLine) lines.push("Please find your tax invoice attached (PDF).");
   lines.push(
     `Total: ${formatAed(invoice.total)}`,
     `Balance due: ${formatAed(invoice.balance ?? Math.max(0, Number(invoice.total || 0) - Number(invoice.paidAmount || 0)))}`
