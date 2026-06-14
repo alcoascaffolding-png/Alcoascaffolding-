@@ -4,6 +4,12 @@ import {
   mapSalesInvoiceForQuotationPdf,
 } from "@/lib/map-sales-order-for-quotation-pdf";
 
+/**
+ * Sales order and tax invoice PDFs reuse the quotation PDF engine and styles
+ * (`quotation-pdf.js` + `quotation-pdf-styles.js`). Layout/styling changes there
+ * apply automatically to download, email, and WhatsApp attachments.
+ */
+
 /** Sales order PDF — same branded layout as quotations. */
 export async function generateSalesOrderPDF(order) {
   if (!order?.items?.length) {

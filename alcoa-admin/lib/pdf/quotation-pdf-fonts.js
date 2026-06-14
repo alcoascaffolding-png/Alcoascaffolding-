@@ -12,6 +12,9 @@ export const QUOTATION_PDF_FONT_FAMILY = "Alcoa PDF Times";
 
 export const QUOTATION_PDF_FONT_STACK = `"${QUOTATION_PDF_FONT_FAMILY}", "Times New Roman", Times, serif`;
 
+/** Serif stack for line-item tables — matches competitor Cambria-style table typography. */
+export const QUOTATION_PDF_TABLE_FONT_STACK = QUOTATION_PDF_FONT_STACK;
+
 const _adminRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const FONT_DEFS = [

@@ -113,6 +113,22 @@ function renderClosingTailHtml(blocks) {
   return `<div class="closing-tail-flow">${inner}</div>`;
 }
 
+function formatItemDescriptionHtml(item) {
+  const lines = [];
+  const title = String(item.equipmentType || "").trim();
+  const desc = String(item.description || "").trim();
+  const specs = String(item.specifications || "").trim();
+  const size = String(item.size || "").trim();
+
+  if (title) lines.push(title);
+  if (desc && desc !== title) lines.push(desc);
+  if (specs) lines.push(specs);
+  if (size) lines.push(size.startsWith("Size:") ? size : `Size: ${size}`);
+
+  if (!lines.length) return "";
+  return lines.map((line) => `<div class="item-desc-line">${escapeHtml(line)}</div>`).join("");
+}
+
 function buildDeliveryNotePdfLayout(note, options = {}) {
   const { logoDataUri = "", headerDataUri = "", footerDataUri = "" } = options;
   const {
@@ -152,7 +168,7 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
           <div class="top-brand">${headerImageBlock}</div>
           <div class="doc-heading">
             <div class="doc-title">DELIVERY NOTE</div>
-            <div class="doc-trn"><strong>TRN:</strong> ${companyTRN}</div>
+            <div class="doc-trn"><strong>TRN: ${companyTRN}</strong></div>
           </div>
         </div>`;
 
@@ -161,38 +177,60 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
           <div class="footer-main">${footerImageBlock}</div>
         </div>`;
 
+  const sumWeight = items.reduce((s, it) => s + Number(it.weight || 0), 0);
+  const sumCbm = items.reduce((s, it) => s + Number(it.cbm || 0), 0);
+  const sumQty = items.reduce((s, it) => s + Number(it.quantity || 0), 0);
+
   const renderRows = (pageItems, start) =>
     pageItems
       .map(
         (item, idx) => `
       <tr>
-        <td class="center">${start + idx + 1}</td>
+        <td class="sn-col">${start + idx + 1}</td>
         <td class="desc-col">
-          <div class="item-title">${escapeHtml(item.equipmentType || item.description || "")}</div>
-          ${item.description && item.equipmentType && item.description !== item.equipmentType ? `<div class="item-sub">${escapeHtml(item.description)}</div>` : ""}
-          ${item.specifications ? `<div class="item-sub">${escapeHtml(item.specifications)}</div>` : ""}
-          ${item.size ? `<div class="item-sub">Size: ${escapeHtml(item.size)}</div>` : ""}
+          <div class="item-desc-body">${formatItemDescriptionHtml(item)}</div>
         </td>
-        <td class="center">${formatPdfAmount(item.weight)}</td>
-        <td class="center">${formatPdfAmount(item.cbm)}</td>
-        <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
+        <td class="num-col num-col-strong">${formatPdfAmount(item.weight)}</td>
+        <td class="num-col num-col-strong">${formatPdfAmount(item.cbm)}</td>
+        <td class="num-col qty-col"><span class="qty-val">${item.quantity || 0}</span><span class="qty-unit">${item.unit || "Nos"}</span></td>
       </tr>`
       )
       .join("");
 
-  const renderTable = (rows) => `
-    <table class="items-table dn-items-table">
-      <thead>
-        <tr>
-          <th style="width:5%;">SN</th>
-          <th class="desc-col" style="width:55%;">Description of Goods</th>
-          <th style="width:12%;">Wt (KG)</th>
-          <th style="width:12%;">CBM</th>
-          <th style="width:16%;">Qty</th>
+  const renderTotalsTfoot = () => `
+      <tfoot class="items-totals-foot">
+        <tr class="items-grand-total-row">
+          <td></td>
+          <td class="grand-total-label">TOTAL</td>
+          <td class="num-col num-col-strong">${formatPdfAmount(sumWeight)}</td>
+          <td class="num-col num-col-strong">${formatPdfAmount(sumCbm)}</td>
+          <td class="num-col qty-col num-col-strong"><span class="qty-val">${sumQty}</span></td>
         </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+      </tfoot>`;
+
+  const renderTable = (rows, withTotals = false) => `
+    <div class="items-table-shell">
+      <table class="items-table dn-items-table">
+        <colgroup>
+          <col class="sn-col" />
+          <col class="desc-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="qty-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="sn-col">SN</th>
+            <th class="desc-col">Description of goods</th>
+            <th class="num-col">Wt<br>(KG)</th>
+            <th class="num-col">CBM</th>
+            <th class="qty-col">Qty</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${withTotals ? renderTotalsTfoot() : ""}
+      </table>
+    </div>`;
 
   /** Fixed 5 rows per column so both header tables stay the same height in PDF. */
   const HEAD_META_ROW_COUNT = 5;
@@ -203,18 +241,18 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
 
   const leftHeadRows = [
     ["Customer Name", customerName],
-    ["Delivery Address", deliveryAddress || customerAddress],
+    ["Del. Address", deliveryAddress || customerAddress],
     ["Mobile No", customerPhone],
     ["Contact Person", contactPersonName],
     ["Contact Phone", contactPersonPhone],
   ];
 
   const rightHeadRows = [
-    ["Delivery Note No", deliveryNoteNumber],
+    ["DN No.", deliveryNoteNumber],
     ["Date", formatDate(noteDate)],
     ["Order Ref", salesOrderNumber],
-    ["Delivery Date", formatDate(deliveryDate)],
-    ["Driver / Vehicle", driverVehicleDisplay],
+    ["Del. Date", formatDate(deliveryDate)],
+    ["Driver/Veh.", driverVehicleDisplay],
   ];
 
   const padHeadRows = (rows) => {
@@ -224,14 +262,14 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
   };
 
   const headGridHtml = `
-        <div class="head-grid dn-head-grid">
+        <div class="head-grid">
           <div class="box">
-            <table class="mini-table head-mini-table dn-head-mini-table">
+            <table class="head-mini-table dn-head-mini-table">
               ${padHeadRows(leftHeadRows).map(([l, v]) => renderHeadMetaRow(l, v)).join("")}
             </table>
           </div>
           <div class="box">
-            <table class="mini-table head-mini-table dn-head-mini-table">
+            <table class="head-mini-table dn-head-mini-table">
               ${padHeadRows(rightHeadRows).map(([l, v]) => renderHeadMetaRow(l, v)).join("")}
             </table>
           </div>
@@ -241,16 +279,16 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
           <div class="dn-signatures-wrap">
             <div class="dn-sign-row">
               <div class="dn-sign-slot">
-                <div class="dn-sign-label">Dispatched By</div>
-                <div class="dn-sign-line"></div>
+                <div class="sign-label">Dispatched By</div>
+                <div class="sign-line"></div>
               </div>
               <div class="dn-sign-slot">
-                <div class="dn-sign-label">Received By</div>
-                <div class="dn-sign-line"></div>
+                <div class="sign-label">Received By</div>
+                <div class="sign-line"></div>
               </div>
               <div class="dn-sign-slot">
-                <div class="dn-sign-label">Driver</div>
-                <div class="dn-sign-line"></div>
+                <div class="sign-label">Driver</div>
+                <div class="sign-line"></div>
               </div>
             </div>
           </div>`;
@@ -295,18 +333,38 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
       body: renderTable(tbodyRowsHtml),
     });
 
+  const probeFirstWithTotals = (tbodyRowsHtml) =>
+    wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: true,
+      body: `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml, true)}
+        </div>`,
+    });
+
+  const probeContWithTotals = (tbodyRowsHtml) =>
+    wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      body: renderTable(tbodyRowsHtml, true),
+    });
+
   const probeLastItemsPage = (isFirst, tbodyRowsHtml, closingHtml = "") => {
     const firstBody = `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
-        ${renderTable(tbodyRowsHtml)}
+        ${renderTable(tbodyRowsHtml, true)}
         </div>`;
     return wrapPdfPage({
       head: runningHeadBlock,
       foot: runningFootBlock,
       first: isFirst,
-      body: `${isFirst ? firstBody : renderTable(tbodyRowsHtml)}${closingHtml}`,
+      body: `${isFirst ? firstBody : renderTable(tbodyRowsHtml, true)}${closingHtml}`,
     });
   };
 
@@ -335,10 +393,10 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
-        ${renderTable(renderRows(chunk, startIndex))}
+        ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
         </div>
         ${closingHtml}`
-          : `${renderTable(renderRows(chunk, startIndex))}${closingHtml}`;
+          : `${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}${closingHtml}`;
         return `
       <section class="pdf-page page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}" data-pdf-page>
         ${watermarkBlock}
@@ -383,91 +441,6 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Delivery Note ${deliveryNoteNumber}</title>
   <style>${quotationPdfStyles()}</style>
-  <style>
-    .closing-tail-flow {
-      padding-left: 5mm;
-      padding-right: 3mm;
-    }
-    .dn-notes-plain {
-      margin-top: 8px;
-      padding-top: 6px;
-      padding-left: 2mm;
-      border-top: 1px solid #d1d5db;
-      font-size: 11px;
-      line-height: 1.55;
-      color: #111;
-    }
-    .dn-notes-plain strong {
-      color: #235aa0;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .dn-signatures-wrap {
-      margin-top: 14px;
-      padding-left: 2mm;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .dn-sign-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      column-gap: 20px;
-      align-items: end;
-      width: 100%;
-    }
-    .dn-sign-slot {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      text-align: center;
-      min-width: 0;
-    }
-    .dn-sign-label {
-      font-size: 10px;
-      color: #235aa0;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      margin-bottom: 6px;
-      width: 100%;
-    }
-    .dn-sign-line {
-      width: 100%;
-      max-width: 190px;
-      height: 32px;
-      border-bottom: 1px solid #235aa0;
-      margin: 0 auto;
-      box-sizing: border-box;
-    }
-    .dn-items-table th:last-child,
-    .dn-items-table td:last-child { border-right: none; }
-    /* Equal-height header meta tables (same row count + stretch). */
-    .dn-head-grid {
-      align-items: stretch;
-      grid-template-columns: 1fr 1fr;
-    }
-    .dn-head-grid .box {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .dn-head-mini-table {
-      height: 100%;
-      table-layout: fixed;
-    }
-    .dn-head-mini-table tr {
-      height: 20%;
-      min-height: 30px;
-    }
-    .dn-head-mini-table td {
-      vertical-align: middle;
-    }
-    .dn-head-mini-table .mini-label {
-      width: 118px;
-      min-width: 118px;
-    }
-  </style>
 </head>
 <body>
   ${itemSections}${closingSections}
@@ -479,9 +452,9 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
     items,
     rowHtmls,
     probeFirstNoTotals,
-    probeFirstWithTotals: probeFirstNoTotals,
+    probeFirstWithTotals,
     probeContNoTotals,
-    probeContWithTotals: probeContNoTotals,
+    probeContWithTotals,
     probeLastItemsPage,
     probeClosingOnlyPage,
     buildClosingBlocks,

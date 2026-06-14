@@ -44,9 +44,19 @@ function formatCurrency(amount, currency = "AED") {
   return `${currency} ${Number(amount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-/** PDF table numbers — always 2 decimal places (e.g. 85.00 not 85.000). */
+/** PDF table numbers — always 2 decimal places (e.g. 85.00). */
 function formatPdfAmount(value) {
   return Number(value || 0).toFixed(2);
+}
+
+/** Comma-grouped amounts for summary totals only (e.g. 3,21,323.32). */
+function formatPdfSummaryAmount(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return "0.00";
+  return n.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 /** Line total including VAT for PDF amount column. */
@@ -58,26 +68,36 @@ function itemAmountWithVat(item, defaultVatPct = 5) {
   return taxable * (1 + pct / 100);
 }
 
-function numberToWords(num) {
-  if (!num || num === 0) return "Zero";
+function formatAmountInWords(num) {
+  const amount = Number(num || 0);
+  if (!amount || amount === 0) return "UAE Dirham Zero Dirhams Only";
   const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
-  const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+  const teens = [
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen",
+    "Nineteen",
+  ];
   const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
 
   function convert(n) {
     if (n < 10) return ones[n];
     if (n < 20) return teens[n - 10];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + ones[n % 10] : "");
-    if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " " + convert(n % 100) : "");
-    if (n < 1000000) return convert(Math.floor(n / 1000)) + " Thousand" + (n % 1000 !== 0 ? " " + convert(n % 1000) : "");
-    return n.toLocaleString();
+    if (n < 1000)
+      return ones[Math.floor(n / 100)] + " Hundred" + (n % 100 !== 0 ? " " + convert(n % 100) : "");
+    if (n < 1000000)
+      return convert(Math.floor(n / 1000)) + " Thousand" + (n % 1000 !== 0 ? " " + convert(n % 1000) : "");
+    if (n < 1000000000)
+      return (
+        convert(Math.floor(n / 1000000)) + " Million" + (n % 1000000 !== 0 ? " " + convert(n % 1000000) : "")
+      );
+    return amount.toLocaleString();
   }
 
-  const intPart = Math.floor(num);
-  const decPart = Math.round((num - intPart) * 100);
-  let result = convert(intPart) + " Dirhams";
-  if (decPart > 0) result += ` and ${convert(decPart)} Fils`;
-  return result;
+  const intPart = Math.floor(amount);
+  const decPart = Math.round((amount - intPart) * 100);
+  let result = `UAE Dirham ${convert(intPart)} Dirham${intPart === 1 ? "" : "s"}`;
+  if (decPart > 0) result += ` And ${convert(decPart)} Fil${decPart === 1 ? "" : "s"}`;
+  return `${result} Only`;
 }
 
 /** A4 viewport at 96 CSS dpi (210mm × 297mm). */
@@ -591,8 +611,8 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       ? `
               <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
-              <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>
-              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>`
+              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>`
       : `
               <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
@@ -619,7 +639,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 5. Standard rental terms and damage charges apply as per signed agreement.`
     : isSalesInvoice
       ? `1. All amounts are in AED unless otherwise stated.
-2. Payment is due by the date shown above (${paymentTerms}).
+2. Payment terms: ${paymentTerms}.
 3. Please quote invoice number on all remittances.
 4. Late payment may incur charges per our credit terms.`
       : `1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
@@ -640,87 +660,138 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     Number(pickupCharges || 0) -
     Number(discountValue || 0);
   const displaySubtotal = Math.max(0, Number(beforeVAT || 0));
+  const sumWeight = items.reduce((s, it) => s + Number(it.weight || 0), 0);
+  const sumCbm = items.reduce((s, it) => s + Number(it.cbm || 0), 0);
+  const sumQty = items.reduce((s, it) => s + Number(it.quantity || 0), 0);
+
+  const formatVatPct = (item) => {
+    const pct = Number(item?.vatPercentage ?? vatPercentage ?? 5);
+    return Number.isInteger(pct) ? String(pct) : pct.toFixed(2).replace(/\.?0+$/, "");
+  };
+
+  /** One flowing bold description block — same pattern as competitor quotation cells. */
+  const formatItemDescriptionHtml = (item) => {
+    const lines = [];
+    const title = String(item.equipmentType || "").trim();
+    const desc = String(item.description || "").trim();
+    const specs = String(item.specifications || "").trim();
+    const size = String(item.size || "").trim();
+
+    if (title) lines.push(title);
+    if (desc && desc !== title) lines.push(desc);
+    if (specs) lines.push(specs);
+    if (size) lines.push(size.startsWith("Size:") ? size : `Size: ${size}`);
+
+    if (!lines.length) return "";
+    return lines.map((line) => `<div class="item-desc-line">${escapeHtml(line)}</div>`).join("");
+  };
 
   const renderRows = (pageItems, start) =>
     pageItems
       .map(
         (item, idx) => `
       <tr>
-        <td class="center">${start + idx + 1}</td>
+        <td class="sn-col">${start + idx + 1}</td>
         <td class="desc-col">
-          <div class="item-title">${escapeHtml(item.equipmentType || "")}</div>
-          ${item.description ? `<div class="item-sub">${escapeHtml(item.description)}</div>` : ""}
-          ${item.specifications ? `<div class="item-sub">${escapeHtml(item.specifications)}</div>` : ""}
-          ${item.size ? `<div class="item-sub">Size: ${escapeHtml(item.size)}</div>` : ""}
+          <div class="item-desc-body">${formatItemDescriptionHtml(item)}</div>
         </td>
-        <td class="center">${formatPdfAmount(item.weight)}</td>
-        <td class="center">${formatPdfAmount(item.cbm)}</td>
-        <td class="center">${item.quantity || 0} ${item.unit || "Nos"}</td>
-        <td class="center">${formatPdfAmount(item.ratePerUnit)}</td>
-        <td class="center">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
-        <td class="center">${formatPdfAmount(item.vatAmount)}</td>
-        <td class="center">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
+        <td class="num-col num-col-strong">${formatPdfAmount(item.weight)}</td>
+        <td class="num-col num-col-strong">${formatPdfAmount(item.cbm)}</td>
+        <td class="num-col qty-col"><span class="qty-val">${item.quantity || 0}</span><span class="qty-unit">${item.unit || "Nos"}</span></td>
+        <td class="num-col num-col-amount">${formatPdfAmount(item.ratePerUnit)}</td>
+        <td class="num-col num-col-amount">${formatPdfAmount(item.taxableAmount ?? item.subtotal)}</td>
+        <td class="num-col num-col-amount">${formatVatPct(item)}</td>
+        <td class="num-col num-col-amount">${formatPdfAmount(item.vatAmount)}</td>
+        <td class="num-col num-col-amount amount-col">${formatPdfAmount(itemAmountWithVat(item, vatPercentage))}</td>
       </tr>`
       )
       .join("");
 
   const renderTotalsTfoot = () => {
+    const amountWords = formatAmountInWords(totalAmount);
     const invoicePaymentRows = isSalesInvoice
       ? `
-        <tr>
-          <td colspan="2" class="totals-spacer"></td>
-          <td colspan="4" class="totals-label">Paid</td>
-          <td colspan="3" class="totals-value right">${formatPdfAmount(paidAmount)}</td>
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Paid</td>
+          <td class="summary-value strong amount-col">${formatPdfAmount(paidAmount)}</td>
         </tr>
-        <tr>
-          <td colspan="2" class="totals-spacer"></td>
-          <td colspan="4" class="totals-label">Balance</td>
-          <td colspan="3" class="totals-value right">${formatPdfAmount(displayBalance)}</td>
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Balance</td>
+          <td class="summary-value net-total-value amount-col">${formatPdfSummaryAmount(displayBalance)}</td>
         </tr>`
       : "";
     return `
       <tfoot class="items-totals-foot">
-        <tr>
-          <td colspan="2" class="totals-spacer"></td>
-          <td colspan="4" class="totals-label">Subtotal</td>
-          <td colspan="3" class="totals-value right">${formatPdfAmount(displaySubtotal)}</td>
+        <tr class="items-grand-total-row">
+          <td></td>
+          <td class="grand-total-label">TOTAL</td>
+          <td class="num-col num-col-strong">${formatPdfAmount(sumWeight)}</td>
+          <td class="num-col num-col-strong">${formatPdfAmount(sumCbm)}</td>
+          <td class="num-col qty-col num-col-strong"><span class="qty-val">${sumQty}</span></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
         </tr>
-        <tr>
-          <td colspan="2" class="totals-spacer"></td>
-          <td colspan="4" class="totals-label">VAT (${vatPercentage}%)</td>
-          <td colspan="3" class="totals-value right">${formatPdfAmount(vatAmount)}</td>
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Total w/o VAT</td>
+          <td class="summary-value summary-value-subtotal amount-col">${formatPdfSummaryAmount(displaySubtotal)}</td>
         </tr>
-        <tr class="totals-grand">
-          <td colspan="2" class="totals-spacer"></td>
-          <td colspan="4" class="totals-label totals-label-total">Total<br /><span class="totals-currency">(${currency})</span></td>
-          <td colspan="3" class="totals-value right">${formatPdfAmount(totalAmount)}</td>
+        <tr class="items-summary-row items-summary-row-vat">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">VAT ${vatPercentage}%</td>
+          <td class="summary-value amount-col">${formatPdfAmount(vatAmount)}</td>
+        </tr>
+        <tr class="items-words-row">
+          <td colspan="7" class="amount-in-words">${escapeHtml(amountWords)}</td>
+          <td colspan="2" class="summary-label">Net Total</td>
+          <td class="summary-value net-total-value amount-col">${formatPdfSummaryAmount(totalAmount)}</td>
         </tr>${invoicePaymentRows}
       </tfoot>`;
   };
 
   const renderTable = (rows, withTotals = false) => `
-    <table class="items-table">
-      <thead>
-        <tr>
-          <th style="width:3%;">SN</th>
-          <th class="desc-col" style="width:52%;">Description of Goods</th>
-          <th style="width:5%;">Wt (KG)</th>
-          <th style="width:4%;">CBM</th>
-          <th style="width:5%;">Qty</th>
-          <th style="width:9%;">Rate<br>(AED)</th>
-          <th style="width:8%;">Taxable Amount</th>
-          <th style="width:7%;">VAT (${vatPercentage}%)<br>AMOUNT</th>
-          <th style="width:7%;">Amount<br>(AED)</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-      ${withTotals ? renderTotalsTfoot() : ""}
-    </table>`;
+    <div class="items-table-shell">
+      <table class="items-table">
+        <colgroup>
+          <col class="sn-col" />
+          <col class="desc-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="qty-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="amount-col" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="sn-col">SN</th>
+            <th class="desc-col">Description of goods</th>
+            <th class="num-col">Wt<br>(KG)</th>
+            <th class="num-col">CBM</th>
+            <th class="qty-col">Qty</th>
+            <th class="num-col">Rate<br>(AED)</th>
+            <th class="num-col">Taxable<br>Amount</th>
+            <th class="num-col">VAT<br>%</th>
+            <th class="num-col">VAT<br>Amount</th>
+            <th class="amount-col">Amount<br>(AED)</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        ${withTotals ? renderTotalsTfoot() : ""}
+      </table>
+    </div>`;
 
   const docHeadingBlock = `
         <div class="doc-heading">
           <div class="doc-title">${docTitle}</div>
-          <div class="doc-trn"><strong>TRN:</strong> ${companyTRN}</div>
+          <div class="doc-trn"><strong>TRN: ${companyTRN}</strong></div>
         </div>`;
 
   const runningHeadBlock = `
@@ -737,10 +808,6 @@ function buildQuotationPdfLayout(quotation, options = {}) {
   const bankSignaturesHtml = `
           <div class="bank-signatures-wrap">
             <div class="bank-title-main">BANK DETAILS</div>
-            <div class="sign-box sign-box-company">
-              <div>For ALCOA ALUMINIUM SCAFFOLDING</div>
-              <div class="sign-line"></div>
-            </div>
             <div class="bank-table-wrap">
               <table class="bank-table-full">
                 <tr><td class="mini-label">Bank details</td><td>${pdfBank.accountName}</td></tr>
@@ -749,9 +816,15 @@ function buildQuotationPdfLayout(quotation, options = {}) {
                 <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
               </table>
             </div>
-            <div class="sign-box sign-box-customer">
-              <div>CUSTOMER'S SIGNATURE</div>
-              <div class="sign-line"></div>
+            <div class="signatures-row">
+              <div class="sign-box sign-box-company">
+                <div class="sign-label">For ALCOA ALUMINIUM SCAFFOLDING</div>
+                <div class="sign-line"></div>
+              </div>
+              <div class="sign-box sign-box-customer">
+                <div class="sign-label">CUSTOMER'S SIGNATURE</div>
+                <div class="sign-line"></div>
+              </div>
             </div>
           </div>`;
 
@@ -787,7 +860,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
   const headGridHtml = `
         <div class="head-grid">
           <div class="box">
-            <table class="mini-table head-mini-table">
+            <table class="head-mini-table">
               <tr><td class="mini-label">Customer Name</td><td>${escapeHtml(customerName || "-")}</td></tr>
               <tr><td class="mini-label">Address</td><td>${escapeHtml(customerAddress || "-")}</td></tr>
               <tr><td class="mini-label">Mobile No</td><td>${escapeHtml(customerPhone || "-")}</td></tr>
@@ -796,7 +869,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
             </table>
           </div>
           <div class="box">
-            <table class="mini-table head-mini-table">
+            <table class="head-mini-table">
               ${rightMetaRows}
             </table>
           </div>
