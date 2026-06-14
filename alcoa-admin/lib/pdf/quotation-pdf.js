@@ -310,6 +310,7 @@ export async function computeQuotationItemPages(playwrightPage, layout) {
       }
       let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeFirstNoTotals(sliceRows(c)));
       if (maxMid < 1) maxMid = 1;
+      if (maxMid >= rem) maxMid = rem - 1;
       chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
       idx += maxMid;
       continue;
@@ -329,7 +330,7 @@ export async function computeQuotationItemPages(playwrightPage, layout) {
     }
     let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeContNoTotals(sliceRows(c)));
     if (maxMid < 1) maxMid = 1;
-    if (maxMid > rem) maxMid = rem;
+    if (maxMid >= rem) maxMid = rem - 1;
     chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
     idx += maxMid;
   }
