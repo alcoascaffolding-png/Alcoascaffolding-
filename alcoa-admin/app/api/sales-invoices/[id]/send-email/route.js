@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import SalesInvoice from "@/models/SalesInvoice";
+import { loadSalesInvoiceForPdf } from "@/lib/load-sales-invoice-for-pdf";
 import { generateSalesInvoicePDF } from "@/lib/pdf/sales-document-pdf";
 import { sendSalesInvoiceEmail } from "@/lib/email/resend";
 
@@ -21,7 +22,7 @@ export const POST = withErrorHandler(async (request, context) => {
   if (!id) return apiError("Missing id", 400);
 
   await connectDB();
-  const invoice = await SalesInvoice.findById(id).lean();
+  const invoice = await loadSalesInvoiceForPdf(id);
   if (!invoice) throw new AppError("Tax Invoice not found", 404);
   if (!invoice.customerEmail) throw new AppError("Invoice has no customer email", 400);
 

@@ -130,6 +130,7 @@ export function SalesInvoiceDetail({ id }) {
   const subject = `Tax Invoice ${inv.invoiceNumber}`;
   const customer = inv.customer && typeof inv.customer === "object" ? inv.customer : null;
   const customerAddress = inv.customerAddress || formatCustomerAddressFromRecord(customer);
+  const customerTRN = inv.customerTRN || customer?.vatRegistrationNumber;
   const paid = Number(inv.paidAmount || 0);
   const balance =
     inv.balance != null ? Number(inv.balance) : Math.max(0, Number(inv.total || 0) - paid);
@@ -194,6 +195,7 @@ export function SalesInvoiceDetail({ id }) {
             <CardContent className="pt-0">
               <InfoRowAlways label="Customer Name" value={inv.customerName} />
               <InfoRowAlways label="Address" value={customerAddress} />
+              <InfoRowAlways label="TRN" value={customerTRN} />
               <InfoRowAlways label="Mobile No" value={inv.customerPhone} />
               <InfoRow label="Email" value={inv.customerEmail} />
             </CardContent>

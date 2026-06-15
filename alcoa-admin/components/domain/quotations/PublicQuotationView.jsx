@@ -127,6 +127,9 @@ export function PublicQuotationView({ token, initialAction }) {
             {data.customerAddress && (
               <p style={{ ...mutedStyle, marginTop: 6, whiteSpace: "pre-line" }}>{data.customerAddress}</p>
             )}
+            {data.customerTRN && (
+              <p style={{ ...mutedStyle, marginTop: 6 }}>TRN: {data.customerTRN}</p>
+            )}
           </Block>
           <Block label="Quote details">
             <Row k="Quote date" v={formatDate(data.quoteDate)} />

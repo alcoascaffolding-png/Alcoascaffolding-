@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Quotation from "@/models/Quotation";
+import { prepareQuotationForPdf } from "@/lib/load-quotation-for-pdf";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import {
   BlobAccessError,
@@ -35,7 +36,8 @@ function toWaMeDigits(phone) {
   return String(phone).replace(/\D/g, "");
 }
 
-async function uploadQuotationPdfToBlob(quotation) {
+async function uploadQuotationPdfToBlob(quotationId) {
+  const quotation = await prepareQuotationForPdf(quotationId);
   const pdfBuffer = await generateQuotationPDF(quotation);
   try {
     const uploaded = await uploadToBlob(pdfBuffer, `${quotation.quoteNumber}.pdf`);
@@ -94,7 +96,7 @@ export const POST = withErrorHandler(async (request, context) => {
   }
 
   await connectDB();
-  const quotation = await Quotation.findById(quotationId).lean();
+  const quotation = await prepareQuotationForPdf(quotationId);
   if (!quotation) throw new AppError("Quotation not found", 404);
 
   const body = await request.json().catch(() => ({}));
@@ -137,8 +139,8 @@ export const POST = withErrorHandler(async (request, context) => {
       );
     }
 
-    const pdfUrl = await uploadQuotationPdfToBlob(quotation);
-    const message = buildWhatsAppQuotationBody(quotation, { publicUrl });
+    const pdfUrl = await uploadQuotationPdfToBlob(quotationId);
+    const message = buildWhatsAppQuotationBody(quotation);
     const result = await sendWhatsAppMessage(toPhone, message, pdfUrl);
     await recordWhatsAppSent(quotationId, toPhone, result.sid);
     return apiSuccess({ mode: "twilio", sent: true, sid: result.sid, pdfUrl });
@@ -160,7 +162,7 @@ export const POST = withErrorHandler(async (request, context) => {
     );
   }
 
-  const pdfUrl = await uploadQuotationPdfToBlob(quotation);
+  const pdfUrl = await uploadQuotationPdfToBlob(quotationId);
   const textBody = `${buildWhatsAppQuotationBody(quotation, {
     attachmentLine: false,
   })}\n\nDownload (PDF):\n${pdfUrl}`;

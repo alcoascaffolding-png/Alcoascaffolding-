@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import Quotation from "@/models/Quotation";
+import { prepareQuotationForPdf } from "@/lib/load-quotation-for-pdf";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 
 export const GET = withErrorHandler(async (request, { params }) => {
@@ -14,7 +14,7 @@ export const GET = withErrorHandler(async (request, { params }) => {
   if (!session?.user) return apiError("Unauthorized", 401);
 
   await connectDB();
-  const quotation = await Quotation.findById(params.id).lean();
+  const quotation = await prepareQuotationForPdf(params.id);
   if (!quotation) throw new AppError("Quotation not found", 404);
 
   const pdfBuffer = await generateQuotationPDF(quotation);

@@ -4,6 +4,7 @@ import SalesInvoice from "@/models/SalesInvoice";
 import Quotation from "@/models/Quotation";
 import { AppError } from "@/lib/api-error";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
+import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 
 const CONVERT_TO_INVOICE_STATUS = "invoiced";
 
@@ -21,7 +22,9 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   }
 
   const soid = new mongoose.Types.ObjectId(String(salesOrderId));
-  const order = await SalesOrder.findById(soid).lean();
+  const order = await SalesOrder.findById(soid)
+    .populate("customer", "vatRegistrationNumber addresses primaryPhone primaryEmail")
+    .lean();
   if (!order) throw new AppError("Sales Order not found", 404);
 
   if (!order.items?.length) {
@@ -89,14 +92,39 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
     { Quotation, SalesOrder, SalesInvoice }
   );
 
+  const cust = order.customer && typeof order.customer === "object" ? order.customer : null;
+
+  let customerTRN = (order.customerTRN && String(order.customerTRN).trim()) || "";
+  let customerAddress = (order.customerAddress && String(order.customerAddress).trim()) || "";
+
+  if ((!customerTRN || !customerAddress) && order.quotation) {
+    const qSnap = await Quotation.findById(order.quotation)
+      .select("customerTRN customerAddress")
+      .lean();
+    if (qSnap) {
+      customerTRN = customerTRN || (qSnap.customerTRN && String(qSnap.customerTRN).trim()) || "";
+      customerAddress =
+        customerAddress || (qSnap.customerAddress && String(qSnap.customerAddress).trim()) || "";
+    }
+  }
+
+  if (!customerTRN) {
+    customerTRN = (cust?.vatRegistrationNumber && String(cust.vatRegistrationNumber).trim()) || "";
+  }
+  if (!customerAddress) {
+    customerAddress = formatCustomerAddressFromRecord(cust) || "";
+  }
+
   let invoice;
   try {
     invoice = await SalesInvoice.create({
       invoiceNumber,
-      customer: order.customer,
+      customer: order.customer?._id ?? order.customer,
       customerName: order.customerName,
+      customerAddress,
       customerEmail: order.customerEmail,
       customerPhone: order.customerPhone,
+      customerTRN,
       salesOrder: soid,
       invoiceDate,
       dueDate,

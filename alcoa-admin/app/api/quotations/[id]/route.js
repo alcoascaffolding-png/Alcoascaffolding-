@@ -10,13 +10,16 @@ import {
 } from "@/lib/sync-quotation-sales-order";
 import Quotation from "@/models/Quotation";
 import { getLinkedDocumentsForQuotation } from "@/lib/quotation-linked-documents";
+import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 
 export const GET = withErrorHandler(async (request, { params }) => {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
 
   await connectDB();
-  const q = await Quotation.findById(params.id).populate("customer", "companyName primaryEmail primaryPhone").lean();
+  const q = await Quotation.findById(params.id)
+    .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
+    .lean();
   if (!q) throw new AppError("Quotation not found", 404);
   const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);
   return apiSuccess({ ...q, linked });
@@ -70,7 +73,7 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   }
 
   const q = await Quotation.findById(params.id)
-    .populate("customer", "companyName primaryEmail primaryPhone")
+    .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
     .lean();
 
   const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);

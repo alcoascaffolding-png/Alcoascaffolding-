@@ -232,6 +232,21 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
       </table>
     </div>`;
 
+  const renderTotalsOnlyTable = () => `
+    <div class="items-table-shell items-totals-only-shell">
+      <table class="items-table dn-items-table">
+        <colgroup>
+          <col class="sn-col" />
+          <col class="desc-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="qty-col" />
+        </colgroup>
+        <tbody></tbody>
+        ${renderTotalsTfoot()}
+      </table>
+    </div>`;
+
   /** Fixed 5 rows per column so both header tables stay the same height in PDF. */
   const HEAD_META_ROW_COUNT = 5;
   const renderHeadMetaRow = (label, value) =>
@@ -353,6 +368,27 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
       body: renderTable(tbodyRowsHtml, true),
     });
 
+  const probeFirstInlineTotals = (tbodyRowsHtml) =>
+    wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: true,
+      body: `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml)}
+        ${renderTotalsOnlyTable()}
+        </div>`,
+    });
+
+  const probeContInlineTotals = (tbodyRowsHtml) =>
+    wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      body: `${renderTable(tbodyRowsHtml)}${renderTotalsOnlyTable()}`,
+    });
+
   const probeLastItemsPage = (isFirst, tbodyRowsHtml, closingHtml = "") => {
     const firstBody = `
         ${headGridHtml}
@@ -368,6 +404,36 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
     });
   };
 
+  const probeLastItemsPageInlineTotals = (isFirst, tbodyRowsHtml, closingHtml = "") => {
+    const itemsBlock = `
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml)}
+        ${renderTotalsOnlyTable()}
+        </div>`;
+    const firstBody = `${headGridHtml}${itemsBlock}`;
+    const contBody = `${renderTable(tbodyRowsHtml)}${renderTotalsOnlyTable()}`;
+    return wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirst,
+      body: `${isFirst ? firstBody : contBody}${closingHtml}`,
+    });
+  };
+
+  const probeTotalsOnlyPage = (isFirstPage, closingHtml = "") => {
+    const totalsBlock = `<div class="doc-lines-shell">${renderTotalsOnlyTable()}</div>`;
+    const body = isFirstPage
+      ? `${headGridHtml}${totalsBlock}${closingHtml}`
+      : `${totalsBlock}${closingHtml}`;
+    return wrapPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirstPage,
+      body,
+    });
+  };
+
   const probeClosingOnlyPage = (closingHtml = "") =>
     wrapPdfPage({
       head: runningHeadBlock,
@@ -376,36 +442,74 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
       body: closingHtml,
     });
 
-  function buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages) {
+  function buildItemSectionsHtml(
+    itemPages,
+    lastPageClosingBlocks,
+    followUpClosingPages,
+    totalsSeparate = false,
+    totalsInlineSeparate = false
+  ) {
     const pages = itemPages.filter((p) => p.chunk?.length > 0);
     const safePages = pages.length ? pages : [{ chunk: [], startIndex: 0 }];
-    return safePages
-      .map(({ chunk, startIndex }, pageIndex) => {
-        const isFirst = pageIndex === 0;
-        const isLastItemsPage = pageIndex === safePages.length - 1;
-        const closingHtml =
-          isLastItemsPage && lastPageClosingBlocks.length
-            ? renderClosingTailHtml(lastPageClosingBlocks)
-            : "";
-        const pageBreakAfter = !isLastItemsPage || followUpClosingPages.length > 0;
-        const body = isFirst
-          ? `
+    const htmlParts = [];
+
+    safePages.forEach(({ chunk, startIndex, totalsSeparate: chunkTotalsSeparate, totalsInlineSeparate: chunkInlineTotals }, pageIndex) => {
+      const isFirst = pageIndex === 0;
+      const isLastItemsPage = pageIndex === safePages.length - 1;
+      const separateTotalsPage =
+        isLastItemsPage && (Boolean(chunkTotalsSeparate) || totalsSeparate) && !chunkInlineTotals && !totalsInlineSeparate;
+      const inlineTotals =
+        isLastItemsPage && (Boolean(chunkInlineTotals) || totalsInlineSeparate);
+      const closingHtml =
+        isLastItemsPage && lastPageClosingBlocks.length && !separateTotalsPage
+          ? renderClosingTailHtml(lastPageClosingBlocks)
+          : "";
+      const withTotals = isLastItemsPage && !separateTotalsPage && !inlineTotals;
+      const itemsPageBreakAfter =
+        !isLastItemsPage || separateTotalsPage || followUpClosingPages.length > 0;
+
+      const rowsHtml = renderRows(chunk, startIndex);
+      const itemsTableHtml = renderTable(rowsHtml, withTotals);
+      const inlineTotalsHtml = inlineTotals ? renderTotalsOnlyTable() : "";
+
+      const body = isFirst
+        ? `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
-        ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
+        ${itemsTableHtml}
+        ${inlineTotalsHtml}
         </div>
         ${closingHtml}`
-          : `${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}${closingHtml}`;
-        return `
-      <section class="pdf-page page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}" data-pdf-page>
+        : `${itemsTableHtml}${inlineTotalsHtml}${closingHtml}`;
+
+      htmlParts.push(`
+      <section class="pdf-page page ${isFirst ? "first-page " : ""}${itemsPageBreakAfter ? "page-break" : ""}" data-pdf-page>
         ${watermarkBlock}
         ${runningHeadBlock}
         <div class="pdf-page-fill content">${body}</div>
         ${runningFootBlock}
-      </section>`;
-      })
-      .join("");
+      </section>`);
+
+      if (separateTotalsPage) {
+        const totalsClosingHtml = lastPageClosingBlocks.length
+          ? renderClosingTailHtml(lastPageClosingBlocks)
+          : "";
+        const totalsPageBreakAfter = followUpClosingPages.length > 0;
+        htmlParts.push(`
+      <section class="pdf-page page ${totalsPageBreakAfter ? "page-break" : ""}" data-pdf-page>
+        ${watermarkBlock}
+        ${runningHeadBlock}
+        <div class="pdf-page-fill content">
+          <div class="doc-lines-shell">${renderTotalsOnlyTable()}</div>
+          ${totalsClosingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`);
+      }
+    });
+
+    return htmlParts.join("");
   }
 
   function buildFollowUpClosingSections(blocksPerPage) {
@@ -432,7 +536,15 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
       ? []
       : pagePlan.lastPageClosingBlocks || [];
     const followUpClosingPages = Array.isArray(pagePlan) ? [] : pagePlan.followUpClosingPages || [];
-    const itemSections = buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages);
+    const totalsSeparate = Array.isArray(pagePlan) ? false : Boolean(pagePlan.totalsSeparate);
+    const totalsInlineSeparate = Array.isArray(pagePlan) ? false : Boolean(pagePlan.totalsInlineSeparate);
+    const itemSections = buildItemSectionsHtml(
+      itemPages,
+      lastPageClosingBlocks,
+      followUpClosingPages,
+      totalsSeparate,
+      totalsInlineSeparate
+    );
     const closingSections = buildFollowUpClosingSections(followUpClosingPages);
     return `<!DOCTYPE html>
 <html lang="en">
@@ -455,7 +567,11 @@ function buildDeliveryNotePdfLayout(note, options = {}) {
     probeFirstWithTotals,
     probeContNoTotals,
     probeContWithTotals,
+    probeFirstInlineTotals,
+    probeContInlineTotals,
     probeLastItemsPage,
+    probeLastItemsPageInlineTotals,
+    probeTotalsOnlyPage,
     probeClosingOnlyPage,
     buildClosingBlocks,
     buildCompleteHtml,

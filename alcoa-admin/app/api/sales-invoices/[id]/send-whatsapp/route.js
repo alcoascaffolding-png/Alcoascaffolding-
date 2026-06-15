@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import SalesInvoice from "@/models/SalesInvoice";
+import { loadSalesInvoiceForPdf } from "@/lib/load-sales-invoice-for-pdf";
 import { generateSalesInvoicePDF } from "@/lib/pdf/sales-document-pdf";
 import {
   BlobAccessError,
@@ -84,7 +85,7 @@ export const POST = withErrorHandler(async (request, context) => {
   }
 
   await connectDB();
-  const invoice = await SalesInvoice.findById(invoiceId).lean();
+  const invoice = await loadSalesInvoiceForPdf(invoiceId);
   if (!invoice) throw new AppError("Tax Invoice not found", 404);
 
   const body = await request.json().catch(() => ({}));

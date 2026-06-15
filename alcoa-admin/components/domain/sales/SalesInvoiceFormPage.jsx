@@ -21,6 +21,7 @@ import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { formatCurrency } from "@/lib/utils";
 import { customerSnapshotToQuotationFormPatch } from "@/lib/map-customer-to-quotation";
+import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
 import {
   buildLineItemSavePayload,
@@ -42,8 +43,10 @@ const lineItemSchema = z.object({
 const invoiceSchema = z.object({
   customer: z.string().optional(),
   customerName: z.string().min(1, "Customer name required"),
+  customerAddress: z.string().optional(),
   customerEmail: z.string().email().optional().or(z.literal("")),
   customerPhone: z.string().optional(),
+  customerTRN: z.string().optional(),
   salesOrder: z.string().optional(),
   invoiceDate: z.string(),
   dueDate: z.string().optional(),
@@ -92,8 +95,10 @@ export function SalesInvoiceFormPage({ id }) {
     defaultValues: {
       customer: "__none__",
       customerName: "",
+      customerAddress: "",
       customerEmail: "",
       customerPhone: "",
+      customerTRN: "",
       salesOrder: "__none__",
       invoiceDate: today,
       dueDate: defaultDue,
@@ -127,11 +132,16 @@ export function SalesInvoiceFormPage({ id }) {
       lineSub > 0 && existing.vatAmount != null
         ? Math.round((Number(existing.vatAmount) / lineSub) * 10000) / 100
         : 5;
+    const custObj = cust && typeof cust === "object" ? cust : null;
     form.reset({
       customer: customerId,
       customerName: existing.customerName || "",
+      customerAddress:
+        existing.customerAddress || formatCustomerAddressFromRecord(custObj) || "",
       customerEmail: existing.customerEmail || "",
       customerPhone: existing.customerPhone || "",
+      customerTRN:
+        existing.customerTRN || custObj?.vatRegistrationNumber || "",
       salesOrder: salesOrderId,
       invoiceDate: fmt(existing.invoiceDate) || today,
       dueDate: fmt(existing.dueDate),
@@ -191,8 +201,10 @@ export function SalesInvoiceFormPage({ id }) {
     if (!c) return;
     const patch = customerSnapshotToQuotationFormPatch(c);
     form.setValue("customerName", patch.customerName || "", { shouldDirty: true });
+    form.setValue("customerAddress", patch.customerAddress || "", { shouldDirty: true });
     form.setValue("customerEmail", patch.customerEmail || "", { shouldDirty: true });
     form.setValue("customerPhone", patch.customerPhone || "", { shouldDirty: true });
+    form.setValue("customerTRN", patch.customerTRN || "", { shouldDirty: true });
   }, [selectedCustomerId, customerList, form, isEdit, loadedInvoiceCustomerId]);
 
   const customerSelectOptions = useMemo(() => {
@@ -255,8 +267,10 @@ export function SalesInvoiceFormPage({ id }) {
 
       const payload = {
         customerName: values.customerName,
+        customerAddress: values.customerAddress || undefined,
         customerEmail: values.customerEmail || undefined,
         customerPhone: values.customerPhone || undefined,
+        customerTRN: values.customerTRN || undefined,
         invoiceDate: values.invoiceDate,
         dueDate: values.dueDate || undefined,
         paymentStatus: values.paymentStatus,
@@ -331,6 +345,18 @@ export function SalesInvoiceFormPage({ id }) {
         </div>
 
         <DocumentCustomerCard control={form.control} customerOptions={customerSelectOptions}>
+          <FormTextField
+            control={form.control}
+            name="customerTRN"
+            label="TRN / VAT Number"
+            className="md:col-span-2"
+          />
+          <FormTextAreaField
+            control={form.control}
+            name="customerAddress"
+            label="Address"
+            className="md:col-span-2"
+          />
           <FormSelectField
             control={form.control}
             name="salesOrder"

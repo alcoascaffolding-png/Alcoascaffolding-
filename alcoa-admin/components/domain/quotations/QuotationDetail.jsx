@@ -25,6 +25,11 @@ import {
   itemAmountWithVat,
   quotationDisplaySubtotal,
 } from "@/lib/quotation-display";
+import {
+  formatCustomerAddressLines,
+  getPrimaryAddress,
+} from "@/lib/map-customer-to-quotation";
+import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
@@ -101,6 +106,12 @@ export function QuotationDetail({ id }) {
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const q = quotation;
+  const customer = q.customer && typeof q.customer === "object" ? q.customer : null;
+  const customerAddress =
+    q.customerAddress ||
+    formatCustomerAddressLines(getPrimaryAddress(customer)) ||
+    formatCustomerAddressFromRecord(customer);
+  const customerTRN = q.customerTRN || customer?.vatRegistrationNumber;
   const vatPct = q.vatPercentage ?? 5;
   const displaySubtotal = quotationDisplaySubtotal(q);
   const bank = QUOTATION_PDF_BANK_DETAILS;
@@ -202,9 +213,9 @@ export function QuotationDetail({ id }) {
             </CardHeader>
             <CardContent className="pt-0">
               <InfoRowAlways label="Customer Name" value={q.customerName} />
-              <InfoRowAlways label="Address" value={q.customerAddress} />
+              <InfoRowAlways label="Address" value={customerAddress} />
               <InfoRowAlways label="Mobile No" value={q.customerPhone} />
-              <InfoRowAlways label="TRN" value={q.customerTRN} />
+              <InfoRowAlways label="TRN" value={customerTRN} />
               <InfoRowAlways label="Contact Person" value={q.contactPersonName} />
               <InfoRow label="Email" value={q.customerEmail} />
             </CardContent>

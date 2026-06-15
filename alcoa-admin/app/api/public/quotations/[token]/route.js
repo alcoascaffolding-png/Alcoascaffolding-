@@ -14,6 +14,7 @@ const PUBLIC_FIELDS = [
   "quoteNumber",
   "customerName",
   "customerAddress",
+  "customerTRN",
   "customerEmail",
   "customerPhone",
   "quoteDate",

@@ -25,10 +25,13 @@ import { itemAmountWithVat, quotationDisplaySubtotal } from "@/lib/quotation-dis
 import {
   bankAccountToQuotationBankDetails,
   customerSnapshotToQuotationFormPatch,
+  formatCustomerAddressLines,
   getLinkedCustomerId,
+  getPrimaryAddress,
   isQuotationBankDetailsEmpty,
   pickDefaultBankAccount,
 } from "@/lib/map-customer-to-quotation";
+import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
 
 const lineItemSchema = z.object({
@@ -129,13 +132,18 @@ function mapItemToForm(item) {
 
 function mapQuotationToFormValues(existing) {
   const fmt = (d) => (d ? new Date(d).toISOString().split("T")[0] : today);
+  const custObj = existing.customer && typeof existing.customer === "object" ? existing.customer : null;
   return {
     customer: getLinkedCustomerId(existing.customer),
     customerName: existing.customerName ?? "",
     customerEmail: existing.customerEmail ?? "",
     customerPhone: existing.customerPhone ?? "",
-    customerAddress: existing.customerAddress ?? "",
-    customerTRN: existing.customerTRN ?? "",
+    customerAddress:
+      existing.customerAddress ||
+      formatCustomerAddressLines(getPrimaryAddress(custObj)) ||
+      formatCustomerAddressFromRecord(custObj) ||
+      "",
+    customerTRN: existing.customerTRN || custObj?.vatRegistrationNumber || "",
     contactPersonName: existing.contactPersonName ?? "",
     quoteDate: fmt(existing.quoteDate),
     validUntil: fmt(existing.validUntil),

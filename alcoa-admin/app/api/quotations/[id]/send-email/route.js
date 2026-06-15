@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Quotation from "@/models/Quotation";
+import { prepareQuotationForPdf } from "@/lib/load-quotation-for-pdf";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import { sendQuotationEmail } from "@/lib/email/resend";
 // import { ensureQuotationPublicToken } from "@/lib/quotation-save";
@@ -15,7 +16,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
   if (!session?.user) return apiError("Unauthorized", 401);
 
   await connectDB();
-  const quotation = await Quotation.findById(params.id).lean();
+  const quotation = await prepareQuotationForPdf(params.id);
   if (!quotation) throw new AppError("Quotation not found", 404);
   if (!quotation.customerEmail) throw new AppError("Quotation has no customer email", 400);
 

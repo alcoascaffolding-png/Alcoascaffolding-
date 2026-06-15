@@ -390,6 +390,12 @@ function buildQuotationPdfCss(embedFonts) {
       border: none;
       flex-shrink: 0;
     }
+    .items-totals-only-shell .items-table {
+      border-top: 2px solid var(--layout-blue);
+    }
+    .items-totals-only-shell tbody {
+      display: none;
+    }
 
     .items-table {
       width: 100%;

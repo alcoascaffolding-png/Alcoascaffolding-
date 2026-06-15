@@ -273,11 +273,39 @@ function sanitizeItemPages(pages) {
   return pages.filter((p) => p.chunk && p.chunk.length > 0);
 }
 
+/** Pick totals placement when all remaining rows fit without inline table tfoot. */
+async function resolveTotalsPlacement(playwrightPage, rem, isOpening, sliceRows, layout) {
+  const {
+    probeFirstInlineTotals,
+    probeContInlineTotals,
+    probeFirstNoTotals,
+    probeContNoTotals,
+  } = layout;
+  const probeInlineTotals = (count) =>
+    quotationPdfPageProbeFits(
+      playwrightPage,
+      isOpening ? probeFirstInlineTotals(sliceRows(count)) : probeContInlineTotals(sliceRows(count))
+    );
+  const probeNoTotals = (count) =>
+    quotationPdfPageProbeFits(
+      playwrightPage,
+      isOpening ? probeFirstNoTotals(sliceRows(count)) : probeContNoTotals(sliceRows(count))
+    );
+
+  if (!(await probeNoTotals(rem))) {
+    return { totalsInlineSeparate: false, totalsSeparate: false };
+  }
+  if (await probeInlineTotals(rem)) {
+    return { totalsInlineSeparate: true, totalsSeparate: false };
+  }
+  return { totalsInlineSeparate: false, totalsSeparate: true };
+}
+
 /**
  * Split line items into pages by measuring real DOM height (variable row heights).
  * @param {import("playwright").Page} playwrightPage
  * @param {object} layout layout from {@link buildQuotationPdfLayout}
- * @returns {Promise<{ chunk: unknown[]; startIndex: number }[]>}
+ * @returns {Promise<{ chunk: unknown[]; startIndex: number; totalsSeparate?: boolean; totalsInlineSeparate?: boolean }[]>}
  */
 export async function computeQuotationItemPages(playwrightPage, layout) {
   const { items, rowHtmls, probeFirstNoTotals, probeFirstWithTotals, probeContNoTotals, probeContWithTotals } =
@@ -294,43 +322,42 @@ export async function computeQuotationItemPages(playwrightPage, layout) {
     const rem = n - idx;
     const sliceRows = (count) => rowHtmls.slice(idx, idx + count).join("");
     const isOpening = chunks.length === 0;
-
-    if (isOpening) {
-      const allFitFirstWithTotals = await quotationPdfPageProbeFits(
+    const probeNoTotals = (count) =>
+      quotationPdfPageProbeFits(
         playwrightPage,
-        probeFirstWithTotals(sliceRows(rem))
+        isOpening ? probeFirstNoTotals(sliceRows(count)) : probeContNoTotals(sliceRows(count))
       );
-      if (allFitFirstWithTotals) {
-        chunks.push({ chunk: items.slice(idx, idx + rem), startIndex: idx });
-        break;
-      }
-      if (rem === 1) {
-        chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx });
-        break;
-      }
-      let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeFirstNoTotals(sliceRows(c)));
-      if (maxMid < 1) maxMid = 1;
-      if (maxMid >= rem) maxMid = rem - 1;
-      chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
-      idx += maxMid;
-      continue;
-    }
+    const probeWithTotals = (count) =>
+      quotationPdfPageProbeFits(
+        playwrightPage,
+        isOpening ? probeFirstWithTotals(sliceRows(count)) : probeContWithTotals(sliceRows(count))
+      );
+    const probeNoTotalsForCount = (count) =>
+      isOpening ? probeFirstNoTotals(sliceRows(count)) : probeContNoTotals(sliceRows(count));
 
-    const allFitContWithTotals = await quotationPdfPageProbeFits(
-      playwrightPage,
-      probeContWithTotals(sliceRows(rem))
-    );
-    if (allFitContWithTotals) {
+    if (await probeWithTotals(rem)) {
       chunks.push({ chunk: items.slice(idx, idx + rem), startIndex: idx });
       break;
     }
-    if (rem === 1) {
-      chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx });
+
+    if (await probeNoTotals(rem)) {
+      const placement = await resolveTotalsPlacement(playwrightPage, rem, isOpening, sliceRows, layout);
+      chunks.push({
+        chunk: items.slice(idx, idx + rem),
+        startIndex: idx,
+        ...placement,
+      });
       break;
     }
-    let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeContNoTotals(sliceRows(c)));
+
+    if (rem === 1) {
+      const placement = await resolveTotalsPlacement(playwrightPage, 1, isOpening, sliceRows, layout);
+      chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx, ...placement });
+      break;
+    }
+
+    let maxMid = await countRowsThatFit(playwrightPage, rem, async (c) => probeNoTotalsForCount(c));
     if (maxMid < 1) maxMid = 1;
-    if (maxMid >= rem) maxMid = rem - 1;
     chunks.push({ chunk: items.slice(idx, idx + maxMid), startIndex: idx });
     idx += maxMid;
   }
@@ -467,7 +494,14 @@ async function flowClosingBlocks(
  * @param {{ chunk: unknown[]; startIndex: number }[]} itemPages
  */
 export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPages) {
-  const { items, rowHtmls, probeLastItemsPage, probeClosingOnlyPage, buildClosingBlocks } = layout;
+  const {
+    rowHtmls,
+    probeLastItemsPage,
+    probeLastItemsPageInlineTotals,
+    probeTotalsOnlyPage,
+    probeClosingOnlyPage,
+    buildClosingBlocks,
+  } = layout;
   const pages = sanitizeItemPages(
     itemPages.length ? [...itemPages.map((p) => ({ ...p }))] : []
   );
@@ -483,9 +517,16 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
   const tbodyRowsHtml = rowHtmls
     .slice(last.startIndex, last.startIndex + last.chunk.length)
     .join("");
+  const lastHasTotalsSeparate = Boolean(last.totalsSeparate);
+  const lastHasTotalsInline = Boolean(last.totalsInlineSeparate);
 
-  const buildItemsProbeHtml = (blocks) =>
-    probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
+  const buildItemsProbeHtml =
+    lastHasTotalsSeparate
+      ? (blocks) => probeTotalsOnlyPage(false, renderClosingTailHtml(blocks))
+      : lastHasTotalsInline
+        ? (blocks) =>
+            probeLastItemsPageInlineTotals(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks))
+        : (blocks) => probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
 
   const segments = await flowClosingBlocks(
     playwrightPage,
@@ -500,8 +541,13 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
     .filter((s) => !s.onItemsPage && s.blocks.length > 0)
     .map((s) => s.blocks);
 
-  const buildItemsClosingProbe = (blocks) =>
-    probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
+  const buildItemsClosingProbe =
+    lastHasTotalsSeparate
+      ? (blocks) => probeTotalsOnlyPage(false, renderClosingTailHtml(blocks))
+      : lastHasTotalsInline
+        ? (blocks) =>
+            probeLastItemsPageInlineTotals(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks))
+        : (blocks) => probeLastItemsPage(isFirst, tbodyRowsHtml, renderClosingTailHtml(blocks));
 
   while (
     lastPageClosingBlocks.length > 0 &&
@@ -536,6 +582,8 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
     itemPages: pages,
     lastPageClosingBlocks,
     followUpClosingPages,
+    totalsSeparate: lastHasTotalsSeparate,
+    totalsInlineSeparate: lastHasTotalsInline,
   };
 }
 
@@ -789,6 +837,26 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       </table>
     </div>`;
 
+  const renderTotalsOnlyTable = () => `
+    <div class="items-table-shell items-totals-only-shell">
+      <table class="items-table">
+        <colgroup>
+          <col class="sn-col" />
+          <col class="desc-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="qty-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="num-col" />
+          <col class="amount-col" />
+        </colgroup>
+        <tbody></tbody>
+        ${renderTotalsTfoot()}
+      </table>
+    </div>`;
+
   const docHeadingBlock = `
         <div class="doc-heading">
           <div class="doc-title">${docTitle}</div>
@@ -920,6 +988,27 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       body: renderTable(tbodyRowsHtml, true),
     });
 
+  const probeFirstInlineTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: true,
+      body: `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml)}
+        ${renderTotalsOnlyTable()}
+        </div>`,
+    });
+
+  const probeContInlineTotals = (tbodyRowsHtml) =>
+    wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      body: `${renderTable(tbodyRowsHtml)}${renderTotalsOnlyTable()}`,
+    });
+
   const probeLastItemsPage = (isFirst, tbodyRowsHtml, closingHtml = "") => {
     const firstBody = `
         ${headGridHtml}
@@ -935,6 +1024,51 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     });
   };
 
+  const probeLastItemsPageNoTotals = (isFirst, tbodyRowsHtml) => {
+    const firstBody = `
+        ${headGridHtml}
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml)}
+        </div>`;
+    return wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirst,
+      body: isFirst ? firstBody : renderTable(tbodyRowsHtml),
+    });
+  };
+
+  const probeLastItemsPageInlineTotals = (isFirst, tbodyRowsHtml, closingHtml = "") => {
+    const itemsBlock = `
+        <div class="doc-lines-shell">
+        <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
+        ${renderTable(tbodyRowsHtml)}
+        ${renderTotalsOnlyTable()}
+        </div>`;
+    const firstBody = `${headGridHtml}${itemsBlock}`;
+    const contBody = `${renderTable(tbodyRowsHtml)}${renderTotalsOnlyTable()}`;
+    return wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirst,
+      body: `${isFirst ? firstBody : contBody}${closingHtml}`,
+    });
+  };
+
+  const probeTotalsOnlyPage = (isFirstPage, closingHtml = "") => {
+    const totalsBlock = `<div class="doc-lines-shell">${renderTotalsOnlyTable()}</div>`;
+    const body = isFirstPage
+      ? `${headGridHtml}${totalsBlock}${closingHtml}`
+      : `${totalsBlock}${closingHtml}`;
+    return wrapQuotationPdfPage({
+      head: runningHeadBlock,
+      foot: runningFootBlock,
+      first: isFirstPage,
+      body,
+    });
+  };
+
   const probeClosingOnlyPage = (closingHtml = "") =>
     wrapQuotationPdfPage({
       head: runningHeadBlock,
@@ -943,35 +1077,73 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       body: closingHtml,
     });
 
-  function buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages) {
+  function buildItemSectionsHtml(
+    itemPages,
+    lastPageClosingBlocks,
+    followUpClosingPages,
+    totalsSeparate = false,
+    totalsInlineSeparate = false
+  ) {
     const pages = sanitizeItemPages(itemPages);
-    return pages
-      .map(({ chunk, startIndex }, pageIndex) => {
-        const isFirst = pageIndex === 0;
-        const isLastItemsPage = pageIndex === pages.length - 1;
-        const closingHtml =
-          isLastItemsPage && lastPageClosingBlocks.length
-            ? renderClosingTailHtml(lastPageClosingBlocks)
-            : "";
-        const pageBreakAfter = !isLastItemsPage || followUpClosingPages.length > 0;
-        const body = isFirst
-          ? `
+    const htmlParts = [];
+
+    pages.forEach(({ chunk, startIndex, totalsSeparate: chunkTotalsSeparate, totalsInlineSeparate: chunkInlineTotals }, pageIndex) => {
+      const isFirst = pageIndex === 0;
+      const isLastItemsPage = pageIndex === pages.length - 1;
+      const separateTotalsPage =
+        isLastItemsPage && (Boolean(chunkTotalsSeparate) || totalsSeparate) && !chunkInlineTotals && !totalsInlineSeparate;
+      const inlineTotals =
+        isLastItemsPage && (Boolean(chunkInlineTotals) || totalsInlineSeparate);
+      const closingHtml =
+        isLastItemsPage && lastPageClosingBlocks.length && !separateTotalsPage
+          ? renderClosingTailHtml(lastPageClosingBlocks)
+          : "";
+      const withTotals = isLastItemsPage && !separateTotalsPage && !inlineTotals;
+      const itemsPageBreakAfter =
+        !isLastItemsPage || separateTotalsPage || followUpClosingPages.length > 0;
+
+      const rowsHtml = renderRows(chunk, startIndex);
+      const itemsTableHtml = renderTable(rowsHtml, withTotals);
+      const inlineTotalsHtml = inlineTotals ? renderTotalsOnlyTable() : "";
+
+      const body = isFirst
+        ? `
         ${headGridHtml}
         <div class="doc-lines-shell">
         <div class="subject-bar"><strong>Subject:</strong> ${escapeHtml(safeSubject)}</div>
-        ${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}
+        ${itemsTableHtml}
+        ${inlineTotalsHtml}
         </div>
         ${closingHtml}`
-          : `${renderTable(renderRows(chunk, startIndex), isLastItemsPage)}${closingHtml}`;
-        return `
-      <section class="pdf-page page ${isFirst ? "first-page " : ""}${pageBreakAfter ? "page-break" : ""}" data-pdf-page>
+        : `${itemsTableHtml}${inlineTotalsHtml}${closingHtml}`;
+
+      htmlParts.push(`
+      <section class="pdf-page page ${isFirst ? "first-page " : ""}${itemsPageBreakAfter ? "page-break" : ""}" data-pdf-page>
         ${watermarkBlock}
         ${runningHeadBlock}
         <div class="pdf-page-fill content">${body}</div>
         ${runningFootBlock}
-      </section>`;
-      })
-      .join("");
+      </section>`);
+
+      if (separateTotalsPage) {
+        const totalsClosingHtml = lastPageClosingBlocks.length
+          ? renderClosingTailHtml(lastPageClosingBlocks)
+          : "";
+        const totalsPageBreakAfter = followUpClosingPages.length > 0;
+        htmlParts.push(`
+      <section class="pdf-page page ${totalsPageBreakAfter ? "page-break" : ""}" data-pdf-page>
+        ${watermarkBlock}
+        ${runningHeadBlock}
+        <div class="pdf-page-fill content">
+          <div class="doc-lines-shell">${renderTotalsOnlyTable()}</div>
+          ${totalsClosingHtml}
+        </div>
+        ${runningFootBlock}
+      </section>`);
+      }
+    });
+
+    return htmlParts.join("");
   }
 
   function buildFollowUpClosingSections(blocksPerPage) {
@@ -998,7 +1170,15 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       ? []
       : pagePlan.lastPageClosingBlocks || [];
     const followUpClosingPages = Array.isArray(pagePlan) ? [] : pagePlan.followUpClosingPages || [];
-    const itemSections = buildItemSectionsHtml(itemPages, lastPageClosingBlocks, followUpClosingPages);
+    const totalsSeparate = Array.isArray(pagePlan) ? false : Boolean(pagePlan.totalsSeparate);
+    const totalsInlineSeparate = Array.isArray(pagePlan) ? false : Boolean(pagePlan.totalsInlineSeparate);
+    const itemSections = buildItemSectionsHtml(
+      itemPages,
+      lastPageClosingBlocks,
+      followUpClosingPages,
+      totalsSeparate,
+      totalsInlineSeparate
+    );
     const closingSections = buildFollowUpClosingSections(followUpClosingPages);
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1021,7 +1201,12 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     probeFirstWithTotals,
     probeContNoTotals,
     probeContWithTotals,
+    probeFirstInlineTotals,
+    probeContInlineTotals,
     probeLastItemsPage,
+    probeLastItemsPageNoTotals,
+    probeLastItemsPageInlineTotals,
+    probeTotalsOnlyPage,
     probeClosingOnlyPage,
     buildClosingBlocks,
     buildCompleteHtml,
