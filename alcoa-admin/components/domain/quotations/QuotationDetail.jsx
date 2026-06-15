@@ -30,6 +30,10 @@ import {
   getPrimaryAddress,
 } from "@/lib/map-customer-to-quotation";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
@@ -112,6 +116,8 @@ export function QuotationDetail({ id }) {
     formatCustomerAddressLines(getPrimaryAddress(customer)) ||
     formatCustomerAddressFromRecord(customer);
   const customerTRN = q.customerTRN || customer?.vatRegistrationNumber;
+  const customerEmail = resolveDocumentCustomerEmail(q);
+  const customerPhone = resolveDocumentCustomerPhone(q);
   const vatPct = q.vatPercentage ?? 5;
   const displaySubtotal = quotationDisplaySubtotal(q);
   const bank = QUOTATION_PDF_BANK_DETAILS;
@@ -143,8 +149,8 @@ export function QuotationDetail({ id }) {
         <DocumentDetailToolbar
           sending={sending}
           showWhatsApp={showWhatsApp}
-          hasEmail={!!q.customerEmail}
-          hasPhone={!!q.customerPhone}
+          hasEmail={!!customerEmail}
+          hasPhone={!!customerPhone}
           onDownloadPdf={downloadPdf}
           onSendEmail={sendEmail}
           onSendWhatsApp={sendWhatsApp}
@@ -214,10 +220,10 @@ export function QuotationDetail({ id }) {
             <CardContent className="pt-0">
               <InfoRowAlways label="Customer Name" value={q.customerName} />
               <InfoRowAlways label="Address" value={customerAddress} />
-              <InfoRowAlways label="Mobile No" value={q.customerPhone} />
+              <InfoRowAlways label="Mobile No" value={customerPhone || q.customerPhone} />
               <InfoRowAlways label="TRN" value={customerTRN} />
               <InfoRowAlways label="Contact Person" value={q.contactPersonName} />
-              <InfoRow label="Email" value={q.customerEmail} />
+              <InfoRow label="Email" value={customerEmail} />
             </CardContent>
           </Card>
 

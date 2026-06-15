@@ -19,6 +19,10 @@ import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { mapDeliveryNoteItemsForDisplay } from "@/lib/map-delivery-note-for-pdf";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
@@ -97,6 +101,8 @@ export function DeliveryNoteDetail({ id }) {
   const displayItems = mapDeliveryNoteItemsForDisplay(n);
   const salesOrder = n.salesOrder && typeof n.salesOrder === "object" ? n.salesOrder : null;
   const subject = `Delivery Note ${n.deliveryNoteNumber}`;
+  const customerEmail = resolveDocumentCustomerEmail(n);
+  const customerPhone = resolveDocumentCustomerPhone(n) || n.contactPersonPhone;
 
   return (
     <>
@@ -118,8 +124,8 @@ export function DeliveryNoteDetail({ id }) {
         <DocumentDetailToolbar
           sending={sending}
           showWhatsApp={showWhatsApp}
-          hasEmail={!!n.customerEmail}
-          hasPhone={!!(n.customerPhone || n.contactPersonPhone)}
+          hasEmail={!!customerEmail}
+          hasPhone={!!customerPhone}
           onDownloadPdf={downloadPdf}
           onSendEmail={sendEmail}
           onSendWhatsApp={sendWhatsApp}

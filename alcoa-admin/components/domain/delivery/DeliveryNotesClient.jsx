@@ -21,6 +21,10 @@ import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { DeliveryNoteStatusChanger } from "@/components/domain/delivery/DeliveryNoteStatusChanger";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 
 const API = "/api/delivery-notes";
 
@@ -148,8 +152,8 @@ export function DeliveryNotesClient() {
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}
             busy={busy}
-            hasEmail={!!n.customerEmail}
-            hasPhone={!!(n.customerPhone || n.contactPersonPhone)}
+            hasEmail={!!resolveDocumentCustomerEmail(n)}
+            hasPhone={!!(resolveDocumentCustomerPhone(n) || n.contactPersonPhone)}
             onView={() => router.push(`/delivery-notes/${nid}`)}
             onEdit={() => router.push(`/delivery-notes/${nid}/edit`)}
             onDownloadPdf={() => downloadPdf(nid, n.deliveryNoteNumber)}

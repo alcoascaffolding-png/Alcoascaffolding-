@@ -5,9 +5,10 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
-import SalesInvoice from "@/models/SalesInvoice";
-import SalesOrder from "@/models/SalesOrder";
-import Quotation from "@/models/Quotation";
+import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
+import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+
+void Customer;
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -42,7 +43,7 @@ export const GET = withErrorHandler(async (request) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("customer", "companyName")
+      .populate("customer", DOCUMENT_CUSTOMER_CONTACT_POPULATE)
       .lean(),
     SalesInvoice.countDocuments(filter),
   ]);

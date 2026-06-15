@@ -9,6 +9,10 @@ import {
   postDocumentSendEmail,
   postDocumentSendWhatsApp,
 } from "@/lib/document-outbound-client";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 import { useShowWhatsApp } from "@/hooks/use-show-whatsapp";
 
 const POPUP_HINT = "Pop-up blocked. Use Copy WhatsApp link button.";
@@ -69,7 +73,7 @@ export function useDocumentDetailOutbound({
     setSending("email");
     try {
       await postDocumentSendEmail(apiBase, id);
-      const to = document?.customerEmail;
+      const to = resolveDocumentCustomerEmail(document);
       toast.success(to ? `Emailed to ${to}` : "Email sent");
       bump();
     } catch (e) {
@@ -77,7 +81,7 @@ export function useDocumentDetailOutbound({
     } finally {
       setSending(null);
     }
-  }, [apiBase, id, document?.customerEmail, bump]);
+  }, [apiBase, id, document, bump]);
 
   const sendWhatsApp = useCallback(async () => {
     setSending("whatsapp");
@@ -101,7 +105,7 @@ export function useDocumentDetailOutbound({
         }
       } else {
         if (waTab && !waTab.closed) waTab.close();
-        const phone = document?.customerPhone;
+        const phone = resolveDocumentCustomerPhone(document);
         toast.success(phone ? `WhatsApp sent to ${phone}` : "WhatsApp message sent");
       }
       bump();
@@ -111,7 +115,7 @@ export function useDocumentDetailOutbound({
     } finally {
       setSending(null);
     }
-  }, [apiBase, id, document?.customerPhone, bump]);
+  }, [apiBase, id, document, bump]);
 
   const copyWhatsAppLink = useCallback(async () => {
     try {

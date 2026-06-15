@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import SalesOrder from "@/models/SalesOrder";
-import SalesInvoice from "@/models/SalesInvoice";
-import Quotation from "@/models/Quotation";
+import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
+
+void Customer;
 import { AppError } from "@/lib/api-error";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";

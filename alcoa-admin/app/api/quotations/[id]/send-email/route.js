@@ -7,6 +7,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Quotation from "@/models/Quotation";
 import { prepareQuotationForPdf } from "@/lib/load-quotation-for-pdf";
+import { resolveDocumentCustomerEmail } from "@/lib/resolve-document-customer";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import { sendQuotationEmail } from "@/lib/email/resend";
 // import { ensureQuotationPublicToken } from "@/lib/quotation-save";
@@ -18,14 +19,21 @@ export const POST = withErrorHandler(async (request, { params }) => {
   await connectDB();
   const quotation = await prepareQuotationForPdf(params.id);
   if (!quotation) throw new AppError("Quotation not found", 404);
-  if (!quotation.customerEmail) throw new AppError("Quotation has no customer email", 400);
+  const toEmail = resolveDocumentCustomerEmail(quotation);
+  if (!toEmail) {
+    throw new AppError(
+      "No customer email on this quotation. Add an email on the quote or on the linked customer record.",
+      400
+    );
+  }
+  const outbound = { ...quotation, customerEmail: toEmail };
 
   // Customer accept/reject links disabled — quotation email + PDF only
   // const { url: publicUrl } = await ensureQuotationPublicToken(params.id, Quotation);
 
-  const pdfBuffer = await generateQuotationPDF(quotation);
+  const pdfBuffer = await generateQuotationPDF(outbound);
 
-  const result = await sendQuotationEmail(quotation, pdfBuffer);
+  const result = await sendQuotationEmail(outbound, pdfBuffer);
 
   // Record in DB
   await Quotation.findByIdAndUpdate(params.id, {
@@ -34,7 +42,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
     $push: {
       emailsSent: {
         sentAt: new Date(),
-        sentTo: quotation.customerEmail,
+        sentTo: toEmail,
         subject: `Quotation ${quotation.quoteNumber}`,
         status: "sent",
       },

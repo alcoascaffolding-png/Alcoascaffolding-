@@ -8,7 +8,9 @@ import {
   markQuotationConvertedFromSalesOrder,
   revertQuotationFromConvertedToApproved,
 } from "@/lib/sync-quotation-sales-order";
-import Quotation from "@/models/Quotation";
+import { Customer, Quotation } from "@/lib/mongoose-models";
+
+void Customer;
 import { getLinkedDocumentsForQuotation } from "@/lib/quotation-linked-documents";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 

@@ -29,6 +29,10 @@ import {
   mapSalesOrderItemsForDisplay,
   formatCustomerAddressFromRecord,
 } from "@/lib/map-sales-order-for-quotation-pdf";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
@@ -123,6 +127,8 @@ export function SalesOrderDetail({ id }) {
   const subject = `Sales Order ${o.orderNumber}`;
   const customer = o.customer && typeof o.customer === "object" ? o.customer : null;
   const customerAddress = o.customerAddress || formatCustomerAddressFromRecord(customer);
+  const customerEmail = resolveDocumentCustomerEmail(o);
+  const customerPhone = resolveDocumentCustomerPhone(o);
 
   return (
     <>
@@ -151,8 +157,8 @@ export function SalesOrderDetail({ id }) {
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
-            hasEmail={!!o.customerEmail}
-            hasPhone={!!o.customerPhone}
+            hasEmail={!!customerEmail}
+            hasPhone={!!customerPhone}
             onDownloadPdf={downloadPdf}
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
@@ -172,8 +178,8 @@ export function SalesOrderDetail({ id }) {
             <CardContent className="pt-0">
               <InfoRowAlways label="Customer Name" value={o.customerName} />
               <InfoRowAlways label="Address" value={customerAddress} />
-              <InfoRowAlways label="Mobile No" value={o.customerPhone} />
-              <InfoRow label="Email" value={o.customerEmail} />
+              <InfoRowAlways label="Mobile No" value={customerPhone || o.customerPhone} />
+              <InfoRow label="Email" value={customerEmail} />
             </CardContent>
           </Card>
 

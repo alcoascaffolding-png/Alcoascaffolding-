@@ -21,6 +21,10 @@ import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { InvoicePaymentStatusChanger } from "@/components/domain/sales/InvoicePaymentStatusChanger";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 
 const API_INVOICES = "/api/sales-invoices";
 
@@ -157,8 +161,8 @@ export function SalesInvoicesClient() {
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}
             busy={busy}
-            hasEmail={!!inv.customerEmail}
-            hasPhone={!!inv.customerPhone}
+            hasEmail={!!resolveDocumentCustomerEmail(inv)}
+            hasPhone={!!resolveDocumentCustomerPhone(inv)}
             onView={() => router.push(`/sales-invoices/${iid}`)}
             onEdit={() => router.push(`/sales-invoices/${iid}/edit`)}
             onDownloadPdf={() => downloadPdf(iid, inv.invoiceNumber)}

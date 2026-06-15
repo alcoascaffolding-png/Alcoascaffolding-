@@ -21,6 +21,10 @@ import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { SalesOrderStatusChanger } from "@/components/domain/sales/SalesOrderStatusChanger";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 
 const API_ORDERS = "/api/sales-orders";
 
@@ -158,8 +162,8 @@ export function SalesOrdersClient() {
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}
             busy={busy}
-            hasEmail={!!o.customerEmail}
-            hasPhone={!!o.customerPhone}
+            hasEmail={!!resolveDocumentCustomerEmail(o)}
+            hasPhone={!!resolveDocumentCustomerPhone(o)}
             onView={() => router.push(`/sales-orders/${oid}`)}
             onEdit={() => router.push(`/sales-orders/${oid}/edit`)}
             onDownloadPdf={() => downloadPdf(oid, o.orderNumber)}

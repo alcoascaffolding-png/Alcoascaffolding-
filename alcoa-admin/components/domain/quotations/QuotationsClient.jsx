@@ -21,6 +21,10 @@ import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 
 const API_QUOTATIONS = "/api/quotations";
 
@@ -160,8 +164,8 @@ export function QuotationsClient() {
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}
             busy={busy}
-            hasEmail={!!q.customerEmail}
-            hasPhone={!!q.customerPhone}
+            hasEmail={!!resolveDocumentCustomerEmail(q)}
+            hasPhone={!!resolveDocumentCustomerPhone(q)}
             onView={() => router.push(`/quotations/${qid}`)}
             onEdit={() => router.push(`/quotations/${qid}/edit`)}
             onDownloadPdf={() => downloadPdf(qid, q.quoteNumber)}

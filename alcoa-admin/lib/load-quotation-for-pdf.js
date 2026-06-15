@@ -1,8 +1,12 @@
-import Quotation from "@/models/Quotation";
+import { Customer, Quotation } from "@/lib/mongoose-models";
+
+// Customer must be imported in this bundle before populate("customer") (Vercel serverless).
+void Customer;
 import {
   getPrimaryAddress,
   formatCustomerAddressLines,
 } from "@/lib/map-customer-to-quotation";
+import { enrichDocumentCustomerContact } from "@/lib/resolve-document-customer";
 
 export const QUOTATION_CUSTOMER_POPULATE_FIELDS =
   "companyName addresses primaryPhone primaryEmail vatRegistrationNumber contactPersons";
@@ -21,7 +25,7 @@ export function enrichQuotationForPdf(quotation) {
     quotation.customer && typeof quotation.customer === "object" ? quotation.customer : null;
   const addrFromCust = formatCustomerAddressLines(getPrimaryAddress(cust));
 
-  return {
+  return enrichDocumentCustomerContact({
     ...quotation,
     customerAddress:
       (quotation.customerAddress && String(quotation.customerAddress).trim()) ||
@@ -31,15 +35,7 @@ export function enrichQuotationForPdf(quotation) {
       (quotation.customerTRN && String(quotation.customerTRN).trim()) ||
       (cust?.vatRegistrationNumber && String(cust.vatRegistrationNumber).trim()) ||
       "",
-    customerEmail:
-      (quotation.customerEmail && String(quotation.customerEmail).trim()) ||
-      cust?.primaryEmail ||
-      "",
-    customerPhone:
-      (quotation.customerPhone && String(quotation.customerPhone).trim()) ||
-      cust?.primaryPhone ||
-      "",
-  };
+  });
 }
 
 /** Load and enrich a quotation for PDF / outbound attachments. */

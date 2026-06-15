@@ -29,6 +29,10 @@ import {
   mapSalesInvoiceItemsForDisplay,
   formatCustomerAddressFromRecord,
 } from "@/lib/map-sales-order-for-quotation-pdf";
+import {
+  resolveDocumentCustomerEmail,
+  resolveDocumentCustomerPhone,
+} from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
@@ -131,6 +135,8 @@ export function SalesInvoiceDetail({ id }) {
   const customer = inv.customer && typeof inv.customer === "object" ? inv.customer : null;
   const customerAddress = inv.customerAddress || formatCustomerAddressFromRecord(customer);
   const customerTRN = inv.customerTRN || customer?.vatRegistrationNumber;
+  const customerEmail = resolveDocumentCustomerEmail(inv);
+  const customerPhone = resolveDocumentCustomerPhone(inv);
   const paid = Number(inv.paidAmount || 0);
   const balance =
     inv.balance != null ? Number(inv.balance) : Math.max(0, Number(inv.total || 0) - paid);
@@ -174,8 +180,8 @@ export function SalesInvoiceDetail({ id }) {
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
-            hasEmail={!!inv.customerEmail}
-            hasPhone={!!inv.customerPhone}
+            hasEmail={!!customerEmail}
+            hasPhone={!!customerPhone}
             onDownloadPdf={downloadPdf}
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
@@ -196,8 +202,8 @@ export function SalesInvoiceDetail({ id }) {
               <InfoRowAlways label="Customer Name" value={inv.customerName} />
               <InfoRowAlways label="Address" value={customerAddress} />
               <InfoRowAlways label="TRN" value={customerTRN} />
-              <InfoRowAlways label="Mobile No" value={inv.customerPhone} />
-              <InfoRow label="Email" value={inv.customerEmail} />
+              <InfoRowAlways label="Mobile No" value={customerPhone || inv.customerPhone} />
+              <InfoRow label="Email" value={customerEmail} />
             </CardContent>
           </Card>
 

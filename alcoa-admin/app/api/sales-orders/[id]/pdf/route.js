@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { SalesOrder } from "@/lib/mongoose-models";
+import { prepareSalesOrderForPdf } from "@/lib/load-sales-order-for-pdf";
 import { generateSalesOrderPDF } from "@/lib/pdf/sales-document-pdf";
 
 export const GET = withErrorHandler(async (request, context) => {
@@ -21,9 +21,7 @@ export const GET = withErrorHandler(async (request, context) => {
   if (!id) return apiError("Missing id", 400);
 
   await connectDB();
-  const order = await SalesOrder.findById(id)
-    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
-    .lean();
+  const order = await prepareSalesOrderForPdf(id);
   if (!order) throw new AppError("Sales Order not found", 404);
   if (!order.items?.length) {
     throw new AppError(

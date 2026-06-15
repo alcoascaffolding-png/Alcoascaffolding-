@@ -3,7 +3,10 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { SalesOrder, Quotation } from "@/lib/mongoose-models";
+import { Customer, Quotation, SalesOrder } from "@/lib/mongoose-models";
+import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
+
+void Customer;
 import { SALES_ORDER_STATUS_VALUES } from "@/models/SalesOrder";
 import { syncQuotationsAfterSalesOrderPatch, revertQuotationFromConvertedToApproved } from "@/lib/sync-quotation-sales-order";
 import {
@@ -29,7 +32,7 @@ export const GET = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const doc = await SalesOrder.findById(params.id)
-    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
+    .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
   if (!doc) throw new AppError("Sales Order not found", 404);
@@ -130,7 +133,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
   }
 
   const populated = await SalesOrder.findById(doc._id)
-    .populate("customer", "companyName addresses primaryPhone primaryEmail vatRegistrationNumber")
+    .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
 

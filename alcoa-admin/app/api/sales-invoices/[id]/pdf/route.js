@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { loadSalesInvoiceForPdf } from "@/lib/load-sales-invoice-for-pdf";
+import { prepareSalesInvoiceForPdf } from "@/lib/load-sales-invoice-for-pdf";
 import { generateSalesInvoicePDF } from "@/lib/pdf/sales-document-pdf";
 
 export const GET = withErrorHandler(async (request, context) => {
@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async (request, context) => {
   if (!id) return apiError("Missing id", 400);
 
   await connectDB();
-  const invoice = await loadSalesInvoiceForPdf(id);
+  const invoice = await prepareSalesInvoiceForPdf(id);
   if (!invoice) throw new AppError("Tax Invoice not found", 404);
   if (!invoice.items?.length) {
     throw new AppError(

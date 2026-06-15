@@ -5,12 +5,10 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveDeliveryNoteNumberForCreate } from "@/lib/document-number";
-import {
-  DeliveryNote,
-  Quotation,
-  SalesOrder,
-  SalesInvoice,
-} from "@/lib/mongoose-models";
+import { Customer, DeliveryNote, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
+import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+
+void Customer;
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -46,6 +44,7 @@ export const GET = withErrorHandler(async (request) => {
       .skip(skip)
       .limit(limit)
       .populate("salesOrder", "orderNumber")
+      .populate("customer", DOCUMENT_CUSTOMER_CONTACT_POPULATE)
       .lean(),
     DeliveryNote.countDocuments(filter),
   ]);
