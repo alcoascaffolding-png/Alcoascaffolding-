@@ -170,6 +170,12 @@ async function quotationPdfPageProbeFits(playwrightPage, bodyHtml) {
         }
       }
 
+      const shell = page.querySelector(".doc-lines-shell");
+      if (shell) {
+        const shellBottom = shell.getBoundingClientRect().bottom;
+        if (shellBottom > maxContentBottom + tol) return false;
+      }
+
       const closing = page.querySelector(".closing-tail-flow");
       if (closing && closing.getBoundingClientRect().bottom > maxContentBottom) return false;
 
@@ -273,32 +279,71 @@ function sanitizeItemPages(pages) {
   return pages.filter((p) => p.chunk && p.chunk.length > 0);
 }
 
-/** Pick totals placement when all remaining rows fit without inline table tfoot. */
-async function resolveTotalsPlacement(playwrightPage, rem, isOpening, sliceRows, layout) {
+/** If totals were forced onto a page that cannot fit them, move totals to the next page. */
+async function ensureLastPageTotalsFit(playwrightPage, layout, pages) {
+  if (!pages.length) return;
+  const last = pages[pages.length - 1];
+  if (!last?.chunk?.length || last.totalsSeparate) return;
+
+  const lastIdx = pages.length - 1;
+  const isFirst = lastIdx === 0;
+  const tbodyRowsHtml = layout.rowHtmls
+    .slice(last.startIndex, last.startIndex + last.chunk.length)
+    .join("");
+
+  const fitsInline = () =>
+    quotationPdfPageProbeFits(
+      playwrightPage,
+      isFirst
+        ? layout.probeFirstInlineTotals(tbodyRowsHtml)
+        : layout.probeContInlineTotals(tbodyRowsHtml)
+    );
+  const fitsTfoot = () =>
+    quotationPdfPageProbeFits(
+      playwrightPage,
+      isFirst
+        ? layout.probeFirstWithTotals(tbodyRowsHtml)
+        : layout.probeContWithTotals(tbodyRowsHtml)
+    );
+
+  if (last.totalsInlineSeparate) {
+    if (!(await fitsInline())) {
+      last.totalsInlineSeparate = false;
+      last.totalsSeparate = true;
+    }
+    return;
+  }
+
+  if (!(await fitsTfoot())) {
+    if (await fitsInline()) {
+      last.totalsInlineSeparate = true;
+    } else {
+      last.totalsSeparate = true;
+      last.totalsInlineSeparate = false;
+    }
+  }
+}
+
+async function probeItemsPlusTotalsFit(playwrightPage, rem, isOpening, sliceRows, layout) {
   const {
     probeFirstInlineTotals,
     probeContInlineTotals,
-    probeFirstNoTotals,
-    probeContNoTotals,
+    probeFirstWithTotals,
+    probeContWithTotals,
   } = layout;
   const probeInlineTotals = (count) =>
     quotationPdfPageProbeFits(
       playwrightPage,
       isOpening ? probeFirstInlineTotals(sliceRows(count)) : probeContInlineTotals(sliceRows(count))
     );
-  const probeNoTotals = (count) =>
+  const probeWithTotals = (count) =>
     quotationPdfPageProbeFits(
       playwrightPage,
-      isOpening ? probeFirstNoTotals(sliceRows(count)) : probeContNoTotals(sliceRows(count))
+      isOpening ? probeFirstWithTotals(sliceRows(count)) : probeContWithTotals(sliceRows(count))
     );
-
-  if (!(await probeNoTotals(rem))) {
-    return { totalsInlineSeparate: false, totalsSeparate: false };
-  }
-  if (await probeInlineTotals(rem)) {
-    return { totalsInlineSeparate: true, totalsSeparate: false };
-  }
-  return { totalsInlineSeparate: false, totalsSeparate: true };
+  if (await probeWithTotals(rem)) return true;
+  if (await probeInlineTotals(rem)) return true;
+  return false;
 }
 
 /**
@@ -308,8 +353,16 @@ async function resolveTotalsPlacement(playwrightPage, rem, isOpening, sliceRows,
  * @returns {Promise<{ chunk: unknown[]; startIndex: number; totalsSeparate?: boolean; totalsInlineSeparate?: boolean }[]>}
  */
 export async function computeQuotationItemPages(playwrightPage, layout) {
-  const { items, rowHtmls, probeFirstNoTotals, probeFirstWithTotals, probeContNoTotals, probeContWithTotals } =
-    layout;
+  const {
+    items,
+    rowHtmls,
+    probeFirstNoTotals,
+    probeFirstWithTotals,
+    probeContNoTotals,
+    probeContWithTotals,
+    probeFirstInlineTotals,
+    probeContInlineTotals,
+  } = layout;
   const n = items.length;
   if (n === 0) return [{ chunk: [], startIndex: 0 }];
 
@@ -332,6 +385,11 @@ export async function computeQuotationItemPages(playwrightPage, layout) {
         playwrightPage,
         isOpening ? probeFirstWithTotals(sliceRows(count)) : probeContWithTotals(sliceRows(count))
       );
+    const probeInlineTotals = (count) =>
+      quotationPdfPageProbeFits(
+        playwrightPage,
+        isOpening ? probeFirstInlineTotals(sliceRows(count)) : probeContInlineTotals(sliceRows(count))
+      );
     const probeNoTotalsForCount = (count) =>
       isOpening ? probeFirstNoTotals(sliceRows(count)) : probeContNoTotals(sliceRows(count));
 
@@ -341,18 +399,54 @@ export async function computeQuotationItemPages(playwrightPage, layout) {
     }
 
     if (await probeNoTotals(rem)) {
-      const placement = await resolveTotalsPlacement(playwrightPage, rem, isOpening, sliceRows, layout);
+      if (await probeInlineTotals(rem)) {
+        chunks.push({
+          chunk: items.slice(idx, idx + rem),
+          startIndex: idx,
+          totalsInlineSeparate: true,
+          totalsSeparate: false,
+        });
+        break;
+      }
+
+      if (rem > 1) {
+        const maxWithTotals = await countRowsThatFit(playwrightPage, rem - 1, async (c) =>
+          probeItemsPlusTotalsFit(playwrightPage, c, isOpening, sliceRows, layout)
+        );
+        if (maxWithTotals >= 1 && maxWithTotals < rem) {
+          chunks.push({ chunk: items.slice(idx, idx + maxWithTotals), startIndex: idx });
+          idx += maxWithTotals;
+          continue;
+        }
+      }
+
       chunks.push({
         chunk: items.slice(idx, idx + rem),
         startIndex: idx,
-        ...placement,
+        totalsSeparate: true,
+        totalsInlineSeparate: false,
       });
       break;
     }
 
     if (rem === 1) {
-      const placement = await resolveTotalsPlacement(playwrightPage, 1, isOpening, sliceRows, layout);
-      chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx, ...placement });
+      if (await probeWithTotals(1)) {
+        chunks.push({ chunk: items.slice(idx, idx + 1), startIndex: idx });
+      } else if (await probeInlineTotals(1)) {
+        chunks.push({
+          chunk: items.slice(idx, idx + 1),
+          startIndex: idx,
+          totalsInlineSeparate: true,
+          totalsSeparate: false,
+        });
+      } else {
+        chunks.push({
+          chunk: items.slice(idx, idx + 1),
+          startIndex: idx,
+          totalsSeparate: true,
+          totalsInlineSeparate: false,
+        });
+      }
       break;
     }
 
@@ -508,6 +602,8 @@ export async function resolveQuotationPdfPagePlan(playwrightPage, layout, itemPa
   if (!pages.length) {
     pages.push({ chunk: [], startIndex: 0 });
   }
+
+  await ensureLastPageTotalsFit(playwrightPage, layout, pages);
 
   const buildClosingProbeHtml = (blocks) => probeClosingOnlyPage(renderClosingTailHtml(blocks));
 

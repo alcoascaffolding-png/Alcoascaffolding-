@@ -353,6 +353,9 @@ function buildQuotationPdfCss(embedFonts) {
       border: none;
       margin-top: 2px;
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
     }
     .doc-lines-shell .subject-bar {
       border: none;
@@ -389,6 +392,10 @@ function buildQuotationPdfCss(embedFonts) {
     .items-table-shell {
       border: none;
       flex-shrink: 0;
+    }
+    .items-totals-only-shell {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .items-totals-only-shell .items-table {
       border-top: 2px solid var(--layout-blue);
