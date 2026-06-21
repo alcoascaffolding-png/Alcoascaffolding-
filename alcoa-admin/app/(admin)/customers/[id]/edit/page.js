@@ -12,4 +12,5 @@ export default async function EditCustomerPage({ params }) {
       <CustomerForm customerId={id} />
     </Suspense>
   );
+  
 }
