@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   MessageSquare,
   Users,
+  UserCog,
   FileText,
   ShoppingCart,
   Receipt,
@@ -16,11 +18,12 @@ import {
   CreditCard,
   Wallet,
   BarChart3,
-  Settings,
+  ScrollText,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { canAccessNavPath, canManageUsers } from "@/lib/permissions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
@@ -47,7 +50,6 @@ const navigation = [
       { name: "Delivery Notes", href: "/delivery-notes", icon: Truck },
     ],
   },
-  /* ─── Temporarily hidden — restore Purchases / Inventory / Accounts when ready ───
   {
     label: "Purchases",
     items: [
@@ -71,17 +73,30 @@ const navigation = [
       { name: "Payments", href: "/payments", icon: Wallet },
     ],
   },
-  ─── end hidden nav ─── */
+  {
+    label: "Settings",
+    items: [
+      { name: "Users", href: "/users", icon: UserCog, adminOnly: true },
+      { name: "Audit Log", href: "/audit-log", icon: ScrollText, adminOnly: true },
+    ],
+  },
 ];
 
-function NavGroup({ group, collapsed, onNavigate }) {
+function NavGroup({ group, collapsed, onNavigate, userRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(true);
+
+  const visibleItems = group.items.filter((item) => {
+    if (item.adminOnly && !canManageUsers(userRole)) return false;
+    return canAccessNavPath(userRole, item.href);
+  });
+
+  if (visibleItems.length === 0) return null;
 
   if (collapsed) {
     return (
       <div className="space-y-1">
-        {group.items.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
           return (
@@ -118,7 +133,7 @@ function NavGroup({ group, collapsed, onNavigate }) {
 
       {open && (
         <div className="space-y-0.5">
-          {group.items.map((item) => {
+          {visibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
             return (
@@ -145,6 +160,19 @@ function NavGroup({ group, collapsed, onNavigate }) {
 }
 
 export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate }) {
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+
+  const visibleNavigation = navigation
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.adminOnly && !canManageUsers(userRole)) return false;
+        return canAccessNavPath(userRole, item.href);
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <aside
       className={cn(
@@ -173,8 +201,8 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate }
       {/* Navigation */}
       <ScrollArea className="flex-1 py-4">
         <nav className={cn("space-y-4", collapsed ? "px-2" : "px-3")}>
-          {navigation.map((group) => (
-            <NavGroup key={group.label} group={group} collapsed={collapsed} onNavigate={onNavigate} />
+          {visibleNavigation.map((group) => (
+            <NavGroup key={group.label} group={group} collapsed={collapsed} onNavigate={onNavigate} userRole={userRole} />
           ))}
         </nav>
       </ScrollArea>

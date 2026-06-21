@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, Truck, Receipt } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import {
@@ -115,10 +115,24 @@ export function SalesOrderDetail({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const fulfillmentByDesc = useMemo(() => {
+    const lines = order?.deliveryFulfillment?.lines;
+    if (!lines?.length) return {};
+    return Object.fromEntries(
+      lines.map((l) => [
+        String(l.description || l.equipmentType || "")
+          .trim()
+          .toLowerCase(),
+        l,
+      ])
+    );
+  }, [order?.deliveryFulfillment]);
+
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const o = order;
+  const fulfillment = o.deliveryFulfillment;
   const subtotal = Number(o.subtotal || 0);
   const vatAmount = Number(o.vatAmount || 0);
   const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
@@ -146,6 +160,24 @@ export function SalesOrderDetail({ id }) {
             value={o.status}
             detailQueryKey={["sales-orders", "detail", id]}
           />
+          {fulfillment?.summary && (
+            <Badge
+              variant={
+                fulfillment.summary.fullyDelivered
+                  ? "default"
+                  : fulfillment.summary.partiallyDelivered
+                    ? "secondary"
+                    : "outline"
+              }
+              className="text-xs font-normal capitalize"
+            >
+              {fulfillment.summary.fullyDelivered
+                ? "Fully delivered"
+                : fulfillment.summary.partiallyDelivered
+                  ? `${fulfillment.summary.totalRemaining.toFixed(0)} qty remaining`
+                  : "Not delivered"}
+            </Badge>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link href={`/delivery-notes/new?salesOrder=${id}`}>
@@ -228,6 +260,35 @@ export function SalesOrderDetail({ id }) {
                   </Button>
                 </div>
               )}
+              {o.linkedSalesInvoice && (
+                <div className="pt-3 border-t border-border/60 mt-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                    Linked tax invoice
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-sm font-medium">
+                      {o.linkedSalesInvoice.invoiceNumber}
+                    </span>
+                    {o.linkedSalesInvoice.paymentStatus != null && (
+                      <Badge variant="secondary" className="text-xs font-normal capitalize">
+                        {String(o.linkedSalesInvoice.paymentStatus).replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      router.push(`/sales-invoices/${String(o.linkedSalesInvoice._id)}`)
+                    }
+                  >
+                    <Receipt className="h-4 w-4 mr-1" />
+                    View tax invoice
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -243,17 +304,39 @@ export function SalesOrderDetail({ id }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Line Items</CardTitle>
+            {fulfillment?.summary && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Delivery: {fulfillment.summary.netDelivered.toFixed(0)} delivered
+                {fulfillment.summary.totalPending > 0
+                  ? `, ${fulfillment.summary.totalPending.toFixed(0)} pending`
+                  : ""}
+                {fulfillment.summary.totalReturned > 0
+                  ? `, ${fulfillment.summary.totalReturned.toFixed(0)} returned`
+                  : ""}
+                {fulfillment.summary.totalRemaining > 0
+                  ? ` — ${fulfillment.summary.totalRemaining.toFixed(0)} remaining`
+                  : ""}
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto -mx-1">
-              <table className="w-full text-sm border-collapse min-w-[720px]">
+              <table className="w-full text-sm border-collapse min-w-[960px]">
                 <thead>
                   <tr className="border-b-2 border-primary/30 bg-muted/40">
                     <th className="text-center py-2 px-2 font-medium w-10">SN</th>
-                    <th className="text-left py-2 px-2 font-medium min-w-[200px]">Description of Goods</th>
+                    <th className="text-left py-2 px-2 font-medium min-w-[180px]">Description of Goods</th>
                     <th className="text-right py-2 px-2 font-medium w-16">Wt (KG)</th>
                     <th className="text-right py-2 px-2 font-medium w-14">CBM</th>
-                    <th className="text-right py-2 px-2 font-medium w-20">Qty</th>
+                    <th className="text-right py-2 px-2 font-medium w-16">Ordered</th>
+                    {fulfillment?.lines?.length > 0 && (
+                      <>
+                        <th className="text-right py-2 px-2 font-medium w-16">Delivered</th>
+                        <th className="text-right py-2 px-2 font-medium w-16">Pending</th>
+                        <th className="text-right py-2 px-2 font-medium w-16">Returned</th>
+                        <th className="text-right py-2 px-2 font-medium w-16">Remaining</th>
+                      </>
+                    )}
                     <th className="text-right py-2 px-2 font-medium w-24">Rate (AED)</th>
                     <th className="text-right py-2 px-2 font-medium w-28">Taxable Amount</th>
                     <th className="text-right py-2 px-2 font-medium w-28">VAT ({vatPct}%) Amount</th>
@@ -261,7 +344,12 @@ export function SalesOrderDetail({ id }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayItems.map((item, i) => (
+                  {displayItems.map((item, i) => {
+                    const fKey = String(item.equipmentType || item.description || "")
+                      .trim()
+                      .toLowerCase();
+                    const fLine = fulfillmentByDesc[fKey];
+                    return (
                     <tr key={item._id || i} className="border-b border-border/60 align-top">
                       <td className="py-2.5 px-2 text-center text-muted-foreground">{i + 1}</td>
                       <td className="py-2.5 px-2">
@@ -269,9 +357,29 @@ export function SalesOrderDetail({ id }) {
                       </td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">—</td>
                       <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">—</td>
-                      <td className="py-2.5 px-2 text-right whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-right whitespace-nowrap tabular-nums">
                         {item.quantity} {item.unit || "Nos"}
                       </td>
+                      {fulfillment?.lines?.length > 0 && (
+                        <>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                            {fLine ? fLine.deliveredQty : "—"}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                            {fLine && fLine.pendingQty > 0 ? fLine.pendingQty : "—"}
+                          </td>
+                          <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
+                            {fLine && fLine.returnedQty > 0 ? fLine.returnedQty : "—"}
+                          </td>
+                          <td
+                            className={`py-2.5 px-2 text-right tabular-nums font-medium ${
+                              fLine && fLine.remainingQty > 0 ? "text-amber-700 dark:text-amber-400" : ""
+                            }`}
+                          >
+                            {fLine != null ? fLine.remainingQty : "—"}
+                          </td>
+                        </>
+                      )}
                       <td className="py-2.5 px-2 text-right tabular-nums">
                         {Number(item.ratePerUnit || 0).toFixed(2)}
                       </td>
@@ -285,7 +393,8 @@ export function SalesOrderDetail({ id }) {
                         {itemAmountWithVat(item, vatPct).toFixed(2)}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

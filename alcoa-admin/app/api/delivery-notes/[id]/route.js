@@ -1,13 +1,16 @@
 import mongoose from "mongoose";
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { Customer, DeliveryNote, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 
 void Customer;
 import { DELIVERY_NOTE_STATUS_VALUES } from "@/models/DeliveryNote";
+import { syncDeliveryNoteStock } from "@/lib/stock-service";
+import { syncSalesOrderOnDeliveryNote } from "@/lib/sync-sales-order-on-delivery";
+import { assertDeliveryNoteQuantitiesWithinSalesOrder } from "@/lib/sales-order-delivery-fulfillment";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -17,8 +20,7 @@ function toObjectId(value) {
 }
 
 export const GET = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("delivery-notes", "read");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -36,8 +38,7 @@ export const GET = withErrorHandler(async (request, context) => {
 });
 
 export const PATCH = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("delivery-notes", "write");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -65,13 +66,36 @@ export const PATCH = withErrorHandler(async (request, context) => {
 
   delete patch.deliveryNoteNumber;
   delete patch.createdBy;
+  delete patch.stockApplied;
 
-  let doc;
-  try {
-    doc = await DeliveryNote.findByIdAndUpdate(params.id, patch, {
-      new: true,
-      runValidators: true,
+  const doc = await DeliveryNote.findById(params.id);
+  if (!doc) throw new AppError("Delivery Note not found", 404);
+
+  const prevSnapshot = {
+    status: doc.status,
+    stockApplied: doc.stockApplied,
+    items: doc.items,
+    deliveryNoteNumber: doc.deliveryNoteNumber,
+    noteType: doc.noteType,
+    salesOrder: doc.salesOrder,
+  };
+
+  for (const [key, value] of Object.entries(patch)) {
+    doc.set(key, value);
+  }
+
+  const soId = doc.salesOrder;
+  if (soId && doc.noteType !== "return") {
+    await assertDeliveryNoteQuantitiesWithinSalesOrder({
+      salesOrderId: soId,
+      noteType: doc.noteType,
+      items: doc.items,
+      excludeDeliveryNoteId: doc._id,
     });
+  }
+
+  try {
+    await doc.validate();
   } catch (err) {
     if (err.name === "ValidationError") {
       const first = Object.values(err.errors || {})[0]?.message;
@@ -79,7 +103,11 @@ export const PATCH = withErrorHandler(async (request, context) => {
     }
     throw err;
   }
-  if (!doc) throw new AppError("Delivery Note not found", 404);
+
+  const stockSaved = await syncDeliveryNoteStock(prevSnapshot, doc, session.user.id);
+  if (!stockSaved) await doc.save();
+
+  await syncSalesOrderOnDeliveryNote(prevSnapshot, doc);
 
   const populated = await DeliveryNote.findById(doc._id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
@@ -91,8 +119,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
 });
 
 export const DELETE = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("delivery-notes", "delete");
 
   const params =
     context.params && typeof context.params.then === "function"

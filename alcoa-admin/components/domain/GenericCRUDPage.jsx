@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Plus, Package } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { canWriteResource, canDeleteDocuments } from "@/lib/permissions";
 
 /**
  * Generic CRUD page that displays a table, add/edit dialog, and delete confirmation.
@@ -43,8 +46,19 @@ export function GenericCRUDPage({
   defaultValues,
   FormFields,
   statCards,
+  allowEdit = true,
+  mapItemToForm,
+  initialOpenCreate = false,
+  presetValues = null,
+  detailPath,
+  prepareSavePayload,
 }) {
+  const router = useRouter();
   const qc = useQueryClient();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const canWrite = canWriteResource(userRole, resource);
+  const canDelete = canDeleteDocuments(userRole);
   const [editItem, setEditItem] = useState(null); // null = closed, {} = new, item = edit
   const [deleteId, setDeleteId] = useState(null);
 
@@ -72,13 +86,21 @@ export function GenericCRUDPage({
     defaultValues,
   });
 
+  useEffect(() => {
+    if (!initialOpenCreate) return;
+    form.reset({ ...defaultValues, ...(presetValues || {}) });
+    setEditItem({});
+    // Only on mount when deep-linking to create (e.g. Record Receipt from invoice)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openCreate() {
     form.reset(defaultValues);
     setEditItem({});
   }
 
   function openEdit(item) {
-    form.reset(item);
+    form.reset(mapItemToForm ? mapItemToForm(item) : item);
     setEditItem(item);
   }
 
@@ -87,7 +109,8 @@ export function GenericCRUDPage({
       const isEdit = editItem?._id;
       const url = isEdit ? `/api/${resource}/${editItem._id}` : `/api/${resource}`;
       const method = isEdit ? "PATCH" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(values) });
+      const payload = prepareSavePayload ? prepareSavePayload(values, !!isEdit) : values;
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const d = await res.json();
       if (!d.success) throw new Error(d.error);
       return d.data;
@@ -119,17 +142,19 @@ export function GenericCRUDPage({
     header: "",
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
-        {FormFields && (
+        {FormFields && allowEdit && canWrite && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>
         )}
+        {canDelete && (
         <Button
           variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
           onClick={(e) => { e.stopPropagation(); setDeleteId(row.original._id); }}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
+        )}
       </div>
     ),
     size: 80,
@@ -158,8 +183,13 @@ export function GenericCRUDPage({
         data={data?.items || []}
         isLoading={isLoading}
         searchPlaceholder={`Search ${title.toLowerCase()}…`}
+        onRowClick={
+          detailPath
+            ? (row) => router.push(`${detailPath}/${String(row._id)}`)
+            : undefined
+        }
         toolbar={
-          FormFields && (
+          FormFields && canWrite && (
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
               Add {title.slice(0, -1)}
@@ -169,7 +199,7 @@ export function GenericCRUDPage({
       />
 
       {/* Create/Edit dialog */}
-      {FormFields && (
+      {FormFields && canWrite && (
         <Dialog open={editItem !== null} onOpenChange={(open) => !open && setEditItem(null)}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>

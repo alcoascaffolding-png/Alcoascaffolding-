@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+const lineItemSchema = new mongoose.Schema(
+  {
+    description: { type: String, required: true, trim: true },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    quantity: { type: Number, required: true, min: 0 },
+    unit: { type: String, default: "Nos", trim: true },
+    unitPrice: { type: Number, required: true, min: 0 },
+    total: { type: Number, required: true, min: 0 },
+  },
+  { _id: true }
+);
+
 const purchaseInvoiceSchema = new mongoose.Schema(
   {
     invoiceNumber: { type: String, required: true, unique: true, trim: true, index: true },
@@ -9,6 +21,7 @@ const purchaseInvoiceSchema = new mongoose.Schema(
     invoiceDate: { type: Date, default: Date.now },
     dueDate: { type: Date },
     paymentStatus: { type: String, enum: ["unpaid", "partially_paid", "paid", "overdue"], default: "unpaid", index: true },
+    items: [lineItemSchema],
     subtotal: { type: Number, default: 0, min: 0 },
     vatAmount: { type: Number, default: 0, min: 0 },
     total: { type: Number, default: 0, min: 0 },

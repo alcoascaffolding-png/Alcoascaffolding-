@@ -4,8 +4,10 @@ import { withErrorHandler } from "@/lib/api-error";
 import User from "@/models/User";
 
 export const POST = withErrorHandler(async (request) => {
-  // Guard with SETUP_SECRET header
   const setupSecret = process.env.SETUP_SECRET;
+  if (process.env.NODE_ENV === "production" && !setupSecret) {
+    return apiError("Setup disabled — configure SETUP_SECRET in production", 403);
+  }
   if (setupSecret) {
     const provided = request.headers.get("x-setup-secret");
     if (provided !== setupSecret) {
@@ -40,6 +42,9 @@ export const POST = withErrorHandler(async (request) => {
 
 export const GET = withErrorHandler(async (request) => {
   const setupSecret = process.env.SETUP_SECRET;
+  if (process.env.NODE_ENV === "production" && !setupSecret) {
+    return apiError("Setup disabled — configure SETUP_SECRET in production", 403);
+  }
   if (setupSecret) {
     const provided = request.headers.get("x-setup-secret");
     if (provided !== setupSecret) return apiError("Forbidden", 403);

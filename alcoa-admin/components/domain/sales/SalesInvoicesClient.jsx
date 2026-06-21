@@ -19,6 +19,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
+import { ExportButton } from "@/components/data-table/ExportButton";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { InvoicePaymentStatusChanger } from "@/components/domain/sales/InvoicePaymentStatusChanger";
 import {
@@ -188,6 +189,7 @@ export function SalesInvoicesClient() {
         searchPlaceholder="Search tax invoices…"
         onRowClick={(row) => router.push(`/sales-invoices/${String(row._id)}`)}
         emptyMessage="No tax invoices yet. Create your first tax invoice."
+        toolbar={<ExportButton resource="sales-invoices" filename="tax-invoices" />}
       />
 
       <AlertDialog

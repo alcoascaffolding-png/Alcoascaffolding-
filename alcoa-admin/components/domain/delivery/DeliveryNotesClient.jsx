@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/utils";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
+import { ExportButton } from "@/components/data-table/ExportButton";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { DeliveryNoteStatusChanger } from "@/components/domain/delivery/DeliveryNoteStatusChanger";
 import {
@@ -179,6 +180,7 @@ export function DeliveryNotesClient() {
         searchPlaceholder="Search delivery notes…"
         onRowClick={(row) => router.push(`/delivery-notes/${String(row._id)}`)}
         emptyMessage="No delivery notes yet. Create one from a sales order or add standalone."
+        toolbar={<ExportButton resource="delivery-notes" filename="delivery-notes" />}
       />
 
       <AlertDialog

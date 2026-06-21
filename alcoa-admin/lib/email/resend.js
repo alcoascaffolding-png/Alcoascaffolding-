@@ -207,3 +207,45 @@ export async function sendSalesInvoiceEmail(invoice, pdfBuffer) {
     reply_to: COMPANY_EMAIL,
   });
 }
+
+export async function sendPurchaseOrderEmail(po, pdfBuffer) {
+  const { default: purchaseOrderEmailTemplate } = await import("./templates/purchase-order-email");
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = purchaseOrderEmailTemplate(po, { logoSrc });
+
+  const brandName = getQuotationCompanyName();
+  return sendEmail({
+    from: emailFromLine(),
+    to: [po.vendorEmail],
+    cc: [COMPANY_EMAIL],
+    subject: `Purchase Order ${po.poNumber} — ${brandName}`,
+    html,
+    attachments: documentEmailAttachments(
+      `${po.poNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
+    reply_to: COMPANY_EMAIL,
+  });
+}
+
+export async function sendPurchaseInvoiceEmail(inv, pdfBuffer) {
+  const { default: purchaseInvoiceEmailTemplate } = await import("./templates/purchase-invoice-email");
+  const { logoSrc, inlineAttachments } = buildDocumentEmailBranding();
+  const html = purchaseInvoiceEmailTemplate(inv, { logoSrc });
+
+  const brandName = getQuotationCompanyName();
+  return sendEmail({
+    from: emailFromLine(),
+    to: [inv.vendorEmail],
+    cc: [COMPANY_EMAIL],
+    subject: `Purchase Invoice ${inv.invoiceNumber} — ${brandName}`,
+    html,
+    attachments: documentEmailAttachments(
+      `${inv.invoiceNumber}.pdf`,
+      pdfBuffer,
+      inlineAttachments
+    ),
+    reply_to: COMPANY_EMAIL,
+  });
+}

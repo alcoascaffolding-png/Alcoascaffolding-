@@ -7,16 +7,19 @@ import Quotation from "@/models/Quotation";
 import SalesOrder from "@/models/SalesOrder";
 import SalesInvoice from "@/models/SalesInvoice";
 import ContactMessage from "@/models/ContactMessage";
+import Product from "@/models/Product";
+import { markOverdueSalesInvoices, markOverduePurchaseInvoices } from "@/lib/mark-overdue-invoices";
 
 export const GET = withErrorHandler(async () => {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
 
   await connectDB();
+  await Promise.all([markOverdueSalesInvoices(), markOverduePurchaseInvoices()]);
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [customerStats, quotationStats, messageStats, invoiceStats, revenueStats] = await Promise.all([
+  const [customerStats, quotationStats, messageStats, invoiceStats, revenueStats, productStats] = await Promise.all([
     Customer.aggregate([
       {
         $group: {
@@ -62,6 +65,30 @@ export const GET = withErrorHandler(async () => {
       { $match: { invoiceDate: { $gte: thirtyDaysAgo } } },
       { $group: { _id: null, revenue: { $sum: "$total" } } },
     ]),
+    Product.aggregate([
+      { $match: { isActive: { $ne: false } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          lowStock: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gt: ["$minStock", 0] },
+                    { $lte: ["$currentStock", "$minStock"] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+          outOfStock: { $sum: { $cond: [{ $lte: ["$currentStock", 0] }, 1, 0] } },
+        },
+      },
+    ]),
   ]);
 
   return apiSuccess({
@@ -70,5 +97,6 @@ export const GET = withErrorHandler(async () => {
     messages: messageStats[0] || { total: 0, unread: 0 },
     invoices: invoiceStats[0] || { total: 0, paid: 0, overdue: 0, totalValue: 0, collected: 0 },
     revenue: { monthly: revenueStats[0]?.revenue || 0 },
+    products: productStats[0] || { total: 0, lowStock: 0, outOfStock: 0 },
   });
 });

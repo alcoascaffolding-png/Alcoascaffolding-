@@ -1,22 +1,32 @@
 /**
  * Factory to create standard CRUD route handlers for a Mongoose model.
- * Usage in route.js:
- *   export const { GET, POST } = createListHandler(() => import("@/models/Product"), "product");
- *   export const { GET, PATCH, DELETE } = createDetailHandler(() => import("@/models/Product"), "product");
+ * Pass `resourceSlug` (e.g. "products") to enforce RBAC on mutations.
  */
 
-import { auth } from "./auth";
 import { connectDB } from "./db";
-import { apiSuccess, apiError } from "./api-response";
+import { apiSuccess } from "./api-response";
 import { withErrorHandler, AppError } from "./api-error";
+import { authorizeApi } from "./api-guard";
+import { logAudit } from "./audit-log";
+
+function auditMutation(session, action, resourceSlug, doc, resourceName) {
+  const id = doc?._id ?? doc?.id;
+  logAudit({
+    userId: session.user.id,
+    userEmail: session.user.email,
+    action,
+    resource: resourceSlug,
+    resourceId: id,
+    summary: `${action} ${resourceName}${id ? ` ${id}` : ""}`,
+  });
+}
 
 /**
  * Creates GET (list) + POST (create) handlers
  */
-export function createListHandlers(getModel, resourceName) {
+export function createListHandlers(getModel, resourceName, resourceSlug) {
   const GET = withErrorHandler(async (request) => {
-    const session = await auth();
-    if (!session?.user) return apiError("Unauthorized", 401);
+    await authorizeApi(resourceSlug || "dashboard", "read");
 
     await connectDB();
     const Model = (await getModel()).default;
@@ -51,14 +61,14 @@ export function createListHandlers(getModel, resourceName) {
   });
 
   const POST = withErrorHandler(async (request) => {
-    const session = await auth();
-    if (!session?.user) return apiError("Unauthorized", 401);
+    const session = await authorizeApi(resourceSlug, "write");
 
     await connectDB();
     const Model = (await getModel()).default;
     const body = await request.json();
 
     const doc = await Model.create({ ...body, createdBy: session.user.id });
+    auditMutation(session, "create", resourceSlug, doc, resourceName);
     return apiSuccess(doc, 201);
   });
 
@@ -68,10 +78,9 @@ export function createListHandlers(getModel, resourceName) {
 /**
  * Creates GET (detail) + PATCH (update) + DELETE handlers
  */
-export function createDetailHandlers(getModel, resourceName) {
+export function createDetailHandlers(getModel, resourceName, resourceSlug) {
   const GET = withErrorHandler(async (request, { params }) => {
-    const session = await auth();
-    if (!session?.user) return apiError("Unauthorized", 401);
+    await authorizeApi(resourceSlug || "dashboard", "read");
 
     await connectDB();
     const Model = (await getModel()).default;
@@ -81,8 +90,7 @@ export function createDetailHandlers(getModel, resourceName) {
   });
 
   const PATCH = withErrorHandler(async (request, { params }) => {
-    const session = await auth();
-    if (!session?.user) return apiError("Unauthorized", 401);
+    const session = await authorizeApi(resourceSlug, "write");
 
     await connectDB();
     const Model = (await getModel()).default;
@@ -94,17 +102,18 @@ export function createDetailHandlers(getModel, resourceName) {
       { new: true, runValidators: true }
     );
     if (!doc) throw new AppError(`${resourceName} not found`, 404);
+    auditMutation(session, "update", resourceSlug, doc, resourceName);
     return apiSuccess(doc);
   });
 
   const DELETE = withErrorHandler(async (request, { params }) => {
-    const session = await auth();
-    if (!session?.user) return apiError("Unauthorized", 401);
+    const session = await authorizeApi(resourceSlug, "delete");
 
     await connectDB();
     const Model = (await getModel()).default;
     const doc = await Model.findByIdAndDelete(params.id);
     if (!doc) throw new AppError(`${resourceName} not found`, 404);
+    auditMutation(session, "delete", resourceSlug, doc, resourceName);
     return apiSuccess({ deleted: true });
   });
 
@@ -114,11 +123,10 @@ export function createDetailHandlers(getModel, resourceName) {
 /**
  * Creates GET (stats) handler using aggregate
  */
-export function createStatsHandler(getModel) {
+export function createStatsHandler(getModel, resourceSlug) {
   return {
     GET: withErrorHandler(async () => {
-      const session = await auth();
-      if (!session?.user) return apiError("Unauthorized", 401);
+      await authorizeApi(resourceSlug || "dashboard", "read");
 
       await connectDB();
       const Model = (await getModel()).default;

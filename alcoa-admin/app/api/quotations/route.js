@@ -1,16 +1,18 @@
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { authorizeApi } from "@/lib/api-guard";
+import { logAudit } from "@/lib/audit-log";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
+import { parseRequestBody } from "@/lib/validate-request";
+import { quotationCreateSchema } from "@/lib/schemas/quotation";
 import { Customer, Quotation } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
 
 void Customer;
 
 export const GET = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  await authorizeApi("quotations", "read");
 
   await connectDB();
 
@@ -41,11 +43,11 @@ export const GET = withErrorHandler(async (request) => {
 });
 
 export const POST = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("quotations", "write");
 
   await connectDB();
-  const body = await request.json();
+  const rawBody = await request.json();
+  const body = parseRequestBody(quotationCreateSchema, rawBody);
 
   const customerId = await resolveQuotationCustomerId(body, session.user.id);
   const quoteDate = coerceQuotationDate(body.quoteDate, new Date());
@@ -73,5 +75,13 @@ export const POST = withErrorHandler(async (request) => {
   }
 
   const quotation = await Quotation.create({ ...payload, createdBy: session.user.id });
+  logAudit({
+    userId: session.user.id,
+    userEmail: session.user.email,
+    action: "create",
+    resource: "quotations",
+    resourceId: quotation._id,
+    summary: `Created quotation ${quotation.quoteNumber}`,
+  });
   return apiSuccess(quotation, 201);
 });

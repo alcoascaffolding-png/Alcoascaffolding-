@@ -1,12 +1,11 @@
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import ContactMessage from "@/models/ContactMessage";
 
 export const GET = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("contact-messages", "read");
 
   await connectDB();
   const msg = await ContactMessage.findById(params.id).lean();
@@ -21,8 +20,7 @@ export const GET = withErrorHandler(async (request, { params }) => {
 });
 
 export const PATCH = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("contact-messages", "write");
 
   await connectDB();
   const body = await request.json();
@@ -44,8 +42,7 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
 });
 
 export const DELETE = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("contact-messages", "delete");
 
   await connectDB();
   const msg = await ContactMessage.findByIdAndDelete(params.id);

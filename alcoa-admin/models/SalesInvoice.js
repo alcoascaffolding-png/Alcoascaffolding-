@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const lineItemSchema = new mongoose.Schema(
   {
     description: { type: String, required: true, trim: true },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     equipmentType: { type: String, trim: true },
     specifications: { type: String, trim: true },
     size: { type: String, trim: true },

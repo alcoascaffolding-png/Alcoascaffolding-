@@ -6,6 +6,13 @@ const receiptSchema = new mongoose.Schema(
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", index: true },
     customerName: { type: String, required: true, trim: true },
     invoices: [{ type: mongoose.Schema.Types.ObjectId, ref: "SalesInvoice" }],
+    /** Per-invoice payment breakdown for reversal on delete */
+    allocations: [
+      {
+        invoice: { type: mongoose.Schema.Types.ObjectId, ref: "SalesInvoice" },
+        amount: { type: Number, min: 0 },
+      },
+    ],
     receiptDate: { type: Date, default: Date.now },
     amount: { type: Number, required: true, min: 0 },
     paymentMethod: { type: String, enum: ["Cash", "Cheque", "Bank Transfer", "Online", "Other"], default: "Cash" },

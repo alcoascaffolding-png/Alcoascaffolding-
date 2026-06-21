@@ -19,6 +19,7 @@ import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
+import { ExportButton } from "@/components/data-table/ExportButton";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
 import {
@@ -29,7 +30,7 @@ import {
 const API_QUOTATIONS = "/api/quotations";
 
 async function fetchQuotations(params = {}) {
-  const qs = new URLSearchParams(params).toString();
+  const qs = new URLSearchParams({ limit: "200", ...params }).toString();
   const res = await fetch(`/api/quotations?${qs}`);
   const d = await res.json();
   if (!d.success) throw new Error(d.error);
@@ -191,6 +192,7 @@ export function QuotationsClient() {
         searchPlaceholder="Search quotations…"
         onRowClick={(row) => router.push(`/quotations/${String(row._id)}`)}
         emptyMessage="No quotations yet. Create your first quotation."
+        toolbar={<ExportButton resource="quotations" filename="quotations" />}
       />
 
       <AlertDialog

@@ -1,10 +1,33 @@
 /**
  * Rate limiting using Upstash Redis.
- * Falls back gracefully if Redis is not configured (dev environments).
+ * Falls back to in-memory sliding window when Redis is not configured.
  */
 
 let ratelimitInstance = null;
 let redisInstance = null;
+
+/** @type {Map<string, { count: number; resetAt: number }>} */
+const memoryBuckets = new Map();
+
+function checkMemoryRateLimit(key, maxRequests = 10, windowMs = 60 * 60 * 1000) {
+  const now = Date.now();
+  const bucket = memoryBuckets.get(key);
+  if (!bucket || now >= bucket.resetAt) {
+    memoryBuckets.set(key, { count: 1, resetAt: now + windowMs });
+    return { success: true, remaining: maxRequests - 1, reset: new Date(now + windowMs) };
+  }
+  if (bucket.count >= maxRequests) {
+    return { success: false, remaining: 0, reset: new Date(bucket.resetAt) };
+  }
+  bucket.count += 1;
+  return { success: true, remaining: maxRequests - bucket.count, reset: new Date(bucket.resetAt) };
+}
+
+/** Login attempts — 10 per email per hour (in-memory when Redis absent). */
+export function checkLoginRateLimit(email) {
+  const key = `login:${String(email || "").toLowerCase().trim()}`;
+  return checkMemoryRateLimit(key, 10, 60 * 60 * 1000);
+}
 
 async function getRatelimit(requests = 10, window = "1 h") {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
@@ -40,7 +63,11 @@ async function getRatelimit(requests = 10, window = "1 h") {
 export async function checkRateLimit(identifier, requests = 10, window = "1 h") {
   try {
     const limiter = await getRatelimit(requests, window);
-    if (!limiter) return { success: true, remaining: 999, reset: new Date() };
+    if (!limiter) {
+      const windowMs =
+        window === "1 h" ? 60 * 60 * 1000 : window === "15 m" ? 15 * 60 * 1000 : 60 * 60 * 1000;
+      return checkMemoryRateLimit(identifier, requests, windowMs);
+    }
 
     const result = await limiter.limit(identifier);
     return {

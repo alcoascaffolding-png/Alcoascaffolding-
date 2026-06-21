@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import {
   ArrowLeft, Pencil, Trash2, Building2, Mail, Phone, MapPin,
-  Users, CreditCard, Calendar, MessageSquare,
+  Users, CreditCard, Calendar, MessageSquare, FileText, ShoppingCart,
 } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
@@ -78,6 +78,17 @@ export function CustomerDetail({ id }) {
     },
   });
 
+  const { data: salesHistory } = useQuery({
+    queryKey: ["customers", id, "sales-history"],
+    queryFn: async () => {
+      const res = await fetch(`/api/customers/${id}/sales-history`);
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled: !!id,
+  });
+
   const deleteMut = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/customers/${id}`, { method: "DELETE" });
@@ -138,6 +149,7 @@ export function CustomerDetail({ id }) {
       <Tabs defaultValue="overview">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="sales">Sales History</TabsTrigger>
           <TabsTrigger value="contacts">Contacts ({c.contactPersons?.length || 0})</TabsTrigger>
           <TabsTrigger value="addresses">Addresses ({c.addresses?.length || 0})</TabsTrigger>
         </TabsList>
@@ -267,6 +279,90 @@ export function CustomerDetail({ id }) {
                     <Separator />
                     <p className="text-muted-foreground text-xs">{c.notes}</p>
                   </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sales">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Quotations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {salesHistory?.quotations?.length ? (
+                  salesHistory.quotations.map((q) => (
+                    <button
+                      key={q._id}
+                      type="button"
+                      className="w-full text-left flex justify-between gap-2 py-2 border-b last:border-0 hover:bg-muted/50 rounded px-1"
+                      onClick={() => router.push(`/quotations/${q._id}`)}
+                    >
+                      <span className="font-mono text-sm">{q.quoteNumber}</span>
+                      <span className="text-xs text-muted-foreground capitalize">{q.status}</span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No quotations yet.</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  Sales Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {salesHistory?.salesOrders?.length ? (
+                  salesHistory.salesOrders.map((so) => (
+                    <button
+                      key={so._id}
+                      type="button"
+                      className="w-full text-left flex justify-between gap-2 py-2 border-b last:border-0 hover:bg-muted/50 rounded px-1"
+                      onClick={() => router.push(`/sales-orders/${so._id}`)}
+                    >
+                      <span className="font-mono text-sm">{so.orderNumber}</span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {String(so.status || "").replace(/_/g, " ")}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No sales orders yet.</p>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Tax Invoices
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {salesHistory?.salesInvoices?.length ? (
+                  salesHistory.salesInvoices.map((inv) => (
+                    <button
+                      key={inv._id}
+                      type="button"
+                      className="w-full text-left flex justify-between gap-2 py-2 border-b last:border-0 hover:bg-muted/50 rounded px-1"
+                      onClick={() => router.push(`/sales-invoices/${inv._id}`)}
+                    >
+                      <span className="font-mono text-sm">{inv.invoiceNumber}</span>
+                      <span className="text-xs text-muted-foreground capitalize">
+                        {String(inv.paymentStatus || "").replace(/_/g, " ")}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No tax invoices yet.</p>
                 )}
               </CardContent>
             </Card>

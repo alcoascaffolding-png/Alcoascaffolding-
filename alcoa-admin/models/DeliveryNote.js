@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const deliveryLineItemSchema = new mongoose.Schema(
   {
     description: { type: String, required: true, trim: true },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     equipmentType: { type: String, trim: true },
     specifications: { type: String, trim: true },
     size: { type: String, trim: true },
@@ -42,9 +43,18 @@ const deliveryNoteSchema = new mongoose.Schema(
       default: "draft",
       index: true,
     },
+    /** delivery = outbound stock decrease; return = inbound stock increase (off-hire) */
+    noteType: {
+      type: String,
+      enum: ["delivery", "return"],
+      default: "delivery",
+      index: true,
+    },
     items: [deliveryLineItemSchema],
     notes: { type: String, trim: true },
     deliveryInstructions: { type: String, trim: true },
+    /** True after outbound stock was decreased for status delivered */
+    stockApplied: { type: Boolean, default: false },
     sentDate: { type: Date },
     emailsSent: [
       {

@@ -1,6 +1,12 @@
-# Alcoa Aluminium Scaffolding - Admin Panel
+# Alcoa Aluminium Scaffolding — Monorepo
 
-A comprehensive full-stack Admin Management System for **Alcoa Aluminium Scaffolding** built using the MERN stack (MongoDB, Express.js, React.js, Node.js).
+Full-stack project for **Alcoa Aluminium Scaffolding** with three apps:
+
+| Folder | Purpose | Stack |
+|--------|---------|-------|
+| `frontend/` | Public marketing website | Vite + React |
+| `backend/` | Legacy Express API (Render) | Node.js + Express + MongoDB |
+| `alcoa-admin/` | Admin panel | Next.js 16 + NextAuth + MongoDB |
 
 ## 🚀 Features
 
@@ -82,71 +88,32 @@ A comprehensive full-stack Admin Management System for **Alcoa Aluminium Scaffol
 ## 📁 Project Structure
 
 ```
-alcoa-scaffolding/
-├── backend/
+alco-aluminium-scaffolding/
+├── frontend/          # Public website (Vite + React)
+│   ├── src/
+│   ├── public/
+│   └── package.json
+│
+├── backend/           # Express API (deployed on Render)
 │   ├── config/
-│   │   ├── app.config.js
-│   │   ├── auth.config.js
-│   │   └── database.js
 │   ├── controllers/
-│   │   └── auth.controller.js
-│   ├── middleware/
-│   │   ├── auth.js
-│   │   ├── errorHandler.js
-│   │   ├── rateLimiter.js
-│   │   └── security.js
 │   ├── models/
-│   │   ├── User.js
-│   │   ├── Customer.js
-│   │   ├── Vendor.js
-│   │   ├── Product.js
-│   │   ├── Quote.js
-│   │   ├── SalesOrder.js
-│   │   ├── SalesInvoice.js
-│   │   ├── PurchaseOrder.js
-│   │   ├── PurchaseInvoice.js
-│   │   ├── StockAdjustment.js
-│   │   ├── BankAccount.js
-│   │   ├── Receipt.js
-│   │   ├── Payment.js
-│   │   └── ... (and more)
 │   ├── routes/
-│   │   ├── auth.routes.js
-│   │   └── admin.routes.js
-│   ├── utils/
-│   │   ├── crudFactory.js
-│   │   └── logger.js
 │   ├── server.js
 │   └── package.json
 │
-├── admin-panel/
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── axios.js
-│   │   ├── components/
-│   │   │   ├── auth/
-│   │   │   ├── common/
-│   │   │   └── layout/
-│   │   ├── pages/
-│   │   │   ├── auth/
-│   │   │   ├── customers/
-│   │   │   ├── vendors/
-│   │   │   ├── products/
-│   │   │   ├── sales/
-│   │   │   ├── purchase/
-│   │   │   ├── inventory/
-│   │   │   └── accounts/
-│   │   ├── store/
-│   │   │   ├── slices/
-│   │   │   └── store.js
-│   │   ├── utils/
-│   │   │   └── exportUtils.js
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── tailwind.config.js
+├── alcoa-admin/       # Admin panel (Next.js, deployed on Vercel)
+│   ├── app/           # App Router pages + API routes
+│   ├── components/
+│   ├── lib/
+│   ├── models/
+│   ├── scripts/
+│   ├── docs/
+│   └── package.json
 │
-└── README.md
+├── package.json       # Root scripts (frontend build for Vercel)
+├── render.yaml        # Render deployment (backend)
+└── vercel.json        # Vercel deployment (frontend)
 ```
 
 ## 🚀 Getting Started
@@ -174,7 +141,7 @@ npm install
 PORT=5000
 NODE_ENV=development
 
-# MongoDB (see docs/mongodb-dev-prod.md)
+# MongoDB (see alcoa-admin/docs/mongodb-dev-prod.md)
 APP_ENV=development
 MONGODB_URI=mongodb+srv://USER:PASS@cluster.mongodb.net/?retryWrites=true&w=majority
 MONGODB_DB_NAME=alcoa-admin-dev
@@ -203,11 +170,11 @@ npm start
 
 The backend will run on `http://localhost:5000`
 
-### Admin Panel Setup
+### Admin Panel Setup (Next.js)
 
-1. Navigate to admin-panel directory:
+1. Navigate to the admin directory:
 ```bash
-cd admin-panel
+cd alcoa-admin
 ```
 
 2. Install dependencies:
@@ -215,9 +182,9 @@ cd admin-panel
 npm install
 ```
 
-3. Create `.env` file:
-```env
-VITE_API_URL=http://localhost:5000/api
+3. Copy environment file and configure:
+```bash
+cp .env.example .env.local
 ```
 
 4. Start the development server:
@@ -225,7 +192,22 @@ VITE_API_URL=http://localhost:5000/api
 npm run dev
 ```
 
-The admin panel will run on `http://localhost:5173`
+The admin panel will run on `http://localhost:3000`. See `alcoa-admin/README.md` for full setup details.
+
+### Public Website Setup (Vite)
+
+1. Navigate to the frontend directory:
+```bash
+cd frontend
+```
+
+2. Install dependencies and start:
+```bash
+npm install
+npm run dev
+```
+
+The public site will run on `http://localhost:5173`
 
 ### Creating the First Admin User
 

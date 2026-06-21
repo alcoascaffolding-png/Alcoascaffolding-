@@ -121,4 +121,26 @@ export const EXPORT_COLUMNS = {
     { header: "Stock", key: "currentStock", width: 12 },
     { header: "Status", key: "isActive", width: 10 },
   ],
+  "sales-orders": [
+    { header: "Order #", key: "orderNumber", width: 16 },
+    { header: "Customer", key: "customerName", width: 30 },
+    { header: "Order Date", key: "orderDate", width: 14 },
+    { header: "Status", key: "status", width: 14 },
+    { header: "Total (AED)", key: "total", width: 18, numFmt: "#,##0.00" },
+  ],
+  "sales-invoices": [
+    { header: "Invoice #", key: "invoiceNumber", width: 16 },
+    { header: "Customer", key: "customerName", width: 30 },
+    { header: "Invoice Date", key: "invoiceDate", width: 14 },
+    { header: "Payment Status", key: "paymentStatus", width: 16 },
+    { header: "Total (AED)", key: "total", width: 18, numFmt: "#,##0.00" },
+    { header: "Balance (AED)", key: "balance", width: 18, numFmt: "#,##0.00" },
+  ],
+  "delivery-notes": [
+    { header: "DN #", key: "deliveryNoteNumber", width: 16 },
+    { header: "Customer", key: "customerName", width: 30 },
+    { header: "Delivery Date", key: "deliveryDate", width: 14 },
+    { header: "Status", key: "status", width: 14 },
+    { header: "Driver", key: "driverName", width: 18 },
+  ],
 };

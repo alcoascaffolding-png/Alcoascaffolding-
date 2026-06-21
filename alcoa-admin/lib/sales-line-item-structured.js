@@ -2,6 +2,7 @@
 export function pickStructuredLineItemFields(item) {
   if (!item) return {};
   const out = {};
+  if (item.productId) out.product = item.productId;
   if (item.equipmentType) out.equipmentType = item.equipmentType;
   if (item.specifications) out.specifications = item.specifications;
   if (item.size) out.size = item.size;
@@ -16,7 +17,12 @@ export function mapExistingLineItemToForm(it) {
     quantity: it.quantity,
     unit: it.unit || "Nos",
     unitPrice: it.unitPrice,
-    ...pickStructuredLineItemFields(it),
+    productId: it.product ? String(it.product) : "",
+    currentStock: undefined,
+    ...pickStructuredLineItemFields({
+      ...it,
+      productId: it.product ? String(it.product) : "",
+    }),
   };
 }
 

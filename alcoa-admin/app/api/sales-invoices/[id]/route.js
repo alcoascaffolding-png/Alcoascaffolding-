@@ -1,10 +1,14 @@
 import mongoose from "mongoose";
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
+import {
+  validateSalesInvoicePayment,
+  applySalesInvoicePaymentFields,
+} from "@/lib/sales-invoice-payment";
 
 void Customer;
 
@@ -16,8 +20,7 @@ function toObjectId(value) {
 }
 
 export const GET = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-invoices", "read");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -34,8 +37,7 @@ export const GET = withErrorHandler(async (request, context) => {
 });
 
 export const PATCH = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-invoices", "write");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -72,11 +74,19 @@ export const PATCH = withErrorHandler(async (request, context) => {
     }
   }
 
-  const doc = await SalesInvoice.findByIdAndUpdate(params.id, patch, {
-    new: true,
-    runValidators: true,
-  });
+  const doc = await SalesInvoice.findById(params.id);
   if (!doc) throw new AppError("Tax Invoice not found", 404);
+
+  Object.assign(doc, patch);
+  if (doc.items?.length) doc.recalculateTotals();
+
+  validateSalesInvoicePayment({
+    paymentStatus: doc.paymentStatus,
+    paidAmount: doc.paidAmount,
+    total: doc.total,
+  });
+  applySalesInvoicePaymentFields(doc);
+  await doc.save();
 
   const populated = await SalesInvoice.findById(doc._id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
@@ -86,8 +96,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
 });
 
 export const DELETE = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-invoices", "delete");
 
   const params =
     context.params && typeof context.params.then === "function"

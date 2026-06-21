@@ -1,7 +1,8 @@
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { authorizeApi } from "@/lib/api-guard";
+import { logAudit } from "@/lib/audit-log";
 import { applyQuotationPatch, normalizeQuotationPatchCustomer } from "@/lib/quotation-save";
 import { ensureSalesOrderFromQuotation } from "@/lib/convert-quotation-to-sales-order";
 import {
@@ -13,10 +14,12 @@ import { Customer, Quotation } from "@/lib/mongoose-models";
 void Customer;
 import { getLinkedDocumentsForQuotation } from "@/lib/quotation-linked-documents";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
+import { assertQuotationSafeToDelete } from "@/lib/sales-document-delete-guards";
+import { parseRequestBody } from "@/lib/validate-request";
+import { quotationPatchSchema } from "@/lib/schemas/quotation";
 
 export const GET = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  await authorizeApi("quotations", "read");
 
   await connectDB();
   const q = await Quotation.findById(params.id)
@@ -28,11 +31,11 @@ export const GET = withErrorHandler(async (request, { params }) => {
 });
 
 export const PATCH = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("quotations", "write");
 
   await connectDB();
-  const body = await request.json();
+  const rawBody = await request.json();
+  const body = parseRequestBody(quotationPatchSchema, rawBody);
 
   const doc = await Quotation.findById(params.id);
   if (!doc) throw new AppError("Quotation not found", 404);
@@ -86,10 +89,10 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
 });
 
 export const DELETE = withErrorHandler(async (request, { params }) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("quotations", "delete");
 
   await connectDB();
+  await assertQuotationSafeToDelete(params.id);
   const q = await Quotation.findByIdAndDelete(params.id);
   if (!q) throw new AppError("Quotation not found", 404);
   return apiSuccess({ deleted: true });

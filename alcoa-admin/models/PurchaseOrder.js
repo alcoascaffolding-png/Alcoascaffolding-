@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const lineItemSchema = new mongoose.Schema(
   {
     description: { type: String, required: true, trim: true },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     quantity: { type: Number, required: true, min: 0 },
     unit: { type: String, default: "Nos", trim: true },
     unitPrice: { type: Number, required: true, min: 0 },
@@ -30,6 +31,8 @@ const purchaseOrderSchema = new mongoose.Schema(
     total: { type: Number, default: 0, min: 0 },
     currency: { type: String, default: "AED" },
     notes: { type: String, trim: true },
+    /** True after inbound stock was increased for status received */
+    stockApplied: { type: Boolean, default: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

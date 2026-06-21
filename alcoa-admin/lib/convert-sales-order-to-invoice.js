@@ -82,8 +82,10 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   }
 
   const lineSubtotal = items.reduce((s, it) => s + Number(it.total || 0), 0);
+  const subtotal = Number(order.subtotal) > 0 ? Number(order.subtotal) : lineSubtotal;
   const vatAmount = Number(order.vatAmount) || 0;
-  const total = lineSubtotal + vatAmount;
+  const total =
+    Number(order.total) > 0 ? Number(order.total) : Math.round((subtotal + vatAmount) * 100) / 100;
   const invoiceDate = new Date();
   const dueDate = new Date(invoiceDate.getTime() + 30 * 86400000);
 
@@ -130,7 +132,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
       dueDate,
       paymentStatus: "unpaid",
       items,
-      subtotal: lineSubtotal,
+      subtotal,
       vatAmount,
       total,
       paidAmount: 0,

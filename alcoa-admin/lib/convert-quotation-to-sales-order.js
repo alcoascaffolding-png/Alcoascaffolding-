@@ -4,30 +4,7 @@ import Quotation from "@/models/Quotation";
 import { AppError } from "@/lib/api-error";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
-
-function quotationItemsToOrderItems(items) {
-  return (items || []).map((it) => {
-    const qty = Number(it.quantity) || 1;
-    const rate = Number(it.ratePerUnit) || 0;
-    const lineSub = Number(it.subtotal ?? qty * rate);
-    const desc =
-      [it.equipmentType, it.description].filter(Boolean).join(" — ") ||
-      it.description ||
-      "Line item";
-    return {
-      description: desc,
-      equipmentType: it.equipmentType || undefined,
-      specifications: it.specifications || undefined,
-      size: it.size || undefined,
-      weight: it.weight != null ? Number(it.weight) : undefined,
-      cbm: it.cbm != null ? Number(it.cbm) : undefined,
-      quantity: qty,
-      unit: it.unit || "Nos",
-      unitPrice: rate,
-      total: lineSub,
-    };
-  });
-}
+import { buildSalesOrderPayloadFromQuotation } from "@/lib/quotation-conversion-totals";
 
 /**
  * When a quotation is marked converted, ensure a linked sales order exists.
@@ -68,11 +45,7 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     };
   }
 
-  const items = quotationItemsToOrderItems(q.items);
-  const lineSubtotal = items.reduce((s, it) => s + Number(it.total || 0), 0);
-  const vatAmount =
-    Number(q.vatAmount) ||
-    Math.round((lineSubtotal * Number(q.vatPercentage || 5)) / 100 * 100) / 100;
+  const { items, subtotal, vatAmount, total } = buildSalesOrderPayloadFromQuotation(q);
 
   const orderNumber = await resolveOrderNumberForCreate(
     { quotationId: qid, orderDate: q.quoteDate || new Date() },
@@ -92,9 +65,9 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     deliveryDate: q.deliveryDate || q.validUntil || undefined,
     status: "confirmed",
     items,
-    subtotal: lineSubtotal,
+    subtotal,
     vatAmount,
-    total: lineSubtotal + vatAmount,
+    total,
     currency: q.currency || "AED",
     notes: q.notes || undefined,
     createdBy: createdByUserId,

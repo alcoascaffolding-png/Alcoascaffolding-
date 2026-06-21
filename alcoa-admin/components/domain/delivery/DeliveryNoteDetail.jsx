@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { mapDeliveryNoteItemsForDisplay } from "@/lib/map-delivery-note-for-pdf";
 import {
@@ -120,6 +121,9 @@ export function DeliveryNoteDetail({ id }) {
             value={n.status}
             detailQueryKey={["delivery-notes", "detail", id]}
           />
+          {n.noteType === "return" && (
+            <Badge variant="secondary">Return / off-hire</Badge>
+          )}
         </div>
         <DocumentDetailToolbar
           sending={sending}

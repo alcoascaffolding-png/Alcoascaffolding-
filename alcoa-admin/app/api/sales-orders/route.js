@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { Customer, Quotation, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
 
 void Customer;
 
@@ -19,8 +20,7 @@ function toObjectId(value) {
 }
 
 export const GET = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-orders", "read");
 
   await connectDB();
   const { searchParams } = new URL(request.url);
@@ -53,8 +53,7 @@ export const GET = withErrorHandler(async (request) => {
 });
 
 export const POST = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-orders", "write");
 
   await connectDB();
   const body = await request.json();
@@ -108,6 +107,12 @@ export const POST = withErrorHandler(async (request) => {
     );
   } catch (err) {
     throw new AppError(err.message || "Could not assign order number", 400);
+  }
+
+  if (payload.status === "confirmed") {
+    const subtotal = (items || []).reduce((s, row) => s + Number(row.total || 0), 0);
+    const total = subtotal + Number(vatAmount) || 0;
+    await assertCustomerCreditForOrder({ customerId, additionalAmount: total });
   }
 
   const doc = await SalesOrder.create({ ...payload, createdBy: session.user.id });

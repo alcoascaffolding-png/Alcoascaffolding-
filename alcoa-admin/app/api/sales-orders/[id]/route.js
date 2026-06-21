@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { Customer, Quotation, SalesOrder } from "@/lib/mongoose-models";
+import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 
 void Customer;
@@ -13,6 +13,9 @@ import {
   ensureSalesInvoiceFromSalesOrder,
   SALES_ORDER_INVOICE_STATUS,
 } from "@/lib/convert-sales-order-to-invoice";
+import { assertSalesOrderSafeToDelete } from "@/lib/sales-document-delete-guards";
+import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
+import { computeSalesOrderDeliveryFulfillment } from "@/lib/sales-order-delivery-fulfillment";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -22,8 +25,7 @@ function toObjectId(value) {
 }
 
 export const GET = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-orders", "read");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -36,12 +38,22 @@ export const GET = withErrorHandler(async (request, context) => {
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
   if (!doc) throw new AppError("Sales Order not found", 404);
-  return apiSuccess(doc);
+
+  const linkedSalesInvoice = await SalesInvoice.findOne({ salesOrder: doc._id })
+    .select("_id invoiceNumber paymentStatus total paidAmount balance")
+    .lean();
+
+  const deliveryFulfillment = await computeSalesOrderDeliveryFulfillment(doc._id);
+
+  return apiSuccess({
+    ...doc,
+    linkedSalesInvoice: linkedSalesInvoice || null,
+    deliveryFulfillment,
+  });
 });
 
 export const PATCH = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-orders", "write");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -56,6 +68,17 @@ export const PATCH = withErrorHandler(async (request, context) => {
 
   const prevStatus = prev.status;
   const patch = { ...body };
+
+  const targetStatus = patch.status ?? prevStatus;
+  if (
+    targetStatus === "confirmed" &&
+    prevStatus !== "confirmed" &&
+    !["invoiced", "delivered", "completed", "cancelled"].includes(prevStatus)
+  ) {
+    const orderTotal = Number(patch.total ?? prev.total) || 0;
+    const customerId = patch.customer ?? prev.customer;
+    await assertCustomerCreditForOrder({ customerId, additionalAmount: orderTotal });
+  }
 
   if (
     Object.prototype.hasOwnProperty.call(patch, "status") &&
@@ -141,8 +164,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
 });
 
 export const DELETE = withErrorHandler(async (request, context) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("sales-orders", "delete");
 
   const params =
     context.params && typeof context.params.then === "function"
@@ -151,6 +173,10 @@ export const DELETE = withErrorHandler(async (request, context) => {
 
   await connectDB();
   const prev = await SalesOrder.findById(params.id).lean();
+  if (!prev) throw new AppError("Sales Order not found", 404);
+
+  await assertSalesOrderSafeToDelete(params.id);
+
   const doc = await SalesOrder.findByIdAndDelete(params.id);
   if (!doc) throw new AppError("Sales Order not found", 404);
 

@@ -693,6 +693,9 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     options;
   const isSalesOrder = docKind === "salesOrder";
   const isSalesInvoice = docKind === "salesInvoice";
+  const isPurchaseOrder = docKind === "purchaseOrder";
+  const isPurchaseInvoice = docKind === "purchaseInvoice";
+  const isPurchase = isPurchaseOrder || isPurchaseInvoice;
   const {
     quoteNumber = "",
     customerName = "",
@@ -735,12 +738,20 @@ function buildQuotationPdfLayout(quotation, options = {}) {
       ? `Sales Order ${quoteNumber}`
       : isSalesInvoice
         ? `Tax Invoice ${quoteNumber}`
-        : `Quotation ${quoteNumber}`);
+        : isPurchaseOrder
+          ? `Purchase Order ${quoteNumber}`
+          : isPurchaseInvoice
+            ? `Purchase Invoice ${quoteNumber}`
+            : `Quotation ${quoteNumber}`);
   const docTitle = isSalesOrder
     ? "SALES ORDER"
     : isSalesInvoice
       ? "TAX INVOICE"
-      : "QUOTATION";
+      : isPurchaseOrder
+        ? "PURCHASE ORDER"
+        : isPurchaseInvoice
+          ? "PURCHASE INVOICE"
+          : "QUOTATION";
   const displayBalance =
     balance != null
       ? Number(balance)
@@ -758,7 +769,19 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
               <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
               <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>`
-      : `
+      : isPurchaseOrder
+        ? `
+              <tr><td class="mini-label">PO No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Order Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Status</td><td>${String(status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Delivery Date</td><td>${formatDate(validUntil)}</td></tr>`
+        : isPurchaseInvoice
+          ? `
+              <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
+              <tr><td class="mini-label">Invoice Date</td><td>${formatDate(quoteDate)}</td></tr>
+              <tr><td class="mini-label">Payment Status</td><td>${String(paymentStatus || status || "-").replace(/_/g, " ")}</td></tr>
+              <tr><td class="mini-label">Due Date</td><td>${formatDate(validUntil)}</td></tr>`
+          : `
               <tr><td class="mini-label">Quotation No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Date</td><td>${formatDate(quoteDate)}</td></tr>
               <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
@@ -787,6 +810,11 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 2. Payment terms: ${paymentTerms}.
 3. Please quote invoice number on all remittances.
 4. Late payment may incur charges per our credit terms.`
+      : isPurchase
+        ? `1. All amounts are in AED unless otherwise stated.
+2. Goods/services as per the line items above.
+3. Delivery and payment per vendor agreement.
+4. This document is for internal procurement records.`
       : `1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
 2. This quotation is valid for 30 days from the date of issue.
 3. Payment terms: ${paymentTerms}.
@@ -1026,7 +1054,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
         <div class="head-grid">
           <div class="box">
             <table class="head-mini-table">
-              <tr><td class="mini-label">Customer Name</td><td>${escapeHtml(customerName || "-")}</td></tr>
+              <tr><td class="mini-label">${isPurchase ? "Vendor Name" : "Customer Name"}</td><td>${escapeHtml(customerName || "-")}</td></tr>
               <tr><td class="mini-label">Address</td><td>${escapeHtml(customerAddress || "-")}</td></tr>
               <tr><td class="mini-label">Mobile No</td><td>${escapeHtml(customerPhone || "-")}</td></tr>
               <tr><td class="mini-label">TRN</td><td>${escapeHtml(customerTRN || "-")}</td></tr>

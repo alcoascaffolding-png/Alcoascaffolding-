@@ -21,9 +21,11 @@ import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { customerSnapshotToQuotationFormPatch } from "@/lib/map-customer-to-quotation";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
+import { ProductPicker } from "@/components/shared/ProductPicker";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
+  productId: z.string().optional(),
   equipmentType: z.string().optional(),
   specifications: z.string().optional(),
   size: z.string().optional(),
@@ -48,14 +50,30 @@ const noteSchema = z.object({
   contactPersonName: z.string().optional(),
   contactPersonPhone: z.string().optional(),
   status: z.enum(["draft", "ready", "dispatched", "in_transit", "delivered", "cancelled"]),
+  noteType: z.enum(["delivery", "return"]).default("delivery"),
   items: z.array(lineItemSchema).min(1, "At least one line item"),
   notes: z.string().optional(),
   deliveryInstructions: z.string().optional(),
 });
 
 const today = new Date().toISOString().split("T")[0];
+function mapDnItemToForm(it) {
+  return {
+    description: it.description || it.equipmentType || "",
+    productId: it.product ? String(it.product) : "",
+    equipmentType: it.equipmentType || "",
+    specifications: it.specifications || "",
+    size: it.size || "",
+    weight: Number(it.weight) || 0,
+    cbm: Number(it.cbm) || 0,
+    quantity: it.quantity,
+    unit: it.unit || "Nos",
+  };
+}
+
 const defaultItem = {
   description: "",
+  productId: "",
   equipmentType: "",
   specifications: "",
   size: "",
@@ -64,6 +82,34 @@ const defaultItem = {
   quantity: 1,
   unit: "Nos",
 };
+
+function findFulfillmentLine(fulfillment, item, index) {
+  if (!fulfillment?.lines?.length || !item) return null;
+  if (item.productId) {
+    const byProduct = fulfillment.lines.find(
+      (l) => l.productId && String(l.productId) === String(item.productId)
+    );
+    if (byProduct) return byProduct;
+  }
+  const desc = String(item.equipmentType || item.description || "")
+    .trim()
+    .toLowerCase();
+  if (desc) {
+    const byDesc = fulfillment.lines.find(
+      (l) =>
+        String(l.description || l.equipmentType || "")
+          .trim()
+          .toLowerCase() === desc
+    );
+    if (byDesc) return byDesc;
+  }
+  return fulfillment.lines[index] || null;
+}
+
+const noteTypeOpts = [
+  { value: "delivery", label: "Delivery (outbound)" },
+  { value: "return", label: "Return / off-hire (inbound)" },
+];
 
 const statusOpts = [
   "draft",
@@ -114,6 +160,7 @@ export function DeliveryNoteFormPage({ id }) {
       contactPersonName: "",
       contactPersonPhone: "",
       status: "draft",
+      noteType: "delivery",
       items: [{ ...defaultItem }],
       notes: "",
       deliveryInstructions: "",
@@ -160,18 +207,10 @@ export function DeliveryNoteFormPage({ id }) {
       contactPersonName: existing.contactPersonName || "",
       contactPersonPhone: existing.contactPersonPhone || "",
       status: existing.status || "draft",
+      noteType: existing.noteType === "return" ? "return" : "delivery",
       items:
         existing.items?.length > 0
-          ? existing.items.map((it) => ({
-              description: it.description || it.equipmentType || "",
-              equipmentType: it.equipmentType || "",
-              specifications: it.specifications || "",
-              size: it.size || "",
-              weight: Number(it.weight) || 0,
-              cbm: Number(it.cbm) || 0,
-              quantity: it.quantity,
-              unit: it.unit || "Nos",
-            }))
+          ? existing.items.map(mapDnItemToForm)
           : [{ ...defaultItem }],
       notes: existing.notes || "",
       deliveryInstructions: existing.deliveryInstructions || "",
@@ -209,16 +248,7 @@ export function DeliveryNoteFormPage({ id }) {
       status: "draft",
       items:
         prefillFromSo.items?.length > 0
-          ? prefillFromSo.items.map((it) => ({
-              description: it.description || it.equipmentType || "",
-              equipmentType: it.equipmentType || "",
-              specifications: it.specifications || "",
-              size: it.size || "",
-              weight: Number(it.weight) || 0,
-              cbm: Number(it.cbm) || 0,
-              quantity: it.quantity,
-              unit: it.unit || "Nos",
-            }))
+          ? prefillFromSo.items.map(mapDnItemToForm)
           : [{ ...defaultItem }],
       notes: prefillFromSo.notes || "",
       deliveryInstructions: "",
@@ -226,6 +256,13 @@ export function DeliveryNoteFormPage({ id }) {
       vehicleNumber: "",
     });
     toast.success(`Prefilled from sales order ${prefillFromSo.salesOrderNumber || ""}`);
+    if (prefillFromSo.deliveryFulfillment?.summary?.fullyDelivered) {
+      toast.warning(
+        "This sales order is fully delivered. Remaining qty is zero — adjust lines manually if needed."
+      );
+    } else if (!prefillFromSo.items?.length) {
+      toast.info("No remaining quantity to deliver on this sales order.");
+    }
   }, [isEdit, prefillLoaded, prefillFromSo, form]);
 
   const loadedCustomerId = useMemo(() => {
@@ -294,6 +331,25 @@ export function DeliveryNoteFormPage({ id }) {
 
   const lastSyncedSalesOrderRef = useRef("__none__");
   const selectedSalesOrderId = useWatch({ control: form.control, name: "salesOrder" });
+  const noteType = useWatch({ control: form.control, name: "noteType" });
+
+  const { data: soFulfillment } = useQuery({
+    queryKey: ["sales-orders", "delivery-fulfillment", selectedSalesOrderId, isEdit ? id : null],
+    queryFn: async () => {
+      const qs = isEdit && id ? `?excludeDeliveryNote=${encodeURIComponent(id)}` : "";
+      const res = await fetch(
+        `/api/sales-orders/${selectedSalesOrderId}/delivery-fulfillment${qs}`
+      );
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled:
+      !!selectedSalesOrderId &&
+      selectedSalesOrderId !== "__none__" &&
+      noteType === "delivery",
+    staleTime: 15 * 1000,
+  });
 
   useEffect(() => {
     if (!selectedSalesOrderId || selectedSalesOrderId === "__none__") return;
@@ -325,18 +381,14 @@ export function DeliveryNoteFormPage({ id }) {
         if (p.items?.length) {
           form.setValue(
             "items",
-            p.items.map((it) => ({
-              description: it.description || it.equipmentType || "",
-              equipmentType: it.equipmentType || "",
-              specifications: it.specifications || "",
-              size: it.size || "",
-              weight: Number(it.weight) || 0,
-              cbm: Number(it.cbm) || 0,
-              quantity: it.quantity,
-              unit: it.unit || "Nos",
-            })),
+            p.items.map(mapDnItemToForm),
             { shouldDirty: true }
           );
+        } else {
+          form.setValue("items", [{ ...defaultItem }], { shouldDirty: true });
+          if (p.deliveryFulfillment?.summary?.fullyDelivered) {
+            toast.warning("Sales order fully delivered — no remaining qty to prefill.");
+          }
         }
         if (p.notes) form.setValue("notes", p.notes, { shouldDirty: true });
         toast.success("Filled from sales order");
@@ -356,11 +408,13 @@ export function DeliveryNoteFormPage({ id }) {
   }, [isEdit, existing]);
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
+  const watchedItems = useWatch({ control: form.control, name: "items" });
 
   const saveMut = useMutation({
     mutationFn: async (values) => {
       const items = values.items.map((item) => ({
         description: item.description,
+        product: item.productId || undefined,
         equipmentType: item.equipmentType || item.description,
         specifications: item.specifications || undefined,
         size: item.size || undefined,
@@ -382,6 +436,7 @@ export function DeliveryNoteFormPage({ id }) {
         contactPersonName: values.contactPersonName || undefined,
         contactPersonPhone: values.contactPersonPhone || undefined,
         status: values.status,
+        noteType: values.noteType || "delivery",
         items,
         notes: values.notes || undefined,
         deliveryInstructions: values.deliveryInstructions || undefined,
@@ -478,6 +533,7 @@ export function DeliveryNoteFormPage({ id }) {
               type="date"
             />
             <FormSelectField control={form.control} name="status" label="Status" options={statusOpts} />
+            <FormSelectField control={form.control} name="noteType" label="Note type" options={noteTypeOpts} />
             <FormTextField
               control={form.control}
               name="deliveryAddress"
@@ -494,17 +550,54 @@ export function DeliveryNoteFormPage({ id }) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Items to deliver</CardTitle>
+            <div>
+              <CardTitle className="text-base">Items to deliver</CardTitle>
+              {soFulfillment?.summary && noteType === "delivery" && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {soFulfillment.summary.totalRemaining.toFixed(0)} qty remaining on sales order
+                  {soFulfillment.summary.totalPending > 0
+                    ? ` (${soFulfillment.summary.totalPending.toFixed(0)} in open notes)`
+                    : ""}
+                </p>
+              )}
+            </div>
             <Button type="button" size="sm" variant="outline" onClick={() => append({ ...defaultItem })}>
               <Plus className="h-4 w-4 mr-1" /> Add line
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.map((field, index) => (
+            {fields.map((field, index) => {
+              const lineItem = watchedItems?.[index];
+              const fLine =
+                noteType === "delivery" && soFulfillment
+                  ? findFulfillmentLine(soFulfillment, lineItem, index)
+                  : null;
+              const qtyExceeds =
+                fLine != null && Number(lineItem?.quantity) > fLine.remainingQty + 0.0001;
+              return (
               <div
                 key={field.id}
                 className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b pb-4 last:border-0"
               >
+                <div className="md:col-span-12">
+                  <p className="text-xs text-muted-foreground mb-1">Product (for stock tracking)</p>
+                  <ProductPicker
+                    value={watchedItems?.[index]?.productId || ""}
+                    quoteType="sales"
+                    onSelect={(product) => {
+                      if (!product) {
+                        form.setValue(`items.${index}.productId`, "");
+                        return;
+                      }
+                      form.setValue(`items.${index}.productId`, String(product._id));
+                      form.setValue(`items.${index}.equipmentType`, product.name || "");
+                      if (!watchedItems?.[index]?.description) {
+                        form.setValue(`items.${index}.description`, product.name || "");
+                      }
+                      form.setValue(`items.${index}.unit`, product.unit || "Nos");
+                    }}
+                  />
+                </div>
                 <div className="md:col-span-4">
                   <FormTextField
                     control={form.control}
@@ -518,6 +611,17 @@ export function DeliveryNoteFormPage({ id }) {
                     name={`items.${index}.quantity`}
                     label="Qty"
                   />
+                  {fLine != null && (
+                    <p
+                      className={`text-xs mt-1 ${
+                        qtyExceeds ? "text-destructive font-medium" : "text-muted-foreground"
+                      }`}
+                    >
+                      {qtyExceeds
+                        ? `Exceeds remaining ${fLine.remainingQty} ${fLine.unit}`
+                        : `${fLine.remainingQty} remaining`}
+                    </p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <FormSelectField
@@ -550,7 +654,8 @@ export function DeliveryNoteFormPage({ id }) {
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 

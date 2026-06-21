@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, Truck, Banknote } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import {
@@ -159,6 +159,14 @@ export function SalesInvoiceDetail({ id }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {balance > 0.01 && inv.paymentStatus !== "paid" && (
+            <Link href={`/receipts?invoice=${id}`}>
+              <Button variant="default" size="sm">
+                <Banknote className="h-4 w-4 mr-1" />
+                Record Receipt
+              </Button>
+            </Link>
+          )}
           {salesOrderId ? (
             <Link href={`/delivery-notes/new?salesOrder=${salesOrderId}`}>
               <Button variant="outline" size="sm">

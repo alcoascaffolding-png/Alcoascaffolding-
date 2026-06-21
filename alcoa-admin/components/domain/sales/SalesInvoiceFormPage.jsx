@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,12 @@ import {
   buildLineItemSavePayload,
   mapExistingLineItemToForm,
 } from "@/lib/sales-line-item-structured";
+import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
+import { mapProductToSalesLine } from "@/lib/map-product-to-quotation-line";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
+  productId: z.string().optional(),
   quantity: z.coerce.number().min(0.01),
   unit: z.string().default("Nos"),
   unitPrice: z.coerce.number().min(0),
@@ -38,28 +41,63 @@ const lineItemSchema = z.object({
   size: z.string().optional(),
   weight: z.coerce.number().optional(),
   cbm: z.coerce.number().optional(),
+  currentStock: z.coerce.number().optional(),
 });
 
-const invoiceSchema = z.object({
-  customer: z.string().optional(),
-  customerName: z.string().min(1, "Customer name required"),
-  customerAddress: z.string().optional(),
-  customerEmail: z.string().email().optional().or(z.literal("")),
-  customerPhone: z.string().optional(),
-  customerTRN: z.string().optional(),
-  salesOrder: z.string().optional(),
-  invoiceDate: z.string(),
-  dueDate: z.string().optional(),
-  paymentStatus: z.enum(["unpaid", "partially_paid", "paid", "overdue", "cancelled"]),
-  paidAmount: z.coerce.number().min(0).default(0),
-  items: z.array(lineItemSchema).min(1, "At least one line item"),
-  vatPercentage: z.coerce.number().min(0).max(100).default(5),
-  notes: z.string().optional(),
-});
+const invoiceSchema = z
+  .object({
+    customer: z.string().optional(),
+    customerName: z.string().min(1, "Customer name required"),
+    customerAddress: z.string().optional(),
+    customerEmail: z.string().email().optional().or(z.literal("")),
+    customerPhone: z.string().optional(),
+    customerTRN: z.string().optional(),
+    salesOrder: z.string().optional(),
+    invoiceDate: z.string(),
+    dueDate: z.string().optional(),
+    paymentStatus: z.enum(["unpaid", "partially_paid", "paid", "overdue", "cancelled"]),
+    paidAmount: z.coerce.number().min(0).default(0),
+    items: z.array(lineItemSchema).min(1, "At least one line item"),
+    pricingMode: z.enum(["rental", "sales"]).default("rental"),
+    vatPercentage: z.coerce.number().min(0).max(100).default(5),
+    notes: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const subtotal = (data.items || []).reduce(
+      (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
+      0
+    );
+    const vat = (subtotal * Number(data.vatPercentage || 0)) / 100;
+    const total = subtotal + vat;
+    const paid = Number(data.paidAmount) || 0;
+    const status = data.paymentStatus;
+
+    if (status === "paid" && total > 0 && paid < total - 0.01) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Paid amount must equal invoice total when status is paid.",
+        path: ["paidAmount"],
+      });
+    }
+    if (status === "unpaid" && paid > 0.01) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Clear paid amount or change status when recording payment.",
+        path: ["paidAmount"],
+      });
+    }
+    if (status === "partially_paid" && paid <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a paid amount for partially paid invoices.",
+        path: ["paidAmount"],
+      });
+    }
+  });
 
 const today = new Date().toISOString().split("T")[0];
 const defaultDue = new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
-const defaultItem = { description: "", quantity: 1, unit: "Nos", unitPrice: 0 };
+const defaultItem = { description: "", productId: "", quantity: 1, unit: "Nos", unitPrice: 0 };
 
 const paymentOpts = [
   "unpaid",
@@ -105,6 +143,7 @@ export function SalesInvoiceFormPage({ id }) {
       paymentStatus: "unpaid",
       paidAmount: 0,
       items: [{ ...defaultItem }],
+      pricingMode: "rental",
       vatPercentage: 5,
       notes: "",
     },
@@ -247,6 +286,7 @@ export function SalesInvoiceFormPage({ id }) {
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
   const watchedItems = form.watch("items");
+  const pricingMode = form.watch("pricingMode") || "rental";
   const vatPct = form.watch("vatPercentage") ?? 5;
   const paidAmount = form.watch("paidAmount") ?? 0;
 
@@ -385,7 +425,15 @@ export function SalesInvoiceFormPage({ id }) {
               control={form.control}
               name="vatPercentage"
               label="VAT %"
-              className="md:col-span-2"
+            />
+            <FormSelectField
+              control={form.control}
+              name="pricingMode"
+              label="Line pricing"
+              options={[
+                { value: "rental", label: "Rental rates" },
+                { value: "sales", label: "Sale rates" },
+              ]}
             />
           </CardContent>
         </Card>
@@ -403,6 +451,31 @@ export function SalesInvoiceFormPage({ id }) {
                 key={field.id}
                 className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b pb-4 last:border-0"
               >
+                <div className="md:col-span-12">
+                  <p className="text-xs text-muted-foreground mb-1">Product (optional)</p>
+                  <ProductPicker
+                    value={watchedItems?.[index]?.productId || ""}
+                    quoteType={pricingMode}
+                    onSelect={(product) => {
+                      if (!product) {
+                        form.setValue(`items.${index}.productId`, "");
+                        return;
+                      }
+                      const mapped = mapProductToSalesLine(product, pricingMode);
+                      if (!mapped) return;
+                      form.setValue(`items.${index}.productId`, mapped.productId);
+                      form.setValue(`items.${index}.equipmentType`, mapped.equipmentType);
+                      form.setValue(`items.${index}.description`, mapped.description);
+                      form.setValue(`items.${index}.unit`, mapped.unit);
+                      form.setValue(`items.${index}.unitPrice`, mapped.unitPrice);
+                      form.setValue(`items.${index}.currentStock`, mapped.currentStock);
+                    }}
+                  />
+                  <StockWarningBadge
+                    currentStock={watchedItems?.[index]?.currentStock}
+                    quantity={watchedItems?.[index]?.quantity}
+                  />
+                </div>
                 <div className="md:col-span-5">
                   <FormTextField
                     control={form.control}

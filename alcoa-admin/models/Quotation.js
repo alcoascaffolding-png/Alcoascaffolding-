@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const quotationItemSchema = new mongoose.Schema(
   {
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", index: true },
     equipmentType: { type: String, required: true, trim: true },
     equipmentCode: { type: String, trim: true },
     description: { type: String, trim: true },

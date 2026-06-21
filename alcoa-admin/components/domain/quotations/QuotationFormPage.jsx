@@ -33,8 +33,11 @@ import {
 } from "@/lib/map-customer-to-quotation";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
+import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
+import { mapProductToQuotationLine } from "@/lib/map-product-to-quotation-line";
 
 const lineItemSchema = z.object({
+  productId: z.string().optional(),
   equipmentType: z.string().min(1, "Required"),
   description: z.string().optional(),
   specifications: z.string().optional(),
@@ -48,6 +51,9 @@ const lineItemSchema = z.object({
   taxableAmount: z.coerce.number().min(0).optional(),
   subtotal: z.coerce.number().min(0).default(0),
   vatAmount: z.coerce.number().min(0).default(0),
+  currentStock: z.coerce.number().min(0).optional(),
+  rentalDurationValue: z.coerce.number().min(0).optional(),
+  rentalDurationUnit: z.enum(["day", "week", "month"]).default("day"),
 });
 
 const quotationSchema = z.object({
@@ -71,7 +77,9 @@ const quotationSchema = z.object({
   items: z.array(lineItemSchema).min(1, "At least one item is required"),
   deliveryCharges: z.coerce.number().min(0).default(0),
   installationCharges: z.coerce.number().min(0).default(0),
+  pickupCharges: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
+  discountType: z.enum(["fixed", "percentage"]).default("fixed"),
   vatPercentage: z.coerce.number().min(0).max(100).default(5),
   notes: z.string().optional(),
   termsAndConditions: z.string().optional(),
@@ -88,6 +96,7 @@ const today = new Date().toISOString().split("T")[0];
 const thirtyDaysLater = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
 const defaultItem = {
+  productId: "",
   equipmentType: "",
   description: "",
   specifications: "",
@@ -101,6 +110,8 @@ const defaultItem = {
   taxableAmount: 0,
   subtotal: 0,
   vatAmount: 0,
+  rentalDurationValue: 0,
+  rentalDurationUnit: "day",
 };
 
 const quoteTypeOpts = [
@@ -127,6 +138,10 @@ function mapItemToForm(item) {
     taxableAmount: Number(item?.taxableAmount) || 0,
     subtotal: Number(item?.subtotal) || 0,
     vatAmount: Number(item?.vatAmount) || 0,
+    productId: item?.product ? String(item.product) : item?.productId ? String(item.productId) : "",
+    currentStock: Number(item?.currentStock) || 0,
+    rentalDurationValue: Number(item?.rentalDuration?.value) || 0,
+    rentalDurationUnit: item?.rentalDuration?.unit || "day",
   };
 }
 
@@ -157,7 +172,9 @@ function mapQuotationToFormValues(existing) {
     items: existing.items?.length ? existing.items.map(mapItemToForm) : [{ ...defaultItem }],
     deliveryCharges: Number(existing.deliveryCharges) || 0,
     installationCharges: Number(existing.installationCharges) || 0,
+    pickupCharges: Number(existing.pickupCharges) || 0,
     discount: Number(existing.discount) || 0,
+    discountType: existing.discountType === "percentage" ? "percentage" : "fixed",
     vatPercentage: Number(existing.vatPercentage) || 5,
     notes: existing.notes ?? "",
     termsAndConditions: existing.termsAndConditions ?? "",
@@ -197,7 +214,7 @@ export function QuotationFormPage({ id }) {
       quoteType: "rental", subject: "", salesExecutive: "", preparedBy: "",
       paymentTerms: "Cash/CDC", deliveryTerms: "7-10 days from date of order",
       projectDuration: "", items: [{ ...defaultItem }],
-      deliveryCharges: 0, installationCharges: 0, discount: 0, vatPercentage: 5,
+      deliveryCharges: 0, installationCharges: 0, pickupCharges: 0, discount: 0, discountType: "fixed", vatPercentage: 5,
       notes: "", termsAndConditions: "",
       bankDetails: { bankName: "", accountName: "", accountNumber: "", iban: "", swiftCode: "" },
     },
@@ -316,10 +333,13 @@ export function QuotationFormPage({ id }) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
 
   const watchedItems = form.watch("items");
+  const quoteType = form.watch("quoteType") || "rental";
   const vatPct = form.watch("vatPercentage");
   const deliveryCharges = form.watch("deliveryCharges") || 0;
   const installationCharges = form.watch("installationCharges") || 0;
+  const pickupCharges = form.watch("pickupCharges") || 0;
   const discount = form.watch("discount") || 0;
+  const discountType = form.watch("discountType") || "fixed";
 
   const lineSubtotal = watchedItems.reduce(
     (sum, item) => sum + Number(item.quantity || 0) * Number(item.ratePerUnit || 0),
@@ -329,9 +349,9 @@ export function QuotationFormPage({ id }) {
     subtotal: lineSubtotal,
     deliveryCharges: Number(deliveryCharges) || 0,
     installationCharges: Number(installationCharges) || 0,
-    pickupCharges: 0,
+    pickupCharges: Number(pickupCharges) || 0,
     discount: Number(discount) || 0,
-    discountType: "fixed",
+    discountType,
   };
   const displaySubtotal = quotationDisplaySubtotal(previewTotals);
   const beforeVAT = displaySubtotal;
@@ -345,29 +365,45 @@ export function QuotationFormPage({ id }) {
         const taxable = Number(item.quantity || 0) * Number(item.ratePerUnit || 0);
         const lineVat = (taxable * docVatPct) / 100;
         return {
-          ...item,
+          equipmentType: item.equipmentType,
+          equipmentCode: item.equipmentCode,
+          description: item.description,
+          specifications: item.specifications,
+          size: item.size,
+          product: item.productId || undefined,
           quantity: Number(item.quantity) || 1,
           ratePerUnit: Number(item.ratePerUnit) || 0,
           weight: Number(item.weight) || 0,
           cbm: Number(item.cbm) || 0,
+          unit: item.unit || "Nos",
           vatPercentage: docVatPct,
           taxableAmount: taxable,
           subtotal: taxable,
           vatAmount: lineVat,
+          ...(Number(item.rentalDurationValue) > 0
+            ? {
+                rentalDuration: {
+                  value: Number(item.rentalDurationValue),
+                  unit: item.rentalDurationUnit || "day",
+                },
+              }
+            : {}),
         };
       });
       const lineSubtotal = items.reduce((s, it) => s + it.subtotal, 0);
       const deliveryCharges = Number(values.deliveryCharges) || 0;
       const installationCharges = Number(values.installationCharges) || 0;
+      const pickupCharges = Number(values.pickupCharges) || 0;
       const discount = Number(values.discount) || 0;
+      const discountType = values.discountType === "percentage" ? "percentage" : "fixed";
       const vatPct = Number(values.vatPercentage ?? 5);
       const beforeVAT = quotationDisplaySubtotal({
         subtotal: lineSubtotal,
         deliveryCharges,
         installationCharges,
-        pickupCharges: 0,
+        pickupCharges,
         discount,
-        discountType: "fixed",
+        discountType,
       });
       const vatAmount = (beforeVAT * vatPct) / 100;
       const totalAmount = beforeVAT + vatAmount;
@@ -381,7 +417,9 @@ export function QuotationFormPage({ id }) {
         totalAmount,
         deliveryCharges,
         installationCharges,
+        pickupCharges,
         discount,
+        discountType,
         vatPercentage: vatPct,
       };
       if (linkedCustomer !== "__none__") {
@@ -495,6 +533,35 @@ export function QuotationFormPage({ id }) {
             <div className="space-y-4">
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-12 gap-2 items-start p-3 rounded-lg border bg-muted/20">
+                  <div className="col-span-12">
+                    <label className="text-xs text-muted-foreground mb-1 block">Product (catalogue)</label>
+                    <ProductPicker
+                      value={watchedItems[index]?.productId || ""}
+                      quoteType={quoteType}
+                      onSelect={(product) => {
+                        if (!product) {
+                          form.setValue(`items.${index}.productId`, "");
+                          return;
+                        }
+                        const mapped = mapProductToQuotationLine(product, quoteType);
+                        if (!mapped) return;
+                        form.setValue(`items.${index}.productId`, mapped.productId);
+                        form.setValue(`items.${index}.equipmentType`, mapped.equipmentType);
+                        form.setValue(`items.${index}.equipmentCode`, mapped.equipmentCode || "");
+                        form.setValue(`items.${index}.description`, mapped.description || "");
+                        form.setValue(`items.${index}.specifications`, mapped.specifications || "");
+                        form.setValue(`items.${index}.unit`, mapped.unit || "Nos");
+                        form.setValue(`items.${index}.ratePerUnit`, mapped.ratePerUnit);
+                        form.setValue(`items.${index}.currentStock`, mapped.currentStock ?? 0);
+                      }}
+                    />
+                    <div className="mt-1">
+                      <StockWarningBadge
+                        currentStock={watchedItems[index]?.currentStock}
+                        quantity={watchedItems[index]?.quantity}
+                      />
+                    </div>
+                  </div>
                   <div className="col-span-12 md:col-span-4">
                     <label className="text-xs text-muted-foreground mb-1 block">Equipment Type *</label>
                     <Input placeholder="Aluminium Tower 4m" {...form.register(`items.${index}.equipmentType`)} />
@@ -534,6 +601,25 @@ export function QuotationFormPage({ id }) {
                     <label className="text-xs text-muted-foreground mb-1 block">Rate (AED)</label>
                     <Input type="number" min="0" step="0.01" {...form.register(`items.${index}.ratePerUnit`)} />
                   </div>
+                  {(quoteType === "rental" || quoteType === "both") && (
+                    <>
+                      <div className="col-span-4 md:col-span-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Rental duration</label>
+                        <Input type="number" min="0" {...form.register(`items.${index}.rentalDurationValue`)} />
+                      </div>
+                      <div className="col-span-4 md:col-span-1">
+                        <label className="text-xs text-muted-foreground mb-1 block">Period</label>
+                        <select
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          {...form.register(`items.${index}.rentalDurationUnit`)}
+                        >
+                          <option value="day">Day</option>
+                          <option value="week">Week</option>
+                          <option value="month">Month</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
                   <div className="col-span-12 md:col-span-4 grid grid-cols-3 gap-2 text-sm">
                     <div>
                       <span className="text-xs text-muted-foreground block">Taxable Amount</span>
@@ -588,8 +674,24 @@ export function QuotationFormPage({ id }) {
                   <Input type="number" min="0" step="0.01" {...form.register("installationCharges")} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Discount (AED)</label>
-                  <Input type="number" min="0" step="0.01" {...form.register("discount")} />
+                  <label className="text-xs text-muted-foreground mb-1 block">Pickup Charges (AED)</label>
+                  <Input type="number" min="0" step="0.01" {...form.register("pickupCharges")} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Discount type</label>
+                  <select
+                    className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    {...form.register("discountType")}
+                  >
+                    <option value="fixed">Fixed (AED)</option>
+                    <option value="percentage">Percentage (%)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">
+                    Discount {discountType === "percentage" ? "(%)" : "(AED)"}
+                  </label>
+                  <Input type="number" min="0" step="0.01" max={discountType === "percentage" ? "100" : undefined} {...form.register("discount")} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">VAT % (quotation)</label>
@@ -600,7 +702,19 @@ export function QuotationFormPage({ id }) {
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal (before VAT)</span><span className="tabular-nums">{displaySubtotal.toFixed(2)}</span></div>
                 {Number(deliveryCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatCurrency(deliveryCharges)}</span></div>}
                 {Number(installationCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Installation</span><span>{formatCurrency(installationCharges)}</span></div>}
-                {Number(discount) > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>- {formatCurrency(discount)}</span></div>}
+                {Number(pickupCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Pickup</span><span>{formatCurrency(pickupCharges)}</span></div>}
+                {Number(discount) > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Discount{discountType === "percentage" ? ` (${discount}%)` : ""}</span>
+                    <span>
+                      - {formatCurrency(
+                        discountType === "percentage"
+                          ? (lineSubtotal * Number(discount)) / 100
+                          : Number(discount)
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between"><span className="text-muted-foreground">VAT ({vatPct}%)</span><span>{formatCurrency(vatAmount)}</span></div>
                 <Separator />
                 <div className="flex justify-between font-bold text-base"><span>Total (AED)</span><span className="text-primary">{formatCurrency(totalAmount)}</span></div>

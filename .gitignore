@@ -6,9 +6,7 @@ yarn-error.log*
 pnpm-debug.log* 
 lerna-debug.log*
 
-# Legacy admin panel (unused)
-admin-panel/
-# alcoa-admin is deployed from this repo — do not ignore the folder (new lib files must be committed)
+# alcoa-admin is deployed from this repo — do not ignore the folder
 
 # Environment variables (never commit secrets)
 .env

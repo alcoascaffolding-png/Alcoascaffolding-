@@ -19,6 +19,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
+import { ExportButton } from "@/components/data-table/ExportButton";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { SalesOrderStatusChanger } from "@/components/domain/sales/SalesOrderStatusChanger";
 import {
@@ -189,6 +190,7 @@ export function SalesOrdersClient() {
         searchPlaceholder="Search sales orders…"
         onRowClick={(row) => router.push(`/sales-orders/${String(row._id)}`)}
         emptyMessage="No sales orders yet. Create your first order."
+        toolbar={<ExportButton resource="sales-orders" filename="sales-orders" />}
       />
 
       <AlertDialog

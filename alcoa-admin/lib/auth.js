@@ -32,6 +32,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        const emailKey = String(credentials.email).toLowerCase().trim();
+        const { checkLoginRateLimit } = await import("./rate-limit");
+        const loginRl = checkLoginRateLimit(emailKey);
+        if (!loginRl.success) {
+          return null;
+        }
+
         try {
           await connectDB();
 
@@ -96,6 +103,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.department = user.department;
         token.permissions = plainPermissionList(user.permissions);
         token.avatar = user.avatar ?? null;
+        return token;
+      }
+
+      if (token?.id) {
+        try {
+          await connectDB();
+          const { default: User } = await import("@/models/User");
+          const dbUser = await User.findById(token.id).select(
+            "passwordChangedAt isActive role department permissions avatar"
+          );
+          if (!dbUser?.isActive) return null;
+          if (dbUser.changedPasswordAfter(token.iat)) return null;
+          token.role = String(dbUser.role ?? "viewer");
+          token.department = dbUser.department != null ? String(dbUser.department) : "";
+          token.permissions = plainPermissionList(dbUser.permissions);
+          token.avatar = dbUser.avatar ?? null;
+        } catch (err) {
+          console.error("[auth] jwt refresh error:", err.message);
+        }
       }
       return token;
     },

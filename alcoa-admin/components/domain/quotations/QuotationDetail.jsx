@@ -38,8 +38,6 @@ import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
-// import { QuotationPublicLinkBadge } from "@/components/domain/quotations/QuotationPublicLinkBadge";
-
 function InfoRow({ label, value, valueClassName = "" }) {
   if (value == null || value === "") return null;
   return (
@@ -139,12 +137,6 @@ export function QuotationDetail({ id }) {
             value={q.status}
             detailQueryKey={["quotations", "detail", id]}
           />
-          {/* Customer public link / accept-reject — disabled; use status dropdown */}
-          {/* <QuotationPublicLinkBadge
-            id={id}
-            publicToken={q.publicToken}
-            detailQueryKey={["quotations", "detail", id]}
-          /> */}
         </div>
         <DocumentDetailToolbar
           sending={sending}

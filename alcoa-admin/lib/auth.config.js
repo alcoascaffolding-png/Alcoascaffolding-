@@ -21,8 +21,10 @@ export const authConfig = {
       // Public paths — always allow
       if (
         pathname.startsWith("/login") ||
+        pathname.startsWith("/q/") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/email") ||
+        pathname.startsWith("/api/public") ||
         pathname.startsWith("/api/setup") ||
         pathname.startsWith("/api/health")
       ) {

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Users, FileText, MessageSquare, TrendingUp,
-  AlertCircle, CheckCircle, Clock, ArrowUpRight,
+  AlertCircle, CheckCircle, Clock, ArrowUpRight, Package,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +148,32 @@ export function DashboardClient() {
           </>
         )}
       </div>
+
+      {!statsLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard
+            title="Low Stock Products"
+            value={stats?.products?.lowStock ?? 0}
+            description={`${stats?.products?.outOfStock ?? 0} out of stock`}
+            icon={Package}
+            color={stats?.products?.lowStock > 0 ? "warning" : "success"}
+          />
+          <StatCard
+            title="Overdue Invoices"
+            value={stats?.invoices?.overdue ?? 0}
+            description={`${stats?.invoices?.paid ?? 0} paid of ${stats?.invoices?.total ?? 0}`}
+            icon={Clock}
+            color={stats?.invoices?.overdue > 0 ? "danger" : "success"}
+          />
+          <StatCard
+            title="Invoice Collection"
+            value={formatCurrency(stats?.invoices?.collected ?? 0)}
+            description={`of ${formatCurrency(stats?.invoices?.totalValue ?? 0)} total`}
+            icon={CheckCircle}
+            color="primary"
+          />
+        </div>
+      )}
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

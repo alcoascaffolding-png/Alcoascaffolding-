@@ -3,6 +3,10 @@ import { Customer, Quotation, SalesOrder } from "@/lib/mongoose-models";
 
 void Customer;
 import { AppError } from "@/lib/api-error";
+import {
+  computeSalesOrderDeliveryFulfillment,
+  applyRemainingQtyToPrefillItems,
+} from "@/lib/sales-order-delivery-fulfillment";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
 
 function formatDeliveryAddressFromQuotation(quotation) {
@@ -17,18 +21,20 @@ function mergeQuotationItemFields(soItem, quoteItem) {
   if (!quoteItem) {
     return {
       description: soItem.description || "",
-      equipmentType: soItem.description || "",
-      specifications: "",
-      size: "",
-      weight: 0,
-      cbm: 0,
+      product: soItem.product || undefined,
+      equipmentType: soItem.equipmentType || soItem.description || "",
+      specifications: soItem.specifications || "",
+      size: soItem.size || "",
+      weight: Number(soItem.weight) || 0,
+      cbm: Number(soItem.cbm) || 0,
       quantity: Number(soItem.quantity) || 0,
       unit: soItem.unit || "Nos",
     };
   }
   return {
     description: soItem.description || quoteItem.equipmentType || quoteItem.description || "",
-    equipmentType: quoteItem.equipmentType || soItem.description || "",
+    product: soItem.product || quoteItem?.product || undefined,
+    equipmentType: quoteItem.equipmentType || soItem.equipmentType || soItem.description || "",
     specifications: quoteItem.specifications || "",
     size: quoteItem.size || "",
     weight: Number(quoteItem.weight) || 0,
@@ -78,6 +84,10 @@ export async function buildDeliveryNotePrefillFromSalesOrder(salesOrderId) {
   const deliveryAddress =
     formatDeliveryAddressFromQuotation(quotation) || customerAddress || "";
 
+  const fulfillment = await computeSalesOrderDeliveryFulfillment(order._id);
+  let items = mapItemsFromOrder(order, quotation);
+  items = applyRemainingQtyToPrefillItems(items, fulfillment);
+
   return {
     salesOrder: String(order._id),
     quotation: quotation ? String(quotation._id) : undefined,
@@ -91,7 +101,8 @@ export async function buildDeliveryNotePrefillFromSalesOrder(salesOrderId) {
     deliveryDate: order.deliveryDate || order.orderDate,
     contactPersonName: quotation?.contactPersonName || "",
     contactPersonPhone: quotation?.contactPersonPhone || "",
-    items: mapItemsFromOrder(order, quotation),
+    items,
+    deliveryFulfillment: fulfillment,
     notes: order.notes || "",
     deliveryInstructions: "",
     status: "draft",

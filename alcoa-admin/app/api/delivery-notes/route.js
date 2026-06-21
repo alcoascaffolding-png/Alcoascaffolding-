@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
-import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
+import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveDeliveryNoteNumberForCreate } from "@/lib/document-number";
+import { syncDeliveryNoteStock } from "@/lib/stock-service";
+import { syncSalesOrderOnDeliveryNote } from "@/lib/sync-sales-order-on-delivery";
+import { assertDeliveryNoteQuantitiesWithinSalesOrder } from "@/lib/sales-order-delivery-fulfillment";
 import { Customer, DeliveryNote, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
 
@@ -18,8 +21,7 @@ function toObjectId(value) {
 }
 
 export const GET = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("delivery-notes", "read");
 
   await connectDB();
   const { searchParams } = new URL(request.url);
@@ -53,8 +55,7 @@ export const GET = withErrorHandler(async (request) => {
 });
 
 export const POST = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("delivery-notes", "write");
 
   await connectDB();
   const body = await request.json();
@@ -79,6 +80,7 @@ export const POST = withErrorHandler(async (request) => {
     status,
     notes,
     deliveryInstructions,
+    noteType,
   } = body;
 
   if (!customerName?.trim()) throw new AppError("Customer name is required", 400);
@@ -97,6 +99,7 @@ export const POST = withErrorHandler(async (request) => {
     contactPersonPhone,
     items,
     status: status || "draft",
+    noteType: noteType === "return" ? "return" : "delivery",
     notes,
     deliveryInstructions,
   };
@@ -116,6 +119,14 @@ export const POST = withErrorHandler(async (request) => {
   }
   if (qid) payload.quotation = qid;
 
+  if (soid) {
+    await assertDeliveryNoteQuantitiesWithinSalesOrder({
+      salesOrderId: soid,
+      noteType: payload.noteType,
+      items: payload.items,
+    });
+  }
+
   try {
     payload.deliveryNoteNumber = await resolveDeliveryNoteNumberForCreate(
       {
@@ -129,5 +140,19 @@ export const POST = withErrorHandler(async (request) => {
   }
 
   const doc = await DeliveryNote.create({ ...payload, createdBy: session.user.id });
+
+  if (doc.status === "delivered") {
+    const prev = {
+      status: "draft",
+      stockApplied: false,
+      items: [],
+      deliveryNoteNumber: doc.deliveryNoteNumber,
+      noteType: doc.noteType,
+      salesOrder: doc.salesOrder,
+    };
+    await syncDeliveryNoteStock(prev, doc, session.user.id);
+    await syncSalesOrderOnDeliveryNote(prev, doc);
+  }
+
   return apiSuccess(doc, 201);
 });
