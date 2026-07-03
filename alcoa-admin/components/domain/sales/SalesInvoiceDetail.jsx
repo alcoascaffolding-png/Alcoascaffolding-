@@ -227,6 +227,38 @@ export function SalesInvoiceDetail({ id }) {
               />
               <InfoRowAlways label="Paid" value={paid.toFixed(2)} />
               <InfoRowAlways label="Balance" value={balance.toFixed(2)} valueClassName="font-medium" />
+              {inv.quotation && (
+                <div className="pt-3 border-t border-border/60 mt-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                    Linked quotation
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-sm font-medium">
+                      {typeof inv.quotation === "object" ? inv.quotation.quoteNumber : "—"}
+                    </span>
+                    {typeof inv.quotation === "object" && inv.quotation.status != null && (
+                      <Badge variant="secondary" className="text-xs font-normal capitalize">
+                        {String(inv.quotation.status).replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      const qid =
+                        typeof inv.quotation === "object" && inv.quotation._id != null
+                          ? String(inv.quotation._id)
+                          : String(inv.quotation);
+                      router.push(`/quotations/${qid}`);
+                    }}
+                  >
+                    View quotation
+                  </Button>
+                </div>
+              )}
               {inv.salesOrder && (
                 <div className="pt-3 border-t border-border/60 mt-2">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">

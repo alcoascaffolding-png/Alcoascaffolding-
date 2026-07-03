@@ -44,8 +44,17 @@ export const GET = withErrorHandler(async (request, context) => {
     await existing.save();
   }
 
+  if (!existing.quotation && existing.salesOrder) {
+    const order = await SalesOrder.findById(existing.salesOrder).select("quotation").lean();
+    if (order?.quotation) {
+      existing.quotation = order.quotation;
+      await existing.save();
+    }
+  }
+
   const doc = await SalesInvoice.findById(params.id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
+    .populate("quotation", "quoteNumber status customerName totalAmount")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
   return apiSuccess(doc);
@@ -103,6 +112,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
 
   const populated = await SalesInvoice.findById(doc._id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
+    .populate("quotation", "quoteNumber status customerName totalAmount")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
   return apiSuccess(populated);
