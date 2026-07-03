@@ -232,6 +232,21 @@ export function QuotationFormPage({ id }) {
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (isEdit && !existing) return;
+    const banks = bankAccountsList || [];
+    if (!banks.length || !isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) return;
+
+    const defaultBank = pickDefaultBankAccount(banks);
+    const bankDetails = bankAccountToQuotationBankDetails(defaultBank);
+    if (bankDetails && (bankDetails.bankName || bankDetails.accountNumber)) {
+      form.setValue("bankDetails", bankDetails, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+    }
+  }, [bankAccountsList, existing, form, isEdit]);
+
   const selectedCustomerId = form.watch("customer");
 
   const loadedQuoteCustomerId = useMemo(() => {
@@ -609,9 +624,14 @@ export function QuotationFormPage({ id }) {
           </CardContent>
         </Card>
 
-        {/* Bank details */}
+        {/* Company bank details */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Bank Details (for PDF)</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-base">Company Bank Details (for PDF)</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Auto-filled from Bank Accounts. These are your company payment details shown to the customer.
+            </p>
+          </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormTextField control={form.control} name="bankDetails.bankName" label="Bank Name" />
             <FormTextField control={form.control} name="bankDetails.accountName" label="Account Name" />

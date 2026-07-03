@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, Receipt, Truck } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import {
@@ -115,6 +115,30 @@ export function SalesOrderDetail({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const convertToInvoiceMut = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/sales-orders/${id}/convert-to-invoice`, {
+        method: "POST",
+      });
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["sales-orders"] });
+      qc.invalidateQueries({ queryKey: ["sales-orders-stats"] });
+      qc.invalidateQueries({ queryKey: ["sales-orders", "detail", id] });
+      qc.invalidateQueries({ queryKey: ["sales-invoices"] });
+      qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
+      toast.success(
+        data.created
+          ? `Tax invoice ${data.invoiceNumber} created`
+          : `Tax invoice ${data.invoiceNumber} already exists`
+      );
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
@@ -129,6 +153,8 @@ export function SalesOrderDetail({ id }) {
   const customerAddress = o.customerAddress || formatCustomerAddressFromRecord(customer);
   const customerEmail = resolveDocumentCustomerEmail(o);
   const customerPhone = resolveDocumentCustomerPhone(o);
+  const linkedInvoiceId = o.linkedSalesInvoice?._id ? String(o.linkedSalesInvoice._id) : null;
+  const hasInvoice = !!linkedInvoiceId;
 
   return (
     <>
@@ -154,6 +180,26 @@ export function SalesOrderDetail({ id }) {
               Create Delivery Note
             </Button>
           </Link>
+          {hasInvoice ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/sales-invoices/${linkedInvoiceId}`)}
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              View Tax Invoice
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={o.status === "cancelled" || convertToInvoiceMut.isPending}
+              onClick={() => convertToInvoiceMut.mutate()}
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              Convert to Invoice
+            </Button>
+          )}
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
