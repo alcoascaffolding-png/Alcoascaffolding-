@@ -15,6 +15,7 @@ function quotationItemsToOrderItems(items) {
       it.description ||
       "Line item";
     return {
+      product: it.product || undefined,
       description: desc,
       equipmentType: it.equipmentType || undefined,
       specifications: it.specifications || undefined,
@@ -60,7 +61,19 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
   }
 
   if (existing) {
-    await markQuotationConvertedFromSalesOrder(qid);
+    if (!String(existing.orderNumber || "").startsWith("SO")) {
+      const repair = await SalesOrder.findById(existing._id);
+      if (repair) {
+        repair.orderNumber = await resolveOrderNumberForCreate(
+          { orderDate: repair.orderDate || new Date() },
+          { SalesOrder }
+        );
+        repair.recalculateTotals();
+        await repair.save();
+        existing = repair.toObject();
+      }
+    }
+    await markQuotationConvertedFromSalesOrder(qid, existing._id);
     return {
       created: false,
       salesOrder: existing,
@@ -69,7 +82,8 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
   }
 
   const items = quotationItemsToOrderItems(q.items);
-  const lineSubtotal = items.reduce((s, it) => s + Number(it.total || 0), 0);
+  const lineSubtotal =
+    Number(q.subtotal) || items.reduce((s, it) => s + Number(it.total || 0), 0);
   const vatAmount =
     Number(q.vatAmount) ||
     Math.round((lineSubtotal * Number(q.vatPercentage || 5)) / 100 * 100) / 100;
@@ -93,14 +107,24 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     status: "confirmed",
     items,
     subtotal: lineSubtotal,
+    deliveryCharges: Number(q.deliveryCharges) || 0,
+    installationCharges: Number(q.installationCharges) || 0,
+    pickupCharges: Number(q.pickupCharges) || 0,
+    discount: Number(q.discount) || 0,
+    discountType: q.discountType || "fixed",
+    vatPercentage: Number(q.vatPercentage) || 5,
     vatAmount,
-    total: lineSubtotal + vatAmount,
+    total: Number(q.totalAmount) || lineSubtotal + vatAmount,
     currency: q.currency || "AED",
+    paymentTerms: q.paymentTerms || "Cash/CDC",
+    deliveryTerms: q.deliveryTerms || "7-10 days from date of order",
+    customerPONumber: q.customerPONumber || undefined,
+    referenceNumber: q.referenceNumber || undefined,
     notes: q.notes || undefined,
     createdBy: createdByUserId,
   });
 
-  await markQuotationConvertedFromSalesOrder(qid);
+  await markQuotationConvertedFromSalesOrder(qid, order._id);
 
   return {
     created: true,

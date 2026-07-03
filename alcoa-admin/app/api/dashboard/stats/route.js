@@ -32,7 +32,11 @@ export const GET = withErrorHandler(async () => {
           _id: null,
           total: { $sum: 1 },
           pending: { $sum: { $cond: [{ $in: ["$status", ["draft", "sent"]] }, 1, 0] } },
-          approved: { $sum: { $cond: [{ $eq: ["$status", "approved"] }, 1, 0] } },
+          approved: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["accepted", "approved"]] }, 1, 0],
+            },
+          },
           totalValue: { $sum: "$totalAmount" },
         },
       },

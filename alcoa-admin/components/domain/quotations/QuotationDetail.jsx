@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Receipt, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
@@ -38,7 +38,6 @@ import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
-// import { QuotationPublicLinkBadge } from "@/components/domain/quotations/QuotationPublicLinkBadge";
 
 function InfoRow({ label, value, valueClassName = "" }) {
   if (value == null || value === "") return null;
@@ -106,6 +105,40 @@ export function QuotationDetail({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const convertMut = useMutation({
+    mutationFn: async (target) => {
+      const endpoint =
+        target === "invoice" ? "convert-to-invoice" : "convert-to-sales-order";
+      const res = await fetch(`/api/quotations/${id}/${endpoint}`, { method: "POST" });
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return { target, data: d.data };
+    },
+    onSuccess: ({ target, data }) => {
+      qc.invalidateQueries({ queryKey: ["quotations"] });
+      qc.invalidateQueries({ queryKey: ["quotations-stats"] });
+      qc.invalidateQueries({ queryKey: ["quotations", "detail", id] });
+      qc.invalidateQueries({ queryKey: ["sales-orders"] });
+      qc.invalidateQueries({ queryKey: ["sales-orders-stats"] });
+      qc.invalidateQueries({ queryKey: ["sales-invoices"] });
+      qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
+      if (target === "invoice") {
+        toast.success(
+          data.created
+            ? `Tax invoice ${data.invoiceNumber} created`
+            : `Tax invoice ${data.invoiceNumber} already exists`
+        );
+      } else {
+        toast.success(
+          data.created
+            ? `Sales order ${data.orderNumber} created`
+            : `Sales order ${data.orderNumber} already exists`
+        );
+      }
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
@@ -122,6 +155,9 @@ export function QuotationDetail({ id }) {
   const displaySubtotal = quotationDisplaySubtotal(q);
   const bank = QUOTATION_PDF_BANK_DETAILS;
   const subject = q.subject || `Quotation ${q.quoteNumber}`;
+  const hasSalesOrder = !!q.linked?.salesOrder;
+  const hasSalesInvoice = !!q.linked?.salesInvoice;
+  const conversionDisabled = ["rejected", "expired"].includes(q.status);
 
   return (
     <>
@@ -139,29 +175,45 @@ export function QuotationDetail({ id }) {
             value={q.status}
             detailQueryKey={["quotations", "detail", id]}
           />
-          {/* Customer public link / accept-reject — disabled; use status dropdown */}
-          {/* <QuotationPublicLinkBadge
-            id={id}
-            publicToken={q.publicToken}
-            detailQueryKey={["quotations", "detail", id]}
-          /> */}
         </div>
-        <DocumentDetailToolbar
-          sending={sending}
-          showWhatsApp={showWhatsApp}
-          hasEmail={!!customerEmail}
-          hasPhone={!!customerPhone}
-          onDownloadPdf={downloadPdf}
-          onSendEmail={sendEmail}
-          onSendWhatsApp={sendWhatsApp}
-          onCopyWhatsAppLink={copyWhatsAppLink}
-          onEdit={() => router.push(`/quotations/${id}/edit`)}
-          onDelete={() => setShowDelete(true)}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={hasSalesOrder || conversionDisabled || convertMut.isPending}
+            onClick={() => convertMut.mutate("sales-order")}
+          >
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            {hasSalesOrder ? "Sales Order Created" : "Convert to Sales Order"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={hasSalesInvoice || conversionDisabled || convertMut.isPending}
+            onClick={() => convertMut.mutate("invoice")}
+          >
+            <Receipt className="h-4 w-4 mr-1" />
+            {hasSalesInvoice ? "Invoice Created" : "Convert to Invoice"}
+          </Button>
+          <DocumentDetailToolbar
+            sending={sending}
+            showWhatsApp={showWhatsApp}
+            hasEmail={!!customerEmail}
+            hasPhone={!!customerPhone}
+            onDownloadPdf={downloadPdf}
+            onSendEmail={sendEmail}
+            onSendWhatsApp={sendWhatsApp}
+            onCopyWhatsAppLink={copyWhatsAppLink}
+            onEdit={() => router.push(`/quotations/${id}/edit`)}
+            onDelete={() => setShowDelete(true)}
+          />
+        </div>
       </div>
 
       <div className="space-y-6">
-        {q.status === "converted" && (
+        {(hasSalesOrder ||
+          hasSalesInvoice ||
+          ["converted", "converted_to_sales_order", "converted_to_invoice"].includes(q.status)) && (
           <Card className="border-emerald-500/30 bg-emerald-500/5">
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Linked sales documents</CardTitle>
@@ -183,8 +235,8 @@ export function QuotationDetail({ id }) {
                 </p>
               ) : (
                 <p className="text-amber-700 dark:text-amber-400">
-                  No sales order linked yet. Change status to Approved, then to Converted again after
-                  deploying the latest admin build — or run the production backfill script.
+                  No sales order linked yet. Use <strong>Convert to Sales Order</strong> if this
+                  quotation should become a sales order.
                 </p>
               )}
               {q.linked?.salesInvoice ? (
@@ -203,8 +255,8 @@ export function QuotationDetail({ id }) {
                 </p>
               ) : q.linked?.salesOrder ? (
                 <p className="text-muted-foreground">
-                  No tax invoice yet. Open the sales order and set status to <strong>Invoiced</strong> to
-                  create a tax invoice.
+                  No tax invoice yet. Use <strong>Convert to Invoice</strong> or invoice the linked
+                  sales order.
                 </p>
               ) : null}
             </CardContent>
@@ -242,7 +294,13 @@ export function QuotationDetail({ id }) {
                 value={formatDate(q.validUntil)}
                 valueClassName={
                   isLocalCalendarDayBeforeToday(q.validUntil) &&
-                  !["approved", "converted"].includes(q.status)
+                  ![
+                    "accepted",
+                    "approved",
+                    "converted",
+                    "converted_to_sales_order",
+                    "converted_to_invoice",
+                  ].includes(q.status)
                     ? "text-destructive font-medium"
                     : ""
                 }

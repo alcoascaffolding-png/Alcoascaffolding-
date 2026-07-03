@@ -4,6 +4,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { applyQuotationPatch, normalizeQuotationPatchCustomer } from "@/lib/quotation-save";
 import { ensureSalesOrderFromQuotation } from "@/lib/convert-quotation-to-sales-order";
+import { ensureSalesInvoiceFromQuotation } from "@/lib/convert-quotation-to-invoice";
 import {
   markQuotationConvertedFromSalesOrder,
   revertQuotationFromConvertedToApproved,
@@ -46,10 +47,14 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   const nextStatus = doc.status;
   let conversion = null;
 
-  if (nextStatus === "converted" && prevStatus !== "converted") {
+  if (
+    ["converted", "converted_to_sales_order"].includes(nextStatus) &&
+    !["converted", "converted_to_sales_order"].includes(prevStatus)
+  ) {
     try {
       const result = await ensureSalesOrderFromQuotation(doc._id, session.user.id);
       conversion = {
+        type: "sales_order",
         created: result.created,
         orderNumber: result.orderNumber,
         salesOrderId: String(result.salesOrder._id),
@@ -63,15 +68,37 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
         ? err
         : new AppError(err.message || "Could not create sales order from quotation", 400);
     }
-  } else if (prevStatus === "converted" && nextStatus !== "converted") {
+  } else if (
+    ["converted", "converted_to_sales_order"].includes(prevStatus) &&
+    !["converted", "converted_to_sales_order", "converted_to_invoice"].includes(nextStatus)
+  ) {
     await revertQuotationFromConvertedToApproved(doc._id);
-  } else if (nextStatus === "converted") {
+  } else if (["converted", "converted_to_sales_order"].includes(nextStatus)) {
     const result = await ensureSalesOrderFromQuotation(doc._id, session.user.id);
     conversion = {
+      type: "sales_order",
       created: result.created,
       orderNumber: result.orderNumber,
       salesOrderId: String(result.salesOrder._id),
     };
+  } else if (nextStatus === "converted_to_invoice") {
+    try {
+      const result = await ensureSalesInvoiceFromQuotation(doc._id, session.user.id);
+      conversion = {
+        type: "sales_invoice",
+        created: result.created,
+        invoiceNumber: result.invoiceNumber,
+        salesInvoiceId: String(result.salesInvoice._id),
+      };
+    } catch (err) {
+      await Quotation.findByIdAndUpdate(doc._id, {
+        $set: { status: prevStatus, convertedToInvoice: false },
+        $unset: { invoiceId: "" },
+      });
+      throw err instanceof AppError
+        ? err
+        : new AppError(err.message || "Could not create tax invoice from quotation", 400);
+    }
   }
 
   const q = await Quotation.findById(params.id)

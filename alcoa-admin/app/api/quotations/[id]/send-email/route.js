@@ -10,7 +10,6 @@ import { prepareQuotationForPdf } from "@/lib/load-quotation-for-pdf";
 import { resolveDocumentCustomerEmail } from "@/lib/resolve-document-customer";
 import { generateQuotationPDF } from "@/lib/pdf/quotation-pdf";
 import { sendQuotationEmail } from "@/lib/email/resend";
-// import { ensureQuotationPublicToken } from "@/lib/quotation-save";
 
 export const POST = withErrorHandler(async (request, { params }) => {
   const session = await auth();
@@ -27,9 +26,6 @@ export const POST = withErrorHandler(async (request, { params }) => {
     );
   }
   const outbound = { ...quotation, customerEmail: toEmail };
-
-  // Customer accept/reject links disabled — quotation email + PDF only
-  // const { url: publicUrl } = await ensureQuotationPublicToken(params.id, Quotation);
 
   const pdfBuffer = await generateQuotationPDF(outbound);
 

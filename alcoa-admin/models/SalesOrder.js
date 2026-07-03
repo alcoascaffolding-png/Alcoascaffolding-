@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const lineItemSchema = new mongoose.Schema(
   {
     description: { type: String, required: true, trim: true },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
     equipmentType: { type: String, trim: true },
     specifications: { type: String, trim: true },
     size: { type: String, trim: true },
@@ -44,9 +45,19 @@ const salesOrderSchema = new mongoose.Schema(
     },
     items: [lineItemSchema],
     subtotal: { type: Number, default: 0, min: 0 },
+    deliveryCharges: { type: Number, default: 0, min: 0 },
+    installationCharges: { type: Number, default: 0, min: 0 },
+    pickupCharges: { type: Number, default: 0, min: 0 },
+    discount: { type: Number, default: 0, min: 0 },
+    discountType: { type: String, enum: ["percentage", "fixed"], default: "fixed" },
     vatAmount: { type: Number, default: 0, min: 0 },
+    vatPercentage: { type: Number, default: 5, min: 0, max: 100 },
     total: { type: Number, default: 0, min: 0 },
     currency: { type: String, default: "AED" },
+    paymentTerms: { type: String, default: "Cash/CDC", trim: true },
+    deliveryTerms: { type: String, default: "7-10 days from date of order", trim: true },
+    customerPONumber: { type: String, trim: true },
+    referenceNumber: { type: String, trim: true },
     notes: { type: String, trim: true },
     sentDate: { type: Date },
     emailsSent: [
@@ -77,7 +88,22 @@ salesOrderSchema.index({ createdAt: -1 });
 salesOrderSchema.methods.recalculateTotals = function recalculateTotals() {
   const sub = (this.items || []).reduce((sum, row) => sum + Number(row.total || 0), 0);
   this.subtotal = sub;
-  this.total = sub + Number(this.vatAmount || 0);
+  let beforeVAT =
+    sub +
+    Number(this.deliveryCharges || 0) +
+    Number(this.installationCharges || 0) +
+    Number(this.pickupCharges || 0);
+  if (Number(this.discount || 0) > 0) {
+    beforeVAT -=
+      this.discountType === "percentage"
+        ? (beforeVAT * Number(this.discount || 0)) / 100
+        : Number(this.discount || 0);
+  }
+  this.vatAmount =
+    this.vatAmount != null && Number(this.vatAmount) > 0
+      ? Number(this.vatAmount)
+      : (beforeVAT * Number(this.vatPercentage || 5)) / 100;
+  this.total = beforeVAT + Number(this.vatAmount || 0);
   return this.total;
 };
 

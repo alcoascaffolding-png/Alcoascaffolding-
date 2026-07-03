@@ -86,7 +86,7 @@ export function QuotationsClient() {
         value: (stats.draft || 0) + (stats.sent || 0),
         valueClassName: "text-2xl text-chart-2",
       },
-      { label: "Approved", value: stats.approved, valueClassName: "text-2xl text-emerald-500" },
+      { label: "Accepted", value: stats.approved, valueClassName: "text-2xl text-emerald-500" },
       {
         label: "Total Value",
         value: formatCurrency(stats.totalValue),
@@ -122,7 +122,13 @@ export function QuotationsClient() {
       cell: ({ row }) => {
         const expired =
           isLocalCalendarDayBeforeToday(row.original.validUntil) &&
-          !["approved", "converted"].includes(row.original.status);
+          ![
+            "accepted",
+            "approved",
+            "converted",
+            "converted_to_sales_order",
+            "converted_to_invoice",
+          ].includes(row.original.status);
         return (
           <span className={`text-sm ${expired ? "text-destructive font-medium" : ""}`}>
             {formatDate(row.original.validUntil)}

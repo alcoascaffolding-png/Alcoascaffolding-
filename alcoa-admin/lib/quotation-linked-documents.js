@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
 import SalesOrder from "@/models/SalesOrder";
 import SalesInvoice from "@/models/SalesInvoice";
+import Quotation from "@/models/Quotation";
+import {
+  resolveInvoiceNumberForCreate,
+  resolveOrderNumberForCreate,
+} from "@/lib/document-number";
 
 /**
- * Find sales order + invoice linked to a quotation (by ref or matching document number).
+ * Find sales order + invoice linked to a quotation.
  */
 export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
   const qid =
@@ -17,27 +22,47 @@ export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
       .select("_id orderNumber status total currency")
       .lean();
   }
-  if (!salesOrder && quoteNumber) {
-    salesOrder = await SalesOrder.findOne({ orderNumber: quoteNumber })
-      .select("_id orderNumber status total currency quotation")
-      .lean();
+  if (salesOrder && !String(salesOrder.orderNumber || "").startsWith("SO")) {
+    const repaired = await SalesOrder.findById(salesOrder._id);
+    if (repaired) {
+      repaired.orderNumber = await resolveOrderNumberForCreate(
+        { orderDate: repaired.orderDate || new Date() },
+        { SalesOrder }
+      );
+      repaired.recalculateTotals();
+      await repaired.save();
+      salesOrder = repaired.toObject();
+    }
   }
 
   let salesInvoice = null;
-  if (salesOrder?._id) {
-    salesInvoice = await SalesInvoice.findOne({ salesOrder: salesOrder._id })
-      .select("_id invoiceNumber status total paidAmount currency")
+  if (qid) {
+    salesInvoice = await SalesInvoice.findOne({ quotation: qid })
+      .select("_id invoiceNumber paymentStatus total paidAmount balance currency salesOrder")
       .lean();
   }
+  if (!salesInvoice && salesOrder?._id) {
+    salesInvoice = await SalesInvoice.findOne({ salesOrder: salesOrder._id })
+      .select("_id invoiceNumber paymentStatus total paidAmount balance currency salesOrder")
+      .lean();
+  }
+  // Backward compatibility for older documents that reused the quotation number.
   if (!salesInvoice && quoteNumber) {
     salesInvoice = await SalesInvoice.findOne({ invoiceNumber: quoteNumber })
-      .select("_id invoiceNumber status total paidAmount currency salesOrder")
+      .select("_id invoiceNumber paymentStatus total paidAmount balance currency salesOrder")
       .lean();
   }
-  if (!salesInvoice && salesOrder?.orderNumber) {
-    salesInvoice = await SalesInvoice.findOne({ invoiceNumber: salesOrder.orderNumber })
-      .select("_id invoiceNumber status total paidAmount currency salesOrder")
-      .lean();
+  if (salesInvoice && !String(salesInvoice.invoiceNumber || "").startsWith("SI")) {
+    const repaired = await SalesInvoice.findById(salesInvoice._id);
+    if (repaired) {
+      repaired.invoiceNumber = await resolveInvoiceNumberForCreate(
+        { invoiceDate: repaired.invoiceDate || new Date() },
+        { Quotation, SalesOrder, SalesInvoice }
+      );
+      repaired.recalculateTotals();
+      await repaired.save();
+      salesInvoice = repaired.toObject();
+    }
   }
 
   return {
@@ -54,9 +79,11 @@ export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
       ? {
           _id: String(salesInvoice._id),
           invoiceNumber: salesInvoice.invoiceNumber,
-          status: salesInvoice.status,
+          status: salesInvoice.paymentStatus,
+          paymentStatus: salesInvoice.paymentStatus,
           total: salesInvoice.total,
           paidAmount: salesInvoice.paidAmount,
+          balance: salesInvoice.balance,
           currency: salesInvoice.currency || "AED",
         }
       : null,
