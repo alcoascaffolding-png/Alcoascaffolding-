@@ -25,7 +25,7 @@ const columns = [
 
 function BankAccountFormFields({ control }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormTextField control={control} name="accountName" label="Account Name" />
       <FormTextField control={control} name="bankName" label="Bank Name" />
       <FormTextField control={control} name="accountNumber" label="Account Number" />

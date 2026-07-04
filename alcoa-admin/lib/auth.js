@@ -6,8 +6,11 @@
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { headers } from "next/headers";
 import { authConfig } from "./auth.config";
 import { connectDB } from "./db";
+import { parseLoginCredentials } from "./schemas/login";
+import { checkLoginRateLimit, checkLoginIpRateLimit } from "./rate-limit";
 
 /** Plain string[] — Mongoose arrays are not structuredClone-safe in Auth.js JWT encoding */
 function plainPermissionList(value) {
@@ -26,15 +29,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // In NextAuth v5, returning null → client gets "CredentialsSignin" error.
-        // Throwing any error → client gets generic "Configuration" error. Always return null.
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        const emailKey = String(credentials.email).toLowerCase().trim();
-        const { checkLoginRateLimit } = await import("./rate-limit");
-        const loginRl = checkLoginRateLimit(emailKey);
+        const parsed = parseLoginCredentials(credentials);
+        if (!parsed.ok) {
+          return null;
+        }
+
+        const { email, password } = parsed.data;
+
+        const headerList = await headers();
+        const ip =
+          headerList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+          headerList.get("x-real-ip") ||
+          "unknown";
+
+        const ipRl = checkLoginIpRateLimit(ip);
+        if (!ipRl.success) {
+          return null;
+        }
+
+        const loginRl = checkLoginRateLimit(email);
         if (!loginRl.success) {
           return null;
         }
@@ -42,18 +59,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           await connectDB();
 
-          // Dynamic import so Mongoose is never pulled into the Edge bundle
           const { default: User } = await import("@/models/User");
 
-          const user = await User.findOne({
-            email: String(credentials.email).toLowerCase().trim(),
-          }).select("+password");
+          const user = await User.findOne({ email }).select("+password");
 
           if (!user || !user.isActive) {
             return null;
           }
 
-          const isValid = await user.comparePassword(String(credentials.password));
+          const isValid = await user.comparePassword(password);
           if (!isValid) {
             return null;
           }

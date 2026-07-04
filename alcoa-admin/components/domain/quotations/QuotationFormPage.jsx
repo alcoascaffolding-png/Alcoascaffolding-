@@ -535,7 +535,7 @@ export function QuotationFormPage({ id }) {
 
         {/* Line items */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Line Items</CardTitle>
             <Button type="button" variant="outline" size="sm" onClick={() => append({ ...defaultItem })}>
               <Plus className="h-4 w-4 mr-1" /> Add Item
@@ -635,7 +635,7 @@ export function QuotationFormPage({ id }) {
                       </div>
                     </>
                   )}
-                  <div className="col-span-12 md:col-span-4 grid grid-cols-3 gap-2 text-sm">
+                  <div className="col-span-12 md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                     <div>
                       <span className="text-xs text-muted-foreground block">Taxable Amount</span>
                       <span className="font-medium tabular-nums">
@@ -678,8 +678,8 @@ export function QuotationFormPage({ id }) {
             <Separator className="my-4" />
 
             {/* Totals */}
-            <div className="grid grid-cols-2 gap-4 max-w-sm ml-auto text-sm">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 col-span-2">
+            <div className="w-full sm:max-w-sm sm:ml-auto grid grid-cols-1 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Delivery Charges (AED)</label>
                   <Input type="number" min="0" step="0.01" {...form.register("deliveryCharges")} />
@@ -713,7 +713,7 @@ export function QuotationFormPage({ id }) {
                   <Input type="number" min="0" max="100" step="0.01" {...form.register("vatPercentage")} />
                 </div>
               </div>
-              <div className="col-span-2 space-y-1.5 text-sm border-t pt-3">
+              <div className="space-y-1.5 text-sm border-t pt-3">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal (before VAT)</span><span className="tabular-nums">{displaySubtotal.toFixed(2)}</span></div>
                 {Number(deliveryCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{formatCurrency(deliveryCharges)}</span></div>}
                 {Number(installationCharges) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Installation</span><span>{formatCurrency(installationCharges)}</span></div>}

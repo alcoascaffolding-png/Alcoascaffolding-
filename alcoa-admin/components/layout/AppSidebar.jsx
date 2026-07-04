@@ -21,10 +21,12 @@ import {
   ScrollText,
   ChevronDown,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessNavPath, canManageUsers } from "@/lib/permissions";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const navigation = [
@@ -159,9 +161,10 @@ function NavGroup({ group, collapsed, onNavigate, userRole }) {
   );
 }
 
-export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate }) {
+export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate, onCloseMobile }) {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
+  const effectiveCollapsed = mobileOpen ? false : collapsed;
 
   const visibleNavigation = navigation
     .map((group) => ({
@@ -185,24 +188,51 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate }
       )}
     >
       {/* Logo */}
-      <div className={cn("flex h-16 items-center border-b border-sidebar-border px-4 shrink-0", collapsed && "justify-center px-2")}>
-        <Link href="/" className="flex items-center gap-2 min-w-0" onClick={onNavigate}>
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-sidebar-border px-4 shrink-0",
+          effectiveCollapsed ? "justify-center px-2" : "justify-between gap-2"
+        )}
+      >
+        <Link
+          href="/"
+          className={cn("flex items-center gap-2 min-w-0", effectiveCollapsed && "justify-center")}
+          onClick={onNavigate}
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-sm">
             A
           </div>
-          {!collapsed && (
+          {!effectiveCollapsed && (
             <span className="font-semibold text-foreground truncate text-sm tracking-tight">
               Alcoa Admin
             </span>
           )}
         </Link>
+        {mobileOpen && onCloseMobile && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 md:hidden"
+            onClick={onCloseMobile}
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
       <ScrollArea className="flex-1 py-4">
-        <nav className={cn("space-y-4", collapsed ? "px-2" : "px-3")}>
+        <nav className={cn("space-y-4", effectiveCollapsed ? "px-2" : "px-3")}>
           {visibleNavigation.map((group) => (
-            <NavGroup key={group.label} group={group} collapsed={collapsed} onNavigate={onNavigate} userRole={userRole} />
+            <NavGroup
+              key={group.label}
+              group={group}
+              collapsed={effectiveCollapsed}
+              onNavigate={onNavigate}
+              userRole={userRole}
+            />
           ))}
         </nav>
       </ScrollArea>

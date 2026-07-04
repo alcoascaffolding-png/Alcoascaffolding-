@@ -123,17 +123,17 @@ export function CustomerDetail({ id }) {
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/customers")}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => router.push("/customers")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{c.companyName}</h1>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight truncate">{c.companyName}</h1>
             <p className="text-sm text-muted-foreground">{c.businessType}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant={STATUS_MAP[c.status] || "outline"} className="text-sm">
             {c.status}
           </Badge>
@@ -147,7 +147,7 @@ export function CustomerDetail({ id }) {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="sales">Sales History</TabsTrigger>
           <TabsTrigger value="contacts">Contacts ({c.contactPersons?.length || 0})</TabsTrigger>

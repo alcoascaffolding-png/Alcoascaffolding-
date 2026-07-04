@@ -109,7 +109,7 @@ const columns = [
 
 function ProductFormFields({ control }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <FormTextField control={control} name="itemCode" label="Item Code" placeholder="ALU-001" />
       <FormTextField
         control={control}

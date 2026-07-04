@@ -1,12 +1,20 @@
 import { Suspense } from "react";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { RouteLoadingView } from "@/components/loading/loading-kit";
 import { BankAccountsClient } from "@/components/domain/accounts/BankAccountsClient";
+
 export const metadata = { title: "Bank Accounts" };
+
 export default function BankAccountsPage() {
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-semibold tracking-tight">Bank Accounts</h1><p className="text-sm text-muted-foreground">Manage company bank accounts</p></div>
-      <Suspense fallback={<RouteLoadingView variant="embedded" />}><BankAccountsClient /></Suspense>
+      <PageHeader
+        title="Bank Accounts"
+        description="Manage company bank accounts"
+      />
+      <Suspense fallback={<RouteLoadingView variant="embedded" />}>
+        <BankAccountsClient />
+      </Suspense>
     </div>
   );
 }

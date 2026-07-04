@@ -478,7 +478,7 @@ export function SalesOrderDetail({ id }) {
         )}
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Linked Delivery Notes</CardTitle>
             <Link href={`/delivery-notes/new?salesOrder=${id}`}>
               <Button variant="outline" size="sm">

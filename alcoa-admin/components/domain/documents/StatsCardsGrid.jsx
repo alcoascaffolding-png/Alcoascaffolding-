@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function StatsCardsGrid({ items }) {
   if (!items?.length) return null;
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
       {items.map((s) => (
         <Card key={s.label}>
           <CardContent className="p-4">

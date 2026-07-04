@@ -166,7 +166,7 @@ export function GenericCRUDPage({
     <>
       {/* Stats */}
       {stats && statCards && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {statCards(stats).map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4">

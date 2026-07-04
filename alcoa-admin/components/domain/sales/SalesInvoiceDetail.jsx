@@ -402,7 +402,7 @@ export function SalesInvoiceDetail({ id }) {
         )}
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Linked Delivery Notes</CardTitle>
             {salesOrderId ? (
               <Link href={`/delivery-notes/new?salesOrder=${salesOrderId}`}>

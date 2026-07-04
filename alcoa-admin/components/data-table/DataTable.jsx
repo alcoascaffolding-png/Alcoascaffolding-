@@ -61,9 +61,9 @@ export function DataTable({
     <>
       {/* Toolbar */}
       {(searchable || toolbar) && (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {searchable && (
-            <div className="relative max-w-sm flex-1">
+            <div className="relative w-full sm:max-w-sm sm:flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
@@ -76,7 +76,11 @@ export function DataTable({
               />
             </div>
           )}
-          {toolbar && <div className="flex items-center gap-2">{toolbar}</div>}
+          {toolbar && (
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
+              {toolbar}
+            </div>
+          )}
         </div>
       )}
 
@@ -93,7 +97,8 @@ export function DataTable({
             <span>Refreshing…</span>
           </div>
         )}
-        <Table className="table-fixed">
+        <div className="overflow-x-auto">
+        <Table className="table-fixed min-w-max w-full">
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="border-b border-border/60 bg-card hover:bg-card">
@@ -182,6 +187,7 @@ export function DataTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Pagination */}
@@ -232,7 +238,7 @@ export function DataTable({
   if (card) {
     return (
       <Card>
-        <CardContent className="space-y-4 p-4">{inner}</CardContent>
+        <CardContent className="space-y-4 p-3 sm:p-4">{inner}</CardContent>
       </Card>
     );
   }

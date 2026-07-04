@@ -179,7 +179,7 @@ export function ContactMessagesClient() {
   ];
 
   const toolbar = (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Select value={filterType} onValueChange={setFilterType}>
         <SelectTrigger className="h-8 w-28">
           <SelectValue placeholder="Type" />
@@ -213,7 +213,7 @@ export function ContactMessagesClient() {
     <>
       {/* Stats row */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">New</p><p className="text-2xl font-bold text-primary">{stats.newMessages}</p></CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Contact</p><p className="text-2xl font-bold">{stats.contactCount}</p></CardContent></Card>
@@ -245,7 +245,7 @@ export function ContactMessagesClient() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   <a href={`mailto:${selectedMsg.email}`} className="text-primary hover:underline">{selectedMsg.email}</a>
@@ -255,7 +255,7 @@ export function ContactMessagesClient() {
                   <a href={`tel:${selectedMsg.phone}`} className="text-foreground">{selectedMsg.phone}</a>
                 </div>
                 {selectedMsg.company && (
-                  <div className="flex items-center gap-2 text-muted-foreground col-span-2">
+                  <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
                     <Building2 className="h-4 w-4" />
                     <span>{selectedMsg.company}</span>
                   </div>
@@ -271,7 +271,7 @@ export function ContactMessagesClient() {
               )}
 
               {selectedMsg.type === "quote" && (
-                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                   {selectedMsg.projectType && <div><span className="font-medium">Type:</span> {selectedMsg.projectType}</div>}
                   {selectedMsg.projectHeight && <div><span className="font-medium">Height:</span> {selectedMsg.projectHeight}</div>}
                   {selectedMsg.coverageArea && <div><span className="font-medium">Area:</span> {selectedMsg.coverageArea}</div>}

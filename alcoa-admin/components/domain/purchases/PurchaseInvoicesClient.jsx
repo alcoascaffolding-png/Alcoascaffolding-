@@ -137,7 +137,7 @@ function PurchaseInvoiceFormFields({ control }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <VendorSelectField control={control} />
         <FormTextField control={control} name="vendorName" label="Vendor name" />
         <FormSelectField control={control} name="purchaseOrder" label="Purchase order" options={poOptions} />

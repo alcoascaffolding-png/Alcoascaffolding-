@@ -227,7 +227,7 @@ export function CustomersClient() {
   return (
     <>
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card>
             <CardContent className="p-4 flex items-center gap-3">
               <Users className="h-5 w-5 text-muted-foreground" />

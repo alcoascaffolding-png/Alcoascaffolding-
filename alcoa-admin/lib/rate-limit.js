@@ -29,6 +29,12 @@ export function checkLoginRateLimit(email) {
   return checkMemoryRateLimit(key, 10, 60 * 60 * 1000);
 }
 
+/** Login attempts — 30 per IP per hour (broader brute-force protection). */
+export function checkLoginIpRateLimit(ip) {
+  const key = `login-ip:${String(ip || "unknown").trim()}`;
+  return checkMemoryRateLimit(key, 30, 60 * 60 * 1000);
+}
+
 async function getRatelimit(requests = 10, window = "1 h") {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return null; // No rate limiting in dev without Redis

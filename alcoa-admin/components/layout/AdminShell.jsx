@@ -53,6 +53,7 @@ export function AdminShell({ children }) {
         collapsed={sidebarCollapsed}
         mobileOpen={mobileNavOpen}
         onNavigate={closeMobileNav}
+        onCloseMobile={closeMobileNav}
       />
 
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">

@@ -128,7 +128,7 @@ function ReceiptFormFields({ control }) {
           maxAmount != null ? `Outstanding balance: ${formatCurrency(maxAmount)}` : undefined
         }
       />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormSelectField
           control={control}
           name="paymentMethod"

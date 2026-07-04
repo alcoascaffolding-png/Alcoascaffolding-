@@ -439,7 +439,7 @@ export function SalesInvoiceFormPage({ id }) {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Line items</CardTitle>
             <Button type="button" size="sm" variant="outline" onClick={() => append({ ...defaultItem })}>
               <Plus className="h-4 w-4 mr-1" /> Add line

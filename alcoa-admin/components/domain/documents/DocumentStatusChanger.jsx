@@ -77,7 +77,7 @@ export function DocumentStatusChanger({
     onError: (e) => toast.error(e.message),
   });
 
-  const triggerSizeCls = size === "sm" ? "h-8 px-2 py-1 text-xs w-[150px]" : "h-9 w-[160px]";
+  const triggerSizeCls = size === "sm" ? "h-8 px-2 py-1 text-xs min-w-[120px] w-full sm:w-[150px]" : "h-9 min-w-[130px] w-full sm:w-[160px]";
   const currentDot = options.find((o) => o.value === value)?.dotClassName || "bg-muted-foreground";
 
   return (
