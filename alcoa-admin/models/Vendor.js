@@ -29,6 +29,5 @@ const vendorSchema = new mongoose.Schema(
 );
 
 vendorSchema.index({ companyName: "text", email: "text" });
-vendorSchema.index({ status: 1 });
 
 export default mongoose.models.Vendor || mongoose.model("Vendor", vendorSchema);

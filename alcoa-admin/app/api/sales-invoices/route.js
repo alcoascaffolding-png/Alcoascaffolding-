@@ -7,10 +7,15 @@ import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+import { markOverdueSalesInvoices } from "@/lib/mark-overdue-invoices";
 import {
   computeSalesInvoiceTotals,
   paymentStatusFromAmounts,
 } from "@/lib/sales-invoice-totals";
+import {
+  applySalesInvoicePaymentFields,
+  validateSalesInvoicePayment,
+} from "@/lib/sales-invoice-payment";
 
 void Customer;
 

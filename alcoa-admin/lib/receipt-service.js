@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Receipt from "@/models/Receipt";
 import SalesInvoice from "@/models/SalesInvoice";
+import BankAccount from "@/models/BankAccount";
 import { AppError } from "@/lib/api-error";
 import {
   validateSalesInvoicePayment,
@@ -106,6 +107,15 @@ async function applyAllocations(allocations, direction = 1) {
   }
 }
 
+async function applyBankAccountDelta(bankAccount, amount) {
+  if (!bankAccount || !mongoose.Types.ObjectId.isValid(String(bankAccount))) return;
+  const delta = Number(amount) || 0;
+  if (!delta) return;
+  await BankAccount.findByIdAndUpdate(bankAccount, {
+    $inc: { currentBalance: delta },
+  });
+}
+
 export async function createReceiptWithPayment({
   invoiceIds,
   amount,
@@ -140,6 +150,7 @@ export async function createReceiptWithPayment({
   });
 
   await applyAllocations(allocations, 1);
+  await applyBankAccountDelta(receipt.bankAccount, receipt.amount);
   return receipt;
 }
 
@@ -153,4 +164,5 @@ export async function reverseReceiptPayment(receipt) {
 
   if (!allocations.length) return;
   await applyAllocations(allocations, -1);
+  await applyBankAccountDelta(receipt.bankAccount, -Number(receipt.amount || 0));
 }

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Payment from "@/models/Payment";
 import PurchaseInvoice from "@/models/PurchaseInvoice";
+import BankAccount from "@/models/BankAccount";
 import { AppError } from "@/lib/api-error";
 import {
   validatePurchaseInvoicePayment,
@@ -95,6 +96,15 @@ async function applyAllocations(allocations, direction = 1) {
   }
 }
 
+async function applyBankAccountDelta(bankAccount, amount) {
+  if (!bankAccount || !mongoose.Types.ObjectId.isValid(String(bankAccount))) return;
+  const delta = Number(amount) || 0;
+  if (!delta) return;
+  await BankAccount.findByIdAndUpdate(bankAccount, {
+    $inc: { currentBalance: delta },
+  });
+}
+
 export async function createPaymentWithAllocation({
   invoiceIds,
   amount,
@@ -129,6 +139,7 @@ export async function createPaymentWithAllocation({
   });
 
   await applyAllocations(allocations, 1);
+  await applyBankAccountDelta(payment.bankAccount, -Number(payment.amount || 0));
   return payment;
 }
 
@@ -142,4 +153,5 @@ export async function reversePaymentAllocation(payment) {
 
   if (!allocations.length) return;
   await applyAllocations(allocations, -1);
+  await applyBankAccountDelta(payment.bankAccount, Number(payment.amount || 0));
 }

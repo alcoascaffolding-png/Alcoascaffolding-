@@ -49,7 +49,7 @@ These were built earlier then **removed** at your request:
 | Bulk export/delete on quotations list | Removed |
 | Generate public share link on quotation detail | Removed |
 
-> Note: `/q/[token]` public pages still exist in code but **cannot be generated from admin** anymore.
+> Note: public quote share pages and token generation were removed from the admin scope.
 
 ---
 

@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler } from "@/lib/api-error";
 import { createListHandlers } from "@/lib/crud-factory";
@@ -8,8 +8,7 @@ import { createPaymentWithAllocation } from "@/lib/payment-service";
 const { GET } = createListHandlers(() => import("@/models/Payment"), "Payment", "payments");
 
 const POST = withErrorHandler(async (request) => {
-  const session = await auth();
-  if (!session?.user) return apiError("Unauthorized", 401);
+  const session = await authorizeApi("payments", "write");
 
   await connectDB();
   const body = await request.json();
