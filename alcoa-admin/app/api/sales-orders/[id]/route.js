@@ -16,6 +16,7 @@ import {
 import { assertSalesOrderSafeToDelete } from "@/lib/sales-document-delete-guards";
 import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
 import { computeSalesOrderDeliveryFulfillment } from "@/lib/sales-order-delivery-fulfillment";
+import { resolveOrderNumberForCreate } from "@/lib/document-number";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -33,6 +34,21 @@ export const GET = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
+  const existing = await SalesOrder.findById(params.id);
+  if (!existing) throw new AppError("Sales Order not found", 404);
+
+  if (!String(existing.orderNumber || "").startsWith("SO")) {
+    existing.orderNumber = await resolveOrderNumberForCreate(
+      {
+        orderDate: existing.orderDate || new Date(),
+        orderNumber: undefined,
+      },
+      { Quotation, SalesInvoice, SalesOrder },
+    );
+    existing.recalculateTotals();
+    await existing.save();
+  }
+
   const doc = await SalesOrder.findById(params.id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
     .populate("quotation", "quoteNumber status customerName totalAmount")
@@ -95,19 +111,17 @@ export const PATCH = withErrorHandler(async (request, context) => {
     const qid = toObjectId(body.quotation);
     patch.quotation = qid ?? null;
     if (qid) {
-      const q = await Quotation.findById(qid).select("quoteNumber").lean();
-      if (q?.quoteNumber) {
-        const conflict = await SalesOrder.exists({
-          orderNumber: q.quoteNumber,
-          _id: { $ne: params.id },
-        });
-        if (conflict) {
-          throw new AppError(
-            `Quotation ${q.quoteNumber} is already linked to another sales order.`,
-            400
-          );
-        }
-        patch.orderNumber = q.quoteNumber;
+      const conflict = await SalesOrder.findOne({
+        quotation: qid,
+        _id: { $ne: params.id },
+      })
+        .select("orderNumber")
+        .lean();
+      if (conflict) {
+        throw new AppError(
+          `Quotation is already linked to sales order ${conflict.orderNumber}.`,
+          400
+        );
       }
     }
   }

@@ -3,7 +3,7 @@
  * - Quotation: always QT
  * - Standalone sales order: SO
  * - Standalone sales invoice: SI
- * When linked, child documents reuse the parent's number (QT from quote, or SO from order).
+ * Linked child documents keep their own prefixes (SO / SI / DN).
  */
 
 export const DOCUMENT_PREFIX = {
@@ -59,11 +59,10 @@ export async function isDocumentNumberTaken(candidate, models, exclude = {}) {
     return q;
   };
 
-  const checks = [
-    Quotation.exists(filter("quoteNumber", exclude.quotationId)),
-    SalesOrder.exists(filter("orderNumber", exclude.salesOrderId)),
-    SalesInvoice.exists(filter("invoiceNumber", exclude.salesInvoiceId)),
-  ];
+  const checks = [];
+  if (Quotation) checks.push(Quotation.exists(filter("quoteNumber", exclude.quotationId)));
+  if (SalesOrder) checks.push(SalesOrder.exists(filter("orderNumber", exclude.salesOrderId)));
+  if (SalesInvoice) checks.push(SalesInvoice.exists(filter("invoiceNumber", exclude.salesInvoiceId)));
   if (DeliveryNote) {
     checks.push(DeliveryNote.exists(filter("deliveryNoteNumber", exclude.deliveryNoteId)));
   }
@@ -86,25 +85,13 @@ export async function generateNewDocumentNumber(
   return generateUniqueDocumentNumber(prefix, isAvailable, baseDate);
 }
 
-/** Sales order: reuse quotation ID when linked; otherwise SOYYMMDD###. */
+/** Sales order: always SOYYMMDD### unless manually supplied. */
 export async function resolveOrderNumberForCreate(
   { quotationId, orderDate, orderNumber },
   models
 ) {
   if (orderNumber && String(orderNumber).trim()) {
     return String(orderNumber).trim();
-  }
-  if (quotationId) {
-    const q = await models.Quotation.findById(quotationId).select("quoteNumber").lean();
-    if (q?.quoteNumber) {
-      const conflict = await models.SalesOrder.exists({ orderNumber: q.quoteNumber });
-      if (conflict) {
-        throw new Error(
-          `Quotation ${q.quoteNumber} is already linked to another sales order. Use that order or unlink it first.`
-        );
-      }
-      return q.quoteNumber;
-    }
   }
   return generateNewDocumentNumber(
     models,
@@ -113,39 +100,13 @@ export async function resolveOrderNumberForCreate(
   );
 }
 
-/** Sales invoice: reuse sales order ID when linked; otherwise SIYYMMDD###. */
+/** Sales invoice: always SIYYMMDD### unless manually supplied. */
 export async function resolveInvoiceNumberForCreate(
   { salesOrderId, invoiceDate, invoiceNumber },
   models
 ) {
   if (invoiceNumber && String(invoiceNumber).trim()) {
     return String(invoiceNumber).trim();
-  }
-  if (salesOrderId) {
-    const o = await models.SalesOrder.findById(salesOrderId)
-      .select("orderNumber quotation")
-      .populate("quotation", "quoteNumber")
-      .lean();
-    const linked =
-      o?.orderNumber ||
-      (o?.quotation && typeof o.quotation === "object" ? o.quotation.quoteNumber : null);
-    if (linked) {
-      const existingInv = await models.SalesInvoice.findOne({ invoiceNumber: linked })
-        .select("salesOrder")
-        .lean();
-      if (existingInv) {
-        const sameOrder =
-          salesOrderId &&
-          existingInv.salesOrder &&
-          String(existingInv.salesOrder) === String(salesOrderId);
-        if (!sameOrder) {
-          throw new Error(
-            `Document ${linked} is already used by another tax invoice. Open that invoice or unlink the order.`
-          );
-        }
-      }
-      return linked;
-    }
   }
   return generateNewDocumentNumber(
     models,

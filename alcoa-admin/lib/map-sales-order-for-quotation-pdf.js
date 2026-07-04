@@ -136,16 +136,24 @@ function resolveVatPct(doc) {
  * Maps a sales invoice into the quotation PDF layout shape.
  */
 export function mapSalesInvoiceForQuotationPdf(invoice) {
-  const subtotal = Number(invoice.subtotal || 0);
+  const fallbackItems = Array.isArray(invoice.items) ? invoice.items : [];
+  const fallbackSubtotal = fallbackItems.reduce(
+    (sum, it) => sum + Number(it.total ?? Number(it.quantity || 0) * Number(it.unitPrice || 0)),
+    0
+  );
+  const subtotal =
+    Number(invoice.subtotal || 0) > 0 ? Number(invoice.subtotal || 0) : fallbackSubtotal;
   const vatAmount = Number(invoice.vatAmount || 0);
-  const vatPct = resolveVatPct(invoice);
+  const vatPct =
+    subtotal > 0
+      ? Math.round((vatAmount / subtotal) * 10000) / 100
+      : resolveVatPct(invoice);
   const items = mapLineItemsForPdf(invoice, vatPct);
   const cust = invoice.customer && typeof invoice.customer === "object" ? invoice.customer : null;
   const customerAddress = invoice.customerAddress || formatCustomerAddressFromRecord(cust);
-  const total = Number(invoice.total || 0);
+  const total = Number(invoice.total || 0) > 0 ? Number(invoice.total || 0) : subtotal + vatAmount;
   const paid = Number(invoice.paidAmount || 0);
-  const balance =
-    invoice.balance != null ? Number(invoice.balance) : Math.max(0, total - paid);
+  const balance = Math.max(0, total - paid);
 
   return {
     quoteNumber: invoice.invoiceNumber,

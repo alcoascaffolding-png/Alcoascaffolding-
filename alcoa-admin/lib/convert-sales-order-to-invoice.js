@@ -47,6 +47,28 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   }
 
   if (existing) {
+    if (!String(existing.invoiceNumber || "").startsWith("SI")) {
+      const repair = await SalesInvoice.findById(existing._id);
+      if (repair) {
+        repair.invoiceNumber = await resolveInvoiceNumberForCreate(
+          { invoiceDate: repair.invoiceDate || new Date() },
+          { Quotation, SalesOrder, SalesInvoice }
+        );
+        repair.recalculateTotals();
+        await repair.save();
+        existing = repair.toObject();
+      }
+    }
+    if (order.quotation) {
+      await Quotation.findByIdAndUpdate(order.quotation, {
+        $set: {
+          status: "converted_to_invoice",
+          convertedToInvoice: true,
+          invoiceId: existing._id,
+          convertedAt: new Date(),
+        },
+      });
+    }
     return {
       created: false,
       salesInvoice: existing,
@@ -60,6 +82,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
       const rate = Number(it.unitPrice) || 0;
       const total = Number(it.total ?? qty * rate);
       return {
+        product: it.product || undefined,
         description: it.description || "Line item",
         equipmentType: it.equipmentType || undefined,
         specifications: it.specifications || undefined,
@@ -127,17 +150,28 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
       customerEmail: order.customerEmail,
       customerPhone: order.customerPhone,
       customerTRN,
+      quotation: order.quotation || undefined,
       salesOrder: soid,
       invoiceDate,
       dueDate,
       paymentStatus: "unpaid",
       items,
       subtotal,
+      deliveryCharges: Number(order.deliveryCharges) || 0,
+      installationCharges: Number(order.installationCharges) || 0,
+      pickupCharges: Number(order.pickupCharges) || 0,
+      discount: Number(order.discount) || 0,
+      discountType: order.discountType || "fixed",
+      vatPercentage: Number(order.vatPercentage) || 5,
       vatAmount,
-      total,
+      total: Number(order.total) || total,
       paidAmount: 0,
-      balance: total,
+      balance: Number(order.total) || total,
       currency: order.currency || "AED",
+      paymentTerms: order.paymentTerms || "Cash/CDC",
+      deliveryTerms: order.deliveryTerms || "7-10 days from date of order",
+      customerPONumber: order.customerPONumber || undefined,
+      referenceNumber: order.referenceNumber || undefined,
       notes: order.notes || undefined,
       createdBy: createdByUserId,
     });
@@ -157,6 +191,17 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
       );
     }
     throw err;
+  }
+
+  if (order.quotation) {
+    await Quotation.findByIdAndUpdate(order.quotation, {
+      $set: {
+        status: "converted_to_invoice",
+        convertedToInvoice: true,
+        invoiceId: invoice._id,
+        convertedAt: new Date(),
+      },
+    });
   }
 
   return {

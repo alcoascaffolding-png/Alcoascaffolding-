@@ -1,36 +1,10 @@
 import mongoose from "mongoose";
-import crypto from "node:crypto";
 import Customer from "@/models/Customer";
 import { AppError } from "@/lib/api-error";
 import { getLinkedCustomerId } from "@/lib/map-customer-to-quotation";
 
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/**
- * Returns the absolute base URL to use for public links shared with customers.
- * Reads PUBLIC_APP_URL → NEXTAUTH_URL → VERCEL_URL → localhost fallback.
- */
-export function getPublicAppUrl() {
-  const explicit = process.env.PUBLIC_APP_URL || process.env.NEXTAUTH_URL;
-  if (explicit) return explicit.replace(/\/$/, "");
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
-
-/** Idempotently ensure the quotation has a publicToken; returns the token + URL. */
-export async function ensureQuotationPublicToken(quotationId, Quotation) {
-  const existing = await Quotation.findById(quotationId).select("publicToken").lean();
-  if (existing?.publicToken) {
-    return {
-      token: existing.publicToken,
-      url: `${getPublicAppUrl()}/q/${existing.publicToken}`,
-    };
-  }
-  const token = crypto.randomBytes(24).toString("hex");
-  await Quotation.findByIdAndUpdate(quotationId, { publicToken: token });
-  return { token, url: `${getPublicAppUrl()}/q/${token}` };
 }
 
 export function coerceQuotationDate(value, fallback) {
@@ -82,7 +56,12 @@ export function applyStatusSideEffects(doc, nextStatus) {
   const now = new Date();
   if (nextStatus === "sent" && !doc.sentDate) doc.sentDate = now;
   if (nextStatus === "viewed" && !doc.viewedDate) doc.viewedDate = now;
-  if (nextStatus === "converted" && !doc.convertedAt) doc.convertedAt = now;
+  if (
+    ["converted", "converted_to_sales_order", "converted_to_invoice"].includes(nextStatus) &&
+    !doc.convertedAt
+  ) {
+    doc.convertedAt = now;
+  }
 }
 
 /** Quotation fields allowed on PATCH (explicit list — avoids silent drops from deny-list gaps). */

@@ -4,7 +4,31 @@ import Quotation from "@/models/Quotation";
 import { AppError } from "@/lib/api-error";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
-import { buildSalesOrderPayloadFromQuotation } from "@/lib/quotation-conversion-totals";
+
+function quotationItemsToOrderItems(items) {
+  return (items || []).map((it) => {
+    const qty = Number(it.quantity) || 1;
+    const rate = Number(it.ratePerUnit) || 0;
+    const lineSub = Number(it.subtotal ?? qty * rate);
+    const desc =
+      [it.equipmentType, it.description].filter(Boolean).join(" — ") ||
+      it.description ||
+      "Line item";
+    return {
+      product: it.product || undefined,
+      description: desc,
+      equipmentType: it.equipmentType || undefined,
+      specifications: it.specifications || undefined,
+      size: it.size || undefined,
+      weight: it.weight != null ? Number(it.weight) : undefined,
+      cbm: it.cbm != null ? Number(it.cbm) : undefined,
+      quantity: qty,
+      unit: it.unit || "Nos",
+      unitPrice: rate,
+      total: lineSub,
+    };
+  });
+}
 
 /**
  * When a quotation is marked converted, ensure a linked sales order exists.
@@ -37,7 +61,19 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
   }
 
   if (existing) {
-    await markQuotationConvertedFromSalesOrder(qid);
+    if (!String(existing.orderNumber || "").startsWith("SO")) {
+      const repair = await SalesOrder.findById(existing._id);
+      if (repair) {
+        repair.orderNumber = await resolveOrderNumberForCreate(
+          { orderDate: repair.orderDate || new Date() },
+          { SalesOrder }
+        );
+        repair.recalculateTotals();
+        await repair.save();
+        existing = repair.toObject();
+      }
+    }
+    await markQuotationConvertedFromSalesOrder(qid, existing._id);
     return {
       created: false,
       salesOrder: existing,
@@ -45,7 +81,12 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     };
   }
 
-  const { items, subtotal, vatAmount, total } = buildSalesOrderPayloadFromQuotation(q);
+  const items = quotationItemsToOrderItems(q.items);
+  const lineSubtotal =
+    Number(q.subtotal) || items.reduce((s, it) => s + Number(it.total || 0), 0);
+  const vatAmount =
+    Number(q.vatAmount) ||
+    Math.round((lineSubtotal * Number(q.vatPercentage || 5)) / 100 * 100) / 100;
 
   const orderNumber = await resolveOrderNumberForCreate(
     { quotationId: qid, orderDate: q.quoteDate || new Date() },
@@ -65,15 +106,25 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     deliveryDate: q.deliveryDate || q.validUntil || undefined,
     status: "confirmed",
     items,
-    subtotal,
+    subtotal: lineSubtotal,
+    deliveryCharges: Number(q.deliveryCharges) || 0,
+    installationCharges: Number(q.installationCharges) || 0,
+    pickupCharges: Number(q.pickupCharges) || 0,
+    discount: Number(q.discount) || 0,
+    discountType: q.discountType || "fixed",
+    vatPercentage: Number(q.vatPercentage) || 5,
     vatAmount,
-    total,
+    total: Number(q.totalAmount) || lineSubtotal + vatAmount,
     currency: q.currency || "AED",
+    paymentTerms: q.paymentTerms || "Cash/CDC",
+    deliveryTerms: q.deliveryTerms || "7-10 days from date of order",
+    customerPONumber: q.customerPONumber || undefined,
+    referenceNumber: q.referenceNumber || undefined,
     notes: q.notes || undefined,
     createdBy: createdByUserId,
   });
 
-  await markQuotationConvertedFromSalesOrder(qid);
+  await markQuotationConvertedFromSalesOrder(qid, order._id);
 
   return {
     created: true,

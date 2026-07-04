@@ -322,7 +322,13 @@ export function SalesOrderFormPage({ id }) {
     const list = [...(quotationList || [])];
     const eligible = list.filter((q) => {
       if (loadedOrderQuotationId && String(q._id) === loadedOrderQuotationId) return true;
-      return !["converted", "rejected", "expired"].includes(q.status);
+      return ![
+        "converted",
+        "converted_to_sales_order",
+        "converted_to_invoice",
+        "rejected",
+        "expired",
+      ].includes(q.status);
     });
     return [
       { value: "__none__", label: "— None —" },

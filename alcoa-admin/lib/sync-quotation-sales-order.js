@@ -8,17 +8,23 @@ function toIdString(ref) {
 }
 
 /**
- * When a sales order is linked to a quotation, mark the quote as converted.
+ * When a sales order is linked to a quotation, mark the quote as converted to sales order.
  */
-export async function markQuotationConvertedFromSalesOrder(quotationId) {
+export async function markQuotationConvertedFromSalesOrder(quotationId, salesOrderId) {
   if (!quotationId || !mongoose.Types.ObjectId.isValid(String(quotationId))) return;
   const qid = new mongoose.Types.ObjectId(String(quotationId));
+  const orderId =
+    salesOrderId && mongoose.Types.ObjectId.isValid(String(salesOrderId))
+      ? new mongoose.Types.ObjectId(String(salesOrderId))
+      : undefined;
+  const set = {
+    status: "converted_to_sales_order",
+    convertedToOrder: true,
+    convertedAt: new Date(),
+  };
+  if (orderId) set.orderId = orderId;
   await Quotation.findByIdAndUpdate(qid, {
-    $set: {
-      status: "converted",
-      convertedToOrder: true,
-      convertedAt: new Date(),
-    },
+    $set: set,
   });
 }
 
@@ -29,13 +35,13 @@ export async function markQuotationConvertedFromSalesOrder(quotationId) {
 export async function revertQuotationFromConvertedToApproved(quotationId) {
   if (!quotationId || !mongoose.Types.ObjectId.isValid(String(quotationId))) return;
   const q = await Quotation.findById(quotationId).select("status").lean();
-  if (!q || q.status !== "converted") return;
+  if (!q || !["converted", "converted_to_sales_order"].includes(q.status)) return;
   await Quotation.findByIdAndUpdate(quotationId, {
     $set: {
-      status: "approved",
+      status: "accepted",
       convertedToOrder: false,
     },
-    $unset: { convertedAt: "" },
+    $unset: { convertedAt: "", orderId: "" },
   });
 }
 
@@ -47,7 +53,7 @@ export async function syncQuotationsAfterSalesOrderPatch(prevOrderLean, updatedO
   const newQ = toIdString(updatedOrderDoc?.quotation);
 
   if (prevQ === newQ) {
-    if (newQ) await markQuotationConvertedFromSalesOrder(newQ);
+    if (newQ) await markQuotationConvertedFromSalesOrder(newQ, updatedOrderDoc?._id);
     return;
   }
 
@@ -55,6 +61,6 @@ export async function syncQuotationsAfterSalesOrderPatch(prevOrderLean, updatedO
     await revertQuotationFromConvertedToApproved(prevQ);
   }
   if (newQ) {
-    await markQuotationConvertedFromSalesOrder(newQ);
+    await markQuotationConvertedFromSalesOrder(newQ, updatedOrderDoc?._id);
   }
 }

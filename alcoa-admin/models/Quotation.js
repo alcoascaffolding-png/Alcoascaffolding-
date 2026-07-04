@@ -44,7 +44,18 @@ const quotationSchema = new mongoose.Schema(
     quoteType: { type: String, enum: ["rental", "sales", "service", "both"], default: "rental", index: true },
     status: {
       type: String,
-      enum: ["draft", "sent", "viewed", "approved", "rejected", "expired", "converted"],
+      enum: [
+        "draft",
+        "sent",
+        "viewed",
+        "accepted",
+        "approved",
+        "rejected",
+        "expired",
+        "converted",
+        "converted_to_sales_order",
+        "converted_to_invoice",
+      ],
       default: "draft",
       index: true,
     },
@@ -81,8 +92,6 @@ const quotationSchema = new mongoose.Schema(
     termsAndConditions: { type: String, trim: true },
     sentDate: { type: Date },
     viewedDate: { type: Date },
-    /** Random token used by the public Accept/Reject page (`/q/:token`). */
-    publicToken: { type: String, index: true, unique: true, sparse: true },
     emailsSent: [
       {
         sentAt: Date,
@@ -102,7 +111,9 @@ const quotationSchema = new mongoose.Schema(
     followUpDate: { type: Date },
     followUpNotes: { type: String, trim: true },
     convertedToOrder: { type: Boolean, default: false },
+    convertedToInvoice: { type: Boolean, default: false },
     orderId: { type: mongoose.Schema.Types.ObjectId, ref: "RentalOrder" },
+    invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: "SalesInvoice" },
     convertedAt: { type: Date },
     attachments: [
       {
@@ -131,11 +142,19 @@ const quotationSchema = new mongoose.Schema(
 quotationSchema.index({ quoteNumber: "text", customerName: "text" });
 quotationSchema.index({ status: 1, quoteDate: -1 });
 quotationSchema.index({ customer: 1, status: 1 });
-quotationSchema.index({ validUntil: 1 });
 quotationSchema.index({ createdAt: -1 });
 
 quotationSchema.virtual("isExpired").get(function () {
-  return this.validUntil < new Date() && !["approved", "converted"].includes(this.status);
+  return (
+    this.validUntil < new Date() &&
+    ![
+      "accepted",
+      "approved",
+      "converted",
+      "converted_to_sales_order",
+      "converted_to_invoice",
+    ].includes(this.status)
+  );
 });
 
 quotationSchema.methods.calculateTotals = function () {

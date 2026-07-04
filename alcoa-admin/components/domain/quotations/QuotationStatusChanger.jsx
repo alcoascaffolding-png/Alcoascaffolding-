@@ -6,10 +6,13 @@ export const QUOTATION_STATUS_OPTIONS = [
   { value: "draft", label: "Draft", dotClassName: "bg-muted-foreground" },
   { value: "sent", label: "Sent", dotClassName: "bg-sky-500" },
   { value: "viewed", label: "Viewed", dotClassName: "bg-violet-500" },
-  { value: "approved", label: "Approved", dotClassName: "bg-emerald-500" },
+  { value: "accepted", label: "Accepted", dotClassName: "bg-emerald-500" },
+  { value: "approved", label: "Approved (legacy)", dotClassName: "bg-emerald-500" },
   { value: "rejected", label: "Rejected", dotClassName: "bg-destructive" },
   { value: "expired", label: "Expired", dotClassName: "bg-amber-500" },
-  { value: "converted", label: "Converted", dotClassName: "bg-emerald-700" },
+  { value: "converted_to_sales_order", label: "Converted to Sales Order", dotClassName: "bg-emerald-700" },
+  { value: "converted_to_invoice", label: "Converted to Invoice", dotClassName: "bg-purple-600" },
+  { value: "converted", label: "Converted (legacy)", dotClassName: "bg-emerald-700" },
 ];
 
 export function QuotationStatusChanger({
@@ -37,11 +40,15 @@ export function QuotationStatusChanger({
       ]}
       getSuccessMessage={(data) => {
         const c = data?.conversion;
-        if (!c?.orderNumber) return "Status updated";
-        if (c.created) {
-          return `Converted — sales order ${c.orderNumber} created`;
+        if (c?.type === "sales_invoice") {
+          if (c.created) return `Converted — tax invoice ${c.invoiceNumber} created`;
+          return `Converted — linked to tax invoice ${c.invoiceNumber}`;
         }
-        return `Converted — linked to sales order ${c.orderNumber}`;
+        if (c?.type === "sales_order") {
+          if (c.created) return `Converted — sales order ${c.orderNumber} created`;
+          return `Converted — linked to sales order ${c.orderNumber}`;
+        }
+        return "Status updated";
       }}
     />
   );

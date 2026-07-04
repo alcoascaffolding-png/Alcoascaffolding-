@@ -8,10 +8,9 @@ import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
 import {
-  validateSalesInvoicePayment,
-  applySalesInvoicePaymentFields,
-} from "@/lib/sales-invoice-payment";
-import { markOverdueSalesInvoices } from "@/lib/mark-overdue-invoices";
+  computeSalesInvoiceTotals,
+  paymentStatusFromAmounts,
+} from "@/lib/sales-invoice-totals";
 
 void Customer;
 
@@ -80,7 +79,15 @@ export const POST = withErrorHandler(async (request) => {
     notes,
     currency,
     vatAmount,
+    deliveryCharges,
+    installationCharges,
+    pickupCharges,
+    discount,
+    discountType,
+    vatPercentage,
   } = body;
+
+  const totals = computeSalesInvoiceTotals({ items, vatAmount, paidAmount });
 
   const payload = {
     customer: customerId,
@@ -89,13 +96,22 @@ export const POST = withErrorHandler(async (request) => {
     customerEmail,
     customerPhone,
     customerTRN,
-    items,
+    items: totals.items,
     invoiceDate: coerceQuotationDate(invoiceDateRaw, new Date()),
-    paymentStatus: paymentStatus || "unpaid",
-    paidAmount: Number(paidAmount) || 0,
+    paymentStatus: paymentStatus || paymentStatusFromAmounts(totals),
+    paidAmount: totals.paidAmount,
     notes,
     currency: currency || "AED",
-    vatAmount: Number(vatAmount) || 0,
+    subtotal: totals.subtotal,
+    deliveryCharges: Number(deliveryCharges) || 0,
+    installationCharges: Number(installationCharges) || 0,
+    pickupCharges: Number(pickupCharges) || 0,
+    discount: Number(discount) || 0,
+    discountType: discountType || "fixed",
+    vatPercentage: Number(vatPercentage) || 5,
+    vatAmount: totals.vatAmount,
+    total: totals.total,
+    balance: totals.balance,
   };
 
   if (dueRaw) {

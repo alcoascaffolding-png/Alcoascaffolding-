@@ -9,6 +9,7 @@ import {
   validateSalesInvoicePayment,
   applySalesInvoicePaymentFields,
 } from "@/lib/sales-invoice-payment";
+import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 
 void Customer;
 
@@ -28,11 +29,37 @@ export const GET = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
+  const existing = await SalesInvoice.findById(params.id);
+  if (!existing) throw new AppError("Tax Invoice not found", 404);
+
+  if (!String(existing.invoiceNumber || "").startsWith("SI")) {
+    existing.invoiceNumber = await resolveInvoiceNumberForCreate(
+      {
+        invoiceDate: existing.invoiceDate || new Date(),
+        invoiceNumber: undefined,
+      },
+      { Quotation, SalesOrder, SalesInvoice },
+    );
+    existing.recalculateTotals();
+    await existing.save();
+  } else if (Number(existing.total || 0) <= 0 && existing.items?.length) {
+    existing.recalculateTotals();
+    await existing.save();
+  }
+
+  if (!existing.quotation && existing.salesOrder) {
+    const order = await SalesOrder.findById(existing.salesOrder).select("quotation").lean();
+    if (order?.quotation) {
+      existing.quotation = order.quotation;
+      await existing.save();
+    }
+  }
+
   const doc = await SalesInvoice.findById(params.id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
+    .populate("quotation", "quoteNumber status customerName totalAmount")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
-  if (!doc) throw new AppError("Tax Invoice not found", 404);
   return apiSuccess(doc);
 });
 
@@ -51,25 +78,17 @@ export const PATCH = withErrorHandler(async (request, context) => {
     const sid = toObjectId(body.salesOrder);
     patch.salesOrder = sid ?? null;
     if (sid) {
-      const o = await SalesOrder.findById(sid)
-        .select("orderNumber quotation")
-        .populate("quotation", "quoteNumber")
+      const conflict = await SalesInvoice.findOne({
+        salesOrder: sid,
+        _id: { $ne: params.id },
+      })
+        .select("invoiceNumber")
         .lean();
-      const linked =
-        o?.orderNumber ||
-        (o?.quotation && typeof o.quotation === "object" ? o.quotation.quoteNumber : null);
-      if (linked) {
-        const conflict = await SalesInvoice.exists({
-          invoiceNumber: linked,
-          _id: { $ne: params.id },
-        });
-        if (conflict) {
-          throw new AppError(
-            `Document ${linked} is already used by another tax invoice.`,
-            400
-          );
-        }
-        patch.invoiceNumber = linked;
+      if (conflict) {
+        throw new AppError(
+          `Sales order is already linked to tax invoice ${conflict.invoiceNumber}.`,
+          400
+        );
       }
     }
   }
@@ -77,8 +96,11 @@ export const PATCH = withErrorHandler(async (request, context) => {
   const doc = await SalesInvoice.findById(params.id);
   if (!doc) throw new AppError("Tax Invoice not found", 404);
 
-  Object.assign(doc, patch);
-  if (doc.items?.length) doc.recalculateTotals();
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === "invoiceNumber" && value == null) continue;
+    doc.set(key, value);
+  }
+  doc.recalculateTotals();
 
   validateSalesInvoicePayment({
     paymentStatus: doc.paymentStatus,
@@ -86,10 +108,20 @@ export const PATCH = withErrorHandler(async (request, context) => {
     total: doc.total,
   });
   applySalesInvoicePaymentFields(doc);
-  await doc.save();
+
+  try {
+    await doc.save();
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      const first = Object.values(err.errors || {})[0]?.message;
+      throw new AppError(first || err.message || "Tax invoice validation failed", 400);
+    }
+    throw err;
+  }
 
   const populated = await SalesInvoice.findById(doc._id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
+    .populate("quotation", "quoteNumber status customerName totalAmount")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
   return apiSuccess(populated);

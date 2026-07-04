@@ -116,6 +116,6 @@ export const POST = withErrorHandler(async (request) => {
   }
 
   const doc = await SalesOrder.create({ ...payload, createdBy: session.user.id });
-  if (qid) await markQuotationConvertedFromSalesOrder(qid);
+  if (qid) await markQuotationConvertedFromSalesOrder(qid, doc._id);
   return apiSuccess(doc, 201);
 });

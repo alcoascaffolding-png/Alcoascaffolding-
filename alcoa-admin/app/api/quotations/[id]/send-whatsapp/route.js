@@ -20,7 +20,6 @@ import {
   isWhatsAppTwilioMode,
 } from "@/lib/server-features";
 import { buildWhatsAppQuotationBody } from "@/lib/quotation-brand";
-// import { ensureQuotationPublicToken } from "@/lib/quotation-save";
 
 /** Local dev only: send WhatsApp text without PDF/Blob (Twilio cannot use localhost PDF URLs). */
 function isLocalTextOnlyWhatsAppMode() {
@@ -102,9 +101,6 @@ export const POST = withErrorHandler(async (request, context) => {
   const body = await request.json().catch(() => ({}));
   const toPhone = body.phone || quotation.customerPhone;
   if (!toPhone) throw new AppError("No phone number specified", 400);
-
-  // Customer accept/reject links disabled — PDF + summary only
-  // const { url: publicUrl } = await ensureQuotationPublicToken(quotationId, Quotation);
 
   // ─── Twilio API path ───────────────────────────────────────────────────
   if (useTwilio) {

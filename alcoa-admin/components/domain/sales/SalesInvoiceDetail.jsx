@@ -126,10 +126,17 @@ export function SalesInvoiceDetail({ id }) {
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
 
   const inv = invoice;
-  const subtotal = Number(inv.subtotal || 0);
-  const vatAmount = Number(inv.vatAmount || 0);
-  const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
   const displayItems = mapSalesInvoiceItemsForDisplay(inv);
+  const lineSubtotal = displayItems.reduce(
+    (sum, item) => sum + Number(item.taxableAmount || item.total || 0),
+    0
+  );
+  const lineVat = displayItems.reduce((sum, item) => sum + Number(item.vatAmount || 0), 0);
+  const subtotal = Number(inv.subtotal || 0) > 0 ? Number(inv.subtotal || 0) : lineSubtotal;
+  const vatAmount = Number(inv.vatAmount || 0) > 0 ? Number(inv.vatAmount || 0) : lineVat;
+  const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
+  const invoiceTotal =
+    Number(inv.total || 0) > 0 ? Number(inv.total || 0) : subtotal + vatAmount;
   const bank = QUOTATION_PDF_BANK_DETAILS;
   const subject = `Tax Invoice ${inv.invoiceNumber}`;
   const customer = inv.customer && typeof inv.customer === "object" ? inv.customer : null;
@@ -138,8 +145,7 @@ export function SalesInvoiceDetail({ id }) {
   const customerEmail = resolveDocumentCustomerEmail(inv);
   const customerPhone = resolveDocumentCustomerPhone(inv);
   const paid = Number(inv.paidAmount || 0);
-  const balance =
-    inv.balance != null ? Number(inv.balance) : Math.max(0, Number(inv.total || 0) - paid);
+  const balance = Math.max(0, invoiceTotal - paid);
 
   return (
     <>
@@ -229,6 +235,38 @@ export function SalesInvoiceDetail({ id }) {
               />
               <InfoRowAlways label="Paid" value={paid.toFixed(2)} />
               <InfoRowAlways label="Balance" value={balance.toFixed(2)} valueClassName="font-medium" />
+              {inv.quotation && (
+                <div className="pt-3 border-t border-border/60 mt-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
+                    Linked quotation
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-sm font-medium">
+                      {typeof inv.quotation === "object" ? inv.quotation.quoteNumber : "—"}
+                    </span>
+                    {typeof inv.quotation === "object" && inv.quotation.status != null && (
+                      <Badge variant="secondary" className="text-xs font-normal capitalize">
+                        {String(inv.quotation.status).replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => {
+                      const qid =
+                        typeof inv.quotation === "object" && inv.quotation._id != null
+                          ? String(inv.quotation._id)
+                          : String(inv.quotation);
+                      router.push(`/quotations/${qid}`);
+                    }}
+                  >
+                    View quotation
+                  </Button>
+                </div>
+              )}
               {inv.salesOrder && (
                 <div className="pt-3 border-t border-border/60 mt-2">
                   <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
@@ -337,7 +375,7 @@ export function SalesInvoiceDetail({ id }) {
               <div className="flex gap-8 w-full max-w-sm justify-between font-bold text-base">
                 <span>Total ({inv.currency || "AED"})</span>
                 <span className="text-primary tabular-nums">
-                  {Number(inv.total || 0).toFixed(2)}
+                  {invoiceTotal.toFixed(2)}
                 </span>
               </div>
               <div className="flex gap-8 w-full max-w-sm justify-between">
