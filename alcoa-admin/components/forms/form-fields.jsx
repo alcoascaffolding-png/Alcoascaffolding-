@@ -128,7 +128,7 @@ export function FormNumberField({ control, name, label, placeholder, min, max, s
               placeholder={placeholder}
               min={min}
               max={max}
-              step={step}
+              step={step ?? "any"}
               disabled={disabled}
               {...field}
               value={field.value ?? ""}

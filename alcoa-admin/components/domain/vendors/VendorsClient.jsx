@@ -5,7 +5,7 @@ import { FormTextField, FormSelectField, FormNumberField, FormTextAreaField } fr
 import { Badge } from "@/components/ui/badge";
 
 const schema = z.object({
-  vendorCode: z.string().min(1, "Vendor code required"),
+  vendorCode: z.string().optional(),
   companyName: z.string().min(1, "Company name required"),
   contactPerson: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
@@ -33,7 +33,14 @@ const columns = [
 function VendorFormFields({ control }) {
   return (
     <div className="grid grid-cols-2 gap-4">
-      <FormTextField control={control} name="vendorCode" label="Vendor Code" placeholder="VEN-001" />
+      <FormTextField
+        control={control}
+        name="vendorCode"
+        label="Vendor Code"
+        placeholder="Auto-generated"
+        description="Generated automatically in sequence when you create a vendor."
+        disabled
+      />
       <FormTextField control={control} name="companyName" label="Company Name" placeholder="Vendor Company" />
       <FormTextField control={control} name="contactPerson" label="Contact Person" />
       <FormTextField control={control} name="email" label="Email" type="email" />
@@ -78,6 +85,11 @@ export function VendorsClient() {
         category: "Supplier", creditLimit: 0, status: "active", notes: "",
       }}
       FormFields={VendorFormFields}
+      prepareSavePayload={(values) => {
+        const payload = { ...values };
+        if (!payload.vendorCode?.trim()) delete payload.vendorCode;
+        return payload;
+      }}
       statCards={(s) => [{ label: "Total Vendors", value: s.total }]}
     />
   );

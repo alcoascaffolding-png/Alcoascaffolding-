@@ -31,6 +31,7 @@ export function DataTable({
   toolbar,
   pagination: showPagination = true,
   pageSize: defaultPageSize = 20,
+  pageSizeOptions = [10, 20, 50, 100],
   onRowClick,
   emptyMessage = "No records found.",
   /** Wrap toolbar + table + pagination in the same Card shell as dashboard metric tiles */
@@ -67,7 +68,10 @@ export function DataTable({
               <Input
                 placeholder={searchPlaceholder}
                 value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
+                onChange={(e) => {
+                  setGlobalFilter(e.target.value);
+                  table.setPageIndex(0);
+                }}
                 className="pl-9 border-border bg-card shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30"
               />
             </div>
@@ -182,11 +186,28 @@ export function DataTable({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="flex items-center justify-between gap-4 border-t border-border/60 pt-4">
+        <div className="flex flex-col gap-3 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {table.getFilteredRowModel().rows.length} record(s)
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              Rows per page
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+                value={pageSize}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value));
+                  table.setPageIndex(0);
+                }}
+              >
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
               <ChevronsLeft className="h-4 w-4" />
             </Button>

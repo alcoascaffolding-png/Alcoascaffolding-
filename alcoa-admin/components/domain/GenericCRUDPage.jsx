@@ -65,7 +65,7 @@ export function GenericCRUDPage({
   const { data, isLoading } = useQuery({
     queryKey: [resource],
     queryFn: async () => {
-      const res = await fetch(`/api/${resource}`);
+      const res = await fetch(`/api/${resource}?limit=100`);
       const d = await res.json();
       if (!d.success) throw new Error(d.error);
       return d.data;
