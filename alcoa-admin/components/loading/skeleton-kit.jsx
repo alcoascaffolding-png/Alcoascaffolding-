@@ -173,11 +173,24 @@ export function QuotationFormEditSkeleton({ className }) {
   );
 }
 
-export function DashboardStatCardsSkeleton() {
+export function DashboardStatCardsSkeleton({ count = 4, className }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4" role="status" aria-busy="true">
-      {[1, 2, 3, 4].map((i) => (
-        <Skeleton key={i} className="h-28 rounded-lg" />
+    <div
+      className={cn("grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4", className)}
+      role="status"
+      aria-busy="true"
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <Card key={i} className="min-h-28">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-7 w-20" />
+            <Skeleton className="h-3 w-24" />
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

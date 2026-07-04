@@ -177,12 +177,19 @@
     outline-color: color-mix(in srgb, var(--ring) 40%, transparent);
   }
 
+  @media (prefers-reduced-motion: no-preference) {
+    body,
+    body * {
+      transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+      transition-duration: 220ms;
+      transition-timing-function: ease-in-out;
+    }
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    transition-property: color, background-color, border-color;
-    transition-duration: 200ms;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;

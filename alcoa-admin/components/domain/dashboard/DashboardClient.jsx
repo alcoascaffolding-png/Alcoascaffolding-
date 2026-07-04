@@ -114,47 +114,44 @@ export function DashboardClient() {
   return (
     <div className="space-y-6">
       {/* Stat cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statsLoading ? (
-          <div className="col-span-full md:col-span-2 lg:col-span-4">
-            <DashboardStatCardsSkeleton />
+      {statsLoading ? (
+        <>
+          <DashboardStatCardsSkeleton />
+          <DashboardStatCardsSkeleton count={3} className="md:grid-cols-3 lg:grid-cols-3" />
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            title="Total Customers"
+            value={stats?.customers?.total ?? 0}
+            description={`${stats?.customers?.active ?? 0} active`}
+            icon={Users}
+            color="accent"
+          />
+          <StatCard
+            title="Quotations"
+            value={stats?.quotations?.total ?? 0}
+            description={`${stats?.quotations?.pending ?? 0} pending`}
+            icon={FileText}
+            color="primary"
+          />
+          <StatCard
+            title="New Messages"
+            value={stats?.messages?.unread ?? 0}
+            description={`${stats?.messages?.total ?? 0} total inquiries`}
+            icon={MessageSquare}
+            color={stats?.messages?.unread > 0 ? "warning" : "success"}
+          />
+          <StatCard
+            title="Monthly Revenue"
+            value={formatCurrency(stats?.revenue?.monthly ?? 0)}
+            description="Last 30 days"
+            icon={TrendingUp}
+            color="success"
+          />
           </div>
-        ) : (
-          <>
-            <StatCard
-              title="Total Customers"
-              value={stats?.customers?.total ?? 0}
-              description={`${stats?.customers?.active ?? 0} active`}
-              icon={Users}
-              color="accent"
-            />
-            <StatCard
-              title="Quotations"
-              value={stats?.quotations?.total ?? 0}
-              description={`${stats?.quotations?.pending ?? 0} pending`}
-              icon={FileText}
-              color="primary"
-            />
-            <StatCard
-              title="New Messages"
-              value={stats?.messages?.unread ?? 0}
-              description={`${stats?.messages?.total ?? 0} total inquiries`}
-              icon={MessageSquare}
-              color={stats?.messages?.unread > 0 ? "warning" : "success"}
-            />
-            <StatCard
-              title="Monthly Revenue"
-              value={formatCurrency(stats?.revenue?.monthly ?? 0)}
-              description="Last 30 days"
-              icon={TrendingUp}
-              color="success"
-            />
-          </>
-        )}
-      </div>
-
-      {!statsLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="Low Stock Products"
             value={stats?.products?.lowStock ?? 0}
@@ -176,7 +173,8 @@ export function DashboardClient() {
             icon={CheckCircle}
             color="primary"
           />
-        </div>
+          </div>
+        </>
       )}
 
       {/* Charts row */}
