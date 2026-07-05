@@ -18,6 +18,7 @@ import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
 import { computeSalesOrderDeliveryFulfillment } from "@/lib/sales-order-delivery-fulfillment";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { assertSufficientStockForLines } from "@/lib/stock-validation";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -78,7 +79,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
 
   const prev = await SalesOrder.findById(params.id).lean();
   if (!prev) throw new AppError("Sales Order not found", 404);

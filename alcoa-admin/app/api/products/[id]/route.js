@@ -5,6 +5,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import { createStockAdjustment } from "@/lib/stock-service";
 import { logAudit } from "@/lib/audit-log";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 const { DELETE } = createDetailHandlers(() => import("@/models/Product"), "Product", "products");
 
@@ -24,7 +25,7 @@ const PATCH = withErrorHandler(async (request, { params }) => {
   const session = await authorizeApi("products", "write");
   await connectDB();
   const Product = (await import("@/models/Product")).default;
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
 
   const existing = await Product.findById(params.id);
   if (!existing) throw new AppError("Product not found", 404);

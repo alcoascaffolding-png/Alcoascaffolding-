@@ -5,6 +5,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import Vendor from "@/models/Vendor";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 const { GET } = createListHandlers(() => import("@/models/Vendor"), "Vendor", "vendors");
 
@@ -30,7 +31,7 @@ const POST = withErrorHandler(async (request) => {
   const session = await authorizeApi("vendors", "write");
   await connectDB();
 
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
   const vendorCode = body.vendorCode?.trim() || (await generateVendorCode());
 
   if (!body.companyName?.trim()) {

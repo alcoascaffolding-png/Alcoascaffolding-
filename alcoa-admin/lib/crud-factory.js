@@ -8,6 +8,8 @@ import { apiSuccess } from "./api-response";
 import { withErrorHandler, AppError } from "./api-error";
 import { authorizeApi } from "./api-guard";
 import { logAudit } from "./audit-log";
+import { sanitizeMongoDocument } from "./mongo-sanitize";
+import { buildGenericCrudSearchFilter } from "./search-utils";
 
 function auditMutation(session, action, resourceSlug, doc, resourceName) {
   const id = doc?._id ?? doc?.id;
@@ -38,19 +40,8 @@ export function createListHandlers(getModel, resourceName, resourceSlug) {
 
     const filter = {};
     if (searchParams.get("status")) filter.status = searchParams.get("status");
-    if (searchParams.get("search")) {
-      const rx = new RegExp(searchParams.get("search"), "i");
-      filter.$or = [
-        { name: rx },
-        { companyName: rx },
-        { description: rx },
-        { itemCode: rx },
-        { vendorCode: rx },
-        { orderNumber: rx },
-        { invoiceNumber: rx },
-        { poNumber: rx },
-      ].filter(Boolean);
-    }
+    const searchFilter = buildGenericCrudSearchFilter(searchParams.get("search"));
+    if (searchFilter) Object.assign(filter, searchFilter);
 
     const [items, total] = await Promise.all([
       Model.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
@@ -66,8 +57,9 @@ export function createListHandlers(getModel, resourceName, resourceSlug) {
     await connectDB();
     const Model = (await getModel()).default;
     const body = await request.json();
+    const patch = sanitizeMongoDocument(body);
 
-    const doc = await Model.create({ ...body, createdBy: session.user.id });
+    const doc = await Model.create({ ...patch, createdBy: session.user.id });
     auditMutation(session, "create", resourceSlug, doc, resourceName);
     return apiSuccess(doc, 201);
   });
@@ -95,10 +87,11 @@ export function createDetailHandlers(getModel, resourceName, resourceSlug) {
     await connectDB();
     const Model = (await getModel()).default;
     const body = await request.json();
+    const patch = sanitizeMongoDocument(body);
 
     const doc = await Model.findByIdAndUpdate(
       params.id,
-      { ...body, lastModifiedBy: session.user.id },
+      { ...patch, lastModifiedBy: session.user.id },
       { new: true, runValidators: true }
     );
     if (!doc) throw new AppError(`${resourceName} not found`, 404);

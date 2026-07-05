@@ -12,6 +12,7 @@ import { syncDeliveryNoteStock } from "@/lib/stock-service";
 import { syncSalesOrderOnDeliveryNote } from "@/lib/sync-sales-order-on-delivery";
 import { assertDeliveryNoteQuantitiesWithinSalesOrder } from "@/lib/sales-order-delivery-fulfillment";
 import { assertSufficientStockForLines } from "@/lib/stock-validation";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -47,7 +48,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
   const patch = { ...body };
 
   if (

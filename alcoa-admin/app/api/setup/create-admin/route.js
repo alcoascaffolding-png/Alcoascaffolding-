@@ -1,7 +1,8 @@
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
-import { withErrorHandler } from "@/lib/api-error";
+import { withErrorHandler, AppError } from "@/lib/api-error";
 import User from "@/models/User";
+import { validatePasswordForSet } from "@/lib/schemas/password";
 
 export const POST = withErrorHandler(async (request) => {
   const setupSecret = process.env.SETUP_SECRET;
@@ -25,10 +26,14 @@ export const POST = withErrorHandler(async (request) => {
 
   const body = await request.json();
 
+  const passwordRaw = body.password || "Admin@1234";
+  const passwordCheck = validatePasswordForSet(passwordRaw);
+  if (!passwordCheck.ok) throw new AppError(passwordCheck.message, 400);
+
   const admin = await User.create({
     name: body.name || "Admin",
     email: body.email || "admin@alcoascaffolding.com",
-    password: body.password || "Admin@1234",
+    password: passwordRaw,
     role: "super_admin",
     isActive: true,
   });

@@ -4,6 +4,7 @@ import { withErrorHandler } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import { buildRegexSearchFilter } from "@/lib/search-utils";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 function sanitizePreferredVendor(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -85,7 +86,7 @@ export const POST = withErrorHandler(async (request) => {
   const session = await authorizeApi("products", "write");
   await connectDB();
   const Product = (await import("@/models/Product")).default;
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
   const preferredVendor = sanitizePreferredVendor(body.preferredVendor);
 
   const doc = await Product.create({

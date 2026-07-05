@@ -10,6 +10,7 @@ import {
   applySalesInvoicePaymentFields,
 } from "@/lib/sales-invoice-payment";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 void Customer;
 
@@ -72,7 +73,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
   const patch = { ...body };
   if (Object.prototype.hasOwnProperty.call(body, "salesOrder")) {
     const sid = toObjectId(body.salesOrder);

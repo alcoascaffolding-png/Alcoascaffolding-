@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { requireSession, requireManageUsers } from "@/lib/api-auth";
 import User from "@/models/User";
+import { validatePasswordForSet } from "@/lib/schemas/password";
 
 export const GET = withErrorHandler(async () => {
   const session = await requireSession();
@@ -32,9 +33,8 @@ export const POST = withErrorHandler(async (request) => {
 
   if (!body.name?.trim()) throw new AppError("Name is required", 400);
   if (!body.email?.trim()) throw new AppError("Email is required", 400);
-  if (!body.password || String(body.password).length < 8) {
-    throw new AppError("Password must be at least 8 characters", 400);
-  }
+  const passwordCheck = validatePasswordForSet(body.password);
+  if (!passwordCheck.ok) throw new AppError(passwordCheck.message, 400);
 
   const existing = await User.findOne({ email: String(body.email).toLowerCase().trim() });
   if (existing) throw new AppError("Email already in use", 409);

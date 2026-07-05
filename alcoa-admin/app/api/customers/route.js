@@ -4,6 +4,7 @@ import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler } from "@/lib/api-error";
 import Customer from "@/models/Customer";
 import { buildRegexSearchFilter } from "@/lib/search-utils";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 function buildCustomerFilter(searchParams) {
   const filter = {};
@@ -50,7 +51,8 @@ export const POST = withErrorHandler(async (request) => {
 
   await connectDB();
   const body = await request.json();
+  const patch = sanitizeMongoDocument(body);
 
-  const customer = await Customer.create({ ...body, createdBy: session.user.id });
+  const customer = await Customer.create({ ...patch, createdBy: session.user.id });
   return apiSuccess(customer, 201);
 });

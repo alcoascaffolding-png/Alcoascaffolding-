@@ -3,6 +3,7 @@ import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { requireSession, requireManageUsers } from "@/lib/api-auth";
 import User from "@/models/User";
+import { validatePasswordForSet } from "@/lib/schemas/password";
 
 async function resolveParams(context) {
   const params =
@@ -44,7 +45,8 @@ export const PATCH = withErrorHandler(async (request, context) => {
     user.email = email;
   }
   if (body.password) {
-    if (String(body.password).length < 8) throw new AppError("Password must be at least 8 characters", 400);
+    const passwordCheck = validatePasswordForSet(body.password);
+    if (!passwordCheck.ok) throw new AppError(passwordCheck.message, 400);
     user.password = body.password;
   }
   if (body.role != null) user.role = body.role;

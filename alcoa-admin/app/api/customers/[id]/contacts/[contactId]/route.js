@@ -3,13 +3,14 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Customer from "@/models/Customer";
+import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 
 export const PATCH = withErrorHandler(async (request, { params }) => {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
 
   await connectDB();
-  const body = await request.json();
+  const body = sanitizeMongoDocument(await request.json());
 
   const customer = await Customer.findById(params.id);
   if (!customer) throw new AppError("Customer not found", 404);

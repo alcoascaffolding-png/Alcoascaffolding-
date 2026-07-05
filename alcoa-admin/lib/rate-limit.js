@@ -23,21 +23,65 @@ function checkMemoryRateLimit(key, maxRequests = 10, windowMs = 60 * 60 * 1000) 
   return { success: true, remaining: maxRequests - bucket.count, reset: new Date(bucket.resetAt) };
 }
 
-/** Login attempts — 10 per email per hour (in-memory when Redis absent). */
-export function checkLoginRateLimit(email) {
+/** Login attempts — 10 per email per hour. Uses Redis when configured. */
+export async function checkLoginRateLimit(email) {
   const key = `login:${String(email || "").toLowerCase().trim()}`;
-  return checkMemoryRateLimit(key, 10, 60 * 60 * 1000);
+  return checkRateLimit(key, 10, "1 h");
 }
 
-/** Login attempts — 30 per IP per hour (broader brute-force protection). */
-export function checkLoginIpRateLimit(ip) {
+/** Login attempts — 30 per IP per hour. Uses Redis when configured. */
+export async function checkLoginIpRateLimit(ip) {
   const key = `login-ip:${String(ip || "unknown").trim()}`;
-  return checkMemoryRateLimit(key, 30, 60 * 60 * 1000);
+  return checkRateLimit(key, 30, "1 h");
+}
+
+/** True when Upstash REST env vars are present. */
+export function isRedisConfigured() {
+  return !!(
+    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+  );
+}
+
+/** Ping Upstash Redis — for health checks and local verification. */
+export async function verifyRedisConnection() {
+  if (!isRedisConfigured()) {
+    return { configured: false, reachable: false, backend: "memory" };
+  }
+
+  try {
+    const { Redis } = await import("@upstash/redis");
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL.trim(),
+      token: process.env.UPSTASH_REDIS_REST_TOKEN.trim(),
+    });
+    const pong = await redis.ping();
+    return {
+      configured: true,
+      reachable: pong === "PONG",
+      backend: "upstash",
+    };
+  } catch (err) {
+    return {
+      configured: true,
+      reachable: false,
+      backend: "upstash",
+      error: err?.message || String(err),
+    };
+  }
+}
+
+/**
+ * Which rate-limit backend is active for this process.
+ * @returns {"upstash"|"memory"}
+ */
+export function getRateLimitBackend() {
+  return isRedisConfigured() ? "upstash" : "memory";
 }
 
 async function getRatelimit(requests = 10, window = "1 h") {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return null; // No rate limiting in dev without Redis
+  if (!isRedisConfigured()) {
+    return null;
   }
 
   if (ratelimitInstance) return ratelimitInstance;

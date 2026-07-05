@@ -30,6 +30,10 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
+function escapeHtmlMultiline(value) {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
 function formatDate(date) {
   if (!date) return "N/A";
   const d = new Date(date);
@@ -1026,10 +1030,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           <div class="lower-grid">
             <div class="terms-plain">
               <div class="terms-plain-title">Terms &amp; Conditions</div>
-              <div class="terms-plain-body">${(termsAndConditions || defaultTerms).replace(/\n/g, "<br>")}</div>
+              <div class="terms-plain-body">${escapeHtmlMultiline(termsAndConditions || defaultTerms)}</div>
             </div>
           </div>
-          ${notes ? `<div class="notes-plain"><strong>Notes:</strong> ${notes.replace(/\n/g, "<br>")}</div>` : ""}
+          ${notes ? `<div class="notes-plain"><strong>Notes:</strong> ${escapeHtmlMultiline(notes)}</div>` : ""}
           ${bankSignaturesHtml}
         </div>`;
 
@@ -1040,7 +1044,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     if (notes) {
       blocks.push({
         type: "notes",
-        html: `<div class="notes-plain"><strong>Notes:</strong> ${notes.replace(/\n/g, "<br>")}</div>`,
+        html: `<div class="notes-plain"><strong>Notes:</strong> ${escapeHtmlMultiline(notes)}</div>`,
       });
     }
     blocks.push({

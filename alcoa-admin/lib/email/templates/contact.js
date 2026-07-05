@@ -1,12 +1,26 @@
+import { escapeEmailHtml } from "./shared-document-email";
+
 const companyName = process.env.NEXT_PUBLIC_APP_NAME || "Alcoa Aluminium Scaffolding";
 const companyEmail = process.env.COMPANY_EMAIL || "sales@alcoascaffolding.com";
+
+function safeMailto(email) {
+  return `mailto:${encodeURIComponent(String(email ?? "").trim())}`;
+}
+
+function safeTel(phone) {
+  return `tel:${encodeURIComponent(String(phone ?? "").trim())}`;
+}
+
+function multilineHtml(text) {
+  return escapeEmailHtml(text).replace(/\n/g, "<br>");
+}
 
 const baseTemplate = (content, title) => `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${escapeEmailHtml(title)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,20 +68,20 @@ export function contactCompanyTemplate(data) {
         <span style="color:#856404;"> Please respond within 2 hours</span>
       </div>
       <h2>Customer Information</h2>
-      <div class="field"><div class="label">Full Name</div><div class="value">${name}</div></div>
-      <div class="field"><div class="label">Email</div><div class="value"><a href="mailto:${email}">${email}</a></div></div>
-      <div class="field"><div class="label">Phone</div><div class="value"><a href="tel:${phone}">${phone}</a></div></div>
-      <div class="field"><div class="label">Company</div><div class="value">${company || "Not provided"}</div></div>
-      <div class="field"><div class="label">Project Type</div><div class="value">${projectLabel}</div></div>
+      <div class="field"><div class="label">Full Name</div><div class="value">${escapeEmailHtml(name)}</div></div>
+      <div class="field"><div class="label">Email</div><div class="value"><a href="${safeMailto(email)}">${escapeEmailHtml(email)}</a></div></div>
+      <div class="field"><div class="label">Phone</div><div class="value"><a href="${safeTel(phone)}">${escapeEmailHtml(phone)}</a></div></div>
+      <div class="field"><div class="label">Company</div><div class="value">${escapeEmailHtml(company || "Not provided")}</div></div>
+      <div class="field"><div class="label">Project Type</div><div class="value">${escapeEmailHtml(projectLabel)}</div></div>
       <h2>Message</h2>
-      <div class="field"><div class="value" style="line-height:1.8;">${(message || "").replace(/\n/g, "<br>")}</div></div>
+      <div class="field"><div class="value" style="line-height:1.8;">${multilineHtml(message || "")}</div></div>
       <h2>Submission Details</h2>
-      <div class="field"><div class="label">Date & Time</div><div class="value">${timestamp} (UAE Time)</div></div>
+      <div class="field"><div class="label">Date & Time</div><div class="value">${escapeEmailHtml(timestamp)} (UAE Time)</div></div>
       <div class="field"><div class="label">Source</div><div class="value">Website Contact Form</div></div>
     </div>
     <div class="footer">
-      <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
+      <p><strong>${escapeEmailHtml(companyName)}</strong></p>
+      <p><a href="${safeMailto(companyEmail)}" style="color:#c7d2fe;">${escapeEmailHtml(companyEmail)}</a></p>
     </div>
   </div>`;
 
@@ -80,11 +94,11 @@ export function contactCustomerTemplate(data) {
   const content = `
   <div class="container">
     <div class="header">
-      <h1>Thank You, ${name}!</h1>
+      <h1>Thank You, ${escapeEmailHtml(name)}!</h1>
       <p>We have received your inquiry</p>
     </div>
     <div class="content">
-      <p style="font-size:16px;color:#1f2937;">Thank you for contacting <strong>${companyName}</strong>.</p>
+      <p style="font-size:16px;color:#1f2937;">Thank you for contacting <strong>${escapeEmailHtml(companyName)}</strong>.</p>
       <p style="color:#4b5563;">We have received your message and our team will get back to you within <strong>2 business hours</strong>.</p>
       <div class="field">
         <div class="label">What happens next?</div>
@@ -99,8 +113,8 @@ export function contactCustomerTemplate(data) {
       <p style="color:#4b5563;">For urgent inquiries, please call us directly.</p>
     </div>
     <div class="footer">
-      <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
+      <p><strong>${escapeEmailHtml(companyName)}</strong></p>
+      <p><a href="${safeMailto(companyEmail)}" style="color:#c7d2fe;">${escapeEmailHtml(companyEmail)}</a></p>
     </div>
   </div>`;
 
@@ -108,7 +122,18 @@ export function contactCustomerTemplate(data) {
 }
 
 export function quoteCompanyTemplate(data) {
-  const { name, email, phone, company, projectType, projectHeight, coverageArea, duration, startDate, message } = data;
+  const {
+    name,
+    email,
+    phone,
+    company,
+    projectType,
+    projectHeight,
+    coverageArea,
+    duration,
+    startDate,
+    message,
+  } = data;
   const timestamp = new Date().toLocaleString("en-AE", { timeZone: "Asia/Dubai" });
 
   const content = `
@@ -123,23 +148,23 @@ export function quoteCompanyTemplate(data) {
         <span style="color:#065f46;"> Quote requests require same-day response</span>
       </div>
       <h2>Customer Details</h2>
-      <div class="field"><div class="label">Name</div><div class="value">${name}</div></div>
-      <div class="field"><div class="label">Email</div><div class="value"><a href="mailto:${email}">${email}</a></div></div>
-      <div class="field"><div class="label">Phone</div><div class="value"><a href="tel:${phone}">${phone}</a></div></div>
-      <div class="field"><div class="label">Company</div><div class="value">${company || "Not provided"}</div></div>
+      <div class="field"><div class="label">Name</div><div class="value">${escapeEmailHtml(name)}</div></div>
+      <div class="field"><div class="label">Email</div><div class="value"><a href="${safeMailto(email)}">${escapeEmailHtml(email)}</a></div></div>
+      <div class="field"><div class="label">Phone</div><div class="value"><a href="${safeTel(phone)}">${escapeEmailHtml(phone)}</a></div></div>
+      <div class="field"><div class="label">Company</div><div class="value">${escapeEmailHtml(company || "Not provided")}</div></div>
       <h2>Project Details</h2>
-      <div class="field"><div class="label">Project Type</div><div class="value">${projectType || "Not specified"}</div></div>
-      ${projectHeight ? `<div class="field"><div class="label">Working Height</div><div class="value">${projectHeight}</div></div>` : ""}
-      ${coverageArea ? `<div class="field"><div class="label">Coverage Area</div><div class="value">${coverageArea}</div></div>` : ""}
-      ${duration ? `<div class="field"><div class="label">Duration</div><div class="value">${duration}</div></div>` : ""}
-      ${startDate ? `<div class="field"><div class="label">Start Date</div><div class="value">${startDate}</div></div>` : ""}
-      ${message ? `<h2>Additional Notes</h2><div class="field"><div class="value">${message.replace(/\n/g, "<br>")}</div></div>` : ""}
+      <div class="field"><div class="label">Project Type</div><div class="value">${escapeEmailHtml(projectType || "Not specified")}</div></div>
+      ${projectHeight ? `<div class="field"><div class="label">Working Height</div><div class="value">${escapeEmailHtml(projectHeight)}</div></div>` : ""}
+      ${coverageArea ? `<div class="field"><div class="label">Coverage Area</div><div class="value">${escapeEmailHtml(coverageArea)}</div></div>` : ""}
+      ${duration ? `<div class="field"><div class="label">Duration</div><div class="value">${escapeEmailHtml(duration)}</div></div>` : ""}
+      ${startDate ? `<div class="field"><div class="label">Start Date</div><div class="value">${escapeEmailHtml(startDate)}</div></div>` : ""}
+      ${message ? `<h2>Additional Notes</h2><div class="field"><div class="value">${multilineHtml(message)}</div></div>` : ""}
       <h2>Submission Details</h2>
-      <div class="field"><div class="label">Date & Time</div><div class="value">${timestamp} (UAE Time)</div></div>
+      <div class="field"><div class="label">Date & Time</div><div class="value">${escapeEmailHtml(timestamp)} (UAE Time)</div></div>
     </div>
     <div class="footer">
-      <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
+      <p><strong>${escapeEmailHtml(companyName)}</strong></p>
+      <p><a href="${safeMailto(companyEmail)}" style="color:#c7d2fe;">${escapeEmailHtml(companyEmail)}</a></p>
     </div>
   </div>`;
 
@@ -156,8 +181,8 @@ export function quoteCustomerTemplate(data) {
       <p>We are preparing your scaffolding quotation</p>
     </div>
     <div class="content">
-      <p style="font-size:16px;color:#1f2937;">Dear <strong>${name}</strong>,</p>
-      <p style="color:#4b5563;">Thank you for requesting a quote from <strong>${companyName}</strong>. We have received your request and our team is working on preparing a detailed quotation.</p>
+      <p style="font-size:16px;color:#1f2937;">Dear <strong>${escapeEmailHtml(name)}</strong>,</p>
+      <p style="color:#4b5563;">Thank you for requesting a quote from <strong>${escapeEmailHtml(companyName)}</strong>. We have received your request and our team is working on preparing a detailed quotation.</p>
       <div class="field">
         <div class="label">What to expect</div>
         <div class="value">
@@ -170,8 +195,8 @@ export function quoteCustomerTemplate(data) {
       </div>
     </div>
     <div class="footer">
-      <p><strong>${companyName}</strong></p>
-      <p><a href="mailto:${companyEmail}" style="color:#c7d2fe;">${companyEmail}</a></p>
+      <p><strong>${escapeEmailHtml(companyName)}</strong></p>
+      <p><a href="${safeMailto(companyEmail)}" style="color:#c7d2fe;">${escapeEmailHtml(companyEmail)}</a></p>
     </div>
   </div>`;
 

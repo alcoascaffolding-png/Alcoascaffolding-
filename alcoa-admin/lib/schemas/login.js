@@ -1,11 +1,11 @@
 import { z } from "zod";
+import { PASSWORD_MAX, hasControlChars } from "@/lib/schemas/password";
 
 const EMAIL_MAX = 254;
-const PASSWORD_MAX = 128;
 
 /** Reject control chars and null bytes (common injection payloads). */
 function noControlChars(value, ctx) {
-  if (/[\x00-\x1F\x7F]/.test(value)) {
+  if (hasControlChars(value)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid characters in input" });
   }
 }

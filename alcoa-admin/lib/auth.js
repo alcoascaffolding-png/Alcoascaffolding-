@@ -46,12 +46,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           headerList.get("x-real-ip") ||
           "unknown";
 
-        const ipRl = checkLoginIpRateLimit(ip);
+        const ipRl = await checkLoginIpRateLimit(ip);
         if (!ipRl.success) {
           return null;
         }
 
-        const loginRl = checkLoginRateLimit(email);
+        const loginRl = await checkLoginRateLimit(email);
         if (!loginRl.success) {
           return null;
         }

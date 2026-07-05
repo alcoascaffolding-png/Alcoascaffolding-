@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler } from "@/lib/api-error";
 import ContactMessage from "@/models/ContactMessage";
+import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 export const GET = withErrorHandler(async (request) => {
   const session = await auth();
@@ -19,10 +20,12 @@ export const GET = withErrorHandler(async (request) => {
   if (searchParams.get("type")) filter.type = searchParams.get("type");
   if (searchParams.get("status")) filter.status = searchParams.get("status");
   if (searchParams.get("priority")) filter.priority = searchParams.get("priority");
-  if (searchParams.get("search")) {
-    const rx = new RegExp(searchParams.get("search"), "i");
-    filter.$or = [{ name: rx }, { email: rx }, { company: rx }];
-  }
+  const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
+    "name",
+    "email",
+    "company",
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
 
   const [items, total] = await Promise.all([
     ContactMessage.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
