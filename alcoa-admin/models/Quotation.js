@@ -127,6 +127,7 @@ const quotationSchema = new mongoose.Schema(
     lastModifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     // Bank details for PDF
+    bankAccount: { type: mongoose.Schema.Types.ObjectId, ref: "BankAccount", index: true },
     bankDetails: {
       bankName: { type: String, trim: true },
       accountName: { type: String, trim: true },

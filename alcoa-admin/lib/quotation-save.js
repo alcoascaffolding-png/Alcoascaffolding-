@@ -149,6 +149,14 @@ export function applyQuotationPatch(doc, body) {
     doc.bankDetails = body.bankDetails;
     doc.markModified("bankDetails");
   }
+  if (Object.prototype.hasOwnProperty.call(body, "bankAccount")) {
+    const raw = body.bankAccount;
+    if (raw && mongoose.Types.ObjectId.isValid(String(raw))) {
+      doc.bankAccount = new mongoose.Types.ObjectId(String(raw));
+    } else {
+      doc.set("bankAccount", undefined);
+    }
+  }
   if (Array.isArray(body.items)) {
     doc.items = body.items;
     doc.markModified("items");

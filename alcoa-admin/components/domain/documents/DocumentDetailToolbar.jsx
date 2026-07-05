@@ -1,10 +1,12 @@
 "use client";
 
 import { AsyncButton } from "@/components/ui/async-button";
+import { Button } from "@/components/ui/button";
 import { Download, Mail, MessageSquare, Copy, Pencil, Trash2 } from "lucide-react";
 
 /**
  * Detail page actions: PDF, email, WhatsApp, copy link, edit, delete.
+ * Only the active outbound action shows a loading spinner.
  */
 export function DocumentDetailToolbar({
   sending,
@@ -18,6 +20,8 @@ export function DocumentDetailToolbar({
   onEdit,
   onDelete,
 }) {
+  const busy = !!sending;
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <AsyncButton
@@ -25,7 +29,7 @@ export function DocumentDetailToolbar({
         variant="outline"
         size="sm"
         loading={typeof sending === "string" && sending.startsWith("pdf:")}
-        disabled={!!sending}
+        disabled={busy}
         idleLabel="PDF"
         pendingLabel="Generating…"
         onClick={onDownloadPdf}
@@ -40,7 +44,7 @@ export function DocumentDetailToolbar({
         loading={typeof sending === "string" && sending.startsWith("email:")}
         idleLabel="Email"
         pendingLabel="Sending…"
-        disabled={!hasEmail || !!sending}
+        disabled={!hasEmail || busy}
         onClick={onSendEmail}
       >
         <Mail className="h-4 w-4 mr-1" />
@@ -51,10 +55,14 @@ export function DocumentDetailToolbar({
           type="button"
           variant="outline"
           size="sm"
-          loading={typeof sending === "string" && sending.startsWith("whatsapp:")}
+          loading={
+            typeof sending === "string" &&
+            sending.startsWith("whatsapp:") &&
+            !sending.startsWith("whatsapp-copy:")
+          }
           idleLabel="WhatsApp"
           pendingLabel="Opening…"
-          disabled={!hasPhone || !!sending}
+          disabled={!hasPhone || busy}
           onClick={onSendWhatsApp}
         >
           <MessageSquare className="h-4 w-4 mr-1" />
@@ -66,41 +74,29 @@ export function DocumentDetailToolbar({
           type="button"
           variant="outline"
           size="sm"
-          loading={typeof sending === "string" && sending.startsWith("whatsapp:")}
+          loading={typeof sending === "string" && sending.startsWith("whatsapp-copy:")}
           idleLabel="Copy WhatsApp link"
           pendingLabel="Copying…"
-          disabled={!hasPhone || !!sending}
+          disabled={!hasPhone || busy}
           onClick={onCopyWhatsAppLink}
         >
           <Copy className="h-4 w-4 mr-1" />
           Copy WhatsApp link
         </AsyncButton>
       )}
-      <AsyncButton
-        type="button"
-        variant="outline"
-        size="sm"
-        loading={!!sending}
-        disabled={!!sending}
-        idleLabel="Edit"
-        pendingLabel="Please wait…"
-        onClick={onEdit}
-      >
+      <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onEdit}>
         <Pencil className="h-4 w-4 mr-1" /> Edit
-      </AsyncButton>
-      <AsyncButton
+      </Button>
+      <Button
         type="button"
         variant="outline"
         size="sm"
         className="text-destructive border-destructive"
-        loading={!!sending}
-        disabled={!!sending}
-        idleLabel="Delete"
-        pendingLabel="Please wait…"
+        disabled={busy}
         onClick={onDelete}
       >
         <Trash2 className="h-4 w-4" />
-      </AsyncButton>
+      </Button>
     </div>
   );
 }

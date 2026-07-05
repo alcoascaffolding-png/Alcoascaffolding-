@@ -98,6 +98,7 @@ const quotationSchema = z.object({
     iban: z.string().optional(),
     swiftCode: z.string().optional(),
   }).optional(),
+  bankAccount: z.string().optional(),
 });
 
 const today = new Date().toISOString().split("T")[0];
@@ -193,6 +194,7 @@ function mapQuotationToFormValues(existing) {
       iban: "",
       swiftCode: "",
     },
+    bankAccount: existing.bankAccount ? String(existing.bankAccount) : "",
   };
 }
 
@@ -272,6 +274,7 @@ export function QuotationFormPage({ id }) {
 
   const handleBankAccountChange = (accountId) => {
     setSelectedBankAccountId(accountId);
+    form.setValue("bankAccount", accountId, { shouldDirty: true, shouldValidate: false });
     const bank = (bankAccountsList || []).find((b) => String(b._id) === accountId);
     const details = bankAccountToQuotationBankDetails(bank);
     if (details) {
@@ -291,23 +294,40 @@ export function QuotationFormPage({ id }) {
         shouldDirty: false,
         shouldValidate: false,
       });
-      if (defaultBank) setSelectedBankAccountId(String(defaultBank._id));
+      if (defaultBank) {
+        setSelectedBankAccountId(String(defaultBank._id));
+        form.setValue("bankAccount", String(defaultBank._id), { shouldDirty: false });
+      }
     }
   }, [bankAccountsList, existing, form, isEdit]);
 
   useEffect(() => {
     const banks = bankAccountsList || [];
     if (!banks.length) return;
+
+    const linkedId = form.getValues("bankAccount");
+    if (linkedId && banks.some((b) => String(b._id) === linkedId)) {
+      setSelectedBankAccountId(linkedId);
+      return;
+    }
+
     const matched = findBankAccountIdForDetails(banks, form.getValues("bankDetails"));
     if (matched) {
       setSelectedBankAccountId(matched);
+      form.setValue("bankAccount", matched, { shouldDirty: false });
       return;
     }
+
     const def = pickDefaultBankAccount(banks);
-    if (def && isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) {
+    if (def) {
       setSelectedBankAccountId(String(def._id));
+      if (isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) {
+        const bd = bankAccountToQuotationBankDetails(def);
+        if (bd) form.setValue("bankDetails", bd, { shouldDirty: false });
+        form.setValue("bankAccount", String(def._id), { shouldDirty: false });
+      }
     }
-  }, [bankAccountsList, existing, form]);
+  }, [bankAccountsList, existing, form, isEdit]);
 
   const selectedCustomerId = form.watch("customer");
 

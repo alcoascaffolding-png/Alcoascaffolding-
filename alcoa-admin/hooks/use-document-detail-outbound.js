@@ -53,13 +53,12 @@ export function useDocumentDetailOutbound({
 
     return singleFlight(flightKey, async () => {
       setSending(`pdf:${id}`);
-      const toastId = toast.loading("Generating PDF…");
       try {
         const blob = await fetchDocumentPdfBlob(apiBase, id);
         saveBlobAsPdfDownload(blob, docNo);
-        toast.success("PDF downloaded", { id: toastId });
+        toast.success("PDF downloaded");
       } catch (e) {
-        toast.error(`PDF failed: ${e?.message || "Unknown error"}`, { id: toastId });
+        toast.error(`PDF failed: ${e?.message || "Unknown error"}`);
         throw e;
       } finally {
         setSending(null);
@@ -72,14 +71,13 @@ export function useDocumentDetailOutbound({
 
     return singleFlight(flightKey, async () => {
       setSending(`email:${id}`);
-      const toastId = toast.loading("Sending email…");
       try {
         await postDocumentSendEmail(apiBase, id);
         bump();
         const to = resolveDocumentCustomerEmail(document);
-        toast.success(to ? `Emailed to ${to}` : "Email sent", { id: toastId });
+        toast.success(to ? `Emailed to ${to}` : "Email sent");
       } catch (e) {
-        toast.error(`Failed: ${e?.message || "Unknown error"}`, { id: toastId });
+        toast.error(`Failed: ${e?.message || "Unknown error"}`);
         throw e;
       } finally {
         setSending(null);
@@ -130,7 +128,7 @@ export function useDocumentDetailOutbound({
     const flightKey = `action:whatsapp-copy:${apiBase}:${id}`;
 
     return singleFlight(flightKey, async () => {
-      setSending(`whatsapp:${id}`);
+      setSending(`whatsapp-copy:${id}`);
       try {
         let link = lastWaMeUrl;
         if (!link) {

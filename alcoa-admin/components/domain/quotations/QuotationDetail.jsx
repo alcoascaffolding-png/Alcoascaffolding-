@@ -478,6 +478,9 @@ export function QuotationDetail({ id }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Bank Details</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Shown on quotation PDF and emails. Uses your primary bank account unless a different account was selected when editing.
+            </p>
           </CardHeader>
           <CardContent className="pt-0">
             <InfoRowAlways label="Bank details" value={bank.accountName} />

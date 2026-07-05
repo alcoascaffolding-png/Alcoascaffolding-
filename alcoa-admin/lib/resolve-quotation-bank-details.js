@@ -21,22 +21,16 @@ export function bankDetailsFromSnapshot(bankDetails) {
   return { accountName, bankName, accountNumber, iban, swiftCode, branch };
 }
 
-/** Bank block for detail pages from saved quotation fields. */
-export function displayBankDetailsFromDocument(doc) {
-  return bankDetailsFromSnapshot(doc?.bankDetails) || { ...COMPANY_BANK_DETAILS };
+function bankAccountIdFromDoc(doc) {
+  const raw = doc?.bankAccount;
+  if (!raw) return null;
+  if (typeof raw === "object" && raw._id) return String(raw._id);
+  return String(raw);
 }
 
-/**
- * Resolve bank details for PDF: quotation snapshot → primary BankAccount → company default.
- */
-export async function resolveQuotationBankDetailsForPdf(quotation) {
-  const fromDoc = bankDetailsFromSnapshot(quotation?.bankDetails);
-  if (fromDoc) return fromDoc;
-
-  await connectDB();
-  const { default: BankAccount } = await import("@/models/BankAccount");
-
-  const primary =
+/** Fetch the primary / PDF-default bank account from the database. */
+export async function fetchPrimaryBankAccount(BankAccount) {
+  return (
     (await BankAccount.findOne({ isPrimary: true, isActive: { $ne: false } }).lean()) ||
     (await BankAccount.findOne({
       accountNumber: COMPANY_BANK_ACCOUNT_NUMBER,
@@ -44,12 +38,44 @@ export async function resolveQuotationBankDetailsForPdf(quotation) {
     }).lean()) ||
     (await BankAccount.findOne({ isActive: { $ne: false } })
       .sort({ createdAt: 1 })
-      .lean());
+      .lean())
+  );
+}
 
+/**
+ * Resolve bank details for quotation display & PDF:
+ * 1. Explicit bankAccount on quotation (user picked in form)
+ * 2. Primary bank account from Bank Accounts module (live data)
+ * 3. Legacy bankDetails snapshot
+ * 4. Company default constant
+ */
+export async function resolveQuotationBankDetailsForPdf(quotation) {
+  await connectDB();
+  const { default: BankAccount } = await import("@/models/BankAccount");
+
+  const linkedId = bankAccountIdFromDoc(quotation);
+  if (linkedId) {
+    const linked = await BankAccount.findById(linkedId).lean();
+    if (linked && linked.isActive !== false) {
+      const mapped = bankDetailsFromSnapshot(bankAccountToQuotationBankDetails(linked));
+      if (mapped) return mapped;
+    }
+  }
+
+  const primary = await fetchPrimaryBankAccount(BankAccount);
   if (primary) {
     const mapped = bankDetailsFromSnapshot(bankAccountToQuotationBankDetails(primary));
     if (mapped) return mapped;
   }
 
+  const fromDoc = bankDetailsFromSnapshot(quotation?.bankDetails);
+  if (fromDoc) return fromDoc;
+
   return { ...COMPANY_BANK_DETAILS };
+}
+
+/** Sync helper for detail pages when API already attached resolvedBankDetails. */
+export function displayBankDetailsFromDocument(doc) {
+  if (doc?.resolvedBankDetails) return { ...doc.resolvedBankDetails };
+  return bankDetailsFromSnapshot(doc?.bankDetails) || { ...COMPANY_BANK_DETAILS };
 }
