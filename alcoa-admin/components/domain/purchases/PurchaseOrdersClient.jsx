@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
@@ -154,15 +155,53 @@ function mapPurchaseDocToForm(item) {
 }
 
 export function PurchaseOrdersClient() {
+  const searchParams = useSearchParams();
+  const fromLowStock = searchParams.get("from") === "low-stock";
+
+  const { data: reorderData, isSuccess: reorderReady } = useQuery({
+    queryKey: ["products", "reorder-lines"],
+    queryFn: async () => {
+      const res = await fetch("/api/products/reorder-lines");
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled: fromLowStock,
+  });
+
+  const presetValues =
+    fromLowStock && reorderData?.lines?.length
+      ? {
+          ...(reorderData.suggestedVendor
+            ? {
+                vendor: reorderData.suggestedVendor.vendorId,
+                vendorName: reorderData.suggestedVendor.vendorName,
+              }
+            : {}),
+          items: reorderData.lines.map((line) => ({
+            description: line.description,
+            product: line.product,
+            quantity: line.quantity,
+            unit: line.unit,
+            unitPrice: line.unitPrice,
+          })),
+          notes: `Replenishment PO for ${reorderData.count} low/out-of-stock product(s). Review quantities before sending.`,
+          status: "draft",
+        }
+      : null;
+
   return (
     <GenericCRUDPage
       resource="purchase-orders"
       title="Purchase Orders"
+      resourceSingular="Purchase order"
       columns={columns}
       schema={poSchema}
       defaultValues={defaultValues}
       FormFields={PurchaseOrderFormFields}
       mapItemToForm={mapPurchaseDocToForm}
+      initialOpenCreate={fromLowStock && reorderReady && !!reorderData?.lines?.length}
+      presetValues={presetValues}
       statCards={(s) => [
         { label: "Total POs", value: s.total },
         { label: "Received", value: s.received || 0 },

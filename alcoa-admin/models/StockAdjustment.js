@@ -11,6 +11,14 @@ const stockAdjustmentSchema = new mongoose.Schema(
     newStock: { type: Number, required: true },
     reason: { type: String, trim: true },
     notes: { type: String, trim: true },
+    sourceType: {
+      type: String,
+      enum: ["manual", "product_edit", "purchase_order", "delivery_note", "stock_adjustment"],
+      default: "manual",
+      index: true,
+    },
+    sourceId: { type: String, trim: true, index: true },
+    sourceNumber: { type: String, trim: true },
     adjustedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

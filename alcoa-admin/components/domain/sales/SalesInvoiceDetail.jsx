@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { AsyncButton } from "@/components/ui/async-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -462,19 +463,31 @@ export function SalesInvoiceDetail({ id }) {
         </Card>
       </div>
 
-      <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
+      <AlertDialog
+        open={showDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteMut.isPending) setShowDelete(false);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {inv.invoiceNumber}?</AlertDialogTitle>
             <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMut.mutate()}
-              className="bg-destructive hover:bg-destructive/90 text-white"
-            >
-              Delete
+            <AlertDialogCancel disabled={deleteMut.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <AsyncButton
+                type="button"
+                loading={deleteMut.isPending}
+                idleLabel="Delete"
+                pendingLabel="Deleting…"
+                className="bg-destructive hover:bg-destructive/90 text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteMut.mutate();
+                }}
+              />
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

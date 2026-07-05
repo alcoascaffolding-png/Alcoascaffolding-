@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Menu, Bell, LogOut, User, Sun, Moon, ChevronDown } from "lucide-react";
+import { Menu, LogOut, Sun, Moon, ChevronDown } from "lucide-react";
 import { useTheme } from "@wrksz/themes/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -78,11 +78,7 @@ export function AppTopbar({ onToggleSidebar }) {
       <div className="flex items-center gap-2">
         <ThemeToggle />
 
-        {/* Notifications placeholder */}
-        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-          <Bell className="h-4 w-4" />
-          <span className="sr-only">Notifications</span>
-        </Button>
+        <NotificationCenter />
 
         {/* User menu */}
         <DropdownMenu>

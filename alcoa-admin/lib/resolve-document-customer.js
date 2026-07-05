@@ -9,12 +9,7 @@ function populatedCustomer(doc) {
   return c && typeof c === "object" ? c : null;
 }
 
-/** Effective email: document snapshot, then linked customer primary / contact email. */
-export function resolveDocumentCustomerEmail(doc) {
-  const snap = doc?.customerEmail && String(doc.customerEmail).trim();
-  if (snap) return snap;
-
-  const cust = populatedCustomer(doc);
+function emailFromCustomer(cust) {
   const primary = cust?.primaryEmail && String(cust.primaryEmail).trim();
   if (primary) return primary;
 
@@ -25,12 +20,7 @@ export function resolveDocumentCustomerEmail(doc) {
   return "";
 }
 
-/** Effective phone: document snapshot, then linked customer primary / WhatsApp / contact phone. */
-export function resolveDocumentCustomerPhone(doc) {
-  const snap = doc?.customerPhone && String(doc.customerPhone).trim();
-  if (snap) return snap;
-
-  const cust = populatedCustomer(doc);
+function phoneFromCustomer(cust) {
   const primary = cust?.primaryPhone && String(cust.primaryPhone).trim();
   if (primary) return primary;
 
@@ -44,11 +34,52 @@ export function resolveDocumentCustomerPhone(doc) {
   return "";
 }
 
-/** Fill missing customerEmail / customerPhone on a loaded document (for PDF / email APIs). */
+/** Effective email: linked customer when populated, else document snapshot. */
+export function resolveDocumentCustomerEmail(doc) {
+  const cust = populatedCustomer(doc);
+  if (cust) {
+    const fromCustomer = emailFromCustomer(cust);
+    if (fromCustomer) return fromCustomer;
+  }
+
+  const snap = doc?.customerEmail && String(doc.customerEmail).trim();
+  if (snap) return snap;
+
+  return "";
+}
+
+/** Effective phone: linked customer when populated, else document snapshot. */
+export function resolveDocumentCustomerPhone(doc) {
+  const cust = populatedCustomer(doc);
+  if (cust) {
+    const fromCustomer = phoneFromCustomer(cust);
+    if (fromCustomer) return fromCustomer;
+  }
+
+  const snap = doc?.customerPhone && String(doc.customerPhone).trim();
+  if (snap) return snap;
+
+  return "";
+}
+
+/** Effective company name: linked customer when populated, else document snapshot. */
+export function resolveDocumentCustomerName(doc) {
+  const cust = populatedCustomer(doc);
+  const fromCustomer = cust?.companyName && String(cust.companyName).trim();
+  if (fromCustomer) return fromCustomer;
+
+  const snap = doc?.customerName && String(doc.customerName).trim();
+  if (snap) return snap;
+
+  return "";
+}
+
+/** Fill missing customer contact fields on a loaded document (for PDF / email APIs). */
 export function enrichDocumentCustomerContact(doc) {
   if (!doc) return doc;
   return {
     ...doc,
+    customerName: resolveDocumentCustomerName(doc),
     customerEmail: resolveDocumentCustomerEmail(doc),
     customerPhone: resolveDocumentCustomerPhone(doc),
   };

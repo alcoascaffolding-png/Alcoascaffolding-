@@ -1,9 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useWatch } from "react-hook-form";
+import { useWatch, useFormContext } from "react-hook-form";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import {
   FormTextField,
@@ -60,13 +61,19 @@ const columns = [
 ];
 
 function openInvoiceBalance(inv) {
+  const balance = Number(inv.balance);
+  if (Number.isFinite(balance) && balance >= 0) {
+    return balance;
+  }
   const total = Number(inv.total) || 0;
   const paid = Number(inv.paidAmount) || 0;
   return Math.max(0, total - paid);
 }
 
 function ReceiptFormFields({ control }) {
+  const { setValue, setError, clearErrors } = useFormContext();
   const selectedInvoiceId = useWatch({ control, name: "invoice" });
+  const amount = useWatch({ control, name: "amount" });
 
   const { data: invoicesData } = useQuery({
     queryKey: ["sales-invoices", "receipts"],
@@ -109,6 +116,27 @@ function ReceiptFormFields({ control }) {
   const selectedInvoice = openInvoices.find((inv) => inv._id === selectedInvoiceId);
   const maxAmount = selectedInvoice ? openInvoiceBalance(selectedInvoice) : undefined;
 
+  useEffect(() => {
+    if (!selectedInvoiceId || maxAmount == null) return;
+    setValue("amount", maxAmount, { shouldValidate: true, shouldDirty: true });
+  }, [selectedInvoiceId, maxAmount, setValue]);
+
+  useEffect(() => {
+    if (maxAmount == null) {
+      clearErrors("amount");
+      return;
+    }
+    const value = Number(amount) || 0;
+    if (value > maxAmount + 0.01) {
+      setError("amount", {
+        type: "max",
+        message: `Amount cannot exceed outstanding balance of ${formatCurrency(maxAmount)}`,
+      });
+      return;
+    }
+    clearErrors("amount");
+  }, [amount, maxAmount, setError, clearErrors]);
+
   return (
     <div className="grid grid-cols-1 gap-4">
       <FormSelectField
@@ -123,9 +151,11 @@ function ReceiptFormFields({ control }) {
         name="amount"
         label="Amount received (AED)"
         min={0.01}
-        max={maxAmount}
+        step="0.01"
         description={
-          maxAmount != null ? `Outstanding balance: ${formatCurrency(maxAmount)}` : undefined
+          maxAmount != null
+            ? `Outstanding balance: ${formatCurrency(maxAmount)}. You can enter any amount up to this limit.`
+            : "Select an invoice to see the outstanding balance."
         }
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -164,6 +194,7 @@ export function ReceiptsClient() {
       allowEdit={false}
       initialOpenCreate={!!presetInvoiceId}
       presetValues={presetInvoiceId ? { invoice: presetInvoiceId } : null}
+      invalidateQueryKeys={[["sales-invoices"], ["sales-invoices", "receipts"]]}
       statCards={(s) => [
         { label: "Total Receipts", value: s.total },
         { label: "Total Received", value: formatCurrency(s.totalAmount || 0) },

@@ -29,6 +29,9 @@ export async function createStockAdjustment({
   reason,
   notes,
   userId,
+  sourceType = "manual",
+  sourceId,
+  sourceNumber,
 }) {
   if (!productId || !mongoose.Types.ObjectId.isValid(String(productId))) {
     throw new AppError("Valid product is required", 400);
@@ -68,6 +71,9 @@ export async function createStockAdjustment({
     newStock,
     reason: reason || undefined,
     notes: notes || undefined,
+    sourceType: sourceType || "manual",
+    sourceId: sourceId ? String(sourceId) : undefined,
+    sourceNumber: sourceNumber || undefined,
     adjustedBy: userId,
   });
 
@@ -147,6 +153,9 @@ export async function syncDeliveryNoteStock(prevDoc, nextDoc, userId) {
         reason: `Delivery note ${nextDoc.deliveryNoteNumber} ${isReturn ? "returned" : "delivered"}`,
         notes: isReturn ? "Auto stock increase on return" : "Auto stock decrease on delivery",
         userId,
+        sourceType: "delivery_note",
+        sourceId: String(nextDoc._id),
+        sourceNumber: nextDoc.deliveryNoteNumber,
       });
     }
     nextDoc.stockApplied = map.size > 0;
@@ -164,6 +173,9 @@ export async function syncDeliveryNoteStock(prevDoc, nextDoc, userId) {
         reason: `Delivery note ${nextDoc.deliveryNoteNumber} reverted from delivered`,
         notes: "Auto stock restore",
         userId,
+        sourceType: "delivery_note",
+        sourceId: String(nextDoc._id),
+        sourceNumber: nextDoc.deliveryNoteNumber,
       });
     }
     nextDoc.stockApplied = false;

@@ -16,8 +16,25 @@ import {
   applySalesInvoicePaymentFields,
   validateSalesInvoicePayment,
 } from "@/lib/sales-invoice-payment";
+import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 void Customer;
+
+function buildSalesInvoiceFilter(searchParams) {
+  const filter = {};
+  const paymentStatus = searchParams.get("paymentStatus");
+
+  if (paymentStatus && paymentStatus !== "all") filter.paymentStatus = paymentStatus;
+
+  const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
+    "invoiceNumber",
+    "customerName",
+    "customerTRN",
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
+
+  return filter;
+}
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -35,17 +52,7 @@ export const GET = withErrorHandler(async (request) => {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.min(100, parseInt(searchParams.get("limit") || "20", 10));
   const skip = (page - 1) * limit;
-
-  const filter = {};
-  if (searchParams.get("paymentStatus")) filter.paymentStatus = searchParams.get("paymentStatus");
-  const searchTerm = (searchParams.get("search") || "").trim();
-  if (searchTerm) {
-    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    filter.$or = [
-      { invoiceNumber: { $regex: escaped, $options: "i" } },
-      { customerName: { $regex: escaped, $options: "i" } },
-    ];
-  }
+  const filter = buildSalesInvoiceFilter(searchParams);
 
   const [items, total] = await Promise.all([
     SalesInvoice.find(filter)

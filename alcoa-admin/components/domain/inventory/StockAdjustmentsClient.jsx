@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
@@ -10,6 +11,7 @@ import {
   FormNumberField,
   FormTextAreaField,
 } from "@/components/forms/form-fields";
+import { FormSection, FormGrid } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
@@ -82,76 +84,116 @@ const columns = [
 
 function StockAdjustmentFormFields({ control }) {
   const adjustmentType = useWatch({ control, name: "adjustmentType" });
+  const selectedProductId = useWatch({ control, name: "product" });
 
   const { data: productsData } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", "adjustment-picker"],
     queryFn: async () => {
-      const res = await fetch("/api/products?limit=200");
+      const res = await fetch("/api/products?limit=200&active=true");
       const d = await res.json();
       if (!d.success) throw new Error(d.error);
       return d.data;
     },
   });
 
+  const { data: selectedProduct } = useQuery({
+    queryKey: ["products", "detail", selectedProductId],
+    queryFn: async () => {
+      const res = await fetch(`/api/products/${selectedProductId}`);
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data;
+    },
+    enabled: !!selectedProductId,
+  });
+
   const productOptions = (productsData?.items || [])
     .filter((p) => p.isActive !== false)
     .map((p) => ({
-      value: p._id,
+      value: String(p._id),
       label: `${p.itemCode} — ${p.name} (stock: ${p.currentStock ?? 0})`,
     }));
 
+  if (
+    selectedProduct &&
+    !productOptions.some((opt) => opt.value === String(selectedProduct._id))
+  ) {
+    productOptions.unshift({
+      value: String(selectedProduct._id),
+      label: `${selectedProduct.itemCode} — ${selectedProduct.name} (stock: ${selectedProduct.currentStock ?? 0})`,
+    });
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-4">
-      <FormSelectField
-        control={control}
-        name="product"
-        label="Product"
-        placeholder="Select product…"
-        options={productOptions}
-      />
-      <FormSelectField
-        control={control}
-        name="adjustmentType"
-        label="Adjustment type"
-        options={adjustmentTypeOptions}
-      />
-      {adjustmentType === "correction" ? (
-        <FormNumberField
+    <FormSection title="Stock adjustment" description="Record a change to on-hand inventory.">
+      <div className="space-y-4">
+        <FormSelectField
           control={control}
-          name="correctionNewStock"
-          label="New stock level"
-          min={0}
+          name="product"
+          label="Product"
+          placeholder="Select product…"
+          options={productOptions}
         />
-      ) : (
-        <FormNumberField control={control} name="quantity" label="Quantity" min={1} />
-      )}
-      <FormTextField
-        control={control}
-        name="reason"
-        label="Reason"
-        placeholder="e.g. Physical count, damaged goods"
-      />
-      <FormTextAreaField
-        control={control}
-        name="notes"
-        label="Notes"
-        placeholder="Optional details"
-        rows={2}
-      />
-    </div>
+        <FormGrid>
+          <FormSelectField
+            control={control}
+            name="adjustmentType"
+            label="Adjustment type"
+            options={adjustmentTypeOptions}
+          />
+          {adjustmentType === "correction" ? (
+            <FormNumberField
+              control={control}
+              name="correctionNewStock"
+              label="New stock level"
+              min={0}
+            />
+          ) : (
+            <FormNumberField control={control} name="quantity" label="Quantity" min={1} />
+          )}
+        </FormGrid>
+        <FormTextField
+          control={control}
+          name="reason"
+          label="Reason"
+          placeholder="e.g. Physical count, damaged goods"
+        />
+        <FormTextAreaField
+          control={control}
+          name="notes"
+          label="Notes"
+          placeholder="Optional details"
+          rows={2}
+        />
+      </div>
+    </FormSection>
   );
 }
 
 export function StockAdjustmentsClient() {
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("productId");
+
+  const presetValues = productId
+    ? {
+        product: productId,
+        adjustmentType: "increase",
+        quantity: 1,
+      }
+    : null;
+
   return (
     <GenericCRUDPage
       resource="stock-adjustments"
       title="Stock Adjustments"
+      resourceSingular="Stock adjustment"
       columns={columns}
       schema={stockAdjustmentSchema}
       defaultValues={defaultValues}
       FormFields={StockAdjustmentFormFields}
       allowEdit={false}
+      initialOpenCreate={!!productId}
+      presetValues={presetValues}
       statCards={(s) => [{ label: "Total Adjustments", value: s.total }]}
     />
   );

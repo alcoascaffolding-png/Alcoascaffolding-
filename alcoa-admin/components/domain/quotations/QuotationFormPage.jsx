@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { AsyncButton } from "@/components/ui/async-button";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { useEffect, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
@@ -768,10 +768,12 @@ export function QuotationFormPage({ id }) {
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={saveMut.isPending}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
-          <Button type="submit" disabled={saveMut.isPending}>
-            {saveMut.isPending && <InlineSkeleton className="mr-2 inline" />}
-            {isEdit ? "Update Quotation" : "Create Quotation"}
-          </Button>
+          <AsyncButton
+            type="submit"
+            loading={saveMut.isPending}
+            idleLabel={isEdit ? "Update Quotation" : "Create Quotation"}
+            pendingLabel={isEdit ? "Updating…" : "Creating…"}
+          />
         </div>
       </form>
     </Form>

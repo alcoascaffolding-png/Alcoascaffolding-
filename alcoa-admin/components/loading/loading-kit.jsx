@@ -54,22 +54,25 @@ export function CompactLoading({ className }) {
 export function BlockingSaveOverlay({ title, description }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 backdrop-blur-sm"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="flex min-w-[280px] max-w-sm flex-col items-center gap-4 rounded-xl border border-border/80 bg-card px-10 py-8 shadow-lg">
-        <Skeleton className="h-14 w-14 shrink-0 rounded-full" />
+      <div className="flex min-w-[280px] max-w-sm flex-col items-center gap-4 rounded-xl border border-border/80 bg-card px-8 py-8 shadow-lg animate-in fade-in zoom-in-95 duration-200">
+        <div className="relative flex h-16 w-16 items-center justify-center">
+          <span className="absolute inset-0 rounded-full bg-primary/10 animate-pulse" />
+          <BrandSpinner size="lg" />
+        </div>
         <div className="space-y-1 text-center">
-          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
           {description ? (
             <p className="text-xs text-muted-foreground">{description}</p>
           ) : null}
         </div>
-        <div className="flex w-full flex-col gap-2 pt-2">
-          <Skeleton className="h-2 w-full rounded-full" />
-          <Skeleton className="h-2 w-4/5 rounded-full" />
+        <div className="flex w-full flex-col gap-2 pt-1">
+          <Skeleton className="h-1.5 w-full rounded-full" />
+          <Skeleton className="h-1.5 w-4/5 rounded-full mx-auto" />
         </div>
       </div>
     </div>

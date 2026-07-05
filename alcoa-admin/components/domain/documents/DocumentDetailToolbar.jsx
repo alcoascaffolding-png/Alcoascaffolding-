@@ -1,8 +1,8 @@
 "use client";
 
+import { AsyncButton } from "@/components/ui/async-button";
 import { Button } from "@/components/ui/button";
 import { Download, Mail, MessageSquare, Copy, Pencil, Trash2 } from "lucide-react";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 
 /**
  * Detail page actions: PDF, email, WhatsApp, copy link, edit, delete.
@@ -21,49 +21,66 @@ export function DocumentDetailToolbar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button variant="outline" size="sm" onClick={onDownloadPdf} disabled={sending === "pdf"}>
-        {sending === "pdf" ? <InlineSkeleton className="mr-1" /> : <Download className="h-4 w-4 mr-1" />}
-        PDF
-      </Button>
-      <Button
+      <AsyncButton
+        type="button"
         variant="outline"
         size="sm"
-        onClick={onSendEmail}
-        disabled={sending === "email" || !hasEmail}
+        loading={sending === "pdf"}
+        idleLabel="PDF"
+        pendingLabel="Generating…"
+        onClick={onDownloadPdf}
       >
-        {sending === "email" ? <InlineSkeleton className="mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+        <Download className="h-4 w-4 mr-1" />
+        PDF
+      </AsyncButton>
+      <AsyncButton
+        type="button"
+        variant="outline"
+        size="sm"
+        loading={sending === "email"}
+        idleLabel="Email"
+        pendingLabel="Sending…"
+        disabled={!hasEmail}
+        onClick={onSendEmail}
+      >
+        <Mail className="h-4 w-4 mr-1" />
         Email
-      </Button>
+      </AsyncButton>
       {showWhatsApp && (
-        <Button
+        <AsyncButton
+          type="button"
           variant="outline"
           size="sm"
+          loading={sending === "whatsapp"}
+          idleLabel="WhatsApp"
+          pendingLabel="Opening…"
+          disabled={!hasPhone}
           onClick={onSendWhatsApp}
-          disabled={sending === "whatsapp" || !hasPhone}
         >
-          {sending === "whatsapp" ? (
-            <InlineSkeleton className="mr-1" />
-          ) : (
-            <MessageSquare className="h-4 w-4 mr-1" />
-          )}
+          <MessageSquare className="h-4 w-4 mr-1" />
           WhatsApp
-        </Button>
+        </AsyncButton>
       )}
       {showWhatsApp && (
-        <Button
+        <AsyncButton
+          type="button"
           variant="outline"
           size="sm"
+          loading={sending === "whatsapp"}
+          idleLabel="Copy WhatsApp link"
+          pendingLabel="Copying…"
+          disabled={!hasPhone}
           onClick={onCopyWhatsAppLink}
-          disabled={sending === "whatsapp" || !hasPhone}
         >
           <Copy className="h-4 w-4 mr-1" />
           Copy WhatsApp link
-        </Button>
+        </AsyncButton>
       )}
-      <Button variant="outline" size="sm" onClick={onEdit}>
+      <Button type="button" variant="outline" size="sm" onClick={onEdit}>
         <Pencil className="h-4 w-4 mr-1" /> Edit
       </Button>
       <Button
+        type="button"
         variant="outline"
         size="sm"
         className="text-destructive border-destructive"

@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { AsyncButton } from "@/components/ui/async-button";
 import { FormEditSkeleton } from "@/components/loading/skeleton-kit";
 
 // ─── Enum constants (must match Customer model exactly) ───────────────────────
@@ -325,6 +325,15 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["customers", "detail", customerId] });
+      for (const key of [
+        "quotations",
+        "sales-orders",
+        "sales-invoices",
+        "delivery-notes",
+        "receipts",
+      ]) {
+        qc.invalidateQueries({ queryKey: [key] });
+      }
       toast.success(isEdit ? "Customer updated" : "Customer created");
       const id = data._id ?? data.id ?? customerId;
       router.push(`/customers/${id}`);
@@ -537,10 +546,12 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
           >
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
-          <Button type="submit" disabled={saveMut.isPending}>
-            {saveMut.isPending && <InlineSkeleton className="mr-2 inline" />}
-            {isEdit ? "Update Customer" : "Create Customer"}
-          </Button>
+          <AsyncButton
+            type="submit"
+            loading={saveMut.isPending}
+            idleLabel={isEdit ? "Update Customer" : "Create Customer"}
+            pendingLabel={isEdit ? "Updating…" : "Creating…"}
+          />
         </div>
       </form>
     </Form>

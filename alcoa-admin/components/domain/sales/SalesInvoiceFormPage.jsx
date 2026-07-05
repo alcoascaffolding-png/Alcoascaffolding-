@@ -7,6 +7,7 @@ import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { AsyncButton } from "@/components/ui/async-button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -546,10 +547,13 @@ export function SalesInvoiceFormPage({ id }) {
         </Card>
 
         <div className="flex gap-2">
-          <Button type="submit" disabled={saveMut.isPending}>
-            {isEdit ? "Save changes" : "Create tax invoice"}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <AsyncButton
+            type="submit"
+            loading={saveMut.isPending}
+            idleLabel={isEdit ? "Save changes" : "Create tax invoice"}
+            pendingLabel={isEdit ? "Updating…" : "Creating…"}
+          />
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={saveMut.isPending}>
             Cancel
           </Button>
         </div>

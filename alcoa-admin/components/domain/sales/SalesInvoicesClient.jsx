@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +33,18 @@ import {
   resolveDocumentCustomerEmail,
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const API_INVOICES = "/api/sales-invoices";
+
+const PAYMENT_FILTERS = [
+  { value: "all", label: "All payments" },
+  { value: "unpaid", label: "Unpaid" },
+  { value: "partially_paid", label: "Partially paid" },
+  { value: "paid", label: "Paid" },
+  { value: "overdue", label: "Overdue" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 async function fetchInvoices(params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -47,11 +64,26 @@ export function SalesInvoicesClient() {
   const router = useRouter();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("all");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  const listParams = useMemo(() => {
+    const params = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
+    if (paymentFilter && paymentFilter !== "all") params.paymentStatus = paymentFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    return params;
+  }, [pagination.pageIndex, pagination.pageSize, paymentFilter, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["sales-invoices"],
-    queryFn: () => fetchInvoices({ limit: "200" }),
+    queryKey: ["sales-invoices", listParams],
+    queryFn: () => fetchInvoices(listParams),
     refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({
@@ -186,10 +218,44 @@ export function SalesInvoicesClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search tax invoices…"
+        searchPlaceholder="Search by invoice #, customer, TRN…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/sales-invoices/${String(row._id)}`)}
-        emptyMessage="No tax invoices yet. Create your first tax invoice."
-        toolbar={<ExportButton resource="sales-invoices" filename="tax-invoices" />}
+        emptyMessage={
+          paymentFilter !== "all" || debouncedSearch
+            ? "No tax invoices match your filters."
+            : "No tax invoices yet. Create your first tax invoice."
+        }
+        toolbar={
+          <>
+            <Select
+              value={paymentFilter}
+              onValueChange={(value) => {
+                setPaymentFilter(value);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
+              }}
+            >
+              <SelectTrigger className="h-8 w-[170px]">
+                <SelectValue placeholder="Payment" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_FILTERS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <ExportButton resource="sales-invoices" filename="tax-invoices" />
+          </>
+        }
       />
 
       <AlertDialog

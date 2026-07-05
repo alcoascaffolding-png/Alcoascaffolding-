@@ -8,8 +8,37 @@ import { parseRequestBody } from "@/lib/validate-request";
 import { quotationCreateSchema } from "@/lib/schemas/quotation";
 import { Customer, Quotation } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 void Customer;
+
+function buildQuotationFilter(searchParams) {
+  const filter = {};
+  const status = searchParams.get("status");
+
+  if (status === "pending") {
+    filter.status = { $in: ["draft", "sent", "viewed"] };
+  } else if (status === "converted") {
+    filter.status = { $in: ["converted", "converted_to_sales_order", "converted_to_invoice"] };
+  } else if (status === "accepted") {
+    filter.status = { $in: ["accepted", "approved"] };
+  } else if (status) {
+    filter.status = status;
+  }
+
+  if (searchParams.get("quoteType")) filter.quoteType = searchParams.get("quoteType");
+  if (searchParams.get("customer")) filter.customer = searchParams.get("customer");
+
+  const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
+    "quoteNumber",
+    "customerName",
+    "referenceNumber",
+    "contactPersonName",
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
+
+  return filter;
+}
 
 export const GET = withErrorHandler(async (request) => {
   await authorizeApi("quotations", "read");
@@ -17,17 +46,10 @@ export const GET = withErrorHandler(async (request) => {
   await connectDB();
 
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
-  const limit = Math.min(100, parseInt(searchParams.get("limit") || "20"));
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(100, parseInt(searchParams.get("limit") || "20", 10));
   const skip = (page - 1) * limit;
-
-  const filter = {};
-  if (searchParams.get("status")) filter.status = searchParams.get("status");
-  if (searchParams.get("quoteType")) filter.quoteType = searchParams.get("quoteType");
-  if (searchParams.get("customer")) filter.customer = searchParams.get("customer");
-  if (searchParams.get("search")) {
-    filter.$text = { $search: searchParams.get("search") };
-  }
+  const filter = buildQuotationFilter(searchParams);
 
   const [items, total] = await Promise.all([
     Quotation.find(filter)

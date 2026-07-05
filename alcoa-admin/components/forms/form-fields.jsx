@@ -6,29 +6,83 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
+
+/** Shared field chrome for all CRUD form inputs — theme tokens only (no hardcoded white). */
+export const formInputClassName =
+  "h-11 rounded-lg border border-input bg-card px-3.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 dark:shadow-none";
+
+export const formSelectClassName =
+  "h-11 w-full rounded-lg border border-input bg-card px-3.5 text-sm text-foreground shadow-sm focus:ring-2 focus:ring-primary/20 dark:shadow-none [&>span]:text-foreground";
+
+export const formTextareaClassName =
+  "min-h-[100px] resize-y rounded-lg border border-input bg-card px-3.5 py-3 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 dark:shadow-none";
+
+function defaultPlaceholder(label, explicit) {
+  if (explicit) return explicit;
+  if (!label) return undefined;
+  return `Enter ${String(label).toLowerCase()}`;
+}
+
+function textDisplayValue(value) {
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
+function numberDisplayValue(value) {
+  if (value === null || value === undefined || value === "" || Number(value) === 0) return "";
+  return String(value);
+}
 
 /**
  * FormTextField - text, email, password, tel, url, number inputs
  */
-export function FormTextField({ control, name, label, placeholder, type = "text", description, disabled, className }) {
+export function FormTextField({
+  control,
+  name,
+  label,
+  placeholder,
+  type = "text",
+  description,
+  disabled,
+  readOnly,
+  className,
+}) {
+  const resolvedPlaceholder = defaultPlaceholder(label, placeholder);
+
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem className={className}>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && (
+            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+          )}
           <FormControl>
             <Input
               type={type}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               disabled={disabled}
+              readOnly={readOnly}
+              className={cn(
+                formInputClassName,
+                (disabled || readOnly) && "cursor-not-allowed bg-muted/40 text-muted-foreground"
+              )}
               {...field}
-              value={field.value ?? ""}
-              onChange={type === "number" ? (e) => field.onChange(e.target.valueAsNumber) : field.onChange}
+              value={textDisplayValue(field.value)}
+              onChange={
+                type === "number"
+                  ? (e) => field.onChange(e.target.valueAsNumber)
+                  : field.onChange
+              }
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
+          {description && (
+            <FormDescription className="text-xs leading-relaxed text-muted-foreground">
+              {description}
+            </FormDescription>
+          )}
           <FormMessage />
         </FormItem>
       )}
@@ -39,24 +93,42 @@ export function FormTextField({ control, name, label, placeholder, type = "text"
 /**
  * FormTextAreaField - multiline textarea
  */
-export function FormTextAreaField({ control, name, label, placeholder, rows = 3, description, disabled, className }) {
+export function FormTextAreaField({
+  control,
+  name,
+  label,
+  placeholder,
+  rows = 3,
+  description,
+  disabled,
+  className,
+}) {
+  const resolvedPlaceholder = defaultPlaceholder(label, placeholder);
+
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem className={className}>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && (
+            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+          )}
           <FormControl>
             <Textarea
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               rows={rows}
               disabled={disabled}
+              className={formTextareaClassName}
               {...field}
-              value={field.value ?? ""}
+              value={textDisplayValue(field.value)}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
+          {description && (
+            <FormDescription className="text-xs leading-relaxed text-muted-foreground">
+              {description}
+            </FormDescription>
+          )}
           <FormMessage />
         </FormItem>
       )}
@@ -66,9 +138,17 @@ export function FormTextAreaField({ control, name, label, placeholder, rows = 3,
 
 /**
  * FormSelectField - shadcn Select with options array
- * options: [{ value, label }]
  */
-export function FormSelectField({ control, name, label, placeholder = "Select…", options = [], description, disabled, className }) {
+export function FormSelectField({
+  control,
+  name,
+  label,
+  placeholder = "Select an option…",
+  options = [],
+  description,
+  disabled,
+  className,
+}) {
   return (
     <FormField
       control={control}
@@ -80,9 +160,12 @@ export function FormSelectField({ control, name, label, placeholder = "Select…
             : String(field.value);
         const matched = options.find((o) => o.value === raw);
         const selectValue = matched ? matched.value : undefined;
+
         return (
           <FormItem className={className}>
-            {label && <FormLabel>{label}</FormLabel>}
+            {label && (
+              <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+            )}
             <Select
               key={`${name}-${options.length}-${raw}`}
               onValueChange={field.onChange}
@@ -90,7 +173,7 @@ export function FormSelectField({ control, name, label, placeholder = "Select…
               disabled={disabled}
             >
               <FormControl>
-                <SelectTrigger>
+                <SelectTrigger className={formSelectClassName}>
                   <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
               </FormControl>
@@ -102,7 +185,11 @@ export function FormSelectField({ control, name, label, placeholder = "Select…
                 ))}
               </SelectContent>
             </Select>
-            {description && <FormDescription>{description}</FormDescription>}
+            {description && (
+              <FormDescription className="text-xs leading-relaxed text-muted-foreground">
+                {description}
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         );
@@ -112,30 +199,59 @@ export function FormSelectField({ control, name, label, placeholder = "Select…
 }
 
 /**
- * FormNumberField - convenience wrapper around FormTextField with type=number
+ * FormNumberField
  */
-export function FormNumberField({ control, name, label, placeholder, min, max, step, description, disabled, className }) {
+export function FormNumberField({
+  control,
+  name,
+  label,
+  placeholder,
+  min,
+  max,
+  step,
+  description,
+  disabled,
+  className,
+  showZero = false,
+}) {
+  const resolvedPlaceholder = placeholder ?? "0";
+
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
         <FormItem className={className}>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && (
+            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+          )}
           <FormControl>
             <Input
               type="number"
-              placeholder={placeholder}
+              inputMode="decimal"
+              placeholder={resolvedPlaceholder}
               min={min}
               max={max}
               step={step ?? "any"}
               disabled={disabled}
-              {...field}
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.valueAsNumber)}
+              className={formInputClassName}
+              value={
+                showZero
+                  ? textDisplayValue(field.value)
+                  : numberDisplayValue(field.value)
+              }
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") field.onChange(0);
+                else field.onChange(Number(raw));
+              }}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
+          {description && (
+            <FormDescription className="text-xs leading-relaxed text-muted-foreground">
+              {description}
+            </FormDescription>
+          )}
           <FormMessage />
         </FormItem>
       )}
@@ -143,16 +259,13 @@ export function FormNumberField({ control, name, label, placeholder, min, max, s
   );
 }
 
-/**
- * FormCheckboxField
- */
 export function FormCheckboxField({ control, name, label, description, disabled, className }) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={`flex flex-row items-start space-x-3 space-y-0 ${className || ""}`}>
+        <FormItem className={cn("flex flex-row items-start space-x-3 space-y-0", className)}>
           <FormControl>
             <Checkbox
               checked={!!field.value}
@@ -171,19 +284,27 @@ export function FormCheckboxField({ control, name, label, description, disabled,
   );
 }
 
-/**
- * FormSwitchField
- */
 export function FormSwitchField({ control, name, label, description, disabled, className }) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={`flex flex-row items-center justify-between rounded-lg border p-3 ${className || ""}`}>
-          <div className="space-y-0.5">
-            {label && <FormLabel>{label}</FormLabel>}
-            {description && <FormDescription>{description}</FormDescription>}
+        <FormItem
+          className={cn(
+            "flex flex-row items-center justify-between rounded-lg border border-border bg-card px-4 py-3.5",
+            className
+          )}
+        >
+          <div className="space-y-0.5 pr-4">
+            {label && (
+              <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+            )}
+            {description && (
+              <FormDescription className="text-xs leading-relaxed text-muted-foreground">
+                {description}
+              </FormDescription>
+            )}
           </div>
           <FormControl>
             <Switch

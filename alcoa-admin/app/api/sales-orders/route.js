@@ -9,8 +9,26 @@ import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { Customer, Quotation, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
 import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
+import { assertSufficientStockForLines } from "@/lib/stock-validation";
+import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 void Customer;
+
+function buildSalesOrderFilter(searchParams) {
+  const filter = {};
+  const status = searchParams.get("status");
+
+  if (status && status !== "all") filter.status = status;
+
+  const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
+    "orderNumber",
+    "customerName",
+    "referenceNumber",
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
+
+  return filter;
+}
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -27,17 +45,7 @@ export const GET = withErrorHandler(async (request) => {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.min(100, parseInt(searchParams.get("limit") || "20", 10));
   const skip = (page - 1) * limit;
-
-  const filter = {};
-  if (searchParams.get("status")) filter.status = searchParams.get("status");
-  const searchTerm = (searchParams.get("search") || "").trim();
-  if (searchTerm) {
-    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    filter.$or = [
-      { orderNumber: { $regex: escaped, $options: "i" } },
-      { customerName: { $regex: escaped, $options: "i" } },
-    ];
-  }
+  const filter = buildSalesOrderFilter(searchParams);
 
   const [items, total] = await Promise.all([
     SalesOrder.find(filter)
@@ -113,6 +121,10 @@ export const POST = withErrorHandler(async (request) => {
     const subtotal = (items || []).reduce((s, row) => s + Number(row.total || 0), 0);
     const total = subtotal + Number(vatAmount) || 0;
     await assertCustomerCreditForOrder({ customerId, additionalAmount: total });
+  }
+
+  if (["confirmed", "in_progress", "delivered"].includes(payload.status)) {
+    await assertSufficientStockForLines(items, { context: "Sales order" });
   }
 
   const doc = await SalesOrder.create({ ...payload, createdBy: session.user.id });

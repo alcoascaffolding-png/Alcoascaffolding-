@@ -30,6 +30,7 @@ const POST = withErrorHandler(async (request) => {
     reason,
     notes,
     userId: session.user.id,
+    sourceType: "manual",
   });
 
   logAudit({

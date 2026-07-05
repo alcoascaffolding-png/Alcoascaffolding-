@@ -1,9 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   Users, FileText, MessageSquare, TrendingUp,
-  AlertCircle, CheckCircle, Clock, ArrowUpRight, Package,
+  AlertCircle, CheckCircle, Clock, ArrowUpRight, Package, Warehouse, AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,14 @@ async function fetchRecentActivities() {
   return data.data;
 }
 
-function StatCard({ title, value, description, icon: Icon, trend, color = "primary" }) {
+async function fetchInventorySummary() {
+  const res = await fetch("/api/dashboard/inventory");
+  if (!res.ok) throw new Error("Failed to fetch inventory summary");
+  const data = await res.json();
+  return data.data;
+}
+
+function StatCard({ title, value, description, icon: Icon, trend, color = "primary", href }) {
   const colorMap = {
     primary: "text-primary",
     success: "text-emerald-600 dark:text-emerald-400",
@@ -47,8 +55,8 @@ function StatCard({ title, value, description, icon: Icon, trend, color = "prima
     accent: "text-brand-accent",
   };
 
-  return (
-    <Card>
+  const inner = (
+    <Card className={href ? "transition-colors hover:bg-muted/30" : undefined}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className={`h-4 w-4 ${colorMap[color] || colorMap.primary}`} />
@@ -59,6 +67,12 @@ function StatCard({ title, value, description, icon: Icon, trend, color = "prima
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return <Link href={href} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">{inner}</Link>;
+  }
+
+  return inner;
 }
 
 const statusBadgeMap = {
@@ -102,6 +116,15 @@ export function DashboardClient() {
     refetchInterval: 2 * 60 * 1000,
   });
 
+  const { data: inventory, isLoading: inventoryLoading } = useQuery({
+    queryKey: ["dashboard-inventory"],
+    queryFn: fetchInventorySummary,
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  const invStats = inventory?.stats;
+  const hasStockAlert = (stats?.products?.lowStock ?? 0) > 0 || (stats?.products?.outOfStock ?? 0) > 0;
+
   if (statsError) {
     return (
       <div className="flex items-center gap-2 text-destructive">
@@ -113,6 +136,26 @@ export function DashboardClient() {
 
   return (
     <div className="space-y-6">
+      {hasStockAlert && !statsLoading && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-900/50 dark:bg-amber-950/30">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-amber-900 dark:text-amber-100">Inventory attention needed</p>
+            <p className="text-amber-800/90 dark:text-amber-200/80 text-xs mt-0.5">
+              {(stats?.products?.lowStock ?? 0) > 0 && (
+                <span>{stats.products.lowStock} product{stats.products.lowStock === 1 ? "" : "s"} running low. </span>
+              )}
+              {(stats?.products?.outOfStock ?? 0) > 0 && (
+                <span>{stats.products.outOfStock} product{stats.products.outOfStock === 1 ? "" : "s"} out of stock.</span>
+              )}
+            </p>
+          </div>
+          <Link href="/products?stock=critical" className="text-xs font-medium text-amber-900 dark:text-amber-100 hover:underline shrink-0">
+            Review
+          </Link>
+        </div>
+      )}
+
       {/* Stat cards */}
       {statsLoading ? (
         <>
@@ -135,6 +178,7 @@ export function DashboardClient() {
             description={`${stats?.quotations?.pending ?? 0} pending`}
             icon={FileText}
             color="primary"
+            href="/quotations?status=pending"
           />
           <StatCard
             title="New Messages"
@@ -158,6 +202,7 @@ export function DashboardClient() {
             description={`${stats?.products?.outOfStock ?? 0} out of stock`}
             icon={Package}
             color={stats?.products?.lowStock > 0 ? "warning" : "success"}
+            href="/products?stock=critical"
           />
           <StatCard
             title="Overdue Invoices"
@@ -176,6 +221,82 @@ export function DashboardClient() {
           </div>
         </>
       )}
+
+      {/* Inventory overview */}
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold tracking-tight">Inventory Overview</h2>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/products" className="text-xs text-primary flex items-center gap-1 hover:underline">
+              Manage products <ArrowUpRight className="h-3 w-3" />
+            </Link>
+            <Link href="/purchase-orders?from=low-stock" className="text-xs text-primary hover:underline">
+              Create PO from low stock
+            </Link>
+          </div>
+        </div>
+        {inventoryLoading ? (
+          <DashboardStatCardsSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              title="Total Products"
+              value={invStats?.total ?? 0}
+              description={`${invStats?.recentlyAdded ?? 0} added this month`}
+              icon={Package}
+              href="/products"
+            />
+            <StatCard
+              title="Inventory Value"
+              value={formatCurrency(invStats?.inventoryValue ?? 0)}
+              description="Stock × purchase price"
+              icon={Warehouse}
+            />
+            <StatCard
+              title="Rental Units"
+              value={invStats?.rentalUnits ?? 0}
+              description="Items with rental pricing"
+              icon={TrendingUp}
+            />
+            <StatCard
+              title="Recent Adjustments"
+              value={invStats?.recentAdjustments ?? 0}
+              description="Last 30 days"
+              icon={Clock}
+              href="/stock-adjustments"
+            />
+          </div>
+        )}
+
+        {!inventoryLoading && (inventory?.lowStockItems?.length > 0) && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Low & Out-of-Stock Items</CardTitle>
+                <CardDescription>Products that need replenishment</CardDescription>
+              </div>
+              <Link href="/products?stock=critical" className="text-xs text-primary hover:underline">
+                View all
+              </Link>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {inventory.lowStockItems.map((p) => (
+                  <div key={p._id} className="flex items-center justify-between gap-2 py-1.5 border-b last:border-0">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.itemCode}</p>
+                    </div>
+                    <Badge variant={p.currentStock <= 0 ? "destructive" : "warning"}>
+                      {p.currentStock <= 0 ? "Out" : `${p.currentStock} ${p.unit || "Nos"}`}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

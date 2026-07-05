@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (matches ClientThemeProvider attribute="class") */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================
    GLOBAL DESIGN SYSTEM — Alcoa Management System brand kit
 
@@ -228,6 +231,21 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--muted-foreground);
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill,
+  .dark textarea:-webkit-autofill:hover,
+  .dark textarea:-webkit-autofill:focus,
+  .dark select:-webkit-autofill,
+  .dark select:-webkit-autofill:hover,
+  .dark select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--card) inset !important;
+    box-shadow: 0 0 0 1000px var(--card) inset !important;
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
   }
 }
 

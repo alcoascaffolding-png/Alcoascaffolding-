@@ -8,10 +8,29 @@ import { resolveDeliveryNoteNumberForCreate } from "@/lib/document-number";
 import { syncDeliveryNoteStock } from "@/lib/stock-service";
 import { syncSalesOrderOnDeliveryNote } from "@/lib/sync-sales-order-on-delivery";
 import { assertDeliveryNoteQuantitiesWithinSalesOrder } from "@/lib/sales-order-delivery-fulfillment";
+import { assertSufficientStockForLines } from "@/lib/stock-validation";
 import { Customer, DeliveryNote, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { DOCUMENT_CUSTOMER_CONTACT_POPULATE } from "@/lib/resolve-document-customer";
+import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 void Customer;
+
+function buildDeliveryNoteFilter(searchParams) {
+  const filter = {};
+  const status = searchParams.get("status");
+
+  if (status && status !== "all") filter.status = status;
+
+  const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
+    "deliveryNoteNumber",
+    "customerName",
+    "driverName",
+    "vehicleNumber",
+  ]);
+  if (searchFilter) Object.assign(filter, searchFilter);
+
+  return filter;
+}
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -28,17 +47,7 @@ export const GET = withErrorHandler(async (request) => {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
   const limit = Math.min(100, parseInt(searchParams.get("limit") || "20", 10));
   const skip = (page - 1) * limit;
-
-  const filter = {};
-  if (searchParams.get("status")) filter.status = searchParams.get("status");
-  const searchTerm = (searchParams.get("search") || "").trim();
-  if (searchTerm) {
-    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    filter.$or = [
-      { deliveryNoteNumber: { $regex: escaped, $options: "i" } },
-      { customerName: { $regex: escaped, $options: "i" } },
-    ];
-  }
+  const filter = buildDeliveryNoteFilter(searchParams);
 
   const [items, total] = await Promise.all([
     DeliveryNote.find(filter)
@@ -125,6 +134,10 @@ export const POST = withErrorHandler(async (request) => {
       noteType: payload.noteType,
       items: payload.items,
     });
+  }
+
+  if (payload.noteType !== "return" && payload.status === "delivered") {
+    await assertSufficientStockForLines(payload.items, { context: "Delivery note" });
   }
 
   try {

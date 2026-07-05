@@ -96,8 +96,12 @@ export function PurchaseLineItemsFields() {
   );
 }
 
-export function VendorSelectField({ control, name = "vendor" }) {
-  const { setValue } = useFormContext();
+export function VendorSelectField({
+  control,
+  name = "vendor",
+  label = "Vendor",
+  description = "Pick a vendor — company name auto-fills below",
+}) {
   const { data } = useQuery({
     queryKey: ["vendors"],
     queryFn: async () => {
@@ -119,9 +123,10 @@ export function VendorSelectField({ control, name = "vendor" }) {
     <FormSelectField
       control={control}
       name={name}
-      label="Vendor"
+      label={label}
+      placeholder="Select a vendor…"
       options={options}
-      description="Pick a vendor — company name auto-fills below"
+      description={description}
     />
   );
 }

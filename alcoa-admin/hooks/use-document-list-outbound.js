@@ -14,12 +14,7 @@ import { useShowWhatsApp } from "@/hooks/use-show-whatsapp";
 const POPUP_HINT = "Pop-up blocked. Use Copy WhatsApp link.";
 
 /**
- * Row-level PDF / email / WhatsApp for list pages (quotations, sales orders, invoices).
- *
- * @param {object} opts
- * @param {string} opts.apiBase - e.g. `/api/quotations`
- * @param {import("@tanstack/react-query").QueryKey} opts.listQueryKey - e.g. `["sales-orders"]`
- * @param {import("@tanstack/react-query").QueryKey} [opts.statsQueryKey] - e.g. `["sales-orders-stats"]`
+ * Row-level PDF / email / WhatsApp for list pages.
  */
 export function useDocumentListOutbound({ apiBase, listQueryKey, statsQueryKey }) {
   const qc = useQueryClient();
@@ -34,13 +29,20 @@ export function useDocumentListOutbound({ apiBase, listQueryKey, statsQueryKey }
   const downloadPdf = useCallback(
     async (id, fileBaseName) => {
       const sid = String(id);
-      toast.info("Generating PDF…");
       try {
-        const blob = await fetchDocumentPdfBlob(apiBase, sid);
-        saveBlobAsPdfDownload(blob, fileBaseName);
-        toast.success("PDF downloaded");
-      } catch (e) {
-        toast.error("Failed to generate PDF: " + e.message);
+        await toast.promise(
+          (async () => {
+            const blob = await fetchDocumentPdfBlob(apiBase, sid);
+            saveBlobAsPdfDownload(blob, fileBaseName);
+          })(),
+          {
+            loading: "Generating PDF…",
+            success: "PDF downloaded",
+            error: (e) => `Failed to generate PDF: ${e?.message || "Unknown error"}`,
+          }
+        );
+      } catch {
+        /* toast.promise handles error display */
       }
     },
     [apiBase]
@@ -51,11 +53,17 @@ export function useDocumentListOutbound({ apiBase, listQueryKey, statsQueryKey }
       const sid = String(id);
       setSendingId(sid);
       try {
-        await postDocumentSendEmail(apiBase, sid);
-        toast.success("Email sent");
-        bump();
-      } catch (e) {
-        toast.error("Failed to send email: " + e.message);
+        await toast.promise(
+          (async () => {
+            await postDocumentSendEmail(apiBase, sid);
+            bump();
+          })(),
+          {
+            loading: "Sending email…",
+            success: "Email sent",
+            error: (e) => `Failed to send email: ${e?.message || "Unknown error"}`,
+          }
+        );
       } finally {
         setSendingId(null);
       }

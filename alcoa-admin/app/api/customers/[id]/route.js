@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import Customer from "@/models/Customer";
+import { syncCustomerSnapshotsToDocuments } from "@/lib/sync-customer-to-documents";
 
 export const GET = withErrorHandler(async (request, { params }) => {
   const session = await authorizeApi("customers", "read");
@@ -59,6 +60,8 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   }
   doc.lastModifiedBy = session.user.id;
   await doc.save();
+
+  await syncCustomerSnapshotsToDocuments(doc);
 
   return apiSuccess(doc.toJSON());
 });

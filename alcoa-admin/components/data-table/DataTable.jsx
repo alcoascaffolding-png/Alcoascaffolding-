@@ -15,9 +15,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Inbox } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
-import { useState } from "react";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 export function DataTable({
@@ -34,27 +35,54 @@ export function DataTable({
   pageSizeOptions = [10, 20, 50, 100],
   onRowClick,
   emptyMessage = "No records found.",
-  /** Wrap toolbar + table + pagination in the same Card shell as dashboard metric tiles */
+  emptyIcon = "default",
+  getRowClassName,
+  /** Server-side pagination */
+  manualPagination = false,
+  pageCount,
+  totalRecords,
+  paginationState,
+  onPaginationChange,
+  /** Server-side search — disables client global filter */
+  serverSearch = false,
+  searchValue,
+  onSearchChange,
   card = true,
 }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [{ pageIndex, pageSize }, setPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });
+  const [localSearch, setLocalSearch] = useState("");
+  const [localPagination, setLocalPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });
+
+  const globalFilter = serverSearch ? "" : localSearch;
+  const displaySearch = serverSearch ? (searchValue ?? "") : localSearch;
+
+  const pagination = paginationState ?? localPagination;
+  const setPagination = onPaginationChange ?? setLocalPagination;
+
+  useEffect(() => {
+    if (!serverSearch) return;
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [searchValue, serverSearch, setPagination]);
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters, globalFilter, pagination: { pageIndex, pageSize } },
+    state: { sorting, columnFilters, globalFilter, pagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: serverSearch ? undefined : setLocalSearch,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: false,
+    ...(manualPagination
+      ? {}
+      : {
+          getFilteredRowModel: getFilteredRowModel(),
+          getPaginationRowModel: getPaginationRowModel(),
+        }),
+    manualPagination,
+    pageCount: manualPagination ? pageCount : undefined,
   });
 
   const inner = (
@@ -67,10 +95,15 @@ export function DataTable({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={searchPlaceholder}
-                value={globalFilter}
+                value={displaySearch}
                 onChange={(e) => {
-                  setGlobalFilter(e.target.value);
-                  table.setPageIndex(0);
+                  const next = e.target.value;
+                  if (serverSearch) {
+                    onSearchChange?.(next);
+                  } else {
+                    setLocalSearch(next);
+                    table.setPageIndex(0);
+                  }
                 }}
                 className="pl-9 border-border bg-card shadow-sm focus-visible:ring-2 focus-visible:ring-ring/30"
               />
@@ -144,7 +177,11 @@ export function DataTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={cn("bg-card hover:bg-muted/40", onRowClick && "cursor-pointer")}
+                  className={cn(
+                    "bg-card hover:bg-muted/40",
+                    onRowClick && "cursor-pointer",
+                    getRowClassName?.(row.original)
+                  )}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
@@ -177,11 +214,12 @@ export function DataTable({
               ))
             ) : (
               <TableRow className="bg-card hover:bg-card">
-                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-2">
-                    <Inbox className="h-8 w-8 opacity-30" />
-                    <span className="text-sm">{emptyMessage}</span>
-                  </div>
+                <TableCell colSpan={columns.length} className="h-auto p-0">
+                  <EmptyState
+                    icon={emptyIcon}
+                    title={emptyMessage}
+                    description="Try adjusting your search or filters."
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -194,17 +232,19 @@ export function DataTable({
       {showPagination && (
         <div className="flex flex-col gap-3 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} record(s)
+            {manualPagination
+              ? `${totalRecords ?? 0} record(s)`
+              : `${table.getFilteredRowModel().rows.length} record(s)`}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               Rows per page
               <select
                 className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-                value={pageSize}
+                value={pagination.pageSize}
                 onChange={(e) => {
-                  table.setPageSize(Number(e.target.value));
-                  table.setPageIndex(0);
+                  const size = Number(e.target.value);
+                  setPagination({ pageIndex: 0, pageSize: size });
                 }}
               >
                 {pageSizeOptions.map((size) => (
@@ -221,7 +261,7 @@ export function DataTable({
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <span className="text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+              {pagination.pageIndex + 1} / {manualPagination ? (pageCount || 1) : (table.getPageCount() || 1)}
             </span>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
               <ChevronRight className="h-4 w-4" />

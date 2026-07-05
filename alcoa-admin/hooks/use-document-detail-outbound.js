@@ -19,15 +19,6 @@ const POPUP_HINT = "Pop-up blocked. Use Copy WhatsApp link button.";
 
 /**
  * Detail page toolbar: PDF, email, WhatsApp (Twilio + wa.me), copy wa.me link.
- *
- * @param {object} opts
- * @param {string} opts.id
- * @param {string} opts.apiBase
- * @param {import("@tanstack/react-query").QueryKey} opts.listQueryKey
- * @param {import("@tanstack/react-query").QueryKey} opts.detailQueryKey
- * @param {Record<string, unknown> | null | undefined} opts.document - loaded entity (for filename / toasts)
- * @param {"quoteNumber"|"orderNumber"|"invoiceNumber"} opts.numberField
- * @param {import("@tanstack/react-query").QueryKey} [opts.statsQueryKey]
  */
 export function useDocumentDetailOutbound({
   id,
@@ -58,12 +49,17 @@ export function useDocumentDetailOutbound({
     }
     setSending("pdf");
     try {
-      toast.info("Generating PDF…");
-      const blob = await fetchDocumentPdfBlob(apiBase, id);
-      saveBlobAsPdfDownload(blob, docNo);
-      toast.success("PDF downloaded");
-    } catch (e) {
-      toast.error("PDF failed: " + (e?.message || "Unknown error"));
+      await toast.promise(
+        (async () => {
+          const blob = await fetchDocumentPdfBlob(apiBase, id);
+          saveBlobAsPdfDownload(blob, docNo);
+        })(),
+        {
+          loading: "Generating PDF…",
+          success: "PDF downloaded",
+          error: (e) => `PDF failed: ${e?.message || "Unknown error"}`,
+        }
+      );
     } finally {
       setSending(null);
     }
@@ -72,12 +68,19 @@ export function useDocumentDetailOutbound({
   const sendEmail = useCallback(async () => {
     setSending("email");
     try {
-      await postDocumentSendEmail(apiBase, id);
-      const to = resolveDocumentCustomerEmail(document);
-      toast.success(to ? `Emailed to ${to}` : "Email sent");
-      bump();
-    } catch (e) {
-      toast.error("Failed: " + e.message);
+      await toast.promise(
+        (async () => {
+          await postDocumentSendEmail(apiBase, id);
+          bump();
+          const to = resolveDocumentCustomerEmail(document);
+          return to ? `Emailed to ${to}` : "Email sent";
+        })(),
+        {
+          loading: "Sending email…",
+          success: (msg) => msg,
+          error: (e) => `Failed: ${e?.message || "Unknown error"}`,
+        }
+      );
     } finally {
       setSending(null);
     }

@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +33,19 @@ import {
   resolveDocumentCustomerEmail,
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const API = "/api/delivery-notes";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "ready", label: "Ready" },
+  { value: "dispatched", label: "Dispatched" },
+  { value: "in_transit", label: "In transit" },
+  { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 async function fetchNotes(params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -47,11 +65,26 @@ export function DeliveryNotesClient() {
   const router = useRouter();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  const listParams = useMemo(() => {
+    const params = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    return params;
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["delivery-notes"],
-    queryFn: () => fetchNotes({ limit: "200" }),
+    queryKey: ["delivery-notes", listParams],
+    queryFn: () => fetchNotes(listParams),
     refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({
@@ -177,10 +210,44 @@ export function DeliveryNotesClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search delivery notes…"
+        searchPlaceholder="Search by DN #, customer, driver…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/delivery-notes/${String(row._id)}`)}
-        emptyMessage="No delivery notes yet. Create one from a sales order or add standalone."
-        toolbar={<ExportButton resource="delivery-notes" filename="delivery-notes" />}
+        emptyMessage={
+          statusFilter !== "all" || debouncedSearch
+            ? "No delivery notes match your filters."
+            : "No delivery notes yet. Create one from a sales order or add standalone."
+        }
+        toolbar={
+          <>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <ExportButton resource="delivery-notes" filename="delivery-notes" />
+          </>
+        }
       />
 
       <AlertDialog

@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AsyncButton } from "@/components/ui/async-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -177,24 +178,38 @@ export function QuotationDetail({ id }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
+          <AsyncButton
+            type="button"
             variant="outline"
             size="sm"
-            disabled={hasSalesOrder || conversionDisabled || convertMut.isPending}
+            loading={convertMut.isPending && convertMut.variables === "sales-order"}
+            disabled={
+              hasSalesOrder ||
+              conversionDisabled ||
+              (convertMut.isPending && convertMut.variables !== "sales-order")
+            }
+            pendingLabel="Converting…"
             onClick={() => convertMut.mutate("sales-order")}
           >
             <ShoppingCart className="h-4 w-4 mr-1" />
             {hasSalesOrder ? "Sales Order Created" : "Convert to Sales Order"}
-          </Button>
-          <Button
+          </AsyncButton>
+          <AsyncButton
+            type="button"
             variant="outline"
             size="sm"
-            disabled={hasSalesInvoice || conversionDisabled || convertMut.isPending}
+            loading={convertMut.isPending && convertMut.variables === "invoice"}
+            disabled={
+              hasSalesInvoice ||
+              conversionDisabled ||
+              (convertMut.isPending && convertMut.variables !== "invoice")
+            }
+            pendingLabel="Converting…"
             onClick={() => convertMut.mutate("invoice")}
           >
             <Receipt className="h-4 w-4 mr-1" />
             {hasSalesInvoice ? "Invoice Created" : "Convert to Invoice"}
-          </Button>
+          </AsyncButton>
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
@@ -473,19 +488,31 @@ export function QuotationDetail({ id }) {
         </Card>
       </div>
 
-      <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
+      <AlertDialog
+        open={showDelete}
+        onOpenChange={(open) => {
+          if (!open && !deleteMut.isPending) setShowDelete(false);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {q.quoteNumber}?</AlertDialogTitle>
             <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMut.mutate()}
-              className="bg-destructive hover:bg-destructive/90 text-white"
-            >
-              Delete
+            <AlertDialogCancel disabled={deleteMut.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <AsyncButton
+                type="button"
+                loading={deleteMut.isPending}
+                idleLabel="Delete"
+                pendingLabel="Deleting…"
+                className="bg-destructive hover:bg-destructive/90 text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteMut.mutate();
+                }}
+              />
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

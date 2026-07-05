@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { FormTextField, FormSelectField, FormNumberField, FormTextAreaField } from "@/components/forms/form-fields";
+import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
 
 const schema = z.object({
@@ -32,46 +33,137 @@ const columns = [
 
 function VendorFormFields({ control }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <FormTextField
-        control={control}
-        name="vendorCode"
-        label="Vendor Code"
-        placeholder="Auto-generated"
-        description="Generated automatically in sequence when you create a vendor."
-        disabled
-      />
-      <FormTextField control={control} name="companyName" label="Company Name" placeholder="Vendor Company" />
-      <FormTextField control={control} name="contactPerson" label="Contact Person" />
-      <FormTextField control={control} name="email" label="Email" type="email" />
-      <FormTextField control={control} name="phone" label="Phone" />
-      <FormSelectField control={control} name="emirate" label="Emirate" options={[
-        { value: "Dubai", label: "Dubai" }, { value: "Abu Dhabi", label: "Abu Dhabi" },
-        { value: "Sharjah", label: "Sharjah" }, { value: "Ajman", label: "Ajman" },
-      ]} />
-      <FormTextField control={control} name="vatNumber" label="VAT / TRN" />
-      <FormTextField control={control} name="tradeLicenseNumber" label="Trade License" />
-      <FormSelectField control={control} name="category" label="Category" options={[
-        { value: "Supplier", label: "Supplier" },
-        { value: "Manufacturer", label: "Manufacturer" },
-        { value: "Distributor", label: "Distributor" },
-        { value: "Service Provider", label: "Service Provider" },
-        { value: "Other", label: "Other" },
-      ]} />
-      <FormSelectField control={control} name="paymentTerms" label="Payment Terms" options={[
-        { value: "Cash", label: "Cash" },
-        { value: "7 Days", label: "7 Days" },
-        { value: "15 Days", label: "15 Days" },
-        { value: "30 Days", label: "30 Days" },
-        { value: "60 Days", label: "60 Days" },
-        { value: "Custom", label: "Custom" },
-      ]} />
-      <FormNumberField control={control} name="creditLimit" label="Credit Limit (AED)" min={0} />
-      <FormSelectField control={control} name="status" label="Status" options={[
-        { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }, { value: "blocked", label: "Blocked" },
-      ]} />
-      <FormTextAreaField control={control} name="notes" label="Notes" className="col-span-2" rows={2} />
-    </div>
+    <>
+      <FormSection title="Company" description="Legal and trading details.">
+        <FormGrid>
+          <FormTextField
+            control={control}
+            name="vendorCode"
+            label="Vendor code"
+            placeholder="Auto-generated on save"
+            description="Assigned automatically when you create the vendor."
+            readOnly
+          />
+          <FormTextField
+            control={control}
+            name="companyName"
+            label="Company name"
+            placeholder="e.g. Dubai Scaffolding Supplies LLC"
+          />
+          <FormSelectField
+            control={control}
+            name="category"
+            label="Category"
+            placeholder="Select category…"
+            options={[
+              { value: "Supplier", label: "Supplier" },
+              { value: "Manufacturer", label: "Manufacturer" },
+              { value: "Distributor", label: "Distributor" },
+              { value: "Service Provider", label: "Service Provider" },
+              { value: "Other", label: "Other" },
+            ]}
+          />
+          <FormTextField
+            control={control}
+            name="tradeLicenseNumber"
+            label="Trade license"
+            placeholder="e.g. 123456"
+          />
+          <FormTextField
+            control={control}
+            name="vatNumber"
+            label="VAT / TRN"
+            placeholder="e.g. 100123456700003"
+          />
+        </FormGrid>
+      </FormSection>
+
+      <FormSection title="Contact">
+        <FormGrid>
+          <FormTextField
+            control={control}
+            name="contactPerson"
+            label="Contact person"
+            placeholder="e.g. Ahmed Hassan"
+          />
+          <FormTextField
+            control={control}
+            name="email"
+            label="Email"
+            type="email"
+            placeholder="vendor@company.ae"
+          />
+          <FormTextField
+            control={control}
+            name="phone"
+            label="Phone"
+            placeholder="e.g. +971 50 123 4567"
+          />
+          <FormSelectField
+            control={control}
+            name="emirate"
+            label="Emirate"
+            placeholder="Select emirate…"
+            options={[
+              { value: "Dubai", label: "Dubai" },
+              { value: "Abu Dhabi", label: "Abu Dhabi" },
+              { value: "Sharjah", label: "Sharjah" },
+              { value: "Ajman", label: "Ajman" },
+              { value: "Umm Al Quwain", label: "Umm Al Quwain" },
+              { value: "Ras Al Khaimah", label: "Ras Al Khaimah" },
+              { value: "Fujairah", label: "Fujairah" },
+            ]}
+          />
+        </FormGrid>
+      </FormSection>
+
+      <FormSection title="Terms & status">
+        <FormGrid>
+          <FormSelectField
+            control={control}
+            name="paymentTerms"
+            label="Payment terms"
+            placeholder="Select terms…"
+            options={[
+              { value: "Cash", label: "Cash" },
+              { value: "7 Days", label: "7 Days" },
+              { value: "15 Days", label: "15 Days" },
+              { value: "30 Days", label: "30 Days" },
+              { value: "60 Days", label: "60 Days" },
+              { value: "Custom", label: "Custom" },
+            ]}
+          />
+          <FormNumberField
+            control={control}
+            name="creditLimit"
+            label="Credit limit (AED)"
+            placeholder="0.00"
+            min={0}
+            step={0.01}
+          />
+          <FormSelectField
+            control={control}
+            name="status"
+            label="Status"
+            placeholder="Select status…"
+            options={[
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+              { value: "blocked", label: "Blocked" },
+            ]}
+          />
+          <FormGridFull>
+            <FormTextAreaField
+              control={control}
+              name="notes"
+              label="Notes"
+              placeholder="Internal notes about this vendor…"
+              rows={3}
+            />
+          </FormGridFull>
+        </FormGrid>
+      </FormSection>
+    </>
   );
 }
 

@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,12 +33,24 @@ import {
   resolveDocumentCustomerEmail,
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const API_QUOTATIONS = "/api/quotations";
 
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "pending", label: "Pending (draft / sent)" },
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+  { value: "accepted", label: "Accepted" },
+  { value: "converted", label: "Converted" },
+  { value: "rejected", label: "Rejected" },
+  { value: "expired", label: "Expired" },
+];
+
 async function fetchQuotations(params = {}) {
-  const qs = new URLSearchParams({ limit: "200", ...params }).toString();
-  const res = await fetch(`/api/quotations?${qs}`);
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(`${API_QUOTATIONS}?${qs}`);
   const d = await res.json();
   if (!d.success) throw new Error(d.error);
   return d.data;
@@ -45,13 +64,30 @@ async function fetchStats() {
 
 export function QuotationsClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  const statusFilter = searchParams.get("status") || "all";
+
+  const listParams = useMemo(() => {
+    const params = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    return params;
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["quotations"],
-    queryFn: () => fetchQuotations(),
+    queryKey: ["quotations", listParams],
+    queryFn: () => fetchQuotations(listParams),
     refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({ queryKey: ["quotations-stats"], queryFn: fetchStats });
@@ -77,6 +113,15 @@ export function QuotationsClient() {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  function setStatusFilter(value) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!value || value === "all") params.delete("status");
+    else params.set("status", value);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+    const qs = params.toString();
+    router.replace(qs ? `/quotations?${qs}` : "/quotations", { scroll: false });
+  }
 
   const statItems =
     stats &&
@@ -195,10 +240,38 @@ export function QuotationsClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search quotations…"
+        searchPlaceholder="Search by quote #, customer, reference…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/quotations/${String(row._id)}`)}
-        emptyMessage="No quotations yet. Create your first quotation."
-        toolbar={<ExportButton resource="quotations" filename="quotations" />}
+        emptyMessage={
+          statusFilter !== "all" || debouncedSearch
+            ? "No quotations match your filters."
+            : "No quotations yet. Create your first quotation."
+        }
+        toolbar={
+          <>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-8 w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <ExportButton resource="quotations" filename="quotations" />
+          </>
+        }
       />
 
       <AlertDialog

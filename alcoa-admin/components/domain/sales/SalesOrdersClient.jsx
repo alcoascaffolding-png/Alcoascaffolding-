@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,8 +33,20 @@ import {
   resolveDocumentCustomerEmail,
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const API_ORDERS = "/api/sales-orders";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "draft", label: "Draft" },
+  { value: "confirmed", label: "Confirmed" },
+  { value: "in_progress", label: "In progress" },
+  { value: "delivered", label: "Delivered" },
+  { value: "completed", label: "Completed" },
+  { value: "invoiced", label: "Invoiced" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 async function fetchOrders(params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -47,11 +66,26 @@ export function SalesOrdersClient() {
   const router = useRouter();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  const listParams = useMemo(() => {
+    const params = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    return params;
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["sales-orders"],
-    queryFn: () => fetchOrders({ limit: "200" }),
+    queryKey: ["sales-orders", listParams],
+    queryFn: () => fetchOrders(listParams),
     refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({
@@ -187,10 +221,44 @@ export function SalesOrdersClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search sales orders…"
+        searchPlaceholder="Search by order #, customer…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/sales-orders/${String(row._id)}`)}
-        emptyMessage="No sales orders yet. Create your first order."
-        toolbar={<ExportButton resource="sales-orders" filename="sales-orders" />}
+        emptyMessage={
+          statusFilter !== "all" || debouncedSearch
+            ? "No sales orders match your filters."
+            : "No sales orders yet. Create your first order."
+        }
+        toolbar={
+          <>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <ExportButton resource="sales-orders" filename="sales-orders" />
+          </>
+        }
       />
 
       <AlertDialog

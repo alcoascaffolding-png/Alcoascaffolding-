@@ -11,6 +11,7 @@ import { DELIVERY_NOTE_STATUS_VALUES } from "@/models/DeliveryNote";
 import { syncDeliveryNoteStock } from "@/lib/stock-service";
 import { syncSalesOrderOnDeliveryNote } from "@/lib/sync-sales-order-on-delivery";
 import { assertDeliveryNoteQuantitiesWithinSalesOrder } from "@/lib/sales-order-delivery-fulfillment";
+import { assertSufficientStockForLines } from "@/lib/stock-validation";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -92,6 +93,16 @@ export const PATCH = withErrorHandler(async (request, context) => {
       items: doc.items,
       excludeDeliveryNoteId: doc._id,
     });
+  }
+
+  const nextStatus = doc.status;
+  const isOutbound = doc.noteType !== "return";
+  if (
+    isOutbound &&
+    nextStatus === "delivered" &&
+    prevSnapshot.status !== "delivered"
+  ) {
+    await assertSufficientStockForLines(doc.items, { context: "Delivery note delivery" });
   }
 
   try {

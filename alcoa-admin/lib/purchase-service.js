@@ -96,6 +96,9 @@ export async function syncPurchaseOrderStock(prevDoc, nextDoc, userId) {
         reason: `Purchase order ${nextDoc.poNumber} received`,
         notes: "Auto stock increase on PO received",
         userId,
+        sourceType: "purchase_order",
+        sourceId: String(nextDoc._id),
+        sourceNumber: nextDoc.poNumber,
       });
     }
     nextDoc.stockApplied = map.size > 0;
@@ -113,6 +116,9 @@ export async function syncPurchaseOrderStock(prevDoc, nextDoc, userId) {
         reason: `Purchase order ${nextDoc.poNumber} reverted from received`,
         notes: "Auto stock reversal",
         userId,
+        sourceType: "purchase_order",
+        sourceId: String(nextDoc._id),
+        sourceNumber: nextDoc.poNumber,
       });
     }
     nextDoc.stockApplied = false;

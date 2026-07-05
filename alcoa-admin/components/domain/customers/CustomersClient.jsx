@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
@@ -22,6 +29,15 @@ import {
   Eye, Mail, MessageSquare,
 } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "active", label: "Active" },
+  { value: "prospect", label: "Prospect" },
+  { value: "inactive", label: "Inactive" },
+  { value: "blocked", label: "Blocked" },
+];
 
 const STATUS_COLORS = {
   active: "success", inactive: "secondary",
@@ -51,11 +67,26 @@ export function CustomersClient() {
   const router = useRouter();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  const listParams = useMemo(() => {
+    const params = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    return params;
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch]);
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["customers"],
-    queryFn: () => fetchCustomers(),
+    queryKey: ["customers", listParams],
+    queryFn: () => fetchCustomers(listParams),
     refetchInterval: 60 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({
@@ -272,9 +303,41 @@ export function CustomersClient() {
         data={data?.items || []}
         isLoading={isLoading}
         isFetching={isFetching}
-        searchPlaceholder="Search customers…"
+        searchPlaceholder="Search by company, email, phone, TRN…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/customers/${String(row._id)}`)}
-        emptyMessage="No customers yet. Add your first customer."
+        emptyMessage={
+          statusFilter !== "all" || debouncedSearch
+            ? "No customers match your filters."
+            : "No customers yet. Add your first customer."
+        }
+        toolbar={
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value);
+              setPagination((p) => ({ ...p, pageIndex: 0 }));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[160px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
       />
 
       {/* Delete confirmation */}

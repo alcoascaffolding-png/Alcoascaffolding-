@@ -17,6 +17,7 @@ import { assertSalesOrderSafeToDelete } from "@/lib/sales-document-delete-guards
 import { assertCustomerCreditForOrder } from "@/lib/customer-credit";
 import { computeSalesOrderDeliveryFulfillment } from "@/lib/sales-order-delivery-fulfillment";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
+import { assertSufficientStockForLines } from "@/lib/stock-validation";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -85,7 +86,23 @@ export const PATCH = withErrorHandler(async (request, context) => {
   const prevStatus = prev.status;
   const patch = { ...body };
 
-  const targetStatus = patch.status ?? prevStatus;
+  const nextStatus = patch.status ?? prevStatus;
+  const nextItems = patch.items ?? prev.items;
+
+  if (
+    Object.prototype.hasOwnProperty.call(patch, "items") &&
+    ["confirmed", "in_progress", "delivered", "completed"].includes(nextStatus)
+  ) {
+    await assertSufficientStockForLines(nextItems, { context: "Sales order update" });
+  } else if (
+    Object.prototype.hasOwnProperty.call(patch, "status") &&
+    ["confirmed", "in_progress", "delivered"].includes(nextStatus) &&
+    !["confirmed", "in_progress", "delivered", "completed"].includes(prevStatus)
+  ) {
+    await assertSufficientStockForLines(nextItems, { context: "Sales order confirmation" });
+  }
+
+  const targetStatus = nextStatus;
   if (
     targetStatus === "confirmed" &&
     prevStatus !== "confirmed" &&
@@ -143,10 +160,10 @@ export const PATCH = withErrorHandler(async (request, context) => {
 
   await syncQuotationsAfterSalesOrderPatch(prev, doc);
 
-  const nextStatus = doc.status;
+  const docStatus = doc.status;
   let invoicing = null;
 
-  if (nextStatus === SALES_ORDER_INVOICE_STATUS && prevStatus !== SALES_ORDER_INVOICE_STATUS) {
+  if (docStatus === SALES_ORDER_INVOICE_STATUS && prevStatus !== SALES_ORDER_INVOICE_STATUS) {
     try {
       const result = await ensureSalesInvoiceFromSalesOrder(doc._id, session.user.id);
       invoicing = {
@@ -160,7 +177,7 @@ export const PATCH = withErrorHandler(async (request, context) => {
         ? err
         : new AppError(err.message || "Could not create tax invoice from order", 400);
     }
-  } else if (nextStatus === SALES_ORDER_INVOICE_STATUS) {
+  } else if (docStatus === SALES_ORDER_INVOICE_STATUS) {
     const result = await ensureSalesInvoiceFromSalesOrder(doc._id, session.user.id);
     invoicing = {
       created: result.created,

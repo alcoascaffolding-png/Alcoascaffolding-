@@ -4,6 +4,7 @@ import Quotation from "@/models/Quotation";
 import { AppError } from "@/lib/api-error";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
+import { assertSufficientStockForLines } from "@/lib/stock-validation";
 
 function quotationItemsToOrderItems(items) {
   return (items || []).map((it) => {
@@ -82,6 +83,8 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
   }
 
   const items = quotationItemsToOrderItems(q.items);
+  await assertSufficientStockForLines(items, { context: "Quotation to sales order conversion" });
+
   const lineSubtotal =
     Number(q.subtotal) || items.reduce((s, it) => s + Number(it.total || 0), 0);
   const vatAmount =

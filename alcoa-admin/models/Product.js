@@ -16,7 +16,9 @@ const productSchema = new mongoose.Schema(
     purchasePrice: { type: Number, default: 0, min: 0 },
     currentStock: { type: Number, default: 0, index: true },
     minStock: { type: Number, default: 0 },
+    reorderLevel: { type: Number, default: 0 },
     maxStock: { type: Number, default: 0 },
+    preferredVendor: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor", index: true },
     specifications: { type: String, trim: true },
     dimensions: { type: String, trim: true },
     weight: { type: Number, min: 0 },
@@ -31,4 +33,12 @@ const productSchema = new mongoose.Schema(
 productSchema.index({ name: "text", itemCode: "text", description: "text" });
 productSchema.index({ category: 1, isActive: 1 });
 
-export default mongoose.models.Product || mongoose.model("Product", productSchema);
+/** Next.js dev hot-reload can keep an older compiled Product without new paths. */
+const Product = mongoose.models.Product || mongoose.model("Product", productSchema);
+if (!Product.schema.paths.preferredVendor) {
+  Product.schema.add({
+    preferredVendor: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor", index: true },
+  });
+}
+
+export default Product;

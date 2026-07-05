@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { AsyncButton } from "@/components/ui/async-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginSchema, LOGIN_FIELD_LIMITS } from "@/lib/schemas/login";
@@ -20,8 +20,26 @@ const ERROR_MESSAGES = {
   RateLimited: "Too many sign-in attempts. Please wait and try again later.",
 };
 
+/** NextAuth middleware passes a full URL; App Router navigation needs a same-origin path. */
+function resolveCallbackPath(callbackUrl) {
+  const fallback = "/";
+  if (!callbackUrl) return fallback;
+
+  if (callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
+    return callbackUrl;
+  }
+
+  try {
+    const parsed = new URL(callbackUrl, window.location.origin);
+    if (parsed.origin !== window.location.origin) return fallback;
+    const path = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    return path || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [showPassword, setShowPassword] = useState(false);
@@ -45,29 +63,44 @@ export function LoginForm() {
     const honeypot = document.getElementById("website")?.value;
     if (honeypot?.trim()) {
       await new Promise((r) => setTimeout(r, 800));
-      setAuthError(ERROR_MESSAGES.CredentialsSignin);
+      const message = ERROR_MESSAGES.CredentialsSignin;
+      setAuthError(message);
+      toast.error(message);
       setIsLoading(false);
       return;
     }
 
     try {
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
+      await toast.promise(
+        (async () => {
+          const result = await signIn("credentials", {
+            email: data.email,
+            password: data.password,
+            redirect: false,
+          });
 
-      if (result?.error) {
-        setAuthError(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
-        return;
-      }
+          if (result?.error) {
+            throw new Error(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
+          }
+          if (!result?.ok) {
+            throw new Error(ERROR_MESSAGES.Default);
+          }
+          return result;
+        })(),
+        {
+          loading: "Signing in…",
+          success: "Signed in successfully",
+          error: (e) => e?.message || ERROR_MESSAGES.Default,
+        }
+      );
 
-      if (result?.ok) {
-        router.push(callbackUrl);
-        router.refresh();
-      }
-    } catch {
-      setAuthError(ERROR_MESSAGES.Default);
+      const target = resolveCallbackPath(callbackUrl);
+      // Full navigation ensures the session cookie is picked up by middleware and server layouts.
+      window.location.assign(target);
+      return;
+    } catch (e) {
+      const message = e?.message || ERROR_MESSAGES.Default;
+      setAuthError(message);
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +118,6 @@ export function LoginForm() {
         </div>
       )}
 
-      {/* Honeypot — hidden from users, bots often fill this */}
       <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input
@@ -152,23 +184,16 @@ export function LoginForm() {
         )}
       </div>
 
-      <Button
+      <AsyncButton
         type="submit"
         className="h-11 w-full gap-2 bg-[#1D3A6C] hover:bg-[#152d56] text-white"
-        disabled={isLoading}
+        loading={isLoading}
+        idleLabel="Sign In"
+        pendingLabel="Signing in…"
       >
-        {isLoading ? (
-          <>
-            <InlineSkeleton />
-            Signing in…
-          </>
-        ) : (
-          <>
-            <LogIn className="h-4 w-4" />
-            Sign In
-          </>
-        )}
-      </Button>
+        <LogIn className="h-4 w-4" />
+        Sign In
+      </AsyncButton>
     </form>
   );
 }
