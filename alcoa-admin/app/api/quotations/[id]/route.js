@@ -14,7 +14,7 @@ import { Customer, Quotation } from "@/lib/mongoose-models";
 
 void Customer;
 import { getLinkedDocumentsForQuotation } from "@/lib/quotation-linked-documents";
-import { resolveQuotationBankDetailsForPdf } from "@/lib/resolve-quotation-bank-details";
+import { resolveDocumentBankDetails } from "@/lib/resolve-document-bank-details";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 import { assertQuotationSafeToDelete } from "@/lib/sales-document-delete-guards";
 import { parseRequestBody } from "@/lib/validate-request";
@@ -29,7 +29,7 @@ export const GET = withErrorHandler(async (request, { params }) => {
     .lean();
   if (!q) throw new AppError("Quotation not found", 404);
   const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);
-  const resolvedBankDetails = await resolveQuotationBankDetailsForPdf(q);
+  const resolvedBankDetails = await resolveDocumentBankDetails(q);
   return apiSuccess({ ...q, linked, resolvedBankDetails });
 });
 
@@ -111,7 +111,7 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
     .lean();
 
   const linked = await getLinkedDocumentsForQuotation(q._id, q.quoteNumber);
-  const resolvedBankDetails = await resolveQuotationBankDetailsForPdf(q);
+  const resolvedBankDetails = await resolveDocumentBankDetails(q);
   const payload = { ...q, linked, resolvedBankDetails };
   if (conversion) payload.conversion = conversion;
 

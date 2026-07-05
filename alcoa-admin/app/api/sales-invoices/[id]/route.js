@@ -11,6 +11,7 @@ import {
 } from "@/lib/sales-invoice-payment";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
+import { resolveDocumentBankDetails } from "@/lib/resolve-document-bank-details";
 
 void Customer;
 
@@ -58,10 +59,12 @@ export const GET = withErrorHandler(async (request, context) => {
 
   const doc = await SalesInvoice.findById(params.id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
-    .populate("quotation", "quoteNumber status customerName totalAmount")
-    .populate("salesOrder", "orderNumber status customerName total")
+    .populate("quotation", "quoteNumber status customerName totalAmount bankAccount")
+    .populate("salesOrder", "orderNumber status customerName total quotation")
     .lean();
-  return apiSuccess(doc);
+
+  const resolvedBankDetails = await resolveDocumentBankDetails(doc);
+  return apiSuccess({ ...doc, resolvedBankDetails });
 });
 
 export const PATCH = withErrorHandler(async (request, context) => {

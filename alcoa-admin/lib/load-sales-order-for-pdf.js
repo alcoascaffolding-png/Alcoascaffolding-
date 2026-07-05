@@ -1,5 +1,6 @@
 import { Customer, SalesOrder } from "@/lib/mongoose-models";
 import { enrichDocumentCustomerContact } from "@/lib/resolve-document-customer";
+import { enrichDocumentWithBankDetails } from "@/lib/resolve-document-bank-details";
 
 void Customer;
 
@@ -14,5 +15,6 @@ export async function loadSalesOrderForPdf(id) {
 
 export async function prepareSalesOrderForPdf(id) {
   const order = await loadSalesOrderForPdf(id);
-  return enrichDocumentCustomerContact(order);
+  const enriched = enrichDocumentCustomerContact(order);
+  return enrichDocumentWithBankDetails(enriched);
 }

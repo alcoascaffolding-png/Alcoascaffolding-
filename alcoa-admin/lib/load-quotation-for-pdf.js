@@ -7,7 +7,7 @@ import {
   formatCustomerAddressLines,
 } from "@/lib/map-customer-to-quotation";
 import { enrichDocumentCustomerContact } from "@/lib/resolve-document-customer";
-import { resolveQuotationBankDetailsForPdf } from "@/lib/resolve-quotation-bank-details";
+import { enrichDocumentWithBankDetails } from "@/lib/resolve-document-bank-details";
 
 export const QUOTATION_CUSTOMER_POPULATE_FIELDS =
   "companyName addresses primaryPhone primaryEmail vatRegistrationNumber contactPersons";
@@ -43,6 +43,5 @@ export function enrichQuotationForPdf(quotation) {
 export async function prepareQuotationForPdf(id) {
   const quotation = await loadQuotationForPdf(id);
   const enriched = enrichQuotationForPdf(quotation);
-  const pdfBankDetails = await resolveQuotationBankDetailsForPdf(enriched);
-  return { ...enriched, pdfBankDetails };
+  return enrichDocumentWithBankDetails(enriched);
 }

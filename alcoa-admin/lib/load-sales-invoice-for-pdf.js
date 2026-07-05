@@ -1,5 +1,6 @@
 import { Customer, SalesInvoice } from "@/lib/mongoose-models";
 import { enrichDocumentCustomerContact } from "@/lib/resolve-document-customer";
+import { enrichDocumentWithBankDetails } from "@/lib/resolve-document-bank-details";
 
 // Customer must be imported in this bundle before populate("customer") (Vercel serverless).
 void Customer;
@@ -17,5 +18,6 @@ export async function loadSalesInvoiceForPdf(id) {
 /** Load and enrich invoice contact fields for PDF / email / WhatsApp. */
 export async function prepareSalesInvoiceForPdf(id) {
   const invoice = await loadSalesInvoiceForPdf(id);
-  return enrichDocumentCustomerContact(invoice);
+  const enriched = enrichDocumentCustomerContact(invoice);
+  return enrichDocumentWithBankDetails(enriched);
 }

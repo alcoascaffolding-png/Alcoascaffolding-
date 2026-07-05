@@ -16,6 +16,7 @@ export async function generateSalesOrderPDF(order) {
     throw new Error("Sales order has no line items — add items before downloading PDF.");
   }
   const mapped = mapSalesOrderForQuotationPdf(order);
+  if (order.pdfBankDetails) mapped.pdfBankDetails = order.pdfBankDetails;
   return generateQuotationPDF(mapped, { docKind: "salesOrder" });
 }
 
@@ -25,5 +26,6 @@ export async function generateSalesInvoicePDF(invoice) {
     throw new Error("Tax invoice has no line items — add items before downloading PDF.");
   }
   const mapped = mapSalesInvoiceForQuotationPdf(invoice);
+  if (invoice.pdfBankDetails) mapped.pdfBankDetails = invoice.pdfBankDetails;
   return generateQuotationPDF(mapped, { docKind: "salesInvoice" });
 }

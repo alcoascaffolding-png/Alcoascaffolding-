@@ -9,13 +9,10 @@ import {
   getQuotationFooterDataUri,
 } from "@/lib/quotation-brand";
 import { COMPANY_BANK_DETAILS } from "@/lib/company-bank-details";
-import { bankDetailsFromSnapshot } from "@/lib/resolve-quotation-bank-details";
 
-/** Bank block for PDF layout from quotation (set by prepareQuotationForPdf). */
+/** Bank block for PDF layout (set by prepare*ForPdf via enrichDocumentWithBankDetails). */
 function getQuotationPdfBankDetails(quotation) {
   if (quotation?.pdfBankDetails) return { ...quotation.pdfBankDetails };
-  const fromDoc = bankDetailsFromSnapshot(quotation?.bankDetails);
-  if (fromDoc) return fromDoc;
   return { ...COMPANY_BANK_DETAILS };
 }
 

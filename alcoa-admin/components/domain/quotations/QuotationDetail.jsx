@@ -25,7 +25,7 @@ import {
   itemAmountWithVat,
   quotationDisplaySubtotal,
 } from "@/lib/quotation-display";
-import { displayBankDetailsFromDocument } from "@/lib/resolve-quotation-bank-details";
+import { displayBankDetailsFromDocument } from "@/lib/resolve-document-bank-details";
 import {
   formatCustomerAddressLines,
   getPrimaryAddress,
@@ -479,7 +479,7 @@ export function QuotationDetail({ id }) {
           <CardHeader>
             <CardTitle className="text-base">Bank Details</CardTitle>
             <p className="text-xs text-muted-foreground">
-              Shown on quotation PDF and emails. Uses your primary bank account unless a different account was selected when editing.
+              Live from Bank Accounts — updates to your primary account appear on quotations, sales orders, tax invoices, and all PDFs.
             </p>
           </CardHeader>
           <CardContent className="pt-0">

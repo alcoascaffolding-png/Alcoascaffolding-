@@ -79,7 +79,10 @@ export function BankAccountsClient() {
       qc.invalidateQueries({ queryKey: ["bank-accounts"] });
       qc.invalidateQueries({ queryKey: ["bank-accounts", "stats"] });
       qc.invalidateQueries({ queryKey: ["bank-accounts", "quotation-form"] });
-      toast.success("Primary account updated — this bank will show on new quotation PDFs by default");
+      qc.invalidateQueries({ queryKey: ["quotations"] });
+      qc.invalidateQueries({ queryKey: ["sales-orders"] });
+      qc.invalidateQueries({ queryKey: ["sales-invoices"] });
+      toast.success("Primary account updated — bank details now apply to all modules and PDFs");
     },
     onError: (e) => toast.error(e.message),
     onSettled: () => setSettingPrimaryId(null),
@@ -136,7 +139,12 @@ export function BankAccountsClient() {
       defaultValues={defaultValues}
       mapItemToForm={mapItemToForm}
       FormFields={BankAccountFormFields}
-      invalidateQueryKeys={[["bank-accounts", "quotation-form"]]}
+      invalidateQueryKeys={[
+        ["bank-accounts", "quotation-form"],
+        ["quotations"],
+        ["sales-orders"],
+        ["sales-invoices"],
+      ]}
       statCards={(s) => [
         { label: "Total Accounts", value: s.total },
         {

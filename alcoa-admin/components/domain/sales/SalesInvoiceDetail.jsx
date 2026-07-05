@@ -22,8 +22,8 @@ import { toast } from "sonner";
 import { ArrowLeft, Truck, Banknote } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
+import { displayBankDetailsFromDocument } from "@/lib/resolve-document-bank-details";
 import {
-  QUOTATION_PDF_BANK_DETAILS,
   itemAmountWithVat,
 } from "@/lib/quotation-display";
 import {
@@ -138,7 +138,7 @@ export function SalesInvoiceDetail({ id }) {
   const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
   const invoiceTotal =
     Number(inv.total || 0) > 0 ? Number(inv.total || 0) : subtotal + vatAmount;
-  const bank = QUOTATION_PDF_BANK_DETAILS;
+  const bank = displayBankDetailsFromDocument(inv);
   const subject = `Tax Invoice ${inv.invoiceNumber}`;
   const customer = inv.customer && typeof inv.customer === "object" ? inv.customer : null;
   const customerAddress = inv.customerAddress || formatCustomerAddressFromRecord(customer);
@@ -453,6 +453,9 @@ export function SalesInvoiceDetail({ id }) {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Bank Details</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Live from Bank Accounts — updates to your primary account appear on all sales PDFs and documents.
+            </p>
           </CardHeader>
           <CardContent className="pt-0">
             <InfoRowAlways label="Bank details" value={bank.accountName} />

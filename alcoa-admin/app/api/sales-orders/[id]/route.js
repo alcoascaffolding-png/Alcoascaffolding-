@@ -19,6 +19,7 @@ import { computeSalesOrderDeliveryFulfillment } from "@/lib/sales-order-delivery
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { assertSufficientStockForLines } from "@/lib/stock-validation";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
+import { resolveDocumentBankDetails } from "@/lib/resolve-document-bank-details";
 
 function toObjectId(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -62,11 +63,13 @@ export const GET = withErrorHandler(async (request, context) => {
     .lean();
 
   const deliveryFulfillment = await computeSalesOrderDeliveryFulfillment(doc._id);
+  const resolvedBankDetails = await resolveDocumentBankDetails(doc);
 
   return apiSuccess({
     ...doc,
     linkedSalesInvoice: linkedSalesInvoice || null,
     deliveryFulfillment,
+    resolvedBankDetails,
   });
 });
 
