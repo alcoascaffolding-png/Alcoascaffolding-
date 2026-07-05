@@ -1,15 +1,13 @@
 "use client";
 
+import { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { BrandSpinner } from "@/components/loading/loading-kit";
 import { cn } from "@/lib/utils";
 
 /**
- * Submit/action button with spinner, dynamic pending label, and disabled state.
- *
- * @param {string} idleLabel - Label when not loading
- * @param {string} pendingLabel - Label while loading (e.g. "Saving…")
- * @param {boolean} loading
+ * Action button — locks synchronously at click time (not pointer-down).
+ * Disabling before the click event fires cancels the click in browsers.
  */
 export function AsyncButton({
   idleLabel,
@@ -18,17 +16,50 @@ export function AsyncButton({
   children,
   className,
   spinnerSize = "sm",
+  onClick,
+  disabled,
   ...props
 }) {
-  const label = loading ? (pendingLabel ?? idleLabel) : (children ?? idleLabel);
+  const lockRef = useRef(false);
+  const [localBusy, setLocalBusy] = useState(false);
+
+  const handleClick = useCallback(
+    async (e) => {
+      if (loading || disabled || lockRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      lockRef.current = true;
+      setLocalBusy(true);
+
+      try {
+        const result = onClick?.(e);
+        if (result && typeof result.then === "function") {
+          await result;
+        }
+      } finally {
+        lockRef.current = false;
+        setLocalBusy(false);
+      }
+    },
+    [onClick, loading, disabled]
+  );
+
+  const isBusy = loading || localBusy;
+  const label = isBusy ? (pendingLabel ?? idleLabel) : (children ?? idleLabel);
 
   return (
     <Button
-      disabled={loading || props.disabled}
-      className={cn(className)}
+      type="button"
       {...props}
+      disabled={isBusy || disabled}
+      aria-busy={isBusy || undefined}
+      className={cn(className)}
+      onClick={handleClick}
     >
-      {loading && <BrandSpinner size={spinnerSize} className="mr-2" />}
+      {isBusy && <BrandSpinner size={spinnerSize} className="mr-2" />}
       {label}
     </Button>
   );

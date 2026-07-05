@@ -12,6 +12,7 @@ import dotenv from "dotenv";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
 import { getMongoDbName, validateMongoEnvironment, MONGO_DB_NAMES } from "../lib/mongodb-config.js";
+import { companyBankAccountSeedDoc, COMPANY_BANK_DETAILS } from "../lib/company-bank-details.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env.local") });
@@ -138,7 +139,9 @@ const BankAccountSchema = new mongoose.Schema({
   iban: String, swiftCode: String, branch: String,
   currency: { type: String, default: "AED" },
   openingBalance: Number, currentBalance: Number,
-  isActive: { type: Boolean, default: true }, notes: String,
+  isActive: { type: Boolean, default: true },
+  isPrimary: { type: Boolean, default: false },
+  notes: String,
 }, { timestamps: true });
 
 const VendorSchema = new mongoose.Schema({
@@ -484,9 +487,10 @@ async function seed() {
   // ── 2. Bank Accounts ─────────────────────────────────────────────────────────
   console.log("🏦 Seeding Bank Accounts...");
   const bankAccounts = await BankAccount.insertMany([
-    { accountName: "Alcoa Scaffolding - Operations", bankName: "Emirates NBD", accountNumber: "1234567890", iban: "AE070260001234567890123", swiftCode: "EBILAEAD", branch: "Business Bay", currency: "AED", openingBalance: 250000, currentBalance: 387500, notes: "Main operations account" },
-    { accountName: "Alcoa Scaffolding - Payroll", bankName: "ADCB", accountNumber: "9876543210", iban: "AE280030000009876543210", swiftCode: "ADCBAEAA", branch: "Deira", currency: "AED", openingBalance: 100000, currentBalance: 145000, notes: "Payroll & staff expenses" },
-    { accountName: "Alcoa Scaffolding - USD Account", bankName: "Mashreq Bank", accountNumber: "1122334455", iban: "AE380330000001122334455", swiftCode: "BOMLAEAD", branch: "Al Quoz", currency: "USD", openingBalance: 50000, currentBalance: 62000, notes: "International transactions" },
+    companyBankAccountSeedDoc({
+      openingBalance: 250000,
+      currentBalance: 387500,
+    }),
   ]);
   console.log(`   ✅ ${bankAccounts.length} bank accounts created`);
 
@@ -565,7 +569,14 @@ async function seed() {
   console.log(`   ✅ ${products.length} products created`);
 
   const salesExecs = ["Ahmed Al Rashid", "Priya Nair", "Mohammed Hassan", "Rajesh Kumar", "Sarah Al Mansoori"];
-  const bankDetail = { bankName: "Emirates NBD", accountName: "Alcoa Aluminium Scaffolding LLC", accountNumber: "1234567890", iban: "AE070260001234567890123", swiftCode: "EBILAEAD", branch: "Business Bay" };
+  const bankDetail = {
+    bankName: COMPANY_BANK_DETAILS.bankName,
+    accountName: COMPANY_BANK_DETAILS.accountName,
+    accountNumber: COMPANY_BANK_DETAILS.accountNumber,
+    iban: COMPANY_BANK_DETAILS.iban,
+    swiftCode: COMPANY_BANK_DETAILS.swiftCode,
+    branch: COMPANY_BANK_DETAILS.branch,
+  };
 
   function buildQuoteDoc(i, customer, status, extra = {}) {
     const qDate = daysAgo(rand(5, 180));

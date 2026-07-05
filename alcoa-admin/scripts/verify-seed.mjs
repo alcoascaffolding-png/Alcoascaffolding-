@@ -17,7 +17,7 @@ const ALLOWED_DB = MONGO_DB_NAMES.development;
 
 const MIN_COUNTS = {
   users: 5,
-  bankaccounts: 3,
+  bankaccounts: 1,
   vendors: 10,
   customers: 15,
   products: 25,

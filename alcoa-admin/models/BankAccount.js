@@ -12,6 +12,8 @@ const bankAccountSchema = new mongoose.Schema(
     openingBalance: { type: Number, default: 0 },
     currentBalance: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    /** Primary account for receipts, quotations, and PDF defaults */
+    isPrimary: { type: Boolean, default: false, index: true },
     notes: { type: String, trim: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },

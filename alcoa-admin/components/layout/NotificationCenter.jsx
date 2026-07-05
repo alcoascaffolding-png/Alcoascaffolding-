@@ -66,6 +66,7 @@ export function NotificationCenter() {
   const unreadCount = data?.unreadCount ?? 0;
 
   function handleClick(n) {
+    if (dismissMut.isPending) return;
     if (!n.read) {
       dismissMut.mutate({ action: "read", ids: [n.id] });
     }

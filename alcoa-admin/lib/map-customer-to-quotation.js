@@ -2,6 +2,8 @@
  * Maps a Customer document (as returned from `/api/customers`, lean) onto quotation form fields.
  */
 
+import { COMPANY_BANK_ACCOUNT_NUMBER } from "@/lib/company-bank-details";
+
 /** Normalize quotation `customer` ref (ObjectId string or populated doc) for form select value. */
 export function getLinkedCustomerId(customerRef) {
   if (customerRef == null || customerRef === "") return "__none__";
@@ -36,10 +38,15 @@ export function formatCustomerAddressLines(addr) {
   return [line1, line2, line3, line4].filter(Boolean).join("\n");
 }
 
-/** First active bank row from admin bank accounts list */
+/** First active bank row from admin bank accounts list (prefers primary / PDF account). */
 export function pickDefaultBankAccount(bankItems) {
   if (!bankItems?.length) return null;
-  return bankItems.find((b) => b.isActive !== false) || bankItems[0];
+  return (
+    bankItems.find((b) => b.isPrimary === true) ||
+    bankItems.find((b) => String(b.accountNumber) === COMPANY_BANK_ACCOUNT_NUMBER) ||
+    bankItems.find((b) => b.isActive !== false) ||
+    bankItems[0]
+  );
 }
 
 export function bankAccountToQuotationBankDetails(b) {
@@ -51,6 +58,24 @@ export function bankAccountToQuotationBankDetails(b) {
     iban: b.iban || "",
     swiftCode: b.swiftCode || "",
   };
+}
+
+/** Match a bank account row to saved quotation bankDetails (account number or IBAN). */
+export function findBankAccountIdForDetails(bankItems, bankDetails) {
+  if (!bankItems?.length || !bankDetails) return "";
+  const num = String(bankDetails.accountNumber || "").trim();
+  if (num) {
+    const byNum = bankItems.find((b) => String(b.accountNumber || "").trim() === num);
+    if (byNum) return String(byNum._id);
+  }
+  const iban = String(bankDetails.iban || "").replace(/\s+/g, "");
+  if (iban) {
+    const byIban = bankItems.find(
+      (b) => String(b.iban || "").replace(/\s+/g, "") === iban
+    );
+    if (byIban) return String(byIban._id);
+  }
+  return "";
 }
 
 /**

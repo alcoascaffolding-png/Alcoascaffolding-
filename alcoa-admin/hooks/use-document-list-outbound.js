@@ -10,6 +10,7 @@ import {
   postDocumentSendWhatsApp,
 } from "@/lib/document-outbound-client";
 import { useShowWhatsApp } from "@/hooks/use-show-whatsapp";
+import { singleFlight } from "@/lib/single-flight";
 
 const POPUP_HINT = "Pop-up blocked. Use Copy WhatsApp link.";
 
@@ -27,103 +28,114 @@ export function useDocumentListOutbound({ apiBase, listQueryKey, statsQueryKey }
   }, [qc, listQueryKey, statsQueryKey]);
 
   const downloadPdf = useCallback(
-    async (id, fileBaseName) => {
+    (id, fileBaseName) => {
       const sid = String(id);
-      try {
-        await toast.promise(
-          (async () => {
-            const blob = await fetchDocumentPdfBlob(apiBase, sid);
-            saveBlobAsPdfDownload(blob, fileBaseName);
-          })(),
-          {
-            loading: "Generating PDF…",
-            success: "PDF downloaded",
-            error: (e) => `Failed to generate PDF: ${e?.message || "Unknown error"}`,
-          }
-        );
-      } catch {
-        /* toast.promise handles error display */
-      }
+      const flightKey = `action:pdf:${apiBase}:${sid}`;
+
+      return singleFlight(flightKey, async () => {
+        setSendingId(`pdf:${sid}`);
+        const toastId = toast.loading("Generating PDF…");
+        try {
+          const blob = await fetchDocumentPdfBlob(apiBase, sid);
+          saveBlobAsPdfDownload(blob, fileBaseName);
+          toast.success("PDF downloaded", { id: toastId });
+        } catch (e) {
+          toast.error(`Failed to generate PDF: ${e?.message || "Unknown error"}`, { id: toastId });
+          throw e;
+        } finally {
+          setSendingId(null);
+        }
+      });
     },
     [apiBase]
   );
 
   const sendEmail = useCallback(
-    async (id) => {
+    (id) => {
       const sid = String(id);
-      setSendingId(sid);
-      try {
-        await toast.promise(
-          (async () => {
-            await postDocumentSendEmail(apiBase, sid);
-            bump();
-          })(),
-          {
-            loading: "Sending email…",
-            success: "Email sent",
-            error: (e) => `Failed to send email: ${e?.message || "Unknown error"}`,
-          }
-        );
-      } finally {
-        setSendingId(null);
-      }
+      const flightKey = `action:email:${apiBase}:${sid}`;
+
+      return singleFlight(flightKey, async () => {
+        setSendingId(`email:${sid}`);
+        const toastId = toast.loading("Sending email…");
+        try {
+          await postDocumentSendEmail(apiBase, sid);
+          bump();
+          toast.success("Email sent", { id: toastId });
+        } catch (e) {
+          toast.error(`Failed to send email: ${e?.message || "Unknown error"}`, { id: toastId });
+          throw e;
+        } finally {
+          setSendingId(null);
+        }
+      });
     },
     [apiBase, bump]
   );
 
   const sendWhatsApp = useCallback(
-    async (id) => {
+    (id) => {
       const sid = String(id);
-      setSendingId(sid);
-      let waTab = null;
-      try {
-        waTab = window.open("about:blank", "_blank", "noopener,noreferrer");
-        const d = await postDocumentSendWhatsApp(apiBase, sid, {});
-        if (d.data?.mode === "wa_me" && d.data?.waMeUrl) {
-          const url = d.data.waMeUrl;
-          if (waTab && !waTab.closed) {
-            waTab.location.href = url;
-            toast.success("WhatsApp opened in a new tab — review message and tap Send");
-          } else {
-            const opened = window.open(url, "_blank", "noopener,noreferrer");
-            if (opened) {
+      const flightKey = `action:whatsapp:${apiBase}:${sid}`;
+
+      return singleFlight(flightKey, async () => {
+        setSendingId(`whatsapp:${sid}`);
+        let waTab = null;
+        try {
+          waTab = window.open("about:blank", "_blank", "noopener,noreferrer");
+          const d = await postDocumentSendWhatsApp(apiBase, sid, {});
+          if (d.data?.mode === "wa_me" && d.data?.waMeUrl) {
+            const url = d.data.waMeUrl;
+            if (waTab && !waTab.closed) {
+              waTab.location.href = url;
               toast.success("WhatsApp opened in a new tab — review message and tap Send");
             } else {
-              toast.info(POPUP_HINT, { duration: 8000 });
+              const opened = window.open(url, "_blank", "noopener,noreferrer");
+              if (opened) {
+                toast.success("WhatsApp opened in a new tab — review message and tap Send");
+              } else {
+                toast.info(POPUP_HINT, { duration: 8000 });
+              }
             }
+          } else {
+            if (waTab && !waTab.closed) waTab.close();
+            toast.success("WhatsApp message sent");
           }
-        } else {
+          bump();
+        } catch (e) {
           if (waTab && !waTab.closed) waTab.close();
-          toast.success("WhatsApp message sent");
+          toast.error("Failed to send WhatsApp: " + String(e?.message || ""));
+          throw e;
+        } finally {
+          setSendingId(null);
         }
-        bump();
-      } catch (e) {
-        if (waTab && !waTab.closed) waTab.close();
-        toast.error("Failed to send WhatsApp: " + String(e?.message || ""));
-      } finally {
-        setSendingId(null);
-      }
+      });
     },
     [apiBase, bump]
   );
 
   const copyWhatsAppLink = useCallback(
-    async (id) => {
+    (id) => {
       const sid = String(id);
-      setSendingId(sid);
-      try {
-        const d = await postDocumentSendWhatsApp(apiBase, sid, {});
-        if (d.data?.mode !== "wa_me" || !d.data?.waMeUrl) {
-          throw new Error("Copy link is available only in wa.me mode.");
+      const flightKey = `action:whatsapp-copy:${apiBase}:${sid}`;
+
+      return singleFlight(flightKey, async () => {
+        setSendingId(`whatsapp:${sid}`);
+        try {
+          const d = await postDocumentSendWhatsApp(apiBase, sid, {});
+          if (d.data?.mode !== "wa_me" || !d.data?.waMeUrl) {
+            throw new Error("Copy link is available only in wa.me mode.");
+          }
+          await navigator.clipboard.writeText(d.data.waMeUrl);
+          toast.success("WhatsApp link copied");
+          bump();
+        } catch (e) {
+          toast.error("Failed to copy WhatsApp link: " + (e?.message || "Unknown error"));
+          throw e;
+        } finally {
+          setSendingId(null);
         }
-        await navigator.clipboard.writeText(d.data.waMeUrl);
-        toast.success("WhatsApp link copied");
-        bump();
-      } catch (e) {
-        toast.error("Failed to copy WhatsApp link: " + (e?.message || "Unknown error"));
-      } finally {
-        setSendingId(null);
-      }
+      });
     },
     [apiBase, bump]
   );

@@ -181,7 +181,7 @@ export function DeliveryNotesClient() {
       cell: ({ row }) => {
         const n = row.original;
         const nid = String(n._id);
-        const busy = sendingId === nid;
+        const busy = !!sendingId;
         return (
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}

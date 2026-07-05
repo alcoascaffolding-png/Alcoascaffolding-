@@ -45,7 +45,13 @@ export function DocumentRowActionMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          disabled={busy}
+          onClick={(e) => e.stopPropagation()}
+        >
           <MoreHorizontal className="h-3.5 w-3.5" />
         </Button>
       </DropdownMenuTrigger>
@@ -72,8 +78,9 @@ export function DocumentRowActionMenu({
             e.stopPropagation();
             onDownloadPdf?.();
           }}
+          disabled={busy}
         >
-          <Download className="mr-2 h-4 w-4" /> Download PDF
+          <Download className="mr-2 h-4 w-4" /> {busy ? "Generating PDF…" : "Download PDF"}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={(e) => {

@@ -17,6 +17,7 @@
     "migrate:document-numbers": "node --require ./dns-fix.cjs scripts/migrate-document-numbers.mjs",
     "db:test": "node --require ./dns-fix.cjs scripts/test-mongo-connection.mjs",
     "verify:redis": "node --require ./dns-fix.cjs scripts/verify-redis.mjs",
+    "bank:ensure-primary": "node --require ./dns-fix.cjs scripts/ensure-company-bank-account.mjs",
     "db:drop-legacy": "node --require ./dns-fix.cjs scripts/drop-legacy-database.mjs",
     "verify:seed": "node --require ./dns-fix.cjs scripts/verify-seed.mjs",
     "db:migrate-rename": "node --require ./dns-fix.cjs scripts/migrate-rename-database.mjs",

@@ -312,16 +312,28 @@ export function ContactMessagesClient() {
       )}
 
       {/* Delete confirmation */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(open) => {
+          if (!open && !deleteMut.isPending) setDeleteId(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete message?</AlertDialogTitle>
             <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteMut.mutate(deleteId)} className="bg-destructive hover:bg-destructive/90 text-white">
-              Delete
+            <AlertDialogCancel disabled={deleteMut.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMut.isPending}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteId && !deleteMut.isPending) deleteMut.mutate(deleteId);
+              }}
+            >
+              {deleteMut.isPending ? "Deleting…" : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

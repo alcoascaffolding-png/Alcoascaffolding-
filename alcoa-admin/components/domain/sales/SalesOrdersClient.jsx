@@ -192,7 +192,7 @@ export function SalesOrdersClient() {
       cell: ({ row }) => {
         const o = row.original;
         const oid = String(o._id);
-        const busy = sendingId === oid;
+        const busy = !!sendingId;
         return (
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}

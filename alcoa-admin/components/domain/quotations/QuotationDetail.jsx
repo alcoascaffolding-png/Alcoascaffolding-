@@ -22,10 +22,10 @@ import { ArrowLeft, Receipt, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
-  QUOTATION_PDF_BANK_DETAILS,
   itemAmountWithVat,
   quotationDisplaySubtotal,
 } from "@/lib/quotation-display";
+import { displayBankDetailsFromDocument } from "@/lib/resolve-quotation-bank-details";
 import {
   formatCustomerAddressLines,
   getPrimaryAddress,
@@ -154,7 +154,7 @@ export function QuotationDetail({ id }) {
   const customerPhone = resolveDocumentCustomerPhone(q);
   const vatPct = q.vatPercentage ?? 5;
   const displaySubtotal = quotationDisplaySubtotal(q);
-  const bank = QUOTATION_PDF_BANK_DETAILS;
+  const bank = displayBankDetailsFromDocument(q);
   const subject = q.subject || `Quotation ${q.quoteNumber}`;
   const hasSalesOrder = !!q.linked?.salesOrder;
   const hasSalesInvoice = !!q.linked?.salesInvoice;

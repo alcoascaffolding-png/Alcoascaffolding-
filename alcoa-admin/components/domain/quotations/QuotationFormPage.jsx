@@ -13,17 +13,25 @@ import { Separator } from "@/components/ui/separator";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
 } from "@/components/forms/form-fields";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { AsyncButton } from "@/components/ui/async-button";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { itemAmountWithVat, quotationDisplaySubtotal } from "@/lib/quotation-display";
 import {
   bankAccountToQuotationBankDetails,
+  findBankAccountIdForDetails,
   customerSnapshotToQuotationFormPatch,
   formatCustomerAddressLines,
   getLinkedCustomerId,
@@ -249,6 +257,28 @@ export function QuotationFormPage({ id }) {
     staleTime: 5 * 60 * 1000,
   });
 
+  const [selectedBankAccountId, setSelectedBankAccountId] = useState("");
+
+  const bankAccountOptions = useMemo(() => {
+    return (bankAccountsList || [])
+      .filter((b) => b.isActive !== false)
+      .map((b) => ({
+        value: String(b._id),
+        label: [b.bankName, b.accountNumber, b.isPrimary ? "(Primary)" : null]
+          .filter(Boolean)
+          .join(" — "),
+      }));
+  }, [bankAccountsList]);
+
+  const handleBankAccountChange = (accountId) => {
+    setSelectedBankAccountId(accountId);
+    const bank = (bankAccountsList || []).find((b) => String(b._id) === accountId);
+    const details = bankAccountToQuotationBankDetails(bank);
+    if (details) {
+      form.setValue("bankDetails", details, { shouldDirty: true, shouldValidate: true });
+    }
+  };
+
   useEffect(() => {
     if (isEdit && !existing) return;
     const banks = bankAccountsList || [];
@@ -261,8 +291,23 @@ export function QuotationFormPage({ id }) {
         shouldDirty: false,
         shouldValidate: false,
       });
+      if (defaultBank) setSelectedBankAccountId(String(defaultBank._id));
     }
   }, [bankAccountsList, existing, form, isEdit]);
+
+  useEffect(() => {
+    const banks = bankAccountsList || [];
+    if (!banks.length) return;
+    const matched = findBankAccountIdForDetails(banks, form.getValues("bankDetails"));
+    if (matched) {
+      setSelectedBankAccountId(matched);
+      return;
+    }
+    const def = pickDefaultBankAccount(banks);
+    if (def && isQuotationBankDetailsEmpty(form.getValues("bankDetails"))) {
+      setSelectedBankAccountId(String(def._id));
+    }
+  }, [bankAccountsList, existing, form]);
 
   const selectedCustomerId = form.watch("customer");
 
@@ -747,6 +792,25 @@ export function QuotationFormPage({ id }) {
             </p>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2 space-y-2">
+              <Label>Bank account</Label>
+              <Select
+                value={selectedBankAccountId || undefined}
+                onValueChange={handleBankAccountChange}
+                disabled={!bankAccountOptions.length || saveMut.isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a bank account from Bank Accounts" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bankAccountOptions.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <FormTextField control={form.control} name="bankDetails.bankName" label="Bank Name" />
             <FormTextField control={form.control} name="bankDetails.accountName" label="Account Name" />
             <FormTextField control={form.control} name="bankDetails.accountNumber" label="Account Number" />

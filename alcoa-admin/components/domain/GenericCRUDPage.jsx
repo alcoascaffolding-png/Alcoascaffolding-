@@ -63,6 +63,8 @@ export function GenericCRUDPage({
   defaultPageSize = 20,
   /** Extra react-query keys to invalidate after save/delete */
   invalidateQueryKeys = [],
+  /** Extra icon buttons in the row actions column (before edit/delete) */
+  extraRowActions,
 }) {
   const router = useRouter();
   const qc = useQueryClient();
@@ -192,6 +194,7 @@ export function GenericCRUDPage({
     header: "",
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
+        {extraRowActions?.(row.original)}
         {FormFields && allowEdit && canWrite && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
             <Pencil className="h-3.5 w-3.5" />
@@ -207,7 +210,7 @@ export function GenericCRUDPage({
         )}
       </div>
     ),
-    size: 80,
+    size: 110,
   };
 
   const columns = [...externalColumns, actionColumn];
@@ -359,6 +362,7 @@ export function GenericCRUDPage({
               disabled={deleteMut.isPending}
               onClick={(e) => {
                 e.preventDefault();
+                if (deleteMut.isPending || !deleteId) return;
                 deleteMut.mutate(deleteId);
               }}
               className="bg-destructive hover:bg-destructive/90 text-white"

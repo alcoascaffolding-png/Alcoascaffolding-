@@ -211,7 +211,7 @@ export function QuotationsClient() {
       cell: ({ row }) => {
         const q = row.original;
         const qid = String(q._id);
-        const busy = sendingId === qid;
+        const busy = !!sendingId;
         return (
           <DocumentRowActionMenu
             showWhatsApp={showWhatsApp}

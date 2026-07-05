@@ -8,18 +8,15 @@ import {
   getQuotationHeaderDataUri,
   getQuotationFooterDataUri,
 } from "@/lib/quotation-brand";
+import { COMPANY_BANK_DETAILS } from "@/lib/company-bank-details";
+import { bankDetailsFromSnapshot } from "@/lib/resolve-quotation-bank-details";
 
-/** Company bank details printed on every quotation PDF. */
-const DEFAULT_QUOTATION_BANK_DETAILS = {
-  accountName: "Alcoa aluminium scaffolding L.L.C - S.P.C",
-  bankName: "ADCB, Musaffah branch, Abu Dhabi",
-  accountNumber: "14262375920001",
-  iban: "AE42 0030 0142 6237 5920 001",
-};
-
-/** Quotation PDF always uses company bank details (not per-quotation DB overrides). */
-function getQuotationPdfBankDetails() {
-  return { ...DEFAULT_QUOTATION_BANK_DETAILS };
+/** Bank block for PDF layout from quotation (set by prepareQuotationForPdf). */
+function getQuotationPdfBankDetails(quotation) {
+  if (quotation?.pdfBankDetails) return { ...quotation.pdfBankDetails };
+  const fromDoc = bankDetailsFromSnapshot(quotation?.bankDetails);
+  if (fromDoc) return fromDoc;
+  return { ...COMPANY_BANK_DETAILS };
 }
 
 function escapeHtml(value) {
@@ -791,7 +788,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               <tr><td class="mini-label">Sales Executive</td><td>${salesExecutive || preparedBy || "-"}</td></tr>
               <tr><td class="mini-label">Payment Terms</td><td>${paymentTerms || "Cash/CDC"}</td></tr>
               <tr><td class="mini-label">Delivery Terms</td><td>${deliveryTerms || "-"}</td></tr>`;
-  const pdfBank = getQuotationPdfBankDetails();
+  const pdfBank = getQuotationPdfBankDetails(quotation);
   const headerImageBlock = headerDataUri
     ? `<img class="header-art" src="${headerDataUri}" alt="Quotation header" crossorigin="anonymous" />`
     : `<div class="header-fallback">${logoDataUri ? `<img class="header-logo-fallback" src="${logoDataUri}" alt="" />` : ""}<div class="header-fallback-title">${companyName.toUpperCase()}</div></div>`;

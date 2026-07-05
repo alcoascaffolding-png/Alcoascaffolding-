@@ -10,7 +10,7 @@ export default function BankAccountsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Bank Accounts"
-        description="Manage company bank accounts"
+        description="Manage company bank accounts. Star an account to set it as primary — it becomes the default on new quotations and quotation PDFs."
       />
       <Suspense fallback={<RouteLoadingView variant="embedded" />}>
         <BankAccountsClient />

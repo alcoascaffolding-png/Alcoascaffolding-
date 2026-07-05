@@ -1,10 +1,9 @@
 /** Company bank details — same as quotation PDF. */
-export const QUOTATION_PDF_BANK_DETAILS = {
-  accountName: "Alcoa aluminium scaffolding L.L.C - S.P.C",
-  bankName: "ADCB, Musaffah branch, Abu Dhabi",
-  accountNumber: "14262375920001",
-  iban: "AE42 0030 0142 6237 5920 001",
-};
+export {
+  COMPANY_BANK_DETAILS,
+  QUOTATION_PDF_BANK_DETAILS,
+  COMPANY_BANK_ACCOUNT_NUMBER,
+} from "@/lib/company-bank-details";
 
 /** Line total including VAT (matches PDF amount column). */
 export function itemAmountWithVat(item, defaultVatPct = 5) {
