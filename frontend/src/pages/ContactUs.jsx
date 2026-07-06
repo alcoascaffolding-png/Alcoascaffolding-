@@ -363,7 +363,9 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
               Project Height (meters)
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               value={quoteData.projectHeight}
               onChange={(e) => setQuoteData({ ...quoteData, projectHeight: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
@@ -375,7 +377,9 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
               Coverage Area (sqm)
             </label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
               value={quoteData.coverageArea}
               onChange={(e) => setQuoteData({ ...quoteData, coverageArea: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"

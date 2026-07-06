@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
+  formInputClassName, numericTextInputProps, setValueAsNumber,
 } from "@/components/forms/form-fields";
 import { Label } from "@/components/ui/label";
 import {
@@ -663,15 +664,15 @@ export function QuotationFormPage({ id }) {
                   </div>
                   <div className="col-span-6 md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">Wt (KG)</label>
-                    <Input type="number" min="0" step="0.001" {...form.register(`items.${index}.weight`)} />
+                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.weight`, { setValueAs: setValueAsNumber(0) })} />
                   </div>
                   <div className="col-span-6 md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">CBM</label>
-                    <Input type="number" min="0" step="0.001" {...form.register(`items.${index}.cbm`)} />
+                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.cbm`, { setValueAs: setValueAsNumber(0) })} />
                   </div>
                   <div className="col-span-4 md:col-span-1">
                     <label className="text-xs text-muted-foreground mb-1 block">Qty</label>
-                    <Input type="number" min="1" {...form.register(`items.${index}.quantity`)} />
+                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.quantity`, { setValueAs: setValueAsNumber(1) })} />
                   </div>
                   <div className="col-span-4 md:col-span-1">
                     <label className="text-xs text-muted-foreground mb-1 block">Unit</label>
@@ -679,13 +680,13 @@ export function QuotationFormPage({ id }) {
                   </div>
                   <div className="col-span-4 md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">Rate (AED)</label>
-                    <Input type="number" min="0" step="0.01" {...form.register(`items.${index}.ratePerUnit`)} />
+                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.ratePerUnit`, { setValueAs: setValueAsNumber(0) })} />
                   </div>
                   {(quoteType === "rental" || quoteType === "both") && (
                     <>
                       <div className="col-span-4 md:col-span-1">
                         <label className="text-xs text-muted-foreground mb-1 block">Rental duration</label>
-                        <Input type="number" min="0" {...form.register(`items.${index}.rentalDurationValue`)} />
+                        <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.rentalDurationValue`, { setValueAs: setValueAsNumber(0) })} />
                       </div>
                       <div className="col-span-4 md:col-span-1">
                         <label className="text-xs text-muted-foreground mb-1 block">Period</label>
@@ -747,15 +748,15 @@ export function QuotationFormPage({ id }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Delivery Charges (AED)</label>
-                  <Input type="number" min="0" step="0.01" {...form.register("deliveryCharges")} />
+                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("deliveryCharges", { setValueAs: setValueAsNumber(0) })} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Installation Charges (AED)</label>
-                  <Input type="number" min="0" step="0.01" {...form.register("installationCharges")} />
+                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("installationCharges", { setValueAs: setValueAsNumber(0) })} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Pickup Charges (AED)</label>
-                  <Input type="number" min="0" step="0.01" {...form.register("pickupCharges")} />
+                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("pickupCharges", { setValueAs: setValueAsNumber(0) })} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Discount type</label>
@@ -771,11 +772,11 @@ export function QuotationFormPage({ id }) {
                   <label className="text-xs text-muted-foreground mb-1 block">
                     Discount {discountType === "percentage" ? "(%)" : "(AED)"}
                   </label>
-                  <Input type="number" min="0" step="0.01" max={discountType === "percentage" ? "100" : undefined} {...form.register("discount")} />
+                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("discount", { setValueAs: setValueAsNumber(0) })} />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">VAT % (quotation)</label>
-                  <Input type="number" min="0" max="100" step="0.01" {...form.register("vatPercentage")} />
+                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("vatPercentage", { setValueAs: setValueAsNumber(5) })} />
                 </div>
               </div>
               <div className="space-y-1.5 text-sm border-t pt-3">

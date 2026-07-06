@@ -29,13 +29,46 @@ function textDisplayValue(value) {
   return String(value);
 }
 
-function numberDisplayValue(value) {
-  if (value === null || value === undefined || value === "" || Number(value) === 0) return "";
+function fieldDisplayValue(value, { showZero = false } = {}) {
+  if (value === null || value === undefined || value === "") {
+    return showZero ? "" : "";
+  }
+  if (!showZero && (value === 0 || value === "0")) return "";
   return String(value);
 }
 
+/** Props for plain text inputs that accept numeric values (no browser spinners). */
+export const numericTextInputProps = {
+  type: "text",
+  inputMode: "decimal",
+  autoComplete: "off",
+};
+
+/** react-hook-form setValueAs helper for numeric text fields. */
+export function setValueAsNumber(empty = 0) {
+  return (value) => {
+    if (value === "" || value == null) return empty;
+    const n = Number(String(value).replace(/,/g, "").trim());
+    return Number.isNaN(n) ? empty : n;
+  };
+}
+
+function sanitizeNumericText(raw) {
+  const trimmed = String(raw).replace(/,/g, "").trim();
+  if (trimmed === "") return { ok: true, value: "" };
+  if (!/^-?\d*\.?\d*$/.test(trimmed)) return { ok: false };
+  return { ok: true, value: trimmed };
+}
+
+function coerceNumericFieldValue(raw, showZero) {
+  if (raw === "") return showZero ? "" : 0;
+  if (raw.endsWith(".") || raw === "-" || /^\d+\.$/.test(raw)) return raw;
+  const n = Number(raw);
+  return Number.isNaN(n) ? raw : n;
+}
+
 /**
- * FormTextField - text, email, password, tel, url, number inputs
+ * FormTextField - text, email, password, tel, url inputs
  */
 export function FormTextField({
   control,
@@ -71,11 +104,7 @@ export function FormTextField({
               )}
               {...field}
               value={textDisplayValue(field.value)}
-              onChange={
-                type === "number"
-                  ? (e) => field.onChange(e.target.valueAsNumber)
-                  : field.onChange
-              }
+              onChange={field.onChange}
             />
           </FormControl>
           {description && (
@@ -199,16 +228,16 @@ export function FormSelectField({
 }
 
 /**
- * FormNumberField
+ * FormNumberField — numeric values via a standard text input (no spinners).
  */
 export function FormNumberField({
   control,
   name,
   label,
   placeholder,
-  min,
-  max,
-  step,
+  min: _min,
+  max: _max,
+  step: _step,
   description,
   disabled,
   className,
@@ -227,23 +256,24 @@ export function FormNumberField({
           )}
           <FormControl>
             <Input
-              type="number"
-              inputMode="decimal"
+              {...numericTextInputProps}
               placeholder={resolvedPlaceholder}
-              min={min}
-              max={max}
-              step={step ?? "any"}
               disabled={disabled}
               className={formInputClassName}
-              value={
-                showZero
-                  ? textDisplayValue(field.value)
-                  : numberDisplayValue(field.value)
-              }
+              value={fieldDisplayValue(field.value, { showZero })}
               onChange={(e) => {
-                const raw = e.target.value;
-                if (raw === "") field.onChange(0);
-                else field.onChange(Number(raw));
+                const { ok, value } = sanitizeNumericText(e.target.value);
+                if (!ok) return;
+                field.onChange(coerceNumericFieldValue(value, showZero));
+              }}
+              onBlur={(e) => {
+                const { ok, value } = sanitizeNumericText(e.target.value);
+                if (!ok) return;
+                const coerced = coerceNumericFieldValue(value, showZero);
+                if (typeof coerced === "string") {
+                  field.onChange(coerced === "" ? (showZero ? "" : 0) : Number(coerced) || 0);
+                }
+                field.onBlur();
               }}
             />
           </FormControl>
