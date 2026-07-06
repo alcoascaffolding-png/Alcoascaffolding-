@@ -261,7 +261,7 @@ export function GenericCRUDPage({
                 key={s.label}
                 type="button"
                 onClick={() => router.push(href)}
-                className="text-left rounded-lg border bg-card shadow-sm transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="text-left rounded-lg border bg-card shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {inner}
               </button>

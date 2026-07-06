@@ -56,7 +56,7 @@ function StatCard({ title, value, description, icon: Icon, trend, color = "prima
   };
 
   const inner = (
-    <Card className={href ? "transition-colors hover:bg-muted/30" : undefined}>
+    <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className={`h-4 w-4 ${colorMap[color] || colorMap.primary}`} />
@@ -69,7 +69,14 @@ function StatCard({ title, value, description, icon: Icon, trend, color = "prima
   );
 
   if (href) {
-    return <Link href={href} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">{inner}</Link>;
+    return (
+      <Link
+        href={href}
+        className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {inner}
+      </Link>
+    );
   }
 
   return inner;
