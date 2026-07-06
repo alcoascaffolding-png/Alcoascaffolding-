@@ -136,8 +136,9 @@ export function ImportButton({ resource, label, onSuccess }) {
           <DialogHeader>
             <DialogTitle>Import {title}</DialogTitle>
             <DialogDescription>
-              Upload a CSV or Excel file. We validate every row against the expected columns and
-              data types before saving anything.
+              Upload a CSV or Excel file. We validate every row before saving. For products and
+              vendors, download the template — it includes a <strong>Reference</strong> sheet with
+              valid categories and status values.
             </DialogDescription>
           </DialogHeader>
 

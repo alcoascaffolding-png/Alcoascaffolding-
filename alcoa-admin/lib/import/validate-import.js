@@ -127,7 +127,7 @@ function validateCell(column, rawValue, rowNumber) {
         return {
           row: rowNumber,
           column: label,
-          message: `Row ${rowNumber}: "${label}" must be Yes/No or True/False (got "${value}").`,
+          message: `Row ${rowNumber}: "${label}" must be Active, Inactive, Yes, No, True, or False (got "${value}").`,
         };
       }
       return null;
@@ -139,10 +139,14 @@ function validateCell(column, rawValue, rowNumber) {
         (opt) => String(opt).toLowerCase() === value.toLowerCase()
       );
       if (!match) {
+        const hint =
+          column.key === "category"
+            ? " Add the category under Product/Vendor Categories first, or see the Reference sheet in the template."
+            : "";
         return {
           row: rowNumber,
           column: label,
-          message: `Row ${rowNumber}: "${label}" must be one of: ${allowed.join(", ")} (got "${value}").`,
+          message: `Row ${rowNumber}: "${label}" must be one of: ${allowed.join(", ")} (got "${value}").${hint}`,
         };
       }
       return null;
