@@ -43,7 +43,11 @@ export function Providers({ children }) {
           closeButton
           toastOptions={{
             duration: 4000,
+            classNames: {
+              toast: "group toast",
+            },
           }}
+          aria-label="Notifications"
         />
       </QueryClientProvider>
     </ClientThemeProvider>

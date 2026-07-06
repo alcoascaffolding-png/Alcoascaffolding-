@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Menu, LogOut, Sun, Moon, ChevronDown } from "lucide-react";
+import { Menu, LogOut, Sun, Moon, ChevronDown, Search } from "lucide-react";
 import { useTheme } from "@wrksz/themes/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
+import { useCommandPalette } from "@/components/layout/CommandPalette";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -41,6 +43,12 @@ function ThemeToggle() {
 export function AppTopbar({ onToggleSidebar }) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { setOpen: setCommandOpen } = useCommandPalette();
+  const [isMac, setIsMac] = useState(false);
+
+  useEffect(() => {
+    setIsMac(/Mac|iPhone|iPod|iPad/i.test(navigator.userAgent));
+  }, []);
 
   const user = session?.user;
   const initials = user?.name
@@ -71,7 +79,32 @@ export function AppTopbar({ onToggleSidebar }) {
         <Menu className="h-4 w-4" />
       </Button>
 
-      <div className="flex-1" />
+      <div className="flex flex-1 items-center gap-2 min-w-0">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="hidden h-9 w-full max-w-md justify-start gap-2 text-muted-foreground sm:flex"
+          onClick={() => setCommandOpen(true)}
+          aria-label="Open search and navigation"
+        >
+          <Search className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="truncate">Search pages and records…</span>
+          <kbd className="pointer-events-none ml-auto hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground lg:inline">
+            {isMac ? "⌘K" : "Ctrl+K"}
+          </kbd>
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 sm:hidden"
+          onClick={() => setCommandOpen(true)}
+          aria-label="Open search"
+        >
+          <Search className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Right section */}
       <div className="flex items-center gap-2">

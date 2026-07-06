@@ -6,7 +6,7 @@
 /* ============================================================
    GLOBAL DESIGN SYSTEM — Alcoa Management System brand kit
 
-   • Primary   #4F46E5 — CTAs, active nav, primary buttons, links
+   • Primary   #1D3A6C — ALCOA logo navy (CTAs, active nav, primary buttons, links)
    • Secondary #0F172A — headlines, body text, inverted surfaces
    • Tertiary  #A54100 — rust accent, status highlights, icon actions
    • Neutral   #64748B — labels, borders, supporting text
@@ -16,8 +16,9 @@
    ============================================================ */
 
 :root {
-  /* Raw brand (hex aligned to guideline) */
-  --brand-primary: #4f46e5;
+  /* Raw brand (hex aligned to ALCOA logo / login panel) */
+  --brand-primary: #1d3a6c;
+  --brand-primary-hover: #152d56;
   --brand-secondary: #0f172a;
   --brand-tertiary: #a54100;
   --brand-neutral: #64748b;
@@ -43,8 +44,8 @@
   --muted: #f1f5f9;
   --muted-foreground: var(--brand-neutral);
 
-  --accent: #eef2ff;
-  --accent-foreground: #3730a3;
+  --accent: color-mix(in srgb, var(--brand-primary) 10%, #ffffff);
+  --accent-foreground: var(--brand-primary);
 
   --tertiary: var(--brand-tertiary);
   --tertiary-foreground: #ffffff;
@@ -59,13 +60,13 @@
   --radius: 0.625rem;
 
   /* Charts — primary / tertiary / supporting palette */
-  --chart-1: #4f46e5;
+  --chart-1: #1d3a6c;
   --chart-2: #a54100;
   --chart-3: #0d9488;
   --chart-4: #ca8a04;
   --chart-5: #64748b;
 
-  /* Sidebar: white rail, indigo active state */
+  /* Sidebar: white rail, ALCOA navy active state */
   --sidebar: #ffffff;
   --sidebar-foreground: #475569;
   --sidebar-primary: var(--brand-primary);
@@ -86,7 +87,7 @@
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
 
-  --primary: #818cf8;
+  --primary: #6b9fd4;
   --primary-foreground: #ffffff;
 
   --secondary: #1e293b;
@@ -95,8 +96,8 @@
   --muted: #1e293b;
   --muted-foreground: #94a3b8;
 
-  --accent: #312e81;
-  --accent-foreground: #e0e7ff;
+  --accent: #1a3050;
+  --accent-foreground: #c5daf0;
 
   --tertiary: #ea580c;
   --tertiary-foreground: #ffffff;
@@ -106,9 +107,9 @@
 
   --border: #334155;
   --input: #334155;
-  --ring: #818cf8;
+  --ring: #6b9fd4;
 
-  --chart-1: #818cf8;
+  --chart-1: #6b9fd4;
   --chart-2: #fb923c;
   --chart-3: #2dd4bf;
   --chart-4: #fbbf24;
@@ -116,12 +117,12 @@
 
   --sidebar: #0f172a;
   --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #818cf8;
+  --sidebar-primary: #6b9fd4;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f8fafc;
   --sidebar-border: #334155;
-  --sidebar-ring: #818cf8;
+  --sidebar-ring: #6b9fd4;
 }
 
 @theme inline {

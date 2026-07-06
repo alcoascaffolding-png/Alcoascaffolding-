@@ -17,7 +17,7 @@ export default function LoginPage() {
       <SessionProvider>
         <div className="min-h-screen grid lg:grid-cols-2">
         {/* Left — brand */}
-        <div className="relative hidden lg:flex flex-col items-center justify-center bg-[#1D3A6C] px-12 py-16 overflow-hidden">
+        <div className="relative hidden lg:flex flex-col items-center justify-center bg-primary px-12 py-16 overflow-hidden">
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
             style={{

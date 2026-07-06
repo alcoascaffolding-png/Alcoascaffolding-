@@ -17,7 +17,7 @@ import ExcelJS from "exceljs";
 const HEADER_FILL = {
   type: "pattern",
   pattern: "solid",
-  fgColor: { argb: "FF4F46E5" }, // Brand primary (indigo)
+  fgColor: { argb: "FF1D3A6C" }, // Brand primary (ALCOA navy)
 };
 
 const HEADER_FONT = {

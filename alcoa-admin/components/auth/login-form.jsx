@@ -178,7 +178,7 @@ export function LoginForm() {
         type="submit"
         disabled={isLoading}
         aria-busy={isLoading || undefined}
-        className="h-11 w-full gap-2 bg-[#1D3A6C] hover:bg-[#152d56] text-white"
+        className="h-11 w-full gap-2"
       >
         {isLoading ? (
           <>

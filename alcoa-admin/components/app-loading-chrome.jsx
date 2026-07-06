@@ -10,11 +10,11 @@ import NextTopLoader from "nextjs-toploader";
 export function AppLoadingChrome() {
   return (
     <NextTopLoader
-      color="#4f46e5"
+      color="#1D3A6C"
       height={3}
       showSpinner={false}
       speed={200}
-      shadow="0 0 10px #4f46e5,0 0 5px #4f46e5"
+      shadow="0 0 10px #1D3A6C,0 0 5px #1D3A6C"
       zIndex={99998}
       crawlSpeed={200}
     />

@@ -3,36 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import {
-  LayoutDashboard,
-  MessageSquare,
-  Users,
-  UserCog,
-  FileText,
-  ShoppingCart,
-  Receipt,
-  Package,
-  Truck,
-  ClipboardList,
-  Landmark,
-  CreditCard,
-  Wallet,
-  BarChart3,
-  Tags,
-  ScrollText,
-  ChevronDown,
-  ChevronRight,
-  X,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { canAccessNavPath, canManageUsers } from "@/lib/permissions";
+import { ADMIN_NAV_GROUPS } from "@/lib/admin-navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const SIDEBAR_GROUPS_KEY = "alcoa-sidebar-groups";
 
 function readGroupOpenState(groupLabel) {
+  if (typeof window === "undefined") return true;
   try {
     const raw = localStorage.getItem(SIDEBAR_GROUPS_KEY);
     if (!raw) return true;
@@ -70,66 +52,15 @@ const navItemCollapsedClass = (isActive) =>
       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
   );
 
-const navigation = [
-  {
-    label: "Overview",
-    items: [
-      { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Leads",
-    items: [
-      { name: "Contact Messages", href: "/contact-messages", icon: MessageSquare },
-      { name: "Customers", href: "/customers", icon: Users },
-    ],
-  },
-  {
-    label: "Sales",
-    items: [
-      { name: "Quotations", href: "/quotations", icon: FileText },
-      { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart },
-      { name: "Tax Invoices", href: "/sales-invoices", icon: Receipt },
-      { name: "Delivery Notes", href: "/delivery-notes", icon: Truck },
-    ],
-  },
-  {
-    label: "Purchases",
-    items: [
-      { name: "Vendors", href: "/vendors", icon: Truck },
-      { name: "Vendor Categories", href: "/vendors/categories", icon: Tags },
-      { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
-      { name: "Purchase Invoices", href: "/purchase-invoices", icon: ClipboardList },
-    ],
-  },
-  {
-    label: "Inventory",
-    items: [
-      { name: "Products", href: "/products", icon: Package },
-      { name: "Product Categories", href: "/products/categories", icon: Tags },
-      { name: "Stock Adjustments", href: "/stock-adjustments", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Accounts",
-    items: [
-      { name: "Bank Accounts", href: "/bank-accounts", icon: Landmark },
-      { name: "Receipts", href: "/receipts", icon: CreditCard },
-      { name: "Payments", href: "/payments", icon: Wallet },
-    ],
-  },
-  {
-    label: "Settings",
-    items: [
-      { name: "Users", href: "/users", icon: UserCog, adminOnly: true },
-      { name: "Audit Log", href: "/audit-log", icon: ScrollText, adminOnly: true },
-    ],
-  },
-];
+const navigation = ADMIN_NAV_GROUPS;
 
 function NavGroup({ group, collapsed, onNavigate, user }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(() => readGroupOpenState(group.label));
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    setOpen(readGroupOpenState(group.label));
+  }, [group.label]);
 
   function toggleOpen() {
     setOpen((prev) => {

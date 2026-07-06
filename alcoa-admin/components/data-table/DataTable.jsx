@@ -152,7 +152,12 @@ export function DataTable({
         )}
       >
         {isFetching && !isLoading && (
-          <div className="absolute right-2 top-2 z-10 flex items-center gap-2 rounded-md border border-border/80 bg-background/95 px-2.5 py-1.5 text-xs text-muted-foreground shadow-sm">
+          <div
+            className="absolute right-2 top-2 z-10 flex items-center gap-2 rounded-md border border-border/80 bg-background/95 px-2.5 py-1.5 text-xs text-muted-foreground shadow-sm"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <InlineSkeleton />
             <span>Refreshing…</span>
           </div>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopbar } from "./AppTopbar";
+import { CommandPaletteProvider } from "./CommandPalette";
 
 export function AdminShell({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -39,7 +40,8 @@ export function AdminShell({ children }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <CommandPaletteProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
@@ -68,6 +70,7 @@ export function AdminShell({ children }) {
           <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full">{children}</div>
         </main>
       </div>
-    </div>
+      </div>
+    </CommandPaletteProvider>
   );
 }
