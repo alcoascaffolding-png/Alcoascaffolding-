@@ -7,7 +7,8 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { LogIn, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { AsyncButton } from "@/components/ui/async-button";
+import { Button } from "@/components/ui/button";
+import { BrandSpinner } from "@/components/loading/loading-kit";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,8 @@ import { loginSchema, LOGIN_FIELD_LIMITS } from "@/lib/schemas/login";
 const ERROR_MESSAGES = {
   CredentialsSignin: "Invalid email or password. Please try again.",
   Configuration:
+    "Cannot connect to database right now. Check MongoDB Atlas network access/IP allowlist, then try again.",
+  DatabaseUnavailable:
     "Cannot connect to database right now. Check MongoDB Atlas network access/IP allowlist, then try again.",
   Default: "Sign in failed. Please try again.",
   RateLimited: "Too many sign-in attempts. Please wait and try again later.",
@@ -53,7 +56,7 @@ export function LoginForm() {
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
-    mode: "onBlur",
+    mode: "onSubmit",
   });
 
   async function onSubmit(data) {
@@ -70,37 +73,36 @@ export function LoginForm() {
       return;
     }
 
+    const target = resolveCallbackPath(callbackUrl);
+
     try {
-      await toast.promise(
-        (async () => {
-          const result = await signIn("credentials", {
-            email: data.email,
-            password: data.password,
-            redirect: false,
-          });
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+        callbackUrl: target,
+      });
 
-          if (result?.error) {
-            throw new Error(ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default);
-          }
-          if (!result?.ok) {
-            throw new Error(ERROR_MESSAGES.Default);
-          }
-          return result;
-        })(),
-        {
-          loading: "Signing in…",
-          success: "Signed in successfully",
-          error: (e) => e?.message || ERROR_MESSAGES.Default,
-        }
-      );
+      if (result?.error) {
+        const message = ERROR_MESSAGES[result.error] ?? ERROR_MESSAGES.Default;
+        setAuthError(message);
+        toast.error(message);
+        return;
+      }
 
-      const target = resolveCallbackPath(callbackUrl);
-      // Full navigation ensures the session cookie is picked up by middleware and server layouts.
-      window.location.assign(target);
-      return;
+      if (!result?.ok) {
+        const message = ERROR_MESSAGES.Default;
+        setAuthError(message);
+        toast.error(message);
+        return;
+      }
+
+      toast.success("Signed in successfully");
+      window.location.assign(result.url || target);
     } catch (e) {
       const message = e?.message || ERROR_MESSAGES.Default;
       setAuthError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -156,17 +158,15 @@ export function LoginForm() {
         <Label htmlFor="password" className="text-slate-700">
           Password
         </Label>
-        <div className="relative">
-          <PasswordInput
-            id="password"
-            autoComplete="current-password"
-            maxLength={LOGIN_FIELD_LIMITS.password}
-            placeholder="••••••••"
-            {...register("password")}
-            aria-invalid={!!errors.password}
-            className="h-11 border-slate-200 bg-slate-50/50 focus-visible:bg-white"
-          />
-        </div>
+        <PasswordInput
+          id="password"
+          autoComplete="current-password"
+          maxLength={LOGIN_FIELD_LIMITS.password}
+          placeholder="••••••••"
+          {...register("password")}
+          aria-invalid={!!errors.password}
+          className="h-11 border-slate-200 bg-slate-50/50 focus-visible:bg-white"
+        />
         {errors.password && (
           <p className="text-sm text-destructive" role="alert">
             {errors.password.message}
@@ -174,16 +174,24 @@ export function LoginForm() {
         )}
       </div>
 
-      <AsyncButton
+      <Button
         type="submit"
+        disabled={isLoading}
+        aria-busy={isLoading || undefined}
         className="h-11 w-full gap-2 bg-[#1D3A6C] hover:bg-[#152d56] text-white"
-        loading={isLoading}
-        idleLabel="Sign In"
-        pendingLabel="Signing in…"
       >
-        <LogIn className="h-4 w-4" />
-        Sign In
-      </AsyncButton>
+        {isLoading ? (
+          <>
+            <BrandSpinner size="sm" className="mr-0" />
+            Signing in…
+          </>
+        ) : (
+          <>
+            <LogIn className="h-4 w-4" />
+            Sign In
+          </>
+        )}
+      </Button>
     </form>
   );
 }

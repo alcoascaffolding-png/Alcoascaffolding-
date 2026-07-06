@@ -18,13 +18,17 @@ export function AsyncButton({
   spinnerSize = "sm",
   onClick,
   disabled,
+  type = "button",
   ...props
 }) {
   const lockRef = useRef(false);
   const [localBusy, setLocalBusy] = useState(false);
+  const isSubmit = type === "submit";
 
   const handleClick = useCallback(
     async (e) => {
+      if (isSubmit) return;
+
       if (loading || disabled || lockRef.current) {
         e.preventDefault();
         e.stopPropagation();
@@ -44,7 +48,7 @@ export function AsyncButton({
         setLocalBusy(false);
       }
     },
-    [onClick, loading, disabled]
+    [isSubmit, onClick, loading, disabled]
   );
 
   const isBusy = loading || localBusy;
@@ -52,12 +56,12 @@ export function AsyncButton({
 
   return (
     <Button
-      type="button"
+      type={type}
       {...props}
       disabled={isBusy || disabled}
       aria-busy={isBusy || undefined}
       className={cn(className)}
-      onClick={handleClick}
+      onClick={isSubmit ? onClick : handleClick}
     >
       {isBusy && <BrandSpinner size={spinnerSize} className="mr-2" />}
       {label}

@@ -17,6 +17,8 @@ export const authSession = {
 function applyTokenToSession(session, token) {
   if (!session?.user || !token) return session;
   session.user.id = token.id ?? token.sub ?? session.user.id;
+  session.user.name = token.name ?? session.user.name ?? "";
+  session.user.email = token.email ?? session.user.email ?? "";
   session.user.role = token.role ?? "viewer";
   session.user.department = token.department ?? "";
   session.user.permissions = Array.isArray(token.permissions) ? token.permissions : [];
@@ -37,7 +39,7 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
-      const isLoggedIn = !!auth?.user;
+      const isLoggedIn = !!(auth?.user?.email || auth?.user?.id);
 
       // Public paths — always allow
       if (
@@ -61,6 +63,8 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.name = user.name ?? token.name;
+        token.email = user.email ?? token.email;
         token.role = user.role ?? "viewer";
         token.department = user.department ?? "";
         token.permissions = user.permissions ?? [];

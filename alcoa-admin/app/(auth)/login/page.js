@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 import { BrandLogo } from "@/components/auth/brand-logo";
 import { Providers } from "@/components/providers";
+import { SessionProvider } from "@/components/auth/session-provider";
 import { RouteLoadingView } from "@/components/loading/loading-kit";
 
 export const metadata = {
@@ -13,7 +14,8 @@ export default function LoginPage() {
 
   return (
     <Providers>
-      <div className="min-h-screen grid lg:grid-cols-2">
+      <SessionProvider>
+        <div className="min-h-screen grid lg:grid-cols-2">
         {/* Left — brand */}
         <div className="relative hidden lg:flex flex-col items-center justify-center bg-[#1D3A6C] px-12 py-16 overflow-hidden">
           <div
@@ -66,7 +68,8 @@ export default function LoginPage() {
             </p>
           </footer>
         </div>
-      </div>
+        </div>
+      </SessionProvider>
     </Providers>
   );
 }
