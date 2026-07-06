@@ -3,7 +3,15 @@
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { FormTextField, FormNumberField, FormSelectField } from "@/components/forms/form-fields";
+import {
+  FormTextField,
+  FormNumberField,
+  FormSelectField,
+  FormLineItemCell,
+  FormLineItemDeleteCell,
+  formLineItemLabelClassName,
+  formLineItemRowClassNameCompact,
+} from "@/components/forms/form-fields";
 import { ProductPicker } from "@/components/shared/ProductPicker";
 import { Plus, Trash2 } from "lucide-react";
 
@@ -34,9 +42,9 @@ export function PurchaseLineItemsFields() {
       </div>
 
       {fields.map((field, index) => (
-        <div key={field.id} className="grid grid-cols-12 gap-2 items-end border rounded-lg p-3">
+        <div key={field.id} className={formLineItemRowClassNameCompact}>
           <div className="col-span-12">
-            <p className="text-xs text-muted-foreground mb-1">Product (optional)</p>
+            <p className={formLineItemLabelClassName}>Product (optional)</p>
             <ProductPicker
               value={items[index]?.product || ""}
               quoteType="sales"
@@ -55,34 +63,36 @@ export function PurchaseLineItemsFields() {
               }}
             />
           </div>
-          <div className="col-span-12 sm:col-span-5">
+          <FormLineItemCell className="col-span-12 sm:col-span-5">
             <FormTextField
               control={control}
               name={`items.${index}.description`}
               label="Description"
               placeholder="Item description"
             />
-          </div>
-          <div className="col-span-4 sm:col-span-2">
+          </FormLineItemCell>
+          <FormLineItemCell className="col-span-4 sm:col-span-2">
             <FormNumberField control={control} name={`items.${index}.quantity`} label="Qty" min={0.01} />
-          </div>
-          <div className="col-span-4 sm:col-span-2">
+          </FormLineItemCell>
+          <FormLineItemCell className="col-span-4 sm:col-span-2">
             <FormSelectField control={control} name={`items.${index}.unit`} label="Unit" options={unitOpts} />
-          </div>
-          <div className="col-span-4 sm:col-span-2">
+          </FormLineItemCell>
+          <FormLineItemCell className="col-span-4 sm:col-span-2">
             <FormNumberField control={control} name={`items.${index}.unitPrice`} label="Unit price" min={0} />
-          </div>
-          <div className="col-span-12 sm:col-span-1 flex justify-end">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-destructive"
-              disabled={fields.length <= 1}
-              onClick={() => remove(index)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          </FormLineItemCell>
+          <div className="col-span-12 sm:col-span-1">
+            <FormLineItemDeleteCell>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive"
+                disabled={fields.length <= 1}
+                onClick={() => remove(index)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </FormLineItemDeleteCell>
           </div>
         </div>
       ))}

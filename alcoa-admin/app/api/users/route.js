@@ -41,7 +41,7 @@ export const POST = withErrorHandler(async (request) => {
 
   const user = await User.create({
     name: body.name.trim(),
-    email: body.email.trim(),
+    email: String(body.email).toLowerCase().trim(),
     password: body.password,
     role: body.role || "viewer",
     department: body.department || "operations",

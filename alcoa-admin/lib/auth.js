@@ -48,12 +48,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const ipRl = await checkLoginIpRateLimit(ip);
         if (!ipRl.success) {
-          return null;
+          throw new Error("RateLimited");
         }
 
         const loginRl = await checkLoginRateLimit(email);
         if (!loginRl.success) {
-          return null;
+          throw new Error("RateLimited");
         }
 
         try {
@@ -102,22 +102,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60,
-  },
-
   callbacks: {
     ...authConfig.callbacks,
 
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.department = user.department;
-        token.permissions = plainPermissionList(user.permissions);
-        token.avatar = user.avatar ?? null;
-        return token;
+        return authConfig.callbacks.jwt({ token, user });
       }
 
       if (token?.id) {
@@ -141,17 +131,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.department = token.department;
-        session.user.permissions = token.permissions;
-        session.user.avatar = token.avatar;
-      }
-      return session;
+      if (!token) return session;
+      return authConfig.callbacks.session({ session, token });
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true,
 });

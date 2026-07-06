@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
   formInputClassName, numericTextInputProps, setValueAsNumber,
+  FormLineItemCell, FormLineItemDeleteCell, formLineItemLabelClassName, formNativeSelectClassName,
 } from "@/components/forms/form-fields";
 import { Label } from "@/components/ui/label";
 import {
@@ -615,7 +616,7 @@ export function QuotationFormPage({ id }) {
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-12 gap-2 items-start p-3 rounded-lg border bg-muted/20">
                   <div className="col-span-12">
-                    <label className="text-xs text-muted-foreground mb-1 block">Product (catalogue)</label>
+                    <label className={formLineItemLabelClassName}>Product (catalogue)</label>
                     <ProductPicker
                       value={watchedItems[index]?.productId || ""}
                       quoteType={quoteType}
@@ -643,62 +644,62 @@ export function QuotationFormPage({ id }) {
                       />
                     </div>
                   </div>
-                  <div className="col-span-12 md:col-span-4">
-                    <label className="text-xs text-muted-foreground mb-1 block">Equipment Type *</label>
-                    <Input placeholder="Aluminium Tower 4m" {...form.register(`items.${index}.equipmentType`)} />
+                  <FormLineItemCell className="col-span-12 md:col-span-4">
+                    <label className={formLineItemLabelClassName}>Equipment Type *</label>
+                    <Input className={formInputClassName} placeholder="Aluminium Tower 4m" {...form.register(`items.${index}.equipmentType`)} />
                     {form.formState.errors.items?.[index]?.equipmentType && (
                       <p className="text-xs text-destructive mt-1">{form.formState.errors.items[index].equipmentType.message}</p>
                     )}
-                  </div>
-                  <div className="col-span-12 md:col-span-4">
-                    <label className="text-xs text-muted-foreground mb-1 block">Description</label>
-                    <Input placeholder="Optional details" {...form.register(`items.${index}.description`)} />
-                  </div>
-                  <div className="col-span-12 md:col-span-4">
-                    <label className="text-xs text-muted-foreground mb-1 block">Specifications</label>
-                    <Input placeholder="Optional" {...form.register(`items.${index}.specifications`)} />
-                  </div>
-                  <div className="col-span-6 md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Size</label>
-                    <Input placeholder="e.g. 8m" {...form.register(`items.${index}.size`)} />
-                  </div>
-                  <div className="col-span-6 md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Wt (KG)</label>
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-12 md:col-span-4">
+                    <label className={formLineItemLabelClassName}>Description</label>
+                    <Input className={formInputClassName} placeholder="Optional details" {...form.register(`items.${index}.description`)} />
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-12 md:col-span-4">
+                    <label className={formLineItemLabelClassName}>Specifications</label>
+                    <Input className={formInputClassName} placeholder="Optional" {...form.register(`items.${index}.specifications`)} />
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-6 md:col-span-2">
+                    <label className={formLineItemLabelClassName}>Size</label>
+                    <Input className={formInputClassName} placeholder="e.g. 8m" {...form.register(`items.${index}.size`)} />
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-6 md:col-span-2">
+                    <label className={formLineItemLabelClassName}>Wt (KG)</label>
                     <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.weight`, { setValueAs: setValueAsNumber(0) })} />
-                  </div>
-                  <div className="col-span-6 md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">CBM</label>
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-6 md:col-span-2">
+                    <label className={formLineItemLabelClassName}>CBM</label>
                     <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.cbm`, { setValueAs: setValueAsNumber(0) })} />
-                  </div>
-                  <div className="col-span-4 md:col-span-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Qty</label>
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-4 md:col-span-1">
+                    <label className={formLineItemLabelClassName}>Qty</label>
                     <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.quantity`, { setValueAs: setValueAsNumber(1) })} />
-                  </div>
-                  <div className="col-span-4 md:col-span-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Unit</label>
-                    <Input placeholder="Nos" {...form.register(`items.${index}.unit`)} />
-                  </div>
-                  <div className="col-span-4 md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Rate (AED)</label>
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-4 md:col-span-1">
+                    <label className={formLineItemLabelClassName}>Unit</label>
+                    <Input className={formInputClassName} placeholder="Nos" {...form.register(`items.${index}.unit`)} />
+                  </FormLineItemCell>
+                  <FormLineItemCell className="col-span-4 md:col-span-2">
+                    <label className={formLineItemLabelClassName}>Rate (AED)</label>
                     <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.ratePerUnit`, { setValueAs: setValueAsNumber(0) })} />
-                  </div>
+                  </FormLineItemCell>
                   {(quoteType === "rental" || quoteType === "both") && (
                     <>
-                      <div className="col-span-4 md:col-span-1">
-                        <label className="text-xs text-muted-foreground mb-1 block">Rental duration</label>
+                      <FormLineItemCell className="col-span-4 md:col-span-1">
+                        <label className={formLineItemLabelClassName}>Rental duration</label>
                         <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.rentalDurationValue`, { setValueAs: setValueAsNumber(0) })} />
-                      </div>
-                      <div className="col-span-4 md:col-span-1">
-                        <label className="text-xs text-muted-foreground mb-1 block">Period</label>
+                      </FormLineItemCell>
+                      <FormLineItemCell className="col-span-4 md:col-span-1">
+                        <label className={formLineItemLabelClassName}>Period</label>
                         <select
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                          className={formNativeSelectClassName}
                           {...form.register(`items.${index}.rentalDurationUnit`)}
                         >
                           <option value="day">Day</option>
                           <option value="week">Week</option>
                           <option value="month">Month</option>
                         </select>
-                      </div>
+                      </FormLineItemCell>
                     </>
                   )}
                   <div className="col-span-12 md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
@@ -729,13 +730,15 @@ export function QuotationFormPage({ id }) {
                       </span>
                     </div>
                   </div>
-                  <div className="col-span-12 md:col-span-1 flex md:justify-end">
-                    <Button
-                      type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive"
-                      onClick={() => remove(index)} disabled={fields.length === 1}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                  <div className="col-span-12 md:col-span-1">
+                    <FormLineItemDeleteCell>
+                      <Button
+                        type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive"
+                        onClick={() => remove(index)} disabled={fields.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </FormLineItemDeleteCell>
                   </div>
                 </div>
               ))}
@@ -745,39 +748,39 @@ export function QuotationFormPage({ id }) {
 
             {/* Totals */}
             <div className="w-full sm:max-w-sm sm:ml-auto grid grid-cols-1 gap-4 text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Delivery Charges (AED)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>Delivery Charges (AED)</label>
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("deliveryCharges", { setValueAs: setValueAsNumber(0) })} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Installation Charges (AED)</label>
+                </FormLineItemCell>
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>Installation Charges (AED)</label>
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("installationCharges", { setValueAs: setValueAsNumber(0) })} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Pickup Charges (AED)</label>
+                </FormLineItemCell>
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>Pickup Charges (AED)</label>
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("pickupCharges", { setValueAs: setValueAsNumber(0) })} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Discount type</label>
+                </FormLineItemCell>
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>Discount type</label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    className={formNativeSelectClassName}
                     {...form.register("discountType")}
                   >
                     <option value="fixed">Fixed (AED)</option>
                     <option value="percentage">Percentage (%)</option>
                   </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">
+                </FormLineItemCell>
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>
                     Discount {discountType === "percentage" ? "(%)" : "(AED)"}
                   </label>
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("discount", { setValueAs: setValueAsNumber(0) })} />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">VAT % (quotation)</label>
+                </FormLineItemCell>
+                <FormLineItemCell>
+                  <label className={formLineItemLabelClassName}>VAT % (quotation)</label>
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("vatPercentage", { setValueAs: setValueAsNumber(5) })} />
-                </div>
+                </FormLineItemCell>
               </div>
               <div className="space-y-1.5 text-sm border-t pt-3">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal (before VAT)</span><span className="tabular-nums">{displaySubtotal.toFixed(2)}</span></div>

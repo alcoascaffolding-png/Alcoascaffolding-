@@ -104,7 +104,7 @@ export function ProductPicker({ value, onSelect, quoteType = "rental", disabled 
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className="h-9 w-full justify-between font-normal"
+          className="h-11 w-full justify-between rounded-lg font-normal"
         >
           <span className="truncate text-left">{displayLabel}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

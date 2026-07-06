@@ -5,10 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react";
+import { LogIn, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AsyncButton } from "@/components/ui/async-button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { loginSchema, LOGIN_FIELD_LIMITS } from "@/lib/schemas/login";
 
@@ -42,7 +43,6 @@ function resolveCallbackPath(callbackUrl) {
 export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
 
@@ -157,25 +157,15 @@ export function LoginForm() {
           Password
         </Label>
         <div className="relative">
-          <Input
+          <PasswordInput
             id="password"
-            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             maxLength={LOGIN_FIELD_LIMITS.password}
             placeholder="••••••••"
             {...register("password")}
             aria-invalid={!!errors.password}
-            className="h-11 border-slate-200 bg-slate-50/50 pr-10 focus-visible:bg-white"
+            className="h-11 border-slate-200 bg-slate-50/50 focus-visible:bg-white"
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-            tabIndex={-1}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
         </div>
         {errors.password && (
           <p className="text-sm text-destructive" role="alert">

@@ -11,15 +11,25 @@ import {
 import { ROLE_LABELS } from "@/lib/permissions";
 import { formatDate } from "@/lib/utils";
 
-const userSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
-  password: z.string().optional(),
-  role: z.enum(["super_admin", "admin", "manager", "accountant", "sales", "inventory", "viewer"]),
-  department: z.enum(["management", "sales", "accounts", "inventory", "operations"]).default("operations"),
-  phone: z.string().optional(),
-  isActive: z.boolean().default(true),
-});
+const userSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Valid email required"),
+    password: z.string().optional(),
+    role: z.enum(["super_admin", "admin", "manager", "accountant", "sales", "inventory", "viewer"]),
+    department: z.enum(["management", "sales", "accounts", "inventory", "operations"]).default("operations"),
+    phone: z.string().optional(),
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (data.password && data.password.length > 0 && data.password.length < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Password must be at least 8 characters",
+        path: ["password"],
+      });
+    }
+  });
 
 const defaultValues = {
   name: "",
@@ -115,6 +125,9 @@ export function UsersClient() {
       prepareSavePayload={(values, isEdit) => {
         const payload = { ...values };
         if (isEdit && !payload.password) delete payload.password;
+        if (!isEdit && !payload.password?.trim()) {
+          throw new Error("Password is required for new users (min. 8 characters)");
+        }
         return payload;
       }}
       statCards={(s) => [{ label: "Total users", value: s.total }]}

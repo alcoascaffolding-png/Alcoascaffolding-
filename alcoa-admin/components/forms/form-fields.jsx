@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordVisibilityToggle } from "@/components/ui/password-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +19,45 @@ export const formSelectClassName =
 
 export const formTextareaClassName =
   "min-h-[100px] resize-y rounded-lg border border-input bg-card px-3.5 py-3 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/20 dark:shadow-none";
+
+/** Label + item spacing shared by every form field component. */
+export const formLabelClassName =
+  "text-xs font-medium leading-tight text-muted-foreground";
+
+export const formItemClassName = "flex flex-col gap-1.5 space-y-0";
+
+export const formMessageClassName = "text-xs font-medium leading-tight";
+
+/**
+ * Line-item rows: equal label slot height so controls align on one baseline.
+ * Wrap each field column (Description, Qty, Unit, etc.) with FormLineItemCell.
+ */
+export const formLineItemRowClassName =
+  "grid grid-cols-1 md:grid-cols-12 gap-3 items-start border-b pb-4 last:border-0";
+
+export const formLineItemRowClassNameCompact =
+  "grid grid-cols-12 gap-2 items-start border rounded-lg p-3";
+
+export const formLineItemCellClassName =
+  "[&_label]:min-h-[2rem] [&_label]:flex [&_label]:items-end [&_label]:whitespace-normal";
+
+export const formLineItemLabelClassName = "text-xs text-muted-foreground mb-1.5 block min-h-[2rem]";
+
+export const formNativeSelectClassName = formSelectClassName;
+
+export function FormLineItemCell({ className, children }) {
+  return <div className={cn(formLineItemCellClassName, className)}>{children}</div>;
+}
+
+/** Spacer + icon button aligned with h-11 inputs in a line-item row. */
+export function FormLineItemDeleteCell({ className, children }) {
+  return (
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <span className="block min-h-[2rem]" aria-hidden="true" />
+      <div className="flex h-11 items-center justify-end">{children}</div>
+    </div>
+  );
+}
 
 function defaultPlaceholder(label, explicit) {
   if (explicit) return explicit;
@@ -67,6 +108,32 @@ function coerceNumericFieldValue(raw, showZero) {
   return Number.isNaN(n) ? raw : n;
 }
 
+function FormPasswordControl({ field, resolvedPlaceholder, disabled, readOnly, className }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="relative w-full">
+      <FormControl>
+        <Input
+          type={showPassword ? "text" : "password"}
+          placeholder={resolvedPlaceholder}
+          disabled={disabled}
+          readOnly={readOnly}
+          className={cn(className, "pr-10")}
+          {...field}
+          value={textDisplayValue(field.value)}
+          onChange={field.onChange}
+        />
+      </FormControl>
+      <PasswordVisibilityToggle
+        show={showPassword}
+        disabled={disabled || readOnly}
+        onToggle={() => setShowPassword((visible) => !visible)}
+      />
+    </div>
+  );
+}
+
 /**
  * FormTextField - text, email, password, tel, url inputs
  */
@@ -88,31 +155,44 @@ export function FormTextField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={cn(formItemClassName, className)}>
           {label && (
-            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+            <FormLabel className={formLabelClassName}>{label}</FormLabel>
           )}
-          <FormControl>
-            <Input
-              type={type}
-              placeholder={resolvedPlaceholder}
+          {type === "password" ? (
+            <FormPasswordControl
+              field={field}
+              resolvedPlaceholder={resolvedPlaceholder}
               disabled={disabled}
               readOnly={readOnly}
               className={cn(
                 formInputClassName,
                 (disabled || readOnly) && "cursor-not-allowed bg-muted/40 text-muted-foreground"
               )}
-              {...field}
-              value={textDisplayValue(field.value)}
-              onChange={field.onChange}
             />
-          </FormControl>
+          ) : (
+            <FormControl>
+              <Input
+                type={type}
+                placeholder={resolvedPlaceholder}
+                disabled={disabled}
+                readOnly={readOnly}
+                className={cn(
+                  formInputClassName,
+                  (disabled || readOnly) && "cursor-not-allowed bg-muted/40 text-muted-foreground"
+                )}
+                {...field}
+                value={textDisplayValue(field.value)}
+                onChange={field.onChange}
+              />
+            </FormControl>
+          )}
           {description && (
             <FormDescription className="text-xs leading-relaxed text-muted-foreground">
               {description}
             </FormDescription>
           )}
-          <FormMessage />
+          <FormMessage className={formMessageClassName} />
         </FormItem>
       )}
     />
@@ -139,9 +219,9 @@ export function FormTextAreaField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={cn(formItemClassName, className)}>
           {label && (
-            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+            <FormLabel className={formLabelClassName}>{label}</FormLabel>
           )}
           <FormControl>
             <Textarea
@@ -158,7 +238,7 @@ export function FormTextAreaField({
               {description}
             </FormDescription>
           )}
-          <FormMessage />
+          <FormMessage className={formMessageClassName} />
         </FormItem>
       )}
     />
@@ -191,9 +271,9 @@ export function FormSelectField({
         const selectValue = matched ? matched.value : undefined;
 
         return (
-          <FormItem className={className}>
+          <FormItem className={cn(formItemClassName, className)}>
             {label && (
-              <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+              <FormLabel className={formLabelClassName}>{label}</FormLabel>
             )}
             <Select
               key={`${name}-${options.length}-${raw}`}
@@ -219,7 +299,7 @@ export function FormSelectField({
                 {description}
               </FormDescription>
             )}
-            <FormMessage />
+            <FormMessage className={formMessageClassName} />
           </FormItem>
         );
       }}
@@ -250,9 +330,9 @@ export function FormNumberField({
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={className}>
+        <FormItem className={cn(formItemClassName, className)}>
           {label && (
-            <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+            <FormLabel className={formLabelClassName}>{label}</FormLabel>
           )}
           <FormControl>
             <Input
@@ -282,7 +362,7 @@ export function FormNumberField({
               {description}
             </FormDescription>
           )}
-          <FormMessage />
+          <FormMessage className={formMessageClassName} />
         </FormItem>
       )}
     />
@@ -307,7 +387,7 @@ export function FormCheckboxField({ control, name, label, description, disabled,
             {label && <FormLabel>{label}</FormLabel>}
             {description && <FormDescription>{description}</FormDescription>}
           </div>
-          <FormMessage />
+          <FormMessage className={formMessageClassName} />
         </FormItem>
       )}
     />
@@ -328,7 +408,7 @@ export function FormSwitchField({ control, name, label, description, disabled, c
         >
           <div className="space-y-0.5 pr-4">
             {label && (
-              <FormLabel className="text-sm font-medium text-foreground">{label}</FormLabel>
+              <FormLabel className={formLabelClassName}>{label}</FormLabel>
             )}
             {description && (
               <FormDescription className="text-xs leading-relaxed text-muted-foreground">

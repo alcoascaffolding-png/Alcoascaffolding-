@@ -15,6 +15,10 @@ import {
   FormSelectField,
   FormTextAreaField,
   FormNumberField,
+  FormLineItemCell,
+  FormLineItemDeleteCell,
+  formLineItemLabelClassName,
+  formLineItemRowClassName,
 } from "@/components/forms/form-fields";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -496,10 +500,10 @@ export function SalesOrderFormPage({ id }) {
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end border-b pb-4 last:border-0"
+                className={formLineItemRowClassName}
               >
                 <div className="md:col-span-12">
-                  <p className="text-xs text-muted-foreground mb-1">Product (optional)</p>
+                  <p className={formLineItemLabelClassName}>Product (optional)</p>
                   <ProductPicker
                     value={watchedItems?.[index]?.productId || ""}
                     quoteType={pricingMode}
@@ -523,46 +527,48 @@ export function SalesOrderFormPage({ id }) {
                     quantity={watchedItems?.[index]?.quantity}
                   />
                 </div>
-                <div className="md:col-span-5">
+                <FormLineItemCell className="md:col-span-5">
                   <FormTextField
                     control={form.control}
                     name={`items.${index}.description`}
                     label="Description"
                   />
-                </div>
-                <div className="md:col-span-2">
+                </FormLineItemCell>
+                <FormLineItemCell className="md:col-span-2">
                   <FormNumberField
                     control={form.control}
                     name={`items.${index}.quantity`}
                     label="Qty"
                   />
-                </div>
-                <div className="md:col-span-2">
+                </FormLineItemCell>
+                <FormLineItemCell className="md:col-span-2">
                   <FormSelectField
                     control={form.control}
                     name={`items.${index}.unit`}
                     label="Unit"
                     options={unitOpts}
                   />
-                </div>
-                <div className="md:col-span-2">
+                </FormLineItemCell>
+                <FormLineItemCell className="md:col-span-2">
                   <FormNumberField
                     control={form.control}
                     name={`items.${index}.unitPrice`}
                     label="Rate"
                   />
-                </div>
-                <div className="md:col-span-1 flex justify-end">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-destructive"
-                    disabled={fields.length <= 1}
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                </FormLineItemCell>
+                <div className="md:col-span-1">
+                  <FormLineItemDeleteCell>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive"
+                      disabled={fields.length <= 1}
+                      onClick={() => remove(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </FormLineItemDeleteCell>
                 </div>
               </div>
             ))}
