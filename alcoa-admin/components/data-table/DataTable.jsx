@@ -31,13 +31,13 @@ function SortableHeader({ column, children }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <span className="truncate">{children}</span>
-      <span className="inline-flex shrink-0">
+      <span className="inline-flex shrink-0" aria-hidden>
         {sorted === "asc" ? (
-          <ArrowUp className="h-3.5 w-3.5 text-foreground" aria-hidden />
+          <ArrowUp className="h-3.5 w-3.5 text-foreground" />
         ) : sorted === "desc" ? (
-          <ArrowDown className="h-3.5 w-3.5 text-foreground" aria-hidden />
+          <ArrowDown className="h-3.5 w-3.5 text-foreground" />
         ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/70" aria-hidden />
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/70" />
         )}
       </span>
     </div>
@@ -59,6 +59,8 @@ export function DataTable({
   onRowClick,
   emptyMessage = "No records found.",
   emptyIcon = "default",
+  emptyDescription,
+  emptyAction,
   getRowClassName,
   /** Server-side pagination */
   manualPagination = false,
@@ -87,7 +89,7 @@ export function DataTable({
 
   useEffect(() => {
     if (!serverSearch) return;
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
   }, [searchValue, serverSearch, setPagination]);
 
   const table = useReactTable({
@@ -160,11 +162,23 @@ export function DataTable({
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
               <TableRow key={hg.id} className="border-b border-border/60 bg-card hover:bg-card">
-                {hg.headers.map((header) => (
+                {hg.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+                  return (
                   <TableHead
                     key={header.id}
+                    aria-sort={
+                      header.column.getCanSort()
+                        ? sorted === "asc"
+                          ? "ascending"
+                          : sorted === "desc"
+                            ? "descending"
+                            : "none"
+                        : undefined
+                    }
                     className={cn(
-                      header.column.getCanSort() && "cursor-pointer select-none hover:bg-muted/30"
+                      "bg-muted/20 text-xs font-semibold uppercase tracking-wide",
+                      header.column.getCanSort() && "cursor-pointer select-none hover:bg-muted/40"
                     )}
                     onClick={header.column.getToggleSortingHandler()}
                     style={{
@@ -179,7 +193,8 @@ export function DataTable({
                       </SortableHeader>
                     )}
                   </TableHead>
-                ))}
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -206,7 +221,7 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   className={cn(
-                    "bg-card hover:bg-muted/40",
+                    "bg-card hover:bg-muted/25 even:bg-muted/[0.03]",
                     onRowClick && "cursor-pointer",
                     getRowClassName?.(row.original)
                   )}
@@ -246,7 +261,8 @@ export function DataTable({
                   <EmptyState
                     icon={emptyIcon}
                     title={emptyMessage}
-                    description="Try adjusting your search or filters."
+                    description={emptyDescription ?? "Try adjusting your search or filters."}
+                    action={emptyAction}
                   />
                 </TableCell>
               </TableRow>

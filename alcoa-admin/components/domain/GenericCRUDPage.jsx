@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { MetricCard } from "@/components/ui/metric-card";
 import { AsyncButton } from "@/components/ui/async-button";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import {
@@ -58,6 +58,8 @@ export function GenericCRUDPage({
   toolbarExtra,
   /** Custom empty state message */
   emptyMessage,
+  /** Optional empty state action (defaults to Add button when form is enabled) */
+  emptyAction,
   /** Optional row className(row) for highlighting */
   getRowClassName,
   /** Make stat cards clickable — { label: href } */
@@ -78,16 +80,19 @@ export function GenericCRUDPage({
 }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const user = session?.user;
+  const permissionsReady = sessionStatus !== "loading";
   const permResource =
     permissionResource || (resource.includes("/") ? resource.split("/")[0] : resource);
   const canWrite =
-    permResource === "users" ? canManageUsers(user) : canWriteResource(user, permResource);
+    permissionsReady &&
+    (permResource === "users" ? canManageUsers(user) : canWriteResource(user, permResource));
   const canDelete =
-    permResource === "users"
+    permissionsReady &&
+    (permResource === "users"
       ? canManageUsers(user)
-      : canDeleteDocuments(user, permResource) && canWriteResource(user, permResource);
+      : canDeleteDocuments(user, permResource) && canWriteResource(user, permResource));
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });
@@ -245,30 +250,17 @@ export function GenericCRUDPage({
     <>
       {stats && statCards && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          {statCards(stats).map((s) => {
-            const href = statCardLinks?.[s.label];
-            const inner = (
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className={cn("font-bold", s.valueClassName ?? "text-2xl")}>{s.value}</p>
-                {s.subtitle ? (
-                  <p className="text-xs text-muted-foreground mt-1">{s.subtitle}</p>
-                ) : null}
-              </CardContent>
-            );
-            return href ? (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => router.push(href)}
-                className="text-left rounded-lg border bg-card shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {inner}
-              </button>
-            ) : (
-              <Card key={s.label}>{inner}</Card>
-            );
-          })}
+          {statCards(stats).map((s) => (
+            <MetricCard
+              key={s.label}
+              title={s.label}
+              value={s.value}
+              subtitle={s.subtitle}
+              valueClassName={s.valueClassName}
+              href={statCardLinks?.[s.label]}
+              variant="compact"
+            />
+          ))}
         </div>
       )}
 
@@ -279,7 +271,16 @@ export function GenericCRUDPage({
         isLoading={isLoading}
         searchPlaceholder={`Search ${title.toLowerCase()}…`}
         emptyMessage={emptyMessage || `No ${title.toLowerCase()} found.`}
-        emptyIcon={resource === "products" ? "products" : "default"}
+        emptyIcon={resource === "products" ? "products" : resource === "customers" ? "customers" : "default"}
+        emptyAction={
+          emptyAction ??
+          (FormFields && canWrite ? (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+              Add {singular}
+            </Button>
+          ) : undefined)
+        }
         manualPagination={serverPagination}
         pageCount={serverPagination ? (data?.pages || 1) : undefined}
         totalRecords={serverPagination ? (data?.total || 0) : undefined}
@@ -318,9 +319,9 @@ export function GenericCRUDPage({
         }
       />
 
-      {FormFields && canWrite && (
+      {FormFields && (
         <Dialog
-          open={editItem !== null}
+          open={canWrite && editItem !== null}
           onOpenChange={(open) => {
             if (!open && !saveMut.isPending) setEditItem(null);
           }}

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { MetricCard } from "@/components/ui/metric-card";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -77,14 +78,28 @@ async function deleteMessage(id) {
 
 export function ContactMessagesClient() {
   const qc = useQueryClient();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const openId = searchParams.get("id");
   const [selectedMsg, setSelectedMsg] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterType, setFilterType] = useState("all");
+  const filterStatus = searchParams.get("status") || "all";
+  const filterType = searchParams.get("type") || "all";
 
-  const params = {};
-  if (filterStatus !== "all") params.status = filterStatus;
-  if (filterType !== "all") params.type = filterType;
+  const params = useMemo(() => {
+    const next = {};
+    if (filterStatus !== "all") next.status = filterStatus;
+    if (filterType !== "all") next.type = filterType;
+    return next;
+  }, [filterStatus, filterType]);
+
+  function setFilter(key, value) {
+    const next = new URLSearchParams(searchParams.toString());
+    if (!value || value === "all") next.delete(key);
+    else next.set(key, value);
+    const qs = next.toString();
+    router.replace(qs ? `/contact-messages?${qs}` : "/contact-messages", { scroll: false });
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["contact-messages", params],
@@ -93,6 +108,28 @@ export function ContactMessagesClient() {
   });
 
   const { data: stats } = useQuery({ queryKey: ["contact-messages-stats"], queryFn: fetchStats });
+
+  useEffect(() => {
+    if (!openId) return;
+
+    const inList = data?.items?.find((m) => String(m._id) === openId);
+    if (inList) {
+      setSelectedMsg(inList);
+      return;
+    }
+
+    let cancelled = false;
+    fetch(`/api/contact-messages/${openId}`)
+      .then((res) => res.json())
+      .then((result) => {
+        if (!cancelled && result.success) setSelectedMsg(result.data);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openId, data?.items]);
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...updates }) => updateMessage(id, updates),
@@ -186,7 +223,7 @@ export function ContactMessagesClient() {
         label="Contact Messages"
         onSuccess={() => qc.invalidateQueries({ queryKey: ["contact-messages"] })}
       />
-      <Select value={filterType} onValueChange={setFilterType}>
+      <Select value={filterType} onValueChange={(v) => setFilter("type", v)}>
         <SelectTrigger className="h-8 w-28">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
@@ -196,7 +233,7 @@ export function ContactMessagesClient() {
           <SelectItem value="quote">Quote</SelectItem>
         </SelectContent>
       </Select>
-      <Select value={filterStatus} onValueChange={setFilterStatus}>
+      <Select value={filterStatus} onValueChange={(v) => setFilter("status", v)}>
         <SelectTrigger className="h-8 w-32">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -220,10 +257,27 @@ export function ContactMessagesClient() {
       {/* Stats row */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total</p><p className="text-2xl font-bold">{stats.total}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">New</p><p className="text-2xl font-bold text-primary">{stats.newMessages}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Contact</p><p className="text-2xl font-bold">{stats.contactCount}</p></CardContent></Card>
-          <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Quote Requests</p><p className="text-2xl font-bold">{stats.quoteCount}</p></CardContent></Card>
+          <MetricCard title="Total" value={stats.total} variant="compact" href="/contact-messages" />
+          <MetricCard
+            title="New"
+            value={stats.newMessages}
+            valueClassName="text-2xl font-bold text-primary"
+            variant="compact"
+            href="/contact-messages?status=new"
+            color="primary"
+          />
+          <MetricCard
+            title="Contact"
+            value={stats.contactCount}
+            variant="compact"
+            href="/contact-messages?type=contact"
+          />
+          <MetricCard
+            title="Quote Requests"
+            value={stats.quoteCount}
+            variant="compact"
+            href="/contact-messages?type=quote"
+          />
         </div>
       )}
 
@@ -235,6 +289,18 @@ export function ContactMessagesClient() {
         searchPlaceholder="Search messages…"
         onRowClick={setSelectedMsg}
         emptyMessage="No messages found."
+        emptyDescription={
+          filterStatus !== "all" || filterType !== "all"
+            ? "Try clearing your filters to see more messages."
+            : "New inquiries from your website will appear here."
+        }
+        emptyAction={
+          filterStatus !== "all" || filterType !== "all" ? (
+            <Button variant="outline" size="sm" onClick={() => router.replace("/contact-messages", { scroll: false })}>
+              Clear filters
+            </Button>
+          ) : null
+        }
       />
 
       {/* Message detail dialog */}

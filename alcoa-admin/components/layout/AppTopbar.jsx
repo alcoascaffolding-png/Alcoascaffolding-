@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Menu, LogOut, Sun, Moon, ChevronDown } from "lucide-react";
@@ -60,12 +59,12 @@ export function AppTopbar({ onToggleSidebar }) {
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/80 bg-card/80 backdrop-blur-sm px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 sm:gap-4 border-b border-border/80 bg-card/90 backdrop-blur-md px-4 sm:px-6 shadow-sm shadow-slate-900/[0.03]">
       {/* Sidebar toggle */}
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9"
+        className="h-9 w-9 shrink-0"
         onClick={onToggleSidebar}
         aria-label="Toggle sidebar"
       >

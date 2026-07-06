@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
 import {
   Select,
@@ -27,6 +27,9 @@ import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { ExportButton } from "@/components/data-table/ExportButton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { InvoicePaymentStatusChanger } from "@/components/domain/sales/InvoicePaymentStatusChanger";
 import {
@@ -62,12 +65,22 @@ async function fetchStats() {
 
 export function SalesInvoicesClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
-  const [paymentFilter, setPaymentFilter] = useState("all");
+  const paymentFilter = searchParams.get("paymentStatus") || "all";
   const debouncedSearch = useDebouncedValue(searchInput, 350);
+
+  function setPaymentFilter(value) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (!value || value === "all") params.delete("paymentStatus");
+    else params.set("paymentStatus", value);
+    const qs = params.toString();
+    router.replace(qs ? `/sales-invoices?${qs}` : "/sales-invoices", { scroll: false });
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }
 
   const listParams = useMemo(() => {
     const params = {
@@ -231,16 +244,36 @@ export function SalesInvoicesClient() {
         emptyMessage={
           paymentFilter !== "all" || debouncedSearch
             ? "No tax invoices match your filters."
-            : "No tax invoices yet. Create your first tax invoice."
+            : "No tax invoices yet."
+        }
+        emptyDescription={
+          paymentFilter !== "all" || debouncedSearch
+            ? "Try adjusting your search or payment filter."
+            : "Create your first tax invoice to start tracking payments."
+        }
+        emptyAction={
+          paymentFilter !== "all" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.replace("/sales-invoices", { scroll: false })}
+            >
+              Clear filter
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/sales-invoices/new">
+                <Plus className="h-4 w-4" />
+                New tax invoice
+              </Link>
+            </Button>
+          )
         }
         toolbar={
           <>
             <Select
               value={paymentFilter}
-              onValueChange={(value) => {
-                setPaymentFilter(value);
-                setPagination((p) => ({ ...p, pageIndex: 0 }));
-              }}
+              onValueChange={setPaymentFilter}
             >
               <SelectTrigger className="h-8 w-[170px]">
                 <SelectValue placeholder="Payment" />

@@ -30,6 +30,46 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
+const SIDEBAR_GROUPS_KEY = "alcoa-sidebar-groups";
+
+function readGroupOpenState(groupLabel) {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_GROUPS_KEY);
+    if (!raw) return true;
+    const parsed = JSON.parse(raw);
+    return parsed[groupLabel] !== false;
+  } catch {
+    return true;
+  }
+}
+
+function persistGroupOpenState(groupLabel, open) {
+  try {
+    const raw = localStorage.getItem(SIDEBAR_GROUPS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    parsed[groupLabel] = open;
+    localStorage.setItem(SIDEBAR_GROUPS_KEY, JSON.stringify(parsed));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+const navItemClass = (isActive) =>
+  cn(
+    "flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
+    isActive
+      ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm"
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  );
+
+const navItemCollapsedClass = (isActive) =>
+  cn(
+    "flex h-9 w-9 items-center justify-center rounded-lg mx-auto transition-colors",
+    isActive
+      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+  );
+
 const navigation = [
   {
     label: "Overview",
@@ -89,7 +129,15 @@ const navigation = [
 
 function NavGroup({ group, collapsed, onNavigate, user }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => readGroupOpenState(group.label));
+
+  function toggleOpen() {
+    setOpen((prev) => {
+      const next = !prev;
+      persistGroupOpenState(group.label, next);
+      return next;
+    });
+  }
 
   const visibleItems = group.items.filter((item) => {
     if (item.adminOnly && !canManageUsers(user)) return false;
@@ -111,8 +159,6 @@ function NavGroup({ group, collapsed, onNavigate, user }) {
     return pathname.startsWith(`${item.href}/`);
   }
 
-  if (visibleItems.length === 0) return null;
-
   if (collapsed) {
     return (
       <div className="space-y-1">
@@ -125,12 +171,7 @@ function NavGroup({ group, collapsed, onNavigate, user }) {
               href={item.href}
               title={item.name}
               onClick={onNavigate}
-              className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg mx-auto transition-colors",
-                isActive
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
+              className={navItemCollapsedClass(isActive)}
             >
               <Icon className="h-4 w-4 shrink-0" />
             </Link>
@@ -144,7 +185,7 @@ function NavGroup({ group, collapsed, onNavigate, user }) {
     <div className="space-y-1">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={toggleOpen}
         className="flex w-full items-center justify-between px-2 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-sidebar-foreground transition-colors"
       >
         <span>{group.label}</span>
@@ -161,12 +202,7 @@ function NavGroup({ group, collapsed, onNavigate, user }) {
                 key={item.href}
                 href={item.href}
                 onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
+                className={navItemClass(isActive)}
               >
                 <Icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{item.name}</span>

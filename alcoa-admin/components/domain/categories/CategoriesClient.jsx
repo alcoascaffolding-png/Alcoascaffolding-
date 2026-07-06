@@ -140,15 +140,25 @@ function ModuleCategoryFormFields({ control, moduleType }) {
   return <CategoryFormFields control={control} config={MODULE_CONFIG[moduleType]} />;
 }
 
+function ProductCategoryFormFields(props) {
+  return <ModuleCategoryFormFields {...props} moduleType="product" />;
+}
+
+function VendorCategoryFormFields(props) {
+  return <ModuleCategoryFormFields {...props} moduleType="vendor" />;
+}
+
+const MODULE_FORM_FIELDS = {
+  product: ProductCategoryFormFields,
+  vendor: VendorCategoryFormFields,
+};
+
 /**
  * @param {{ moduleType: "product" | "vendor" }} props
  */
 export function ModuleCategoriesClient({ moduleType }) {
   const config = MODULE_CONFIG[moduleType];
-
-  function FormFields(props) {
-    return <ModuleCategoryFormFields {...props} moduleType={moduleType} />;
-  }
+  const FormFields = MODULE_FORM_FIELDS[moduleType];
 
   return (
     <GenericCRUDPage

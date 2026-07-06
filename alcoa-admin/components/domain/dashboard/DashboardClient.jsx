@@ -8,6 +8,12 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard } from "@/components/ui/metric-card";
+import { ChartCard } from "@/components/ui/chart-card";
+import { DashboardSection } from "@/components/layout/DashboardSection";
+import { ActivityListItem } from "@/components/domain/dashboard/ActivityListItem";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Button } from "@/components/ui/button";
 import {
   DashboardStatCardsSkeleton,
   DashboardChartSkeleton,
@@ -15,7 +21,7 @@ import {
 } from "@/components/loading/skeleton-kit";
 import { formatCurrency, formatRelativeTime } from "@/lib/utils";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
 async function fetchDashboardStats() {
@@ -46,42 +52,6 @@ async function fetchInventorySummary() {
   return data.data;
 }
 
-function StatCard({ title, value, description, icon: Icon, trend, color = "primary", href }) {
-  const colorMap = {
-    primary: "text-primary",
-    success: "text-emerald-600 dark:text-emerald-400",
-    warning: "text-chart-2 dark:text-orange-300",
-    danger: "text-red-600 dark:text-red-400",
-    accent: "text-brand-accent",
-  };
-
-  const inner = (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${colorMap[color] || colorMap.primary}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
-      </CardContent>
-    </Card>
-  );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {inner}
-      </Link>
-    );
-  }
-
-  return inner;
-}
-
 const statusBadgeMap = {
   new: { variant: "info", label: "New" },
   draft: { variant: "outline", label: "Draft" },
@@ -92,6 +62,10 @@ const statusBadgeMap = {
   converted_to_sales_order: { variant: "success", label: "Converted to SO" },
   converted_to_invoice: { variant: "success", label: "Converted to Invoice" },
   converted: { variant: "success", label: "Converted" },
+  confirmed: { variant: "success", label: "Confirmed" },
+  completed: { variant: "success", label: "Completed" },
+  invoiced: { variant: "success", label: "Invoiced" },
+  cancelled: { variant: "destructive", label: "Cancelled" },
   in_progress: { variant: "warning", label: "In Progress" },
   delivered: { variant: "success", label: "Delivered" },
   read: { variant: "secondary", label: "Read" },
@@ -142,7 +116,11 @@ export function DashboardClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <p className="text-sm text-muted-foreground -mt-1">
+        Welcome back! Here is your business overview.
+      </p>
+
       {hasStockAlert && !statsLoading && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm dark:border-amber-900/50 dark:bg-amber-950/30">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
@@ -164,108 +142,113 @@ export function DashboardClient() {
       )}
 
       {/* Stat cards */}
-      {statsLoading ? (
-        <>
-          <DashboardStatCardsSkeleton />
-          <DashboardStatCardsSkeleton count={3} className="md:grid-cols-3 lg:grid-cols-3" />
-        </>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Customers"
-            value={stats?.customers?.total ?? 0}
-            description={`${stats?.customers?.active ?? 0} active`}
-            icon={Users}
-            color="accent"
-          />
-          <StatCard
-            title="Quotations"
-            value={stats?.quotations?.total ?? 0}
-            description={`${stats?.quotations?.pending ?? 0} pending`}
-            icon={FileText}
-            color="primary"
-            href="/quotations?status=pending"
-          />
-          <StatCard
-            title="New Messages"
-            value={stats?.messages?.unread ?? 0}
-            description={`${stats?.messages?.total ?? 0} total inquiries`}
-            icon={MessageSquare}
-            color={stats?.messages?.unread > 0 ? "warning" : "success"}
-          />
-          <StatCard
-            title="Monthly Revenue"
-            value={formatCurrency(stats?.revenue?.monthly ?? 0)}
-            description="Last 30 days"
-            icon={TrendingUp}
-            color="success"
-          />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard
-            title="Low Stock Products"
-            value={stats?.products?.lowStock ?? 0}
-            description={`${stats?.products?.outOfStock ?? 0} out of stock`}
-            icon={Package}
-            color={stats?.products?.lowStock > 0 ? "warning" : "success"}
-            href="/products?stock=critical"
-          />
-          <StatCard
-            title="Overdue Invoices"
-            value={stats?.invoices?.overdue ?? 0}
-            description={`${stats?.invoices?.paid ?? 0} paid of ${stats?.invoices?.total ?? 0}`}
-            icon={Clock}
-            color={stats?.invoices?.overdue > 0 ? "danger" : "success"}
-          />
-          <StatCard
-            title="Invoice Collection"
-            value={formatCurrency(stats?.invoices?.collected ?? 0)}
-            description={`of ${formatCurrency(stats?.invoices?.totalValue ?? 0)} total`}
-            icon={CheckCircle}
-            color="primary"
-          />
-          </div>
-        </>
-      )}
+      <DashboardSection title="Overview">
+        {statsLoading ? (
+          <>
+            <DashboardStatCardsSkeleton />
+            <DashboardStatCardsSkeleton count={3} className="md:grid-cols-3 lg:grid-cols-3" />
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                title="Total Customers"
+                value={stats?.customers?.total ?? 0}
+                description={`${stats?.customers?.active ?? 0} active`}
+                icon={Users}
+                color="accent"
+              />
+              <MetricCard
+                title="Quotations"
+                value={stats?.quotations?.total ?? 0}
+                description={`${stats?.quotations?.pending ?? 0} pending`}
+                icon={FileText}
+                color="primary"
+                href="/quotations?status=pending"
+              />
+              <MetricCard
+                title="New Messages"
+                value={stats?.messages?.unread ?? 0}
+                description={`${stats?.messages?.total ?? 0} total inquiries`}
+                icon={MessageSquare}
+                color={stats?.messages?.unread > 0 ? "warning" : "success"}
+                href="/contact-messages?status=new"
+              />
+              <MetricCard
+                title="Monthly Revenue"
+                value={formatCurrency(stats?.revenue?.monthly ?? 0)}
+                description="Last 30 days"
+                icon={TrendingUp}
+                color="success"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <MetricCard
+                title="Low Stock Products"
+                value={stats?.products?.lowStock ?? 0}
+                description={`${stats?.products?.outOfStock ?? 0} out of stock`}
+                icon={Package}
+                color={stats?.products?.lowStock > 0 ? "warning" : "success"}
+                href="/products?stock=critical"
+              />
+              <MetricCard
+                title="Overdue Invoices"
+                value={stats?.invoices?.overdue ?? 0}
+                description={`${stats?.invoices?.paid ?? 0} paid of ${stats?.invoices?.total ?? 0}`}
+                icon={Clock}
+                color={stats?.invoices?.overdue > 0 ? "danger" : "success"}
+                href="/sales-invoices?paymentStatus=overdue"
+              />
+              <MetricCard
+                title="Invoice Collection"
+                value={formatCurrency(stats?.invoices?.collected ?? 0)}
+                description={`of ${formatCurrency(stats?.invoices?.totalValue ?? 0)} total`}
+                icon={CheckCircle}
+                color="primary"
+              />
+            </div>
+          </>
+        )}
+      </DashboardSection>
 
       {/* Inventory overview */}
-      <div className="space-y-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Inventory Overview</h2>
-          <div className="flex flex-wrap gap-3">
+      <DashboardSection
+        title="Inventory"
+        action={
+          <>
             <Link href="/products" className="text-xs text-primary flex items-center gap-1 hover:underline">
               Manage products <ArrowUpRight className="h-3 w-3" />
             </Link>
             <Link href="/purchase-orders?from=low-stock" className="text-xs text-primary hover:underline">
               Create PO from low stock
             </Link>
-          </div>
-        </div>
+          </>
+        }
+      >
         {inventoryLoading ? (
           <DashboardStatCardsSkeleton count={4} />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
+            <MetricCard
               title="Total Products"
               value={invStats?.total ?? 0}
               description={`${invStats?.recentlyAdded ?? 0} added this month`}
               icon={Package}
               href="/products"
             />
-            <StatCard
+            <MetricCard
               title="Inventory Value"
               value={formatCurrency(invStats?.inventoryValue ?? 0)}
               description="Stock × purchase price"
               icon={Warehouse}
             />
-            <StatCard
+            <MetricCard
               title="Rental Units"
               value={invStats?.rentalUnits ?? 0}
               description="Items with rental pricing"
               icon={TrendingUp}
             />
-            <StatCard
+            <MetricCard
               title="Recent Adjustments"
               value={invStats?.recentAdjustments ?? 0}
               description="Last 30 days"
@@ -287,9 +270,13 @@ export function DashboardClient() {
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {inventory.lowStockItems.map((p) => (
-                  <div key={p._id} className="flex items-center justify-between gap-2 py-1.5 border-b last:border-0">
+                  <Link
+                    key={p._id}
+                    href={`/products/${p._id}`}
+                    className="flex items-center justify-between gap-2 py-1.5 px-2 -mx-2 rounded-lg border-b last:border-0 hover:bg-muted/50 transition-colors"
+                  >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{p.name}</p>
                       <p className="text-xs text-muted-foreground">{p.itemCode}</p>
@@ -297,121 +284,135 @@ export function DashboardClient() {
                     <Badge variant={p.currentStock <= 0 ? "destructive" : "warning"}>
                       {p.currentStock <= 0 ? "Out" : `${p.currentStock} ${p.unit || "Nos"}`}
                     </Badge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
           </Card>
         )}
-      </div>
+      </DashboardSection>
 
       {/* Charts row */}
+      <DashboardSection title="Analytics">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Sales overview chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Revenue Overview</CardTitle>
-            <CardDescription>Monthly revenue trend (last 6 months)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {salesLoading ? (
-              <DashboardChartSkeleton className="min-h-[200px]" />
-            ) : (
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={salesData || []}>
-                  <defs>
-                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip
-                    formatter={(v) => [formatCurrency(v), "Revenue"]}
-                    contentStyle={{
-                      background: "var(--popover)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="var(--chart-1)"
-                    strokeWidth={2}
-                    fill="url(#revenueGradient)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        <ChartCard
+          title="Revenue Overview"
+          description="Monthly revenue trend (last 6 months)"
+          action={
+            <Link href="/sales-invoices" className="text-xs text-primary flex items-center gap-1 hover:underline">
+              Invoices <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          }
+        >
+          {salesLoading ? (
+            <DashboardChartSkeleton className="min-h-[200px]" />
+          ) : (salesData || []).length === 0 ? (
+            <EmptyState compact title="No revenue data yet" description="Invoices will appear here once recorded." />
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={salesData || []}>
+                <defs>
+                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.28} />
+                    <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/60" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} width={40} />
+                <Tooltip
+                  formatter={(v) => [formatCurrency(v), "Revenue"]}
+                  contentStyle={{
+                    background: "var(--popover)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--chart-1)"
+                  strokeWidth={2}
+                  fill="url(#revenueGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
 
-        {/* Invoice status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Invoice Status</CardTitle>
-            <CardDescription>Payment collection overview</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {statsLoading ? (
-              <DashboardChartSkeleton className="min-h-[200px]" />
-            ) : (
-              <div className="space-y-4 pt-2">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-emerald-500" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Paid</p>
-                      <p className="text-lg font-bold">{stats?.invoices?.paid ?? 0}</p>
-                    </div>
+        <ChartCard
+          title="Invoice Status"
+          description="Payment collection overview"
+          action={
+            <Link href="/sales-invoices" className="text-xs text-primary flex items-center gap-1 hover:underline">
+              View all <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          }
+        >
+          {statsLoading ? (
+            <DashboardChartSkeleton className="min-h-[200px]" />
+          ) : (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <Link href="/sales-invoices?paymentStatus=paid" className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors">
+                  <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Paid</p>
+                    <p className="text-lg font-bold tabular-nums">{stats?.invoices?.paid ?? 0}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Overdue</p>
-                      <p className="text-lg font-bold">{stats?.invoices?.overdue ?? 0}</p>
-                    </div>
+                </Link>
+                <Link href="/sales-invoices?paymentStatus=overdue" className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted/50 transition-colors">
+                  <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Overdue</p>
+                    <p className="text-lg font-bold tabular-nums">{stats?.invoices?.overdue ?? 0}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-chart-2" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Total Invoiced</p>
-                      <p className="text-sm font-bold">{formatCurrency(stats?.invoices?.totalValue ?? 0)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-emerald-500" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Collected</p>
-                      <p className="text-sm font-bold">{formatCurrency(stats?.invoices?.collected ?? 0)}</p>
-                    </div>
+                </Link>
+                <div className="flex items-center gap-2 rounded-lg p-2">
+                  <Clock className="h-4 w-4 text-chart-2 shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Invoiced</p>
+                    <p className="text-sm font-bold tabular-nums">{formatCurrency(stats?.invoices?.totalValue ?? 0)}</p>
                   </div>
                 </div>
-                <div className="pt-2">
-                  <p className="text-xs text-muted-foreground mb-1">Collection rate</p>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{
-                        width: `${stats?.invoices?.totalValue
-                          ? Math.min(100, ((stats.invoices.collected || 0) / stats.invoices.totalValue) * 100)
-                          : 0}%`,
-                      }}
-                    />
+                <div className="flex items-center gap-2 rounded-lg p-2">
+                  <TrendingUp className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Collected</p>
+                    <p className="text-sm font-bold tabular-nums">{formatCurrency(stats?.invoices?.collected ?? 0)}</p>
                   </div>
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-xs text-muted-foreground">Collection rate</p>
+                  <p className="text-xs font-medium tabular-nums">
+                    {stats?.invoices?.totalValue
+                      ? Math.min(100, Math.round(((stats.invoices.collected || 0) / stats.invoices.totalValue) * 100))
+                      : 0}%
+                  </p>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{
+                      width: `${stats?.invoices?.totalValue
+                        ? Math.min(100, ((stats.invoices.collected || 0) / stats.invoices.totalValue) * 100)
+                        : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </ChartCard>
       </div>
+      </DashboardSection>
 
       {/* Recent activities */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <DashboardSection title="Recent Activity">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent messages */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -419,26 +420,36 @@ export function DashboardClient() {
               <CardTitle className="text-base">Recent Inquiries</CardTitle>
               <CardDescription>Latest contact messages</CardDescription>
             </div>
-            <a href="/contact-messages" className="text-xs text-primary flex items-center gap-1 hover:underline">
+            <Link href="/contact-messages" className="text-xs text-primary flex items-center gap-1 hover:underline">
               View all <ArrowUpRight className="h-3 w-3" />
-            </a>
+            </Link>
           </CardHeader>
           <CardContent>
             {activitiesLoading ? (
               <DashboardActivityListSkeleton />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {(activities?.messages || []).slice(0, 5).map((msg) => (
-                  <div key={msg._id} className="flex items-center justify-between gap-2 py-1">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{msg.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatRelativeTime(msg.createdAt)}</p>
-                    </div>
-                    <StatusBadge status={msg.status} />
-                  </div>
+                  <ActivityListItem
+                    key={msg._id}
+                    href={`/contact-messages?id=${msg._id}`}
+                    title={msg.name}
+                    subtitle={formatRelativeTime(msg.createdAt)}
+                    trailing={<StatusBadge status={msg.status} />}
+                  />
                 ))}
                 {!activities?.messages?.length && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">No messages yet</p>
+                  <EmptyState
+                    compact
+                    icon="default"
+                    title="No messages yet"
+                    description="New inquiries from your website will appear here."
+                    action={
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/contact-messages">View messages</Link>
+                      </Button>
+                    }
+                  />
                 )}
               </div>
             )}
@@ -452,32 +463,86 @@ export function DashboardClient() {
               <CardTitle className="text-base">Recent Quotations</CardTitle>
               <CardDescription>Latest quote activity</CardDescription>
             </div>
-            <a href="/quotations" className="text-xs text-primary flex items-center gap-1 hover:underline">
+            <Link href="/quotations" className="text-xs text-primary flex items-center gap-1 hover:underline">
               View all <ArrowUpRight className="h-3 w-3" />
-            </a>
+            </Link>
           </CardHeader>
           <CardContent>
             {activitiesLoading ? (
               <DashboardActivityListSkeleton />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {(activities?.quotations || []).slice(0, 5).map((q) => (
-                  <div key={q._id} className="flex items-center justify-between gap-2 py-1">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{q.quoteNumber}</p>
-                      <p className="text-xs text-muted-foreground">{q.customerName} · {formatCurrency(q.totalAmount)}</p>
-                    </div>
-                    <StatusBadge status={q.status} />
-                  </div>
+                  <ActivityListItem
+                    key={q._id}
+                    href={`/quotations/${q._id}`}
+                    title={q.quoteNumber}
+                    subtitle={`${q.customerName} · ${formatCurrency(q.totalAmount)}`}
+                    trailing={<StatusBadge status={q.status} />}
+                  />
                 ))}
                 {!activities?.quotations?.length && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">No quotations yet</p>
+                  <EmptyState
+                    compact
+                    icon="documents"
+                    title="No quotations yet"
+                    description="Create your first quote to start tracking sales."
+                    action={
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/quotations/new">New quotation</Link>
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent sales orders */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">Recent Sales Orders</CardTitle>
+              <CardDescription>Latest order activity</CardDescription>
+            </div>
+            <Link href="/sales-orders" className="text-xs text-primary flex items-center gap-1 hover:underline">
+              View all <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {activitiesLoading ? (
+              <DashboardActivityListSkeleton />
+            ) : (
+              <div className="space-y-1">
+                {(activities?.orders || []).slice(0, 5).map((order) => (
+                  <ActivityListItem
+                    key={order._id}
+                    href={`/sales-orders/${order._id}`}
+                    title={order.orderNumber}
+                    subtitle={`${order.customerName} · ${formatCurrency(order.total)}`}
+                    trailing={<StatusBadge status={order.status} />}
+                  />
+                ))}
+                {!activities?.orders?.length && (
+                  <EmptyState
+                    compact
+                    icon="documents"
+                    title="No sales orders yet"
+                    description="Orders created from quotations will appear here."
+                    action={
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/sales-orders/new">New sales order</Link>
+                      </Button>
+                    }
+                  />
                 )}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+      </DashboardSection>
     </div>
   );
 }

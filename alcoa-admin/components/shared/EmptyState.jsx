@@ -16,26 +16,40 @@ export function EmptyState({
   description,
   action,
   className,
+  compact = false,
 }) {
   const Icon = ICONS[icon] || ICONS.default;
 
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 py-12 px-4 text-center",
+        "flex flex-col items-center justify-center gap-3 text-center",
+        compact ? "py-8 px-3 gap-2" : "py-12 px-4",
         className
       )}
     >
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted/60">
-        <Icon className="h-7 w-7 text-muted-foreground/70" aria-hidden />
+      <div
+        className={cn(
+          "flex items-center justify-center rounded-full bg-muted/60",
+          compact ? "h-10 w-10" : "h-14 w-14"
+        )}
+      >
+        <Icon
+          className={cn("text-muted-foreground/70", compact ? "h-5 w-5" : "h-7 w-7")}
+          aria-hidden
+        />
       </div>
       <div className="space-y-1 max-w-sm">
-        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className={cn("font-medium text-foreground", compact ? "text-xs" : "text-sm")}>
+          {title}
+        </p>
         {description ? (
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className={cn("text-muted-foreground", compact ? "text-[11px]" : "text-xs")}>
+            {description}
+          </p>
         ) : null}
       </div>
-      {action ? <div className="pt-2">{action}</div> : null}
+      {action ? <div className={compact ? "pt-1" : "pt-2"}>{action}</div> : null}
     </div>
   );
 }
