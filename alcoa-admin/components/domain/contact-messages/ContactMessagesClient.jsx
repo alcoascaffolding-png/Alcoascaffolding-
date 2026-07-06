@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { MessageSquare, Mail, Phone, Building2, Clock, Trash2, Eye, RefreshCw } from "lucide-react";
+import { ImportButton } from "@/components/data-table/ImportButton";
 
 const STATUS_COLORS = {
   new: "info",
@@ -180,6 +181,11 @@ export function ContactMessagesClient() {
 
   const toolbar = (
     <div className="flex flex-wrap items-center gap-2">
+      <ImportButton
+        resource="contact-messages"
+        label="Contact Messages"
+        onSuccess={() => qc.invalidateQueries({ queryKey: ["contact-messages"] })}
+      />
       <Select value={filterType} onValueChange={setFilterType}>
         <SelectTrigger className="h-8 w-28">
           <SelectValue placeholder="Type" />

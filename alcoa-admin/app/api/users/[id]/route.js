@@ -4,6 +4,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { requireSession, requireManageUsers } from "@/lib/api-auth";
 import User from "@/models/User";
 import { validatePasswordForSet } from "@/lib/schemas/password";
+import { sanitizePermissionList } from "@/lib/permission-catalog";
 
 async function resolveParams(context) {
   const params =
@@ -53,6 +54,8 @@ export const PATCH = withErrorHandler(async (request, context) => {
   if (body.department != null) user.department = body.department;
   if (body.phone !== undefined) user.phone = body.phone || undefined;
   if (body.isActive !== undefined) user.isActive = !!body.isActive;
+  if (body.useCustomPermissions !== undefined) user.useCustomPermissions = !!body.useCustomPermissions;
+  if (body.permissions !== undefined) user.permissions = sanitizePermissionList(body.permissions);
 
   await user.save();
   return apiSuccess(user.getPublicProfile());

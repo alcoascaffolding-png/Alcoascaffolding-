@@ -1,9 +1,13 @@
 "use client";
+import Link from "next/link";
+import { Tags } from "lucide-react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { FormTextField, FormSelectField, FormNumberField, FormTextAreaField } from "@/components/forms/form-fields";
 import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CategorySelectField } from "@/components/shared/CategorySelectField";
 
 const schema = z.object({
   vendorCode: z.string().optional(),
@@ -50,19 +54,7 @@ function VendorFormFields({ control }) {
             label="Company name"
             placeholder="e.g. Dubai Scaffolding Supplies LLC"
           />
-          <FormSelectField
-            control={control}
-            name="category"
-            label="Category"
-            placeholder="Select category…"
-            options={[
-              { value: "Supplier", label: "Supplier" },
-              { value: "Manufacturer", label: "Manufacturer" },
-              { value: "Distributor", label: "Distributor" },
-              { value: "Service Provider", label: "Service Provider" },
-              { value: "Other", label: "Other" },
-            ]}
-          />
+          <CategorySelectField control={control} name="category" type="vendor" />
           <FormTextField
             control={control}
             name="tradeLicenseNumber"
@@ -183,6 +175,14 @@ export function VendorsClient() {
         return payload;
       }}
       statCards={(s) => [{ label: "Total Vendors", value: s.total }]}
+      toolbarExtra={
+        <Button size="sm" variant="outline" asChild>
+          <Link href="/vendors/categories">
+            <Tags className="h-4 w-4" />
+            Categories
+          </Link>
+        </Button>
+      }
     />
   );
 }

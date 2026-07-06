@@ -1,4 +1,4 @@
-import { requireSession, requireWrite, requireDelete } from "@/lib/api-auth";
+import { requireSession, requireWrite, requireDelete, requireRead } from "@/lib/api-auth";
 
 /** @typedef {"read"|"write"|"delete"} ApiAction */
 
@@ -9,9 +9,10 @@ import { requireSession, requireWrite, requireDelete } from "@/lib/api-auth";
  */
 export async function authorizeApi(resource, action = "read") {
   const session = await requireSession();
+  if (action === "read") requireRead(session, resource);
   if (action === "write") requireWrite(session, resource);
   if (action === "delete") {
-    requireDelete(session);
+    requireDelete(session, resource);
     requireWrite(session, resource);
   }
   return session;

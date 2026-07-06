@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,16 +21,22 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Pencil, Trash2, Plus } from "lucide-react";
+import { ImportButton } from "@/components/data-table/ImportButton";
+import { IMPORTABLE_RESOURCES } from "@/lib/import/schemas";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
-import { canWriteResource, canDeleteDocuments } from "@/lib/permissions";
+import { canWriteResource, canDeleteDocuments, canManageUsers } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+
+const EMPTY_LIST_PARAMS = {};
 
 /**
  * Generic CRUD page — table, add/edit dialog, delete confirmation.
  */
 export function GenericCRUDPage({
   resource,
+  /** Permission module id (defaults to parent segment when resource contains `/`) */
+  permissionResource,
   title,
   description,
   columns: externalColumns,
@@ -47,7 +53,7 @@ export function GenericCRUDPage({
   /** Singular label for toasts, e.g. "Product" */
   resourceSingular,
   /** Extra query params appended to list fetch, e.g. { stock: "low" } */
-  extraListParams = {},
+  extraListParams,
   /** Additional toolbar nodes (filters, export, etc.) */
   toolbarExtra,
   /** Custom empty state message */
@@ -65,23 +71,38 @@ export function GenericCRUDPage({
   invalidateQueryKeys = [],
   /** Extra icon buttons in the row actions column (before edit/delete) */
   extraRowActions,
+  /** Show import button when resource supports CSV/Excel import (default: auto-detect) */
+  importEnabled,
+  /** Default table column sort passed to DataTable */
+  defaultSorting,
 }) {
   const router = useRouter();
   const qc = useQueryClient();
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
-  const canWrite = canWriteResource(userRole, resource);
-  const canDelete = canDeleteDocuments(userRole);
+  const user = session?.user;
+  const permResource =
+    permissionResource || (resource.includes("/") ? resource.split("/")[0] : resource);
+  const canWrite =
+    permResource === "users" ? canManageUsers(user) : canWriteResource(user, permResource);
+  const canDelete =
+    permResource === "users"
+      ? canManageUsers(user)
+      : canDeleteDocuments(user, permResource) && canWriteResource(user, permResource);
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebouncedValue(searchInput, 350);
+  const listParams = extraListParams ?? EMPTY_LIST_PARAMS;
+  const listParamsKey = useMemo(() => JSON.stringify(listParams), [listParams]);
 
   const singular = resourceSingular || title.replace(/s$/, "");
+  const showImport =
+    importEnabled !== false &&
+    (importEnabled === true || IMPORTABLE_RESOURCES.includes(resource));
   const listQueryKey = serverPagination || serverSearch
-    ? [resource, extraListParams, pagination.pageIndex, pagination.pageSize, debouncedSearch]
-    : [resource, extraListParams];
+    ? [resource, listParamsKey, pagination.pageIndex, pagination.pageSize, debouncedSearch]
+    : [resource, listParamsKey];
 
   const { data, isLoading } = useQuery({
     queryKey: listQueryKey,
@@ -95,7 +116,7 @@ export function GenericCRUDPage({
       if (serverSearch && debouncedSearch.trim()) {
         params.set("search", debouncedSearch.trim());
       }
-      Object.entries(extraListParams).forEach(([k, v]) => {
+      Object.entries(listParams).forEach(([k, v]) => {
         if (v != null && v !== "") params.set(k, String(v));
       });
       const res = await fetch(`/api/${resource}?${params}`);
@@ -126,11 +147,15 @@ export function GenericCRUDPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const resetFiltersKey = useRef(null);
+
   useEffect(() => {
-    if (serverPagination || serverSearch) {
-      setPagination((p) => ({ ...p, pageIndex: 0 }));
-    }
-  }, [extraListParams, serverPagination, serverSearch, debouncedSearch]);
+    if (!serverPagination && !serverSearch) return;
+    const key = `${listParamsKey}|${debouncedSearch}`;
+    if (resetFiltersKey.current === key) return;
+    resetFiltersKey.current = key;
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, [listParamsKey, serverPagination, serverSearch, debouncedSearch]);
 
   function openCreate() {
     form.reset(defaultValues);
@@ -192,6 +217,7 @@ export function GenericCRUDPage({
   const actionColumn = {
     id: "actions",
     header: "",
+    enableSorting: false,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         {extraRowActions?.(row.original)}
@@ -249,6 +275,7 @@ export function GenericCRUDPage({
       <DataTable
         columns={columns}
         data={data?.items || []}
+        defaultSorting={defaultSorting}
         isLoading={isLoading}
         searchPlaceholder={`Search ${title.toLowerCase()}…`}
         emptyMessage={emptyMessage || `No ${title.toLowerCase()} found.`}
@@ -270,6 +297,17 @@ export function GenericCRUDPage({
         toolbar={
           <>
             {toolbarExtra}
+            {showImport && canWrite && (
+              <ImportButton
+                resource={resource}
+                label={singular}
+                onSuccess={() => {
+                  qc.invalidateQueries({ queryKey: [resource] });
+                  qc.invalidateQueries({ queryKey: [resource, "stats"] });
+                  invalidateQueryKeys.forEach((key) => qc.invalidateQueries({ queryKey: key }));
+                }}
+              />
+            )}
             {FormFields && canWrite && (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
@@ -318,7 +356,7 @@ export function GenericCRUDPage({
               >
                 <div className="flex-1 overflow-y-auto bg-muted/20 px-5 py-6 dark:bg-muted/10 sm:px-8 sm:py-8">
                   <div className="mx-auto max-w-4xl space-y-8">
-                    <FormFields control={form.control} />
+                    <FormFields control={form.control} isEditing={isEditing} />
                   </div>
                 </div>
                 <DialogFooter className="shrink-0 gap-3 border-t border-border/80 bg-background px-5 py-4 sm:px-8">

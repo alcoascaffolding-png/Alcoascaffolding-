@@ -4,6 +4,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { requireSession, requireManageUsers } from "@/lib/api-auth";
 import User from "@/models/User";
 import { validatePasswordForSet } from "@/lib/schemas/password";
+import { sanitizePermissionList } from "@/lib/permission-catalog";
 
 export const GET = withErrorHandler(async () => {
   const session = await requireSession();
@@ -47,6 +48,8 @@ export const POST = withErrorHandler(async (request) => {
     department: body.department || "operations",
     phone: body.phone || undefined,
     isActive: body.isActive !== false,
+    useCustomPermissions: !!body.useCustomPermissions,
+    permissions: sanitizePermissionList(body.permissions),
   });
 
   return apiSuccess(user.getPublicProfile(), 201);

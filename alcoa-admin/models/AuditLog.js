@@ -6,7 +6,7 @@ const auditLogSchema = new mongoose.Schema(
     userEmail: { type: String, trim: true },
     action: {
       type: String,
-      enum: ["create", "update", "delete", "status_change", "send_email", "send_whatsapp"],
+      enum: ["create", "update", "delete", "import", "status_change", "send_email", "send_whatsapp"],
       required: true,
       index: true,
     },

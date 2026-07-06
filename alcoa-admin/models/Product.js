@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     category: {
       type: String,
-      enum: ["Aluminium Scaffolding", "Steel Scaffolding", "Ladders", "Accessories", "Safety Equipment", "Other"],
+      trim: true,
       index: true,
     },
     unit: { type: String, default: "Nos", trim: true },

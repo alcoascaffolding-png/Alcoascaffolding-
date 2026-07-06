@@ -3,12 +3,12 @@
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Tags } from "lucide-react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import {
   FormTextField,
   FormTextAreaField,
-  FormSelectField,
   FormNumberField,
   FormSwitchField,
 } from "@/components/forms/form-fields";
@@ -26,6 +26,7 @@ import { formatCurrency } from "@/lib/utils";
 import { isLowStock, isOutOfStock } from "@/lib/inventory-utils";
 import { cn } from "@/lib/utils";
 import { VendorSelectField } from "@/components/shared/PurchaseLineItemsFields";
+import { CategorySelectField } from "@/components/shared/CategorySelectField";
 
 const productSchema = z.object({
   itemCode: z.string().min(1, "Item code required"),
@@ -43,15 +44,6 @@ const productSchema = z.object({
   isActive: z.boolean().default(true),
   description: z.string().optional(),
 });
-
-const categoryOptions = [
-  { value: "Aluminium Scaffolding", label: "Aluminium Scaffolding" },
-  { value: "Steel Scaffolding", label: "Steel Scaffolding" },
-  { value: "Ladders", label: "Ladders" },
-  { value: "Accessories", label: "Accessories" },
-  { value: "Safety Equipment", label: "Safety Equipment" },
-  { value: "Other", label: "Other" },
-];
 
 const columns = [
   { accessorKey: "itemCode", header: "Code", size: 100 },
@@ -127,13 +119,7 @@ function ProductFormFields({ control }) {
         <FormGrid>
           <FormTextField control={control} name="itemCode" label="Item code" placeholder="e.g. ALU-001" />
           <FormTextField control={control} name="name" label="Product name" placeholder="e.g. Aluminium Tower 4m" />
-          <FormSelectField
-            control={control}
-            name="category"
-            label="Category"
-            placeholder="Select category…"
-            options={categoryOptions}
-          />
+          <CategorySelectField control={control} name="category" type="product" />
           <FormTextField control={control} name="unit" label="Unit of measure" placeholder="e.g. Nos, Set, M" />
           <FormGridFull>
             <FormTextAreaField
@@ -330,6 +316,12 @@ export function ProductsClient() {
               ))}
             </SelectContent>
           </Select>
+          <Link href="/products/categories">
+            <Button size="sm" variant="outline">
+              <Tags className="h-4 w-4" />
+              Categories
+            </Button>
+          </Link>
           <Link href="/purchase-orders?from=low-stock">
             <Button size="sm" variant="outline">
               Create PO from low stock

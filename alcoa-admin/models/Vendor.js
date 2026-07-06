@@ -19,7 +19,7 @@ const vendorSchema = new mongoose.Schema(
     status: { type: String, enum: ["active", "inactive", "blocked"], default: "active", index: true },
     category: {
       type: String,
-      enum: ["Supplier", "Manufacturer", "Distributor", "Service Provider", "Other"],
+      trim: true,
       default: "Supplier",
     },
     notes: { type: String, trim: true },

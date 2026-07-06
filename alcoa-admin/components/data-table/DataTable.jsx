@@ -15,11 +15,34 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+
+function SortableHeader({ column, children }) {
+  if (!column.getCanSort()) {
+    return <span className="truncate">{children}</span>;
+  }
+
+  const sorted = column.getIsSorted();
+
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      <span className="truncate">{children}</span>
+      <span className="inline-flex shrink-0">
+        {sorted === "asc" ? (
+          <ArrowUp className="h-3.5 w-3.5 text-foreground" aria-hidden />
+        ) : sorted === "desc" ? (
+          <ArrowDown className="h-3.5 w-3.5 text-foreground" aria-hidden />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/70" aria-hidden />
+        )}
+      </span>
+    </div>
+  );
+}
 
 export function DataTable({
   columns,
@@ -48,8 +71,10 @@ export function DataTable({
   searchValue,
   onSearchChange,
   card = true,
+  /** Initial column sort, e.g. [{ id: "name", desc: false }] */
+  defaultSorting = [],
 }) {
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState(defaultSorting);
   const [columnFilters, setColumnFilters] = useState([]);
   const [localSearch, setLocalSearch] = useState("");
   const [localPagination, setLocalPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });
@@ -138,7 +163,9 @@ export function DataTable({
                 {hg.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className={cn(header.column.getCanSort() && "cursor-pointer select-none")}
+                    className={cn(
+                      header.column.getCanSort() && "cursor-pointer select-none hover:bg-muted/30"
+                    )}
                     onClick={header.column.getToggleSortingHandler()}
                     style={{
                       width: header.getSize(),
@@ -146,10 +173,11 @@ export function DataTable({
                       maxWidth: header.getSize(),
                     }}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getIsSorted() === "asc" ? " ↑" : header.column.getIsSorted() === "desc" ? " ↓" : ""}
+                    {header.isPlaceholder ? null : (
+                      <SortableHeader column={header.column}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </SortableHeader>
+                    )}
                   </TableHead>
                 ))}
               </TableRow>

@@ -6,6 +6,7 @@ import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import Vendor from "@/models/Vendor";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
+import { assertValidCategory } from "@/lib/category-service";
 
 const { GET } = createListHandlers(() => import("@/models/Vendor"), "Vendor", "vendors");
 
@@ -38,10 +39,13 @@ const POST = withErrorHandler(async (request) => {
     throw new AppError("Company name is required", 400);
   }
 
+  const category = await assertValidCategory("vendor", body.category || "Supplier");
+
   const doc = await Vendor.create({
     ...body,
     vendorCode,
     companyName: body.companyName.trim(),
+    category,
     createdBy: session.user.id,
   });
 

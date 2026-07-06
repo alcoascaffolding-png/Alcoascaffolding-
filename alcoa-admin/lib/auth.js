@@ -83,6 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             department: user.department != null ? String(user.department) : "",
             avatar: user.avatar != null ? String(user.avatar) : null,
             permissions: plainPermissionList(user.permissions),
+            useCustomPermissions: !!user.useCustomPermissions,
           };
         } catch (err) {
           console.error("[auth] authorize error:", err.message);
@@ -115,13 +116,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await connectDB();
           const { default: User } = await import("@/models/User");
           const dbUser = await User.findById(token.id).select(
-            "passwordChangedAt isActive role department permissions avatar"
+            "passwordChangedAt isActive role department permissions useCustomPermissions avatar"
           );
           if (!dbUser?.isActive) return null;
           if (dbUser.changedPasswordAfter(token.iat)) return null;
           token.role = String(dbUser.role ?? "viewer");
           token.department = dbUser.department != null ? String(dbUser.department) : "";
           token.permissions = plainPermissionList(dbUser.permissions);
+          token.useCustomPermissions = !!dbUser.useCustomPermissions;
           token.avatar = dbUser.avatar ?? null;
         } catch (err) {
           console.error("[auth] jwt refresh error:", err.message);

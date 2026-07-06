@@ -22,6 +22,7 @@ function applyTokenToSession(session, token) {
   session.user.role = token.role ?? "viewer";
   session.user.department = token.department ?? "";
   session.user.permissions = Array.isArray(token.permissions) ? token.permissions : [];
+  session.user.useCustomPermissions = !!token.useCustomPermissions;
   session.user.avatar = token.avatar ?? null;
   return session;
 }
@@ -68,6 +69,7 @@ export const authConfig = {
         token.role = user.role ?? "viewer";
         token.department = user.department ?? "";
         token.permissions = user.permissions ?? [];
+        token.useCustomPermissions = !!user.useCustomPermissions;
         token.avatar = user.avatar ?? null;
       }
       return token;

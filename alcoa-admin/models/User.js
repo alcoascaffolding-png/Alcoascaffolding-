@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
       default: "viewer",
     },
     permissions: [{ type: String }],
+    useCustomPermissions: { type: Boolean, default: false },
     department: {
       type: String,
       enum: ["management", "sales", "accounts", "inventory", "operations"],
@@ -72,6 +73,7 @@ userSchema.methods.getPublicProfile = function () {
     email: this.email,
     role: this.role,
     permissions: this.permissions,
+    useCustomPermissions: !!this.useCustomPermissions,
     department: this.department,
     phone: this.phone,
     avatar: this.avatar,

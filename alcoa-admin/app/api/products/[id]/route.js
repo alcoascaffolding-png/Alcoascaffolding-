@@ -6,6 +6,7 @@ import { authorizeApi } from "@/lib/api-guard";
 import { createStockAdjustment } from "@/lib/stock-service";
 import { logAudit } from "@/lib/audit-log";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
+import { assertValidCategory } from "@/lib/category-service";
 
 const { DELETE } = createDetailHandlers(() => import("@/models/Product"), "Product", "products");
 
@@ -37,6 +38,12 @@ const PATCH = withErrorHandler(async (request, { params }) => {
     const v = payload.preferredVendor;
     payload.preferredVendor =
       v == null || v === "" || v === "__none__" ? null : v;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(payload, "category")) {
+    payload.category = payload.category
+      ? await assertValidCategory("product", payload.category, { allowEmpty: true })
+      : undefined;
   }
 
   if (

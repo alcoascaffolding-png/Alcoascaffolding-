@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { ImportButton } from "@/components/data-table/ImportButton";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All statuses" },
@@ -319,7 +320,16 @@ export function CustomersClient() {
             : "No customers yet. Add your first customer."
         }
         toolbar={
-          <Select
+          <>
+            <ImportButton
+              resource="customers"
+              label="Customers"
+              onSuccess={() => {
+                qc.invalidateQueries({ queryKey: ["customers"] });
+                qc.invalidateQueries({ queryKey: ["customers-stats"] });
+              }}
+            />
+            <Select
             value={statusFilter}
             onValueChange={(value) => {
               setStatusFilter(value);
@@ -337,6 +347,7 @@ export function CustomersClient() {
               ))}
             </SelectContent>
           </Select>
+          </>
         }
       />
 

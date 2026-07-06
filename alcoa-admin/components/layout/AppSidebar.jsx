@@ -18,6 +18,7 @@ import {
   CreditCard,
   Wallet,
   BarChart3,
+  Tags,
   ScrollText,
   ChevronDown,
   ChevronRight,
@@ -56,6 +57,7 @@ const navigation = [
     label: "Purchases",
     items: [
       { name: "Vendors", href: "/vendors", icon: Truck },
+      { name: "Vendor Categories", href: "/vendors/categories", icon: Tags },
       { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
       { name: "Purchase Invoices", href: "/purchase-invoices", icon: ClipboardList },
     ],
@@ -64,6 +66,7 @@ const navigation = [
     label: "Inventory",
     items: [
       { name: "Products", href: "/products", icon: Package },
+      { name: "Product Categories", href: "/products/categories", icon: Tags },
       { name: "Stock Adjustments", href: "/stock-adjustments", icon: BarChart3 },
     ],
   },
@@ -84,14 +87,29 @@ const navigation = [
   },
 ];
 
-function NavGroup({ group, collapsed, onNavigate, userRole }) {
+function NavGroup({ group, collapsed, onNavigate, user }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(true);
 
   const visibleItems = group.items.filter((item) => {
-    if (item.adminOnly && !canManageUsers(userRole)) return false;
-    return canAccessNavPath(userRole, item.href);
+    if (item.adminOnly && !canManageUsers(user)) return false;
+    return canAccessNavPath(user, item.href);
   });
+
+  function isNavItemActive(item) {
+    if (pathname === item.href) return true;
+    if (item.href === "/") return false;
+
+    const childActive = visibleItems.some(
+      (other) =>
+        other.href !== item.href &&
+        other.href.startsWith(`${item.href}/`) &&
+        (pathname === other.href || pathname.startsWith(`${other.href}/`))
+    );
+    if (childActive) return false;
+
+    return pathname.startsWith(`${item.href}/`);
+  }
 
   if (visibleItems.length === 0) return null;
 
@@ -100,7 +118,7 @@ function NavGroup({ group, collapsed, onNavigate, userRole }) {
       <div className="space-y-1">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const isActive = isNavItemActive(item);
           return (
             <Link
               key={item.href}
@@ -137,7 +155,7 @@ function NavGroup({ group, collapsed, onNavigate, userRole }) {
         <div className="space-y-0.5">
           {visibleItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+            const isActive = isNavItemActive(item);
             return (
               <Link
                 key={item.href}
@@ -163,15 +181,15 @@ function NavGroup({ group, collapsed, onNavigate, userRole }) {
 
 export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate, onCloseMobile }) {
   const { data: session } = useSession();
-  const userRole = session?.user?.role;
+  const user = session?.user;
   const effectiveCollapsed = mobileOpen ? false : collapsed;
 
   const visibleNavigation = navigation
     .map((group) => ({
       ...group,
       items: group.items.filter((item) => {
-        if (item.adminOnly && !canManageUsers(userRole)) return false;
-        return canAccessNavPath(userRole, item.href);
+        if (item.adminOnly && !canManageUsers(user)) return false;
+        return canAccessNavPath(user, item.href);
       }),
     }))
     .filter((group) => group.items.length > 0);
@@ -231,7 +249,7 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onNavigate, 
               group={group}
               collapsed={effectiveCollapsed}
               onNavigate={onNavigate}
-              userRole={userRole}
+              user={user}
             />
           ))}
         </nav>

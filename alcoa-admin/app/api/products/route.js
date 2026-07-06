@@ -5,6 +5,7 @@ import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import { buildRegexSearchFilter } from "@/lib/search-utils";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
+import { assertValidCategory } from "@/lib/category-service";
 
 function sanitizePreferredVendor(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -88,9 +89,13 @@ export const POST = withErrorHandler(async (request) => {
   const Product = (await import("@/models/Product")).default;
   const body = sanitizeMongoDocument(await request.json());
   const preferredVendor = sanitizePreferredVendor(body.preferredVendor);
+  const category = body.category
+    ? await assertValidCategory("product", body.category, { allowEmpty: true })
+    : undefined;
 
   const doc = await Product.create({
     ...body,
+    category,
     preferredVendor,
     createdBy: session.user.id,
   });
