@@ -1,12 +1,9 @@
 "use client";
-import Link from "next/link";
-import { Tags } from "lucide-react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { FormTextField, FormSelectField, FormNumberField, FormTextAreaField } from "@/components/forms/form-fields";
 import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { CategorySelectField } from "@/components/shared/CategorySelectField";
 
 const schema = z.object({
@@ -175,14 +172,6 @@ export function VendorsClient() {
         return payload;
       }}
       statCards={(s) => [{ label: "Total Vendors", value: s.total }]}
-      toolbarExtra={
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/vendors/categories">
-            <Tags className="h-4 w-4" />
-            Categories
-          </Link>
-        </Button>
-      }
     />
   );
 }

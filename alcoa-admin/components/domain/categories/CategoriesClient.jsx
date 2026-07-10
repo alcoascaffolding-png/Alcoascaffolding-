@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-import Link from "next/link";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import {
   FormTextField,
@@ -11,8 +10,6 @@ import {
 } from "@/components/forms/form-fields";
 import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 const schema = z.object({
   name: z.string().min(1, "Name required"),
@@ -28,8 +25,6 @@ const MODULE_CONFIG = {
     categoryType: "product",
     title: "Product Categories",
     resourceSingular: "Category",
-    listHref: "/products",
-    listLabel: "Products",
     description: "Categories used when classifying inventory products",
     namePlaceholder: "e.g. Aluminium Scaffolding",
     formDescription:
@@ -41,8 +36,6 @@ const MODULE_CONFIG = {
     categoryType: "vendor",
     title: "Vendor Categories",
     resourceSingular: "Category",
-    listHref: "/vendors",
-    listLabel: "Vendors",
     description: "Categories used when classifying purchase vendors",
     namePlaceholder: "e.g. Supplier",
     formDescription:
@@ -187,14 +180,6 @@ export function ModuleCategoriesClient({ moduleType }) {
         { label: "Active", value: s.active ?? 0 },
         { label: "Inactive", value: s.inactive ?? 0 },
       ]}
-      toolbarExtra={
-        <Button variant="outline" size="sm" asChild>
-          <Link href={config.listHref}>
-            <ArrowLeft className="h-4 w-4" />
-            Back to {config.listLabel}
-          </Link>
-        </Button>
-      }
       emptyMessage="No categories yet. Add your first category."
     />
   );

@@ -43,8 +43,8 @@ export const ADMIN_NAV_GROUPS = [
   {
     label: "Purchases",
     items: [
-      { name: "Vendors", href: "/vendors", icon: Truck },
       { name: "Vendor Categories", href: "/vendors/categories", icon: Tags },
+      { name: "Vendors", href: "/vendors", icon: Truck },
       { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList },
       { name: "Purchase Invoices", href: "/purchase-invoices", icon: ClipboardList },
     ],
@@ -52,8 +52,8 @@ export const ADMIN_NAV_GROUPS = [
   {
     label: "Inventory",
     items: [
-      { name: "Products", href: "/products", icon: Package },
       { name: "Product Categories", href: "/products/categories", icon: Tags },
+      { name: "Products", href: "/products", icon: Package },
       { name: "Stock Adjustments", href: "/stock-adjustments", icon: BarChart3 },
     ],
   },

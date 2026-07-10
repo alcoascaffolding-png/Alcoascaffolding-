@@ -80,16 +80,15 @@ export function GenericCRUDPage({
 }) {
   const router = useRouter();
   const qc = useQueryClient();
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session } = useSession();
   const user = session?.user;
-  const permissionsReady = sessionStatus !== "loading";
   const permResource =
     permissionResource || (resource.includes("/") ? resource.split("/")[0] : resource);
   const canWrite =
-    permissionsReady &&
+    !!user &&
     (permResource === "users" ? canManageUsers(user) : canWriteResource(user, permResource));
   const canDelete =
-    permissionsReady &&
+    !!user &&
     (permResource === "users"
       ? canManageUsers(user)
       : canDeleteDocuments(user, permResource) && canWriteResource(user, permResource));
@@ -297,7 +296,12 @@ export function GenericCRUDPage({
         getRowClassName={getRowClassName}
         toolbar={
           <>
-            {toolbarExtra}
+            {FormFields && canWrite && (
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Add {singular}
+              </Button>
+            )}
             {showImport && canWrite && (
               <ImportButton
                 resource={resource}
@@ -309,12 +313,7 @@ export function GenericCRUDPage({
                 }}
               />
             )}
-            {FormFields && canWrite && (
-              <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                Add {singular}
-              </Button>
-            )}
+            {toolbarExtra}
           </>
         }
       />

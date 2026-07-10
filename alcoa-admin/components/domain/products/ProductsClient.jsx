@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Tags } from "lucide-react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import {
@@ -316,12 +315,6 @@ export function ProductsClient() {
               ))}
             </SelectContent>
           </Select>
-          <Link href="/products/categories">
-            <Button size="sm" variant="outline">
-              <Tags className="h-4 w-4" />
-              Categories
-            </Button>
-          </Link>
           <Link href="/purchase-orders?from=low-stock">
             <Button size="sm" variant="outline">
               Create PO from low stock
