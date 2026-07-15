@@ -56,6 +56,17 @@ Modern admin panel for Alcoa Aluminium Scaffolding, built with Next.js 16 App Ro
 | `/api/setup/create-admin` | One-time admin seeding (guarded by `SETUP_SECRET`) |
 | `/api/health` | Liveness check |
 
+## Live deployment
+
+| | |
+|---|---|
+| **URL** | [https://admin-dev-seven.vercel.app/](https://admin-dev-seven.vercel.app/) |
+| **Login** | [https://admin-dev-seven.vercel.app/login](https://admin-dev-seven.vercel.app/login) |
+| **Admin email** | `admin@alcoascaffolding.ae` |
+| **Admin password** | `Admin@1234` |
+
+Client manual testing guide: [`CLIENT_TESTING_GUIDE.md`](./CLIENT_TESTING_GUIDE.md)
+
 ## Getting Started
 
 ```bash

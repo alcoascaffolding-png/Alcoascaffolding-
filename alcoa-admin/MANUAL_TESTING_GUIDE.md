@@ -16,9 +16,15 @@
 | **Partial delivery qty flow** | Build only | Logic is wired; needs your manual test (Section 5.4). |
 | **Removed features** | Verified via build | Duplicate, pipeline, bulk actions, share link removed from UI/API. |
 
-**Dev login (default seed):**
+**Dev login (local seed):**
 
 - URL: `http://localhost:3000/login`
+- Email: `admin@alcoascaffolding.ae`
+- Password: `Admin@1234`
+
+**Live deployment:**
+
+- URL: [https://admin-dev-seven.vercel.app/login](https://admin-dev-seven.vercel.app/login)
 - Email: `admin@alcoascaffolding.ae`
 - Password: `Admin@1234`
 
