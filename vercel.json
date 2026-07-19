@@ -21,8 +21,13 @@
       "permanent": true
     },
     {
-      "source": "/scaffolding-rental-dubai",
-      "destination": "/scaffolding-rental-abu-dhabi",
+      "source": "/products",
+      "destination": "/aluminum-scaffolding-abu-dhabi",
+      "permanent": true
+    },
+    {
+      "source": "/services",
+      "destination": "/construction-scaffolding-uae",
       "permanent": true
     },
     {

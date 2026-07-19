@@ -36,7 +36,7 @@ const WhatsAppButton = () => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={openWhatsApp}
-          className="fixed bottom-24 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white rounded-full shadow-lg dark:shadow-2xl flex items-center justify-center transition-colors"
+          className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-colors hover:bg-green-600 dark:bg-green-600 dark:shadow-2xl dark:hover:bg-green-700"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           aria-label="Contact us on WhatsApp"

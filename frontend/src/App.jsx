@@ -24,6 +24,7 @@ const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const SafetyStandards = lazy(() => import('./pages/SafetyStandards'));
 const Branches = lazy(() => import('./pages/Branches'));
 const LocationPage = lazy(() => import('./pages/LocationPage'));
+const SeoLandingPage = lazy(() => import('./pages/SeoLandingPage'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const ProductDetail = lazy(() => import('./pages/products/ProductDetail'));
@@ -52,11 +53,11 @@ function App() {
                   <Route path="/ar/products" element={<ArabicPage pageKey="products" />} />
                   <Route path="/ar/services" element={<ArabicPage pageKey="services" />} />
                   <Route path="/ar/contact-us" element={<ArabicPage pageKey="contact" />} />
-                  <Route path="/products" element={<Products />} />
+                  <Route path="/products" element={<Navigate to="/aluminum-scaffolding-abu-dhabi" replace />} />
                   <Route path="/aluminum-scaffolding-abu-dhabi" element={<Products />} />
                   <Route path="/aluminum-scaffolding-dubai" element={<Navigate to="/aluminum-scaffolding-abu-dhabi" replace />} />
                   <Route path="/products/:productId" element={<ProductDetail />} />
-                  <Route path="/services" element={<Services />} />
+                  <Route path="/services" element={<Navigate to="/construction-scaffolding-uae" replace />} />
                   <Route path="/construction-scaffolding-uae" element={<Services />} />
                   <Route path="/services/:serviceId" element={<ServiceDetail />} />
                   <Route path="/about-us" element={<AboutUs />} />
@@ -67,14 +68,20 @@ function App() {
                   <Route path="/branches" element={<Branches />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
-                  <Route path="/scaffolding-rental-dubai" element={<Navigate to="/scaffolding-rental-abu-dhabi" replace />} />
+                  <Route path="/faq" element={<SeoLandingPage pageKey="faq" />} />
+                  <Route path="/scaffolding-for-sale" element={<SeoLandingPage pageKey="for-sale" />} />
+                  <Route path="/scaffolding-rental-uae" element={<SeoLandingPage pageKey="rental-uae" />} />
+                  <Route path="/scaffolding-inspection-uae" element={<SeoLandingPage pageKey="inspection" />} />
+                  <Route path="/scaffolding-manpower-supply" element={<SeoLandingPage pageKey="manpower" />} />
+                  <Route path="/scaffolding-rental-dubai" element={<SeoLandingPage pageKey="dubai" />} />
                   <Route path="/blog/scaffolding-rental-cost-dubai-2026" element={<Navigate to="/blog/scaffolding-rental-cost-abu-dhabi-2026" replace />} />
                   <Route path="/scaffolding-rental-abu-dhabi" element={<LocationPage locationKey="abu-dhabi" />} />
                   <Route path="/scaffolding-rental-musaffah" element={<LocationPage locationKey="musaffah" />} />
                   <Route path="/scaffolding-rental-kizad" element={<LocationPage locationKey="kizad" />} />
                   <Route path="/scaffolding-hire-yas-island" element={<LocationPage locationKey="yas-island" />} />
                   <Route path="/scaffolding-near-me-uae" element={<LocationPage locationKey="near-me" />} />
-                  <Route path="/alcoa-scaffolding" element={<AboutUs />} />
+                  <Route path="/alcoa-scaffolding" element={<Navigate to="/about-us" replace />} />
+                  <Route path="/404" element={<NotFound />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

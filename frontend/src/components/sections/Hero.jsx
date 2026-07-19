@@ -39,7 +39,7 @@ const Hero = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex items-center bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900 overflow-hidden">
+    <section className="relative flex min-h-[100svh] items-center overflow-hidden bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50 dark:from-gray-900 dark:via-slate-800 dark:to-gray-900">
       {/* Industrial Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -55,7 +55,7 @@ const Hero = () => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-12 xl:gap-16 items-center min-h-screen py-6 sm:py-8 lg:py-12 xl:py-20">
+        <div className="grid grid-cols-1 items-center gap-4 py-6 sm:gap-6 sm:py-8 lg:grid-cols-2 lg:gap-12 lg:py-12 xl:gap-16 xl:py-20">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}

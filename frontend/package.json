@@ -3,15 +3,18 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "dev:local": "vite --mode development",
     "dev:prod": "vite --mode production",
-    "build": "vite build",
-    "build:prerender": "vite build --mode prerender",
+    "build": "vite build && node scripts/inject-prerender-meta.mjs",
+    "build:prerender": "vite build --mode prerender && node scripts/inject-prerender-meta.mjs",
     "lighthouse": "npm run build && npx @lhci/cli autorun",
     "build:dev": "vite build --mode development",
-    "build:prod": "vite build --mode production",
+    "build:prod": "vite build --mode production && node scripts/inject-prerender-meta.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

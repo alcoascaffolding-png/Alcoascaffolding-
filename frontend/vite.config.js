@@ -14,9 +14,7 @@ const staticRoutes = [
   '/ar/products',
   '/ar/services',
   '/ar/contact-us',
-  // /products is omitted — canonical is /aluminum-scaffolding-abu-dhabi
   '/aluminum-scaffolding-abu-dhabi',
-  // /services is omitted — canonical is /construction-scaffolding-uae
   '/construction-scaffolding-uae',
   '/about-us',
   '/contact-us',
@@ -32,8 +30,14 @@ const staticRoutes = [
   '/branches',
   '/scaffolding-rental-abu-dhabi',
   '/scaffolding-rental-musaffah',
+  '/scaffolding-rental-dubai',
   '/scaffolding-rental-kizad',
   '/scaffolding-hire-yas-island',
+  '/scaffolding-rental-uae',
+  '/scaffolding-for-sale',
+  '/scaffolding-inspection-uae',
+  '/scaffolding-manpower-supply',
+  '/faq',
   '/blog',
   '/blog/scaffolding-rental-cost-abu-dhabi-2026',
   '/blog/aluminium-vs-steel-scaffolding-uae',
@@ -43,6 +47,8 @@ const staticRoutes = [
   '/blog/mobile-scaffolding-tower-setup-guide',
   '/blog/industrial-scaffolding-oil-gas-abu-dhabi',
   '/blog/weekly-monthly-scaffolding-rental-abu-dhabi',
+  '/blog/how-to-choose-scaffolding-company-uae',
+  '/blog/types-of-scaffolding-uae-construction',
   '/products/aluminium-scaffolding',
   '/products/ladders',
   '/products/steel-cuplock-scaffolding',
@@ -68,9 +74,12 @@ export default defineConfig(async ({ mode }) => {
     Sitemap({
       hostname: 'https://alcoascaffolding.com',
       dynamicRoutes: sitemapRoutes,
+      generateRobotsTxt: false,
     }),
   ]
 
+  // Optional Puppeteer prerender — prefer postbuild meta injection for Vercel stability.
+  // Enable with: npm run build:prerender
   if (mode === 'prerender') {
     const { default: vitePrerender } = await import('vite-plugin-prerender')
     plugins.push(
@@ -79,7 +88,8 @@ export default defineConfig(async ({ mode }) => {
         routes: sitemapRoutes,
         renderer: new vitePrerender.PuppeteerRenderer({
           renderAfterDocumentEvent: 'render-event',
-          maxConcurrentRoutes: 4,
+          maxConcurrentRoutes: 2,
+          timeout: 60000,
         }),
       })
     )

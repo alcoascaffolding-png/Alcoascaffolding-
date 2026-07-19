@@ -20,8 +20,11 @@ const ArabicPage = ({ pageKey }) => {
       <SEOHead
         title={page.title}
         description={page.description}
+        keywords={page.keywords}
         canonical={page.path}
         alternates={alternates}
+        ogLocale="ar_AE"
+        htmlLang="ar"
       />
       <section className="section-padding py-12 sm:py-16">
         <div className="container-custom max-w-4xl">
