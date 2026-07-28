@@ -22,6 +22,15 @@
    - `/blog/scaffolding-rental-cost-abu-dhabi-2026`
    - `/ar`
 
+https://alcoascaffolding.com/sitemap.xml
+https://alcoascaffolding.com/scaffolding-rental-abu-dhabi
+https://alcoascaffolding.com/scaffolding-rental-dubai
+https://alcoascaffolding.com/scaffolding-rental-musaffah
+https://alcoascaffolding.com/services/rental
+https://alcoascaffolding.com/aluminum-scaffolding-abu-dhabi
+https://alcoascaffolding.com/scaffolding-for-sale
+https://alcoascaffolding.com/contact-us
+
 ## Monitor weekly (first month)
 
 - Coverage / Page indexing: soft 404s, redirects, duplicate without user-selected canonical
