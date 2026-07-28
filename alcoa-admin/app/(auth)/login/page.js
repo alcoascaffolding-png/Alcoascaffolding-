@@ -13,9 +13,9 @@ export default function LoginPage() {
   const year = new Date().getFullYear();
 
   return (
-    <Providers>
+    <Providers forcedTheme="light">
       <SessionProvider>
-        <div className="min-h-screen grid lg:grid-cols-2">
+        <div className="login-surface min-h-screen grid lg:grid-cols-2">
         {/* Left — brand */}
         <div className="relative hidden lg:flex flex-col items-center justify-center bg-primary px-12 py-16 overflow-hidden">
           <div

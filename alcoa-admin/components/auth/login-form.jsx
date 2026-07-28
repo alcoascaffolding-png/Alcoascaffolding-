@@ -145,7 +145,7 @@ export function LoginForm() {
           placeholder="admin@alcoascaffolding.ae"
           {...register("email")}
           aria-invalid={!!errors.email}
-          className="h-11 border-slate-200 bg-slate-50/50 focus-visible:bg-white"
+          className="h-11 border-slate-200 bg-slate-50/50 text-slate-900 caret-slate-900 placeholder:text-slate-400 focus-visible:bg-white"
         />
         {errors.email && (
           <p className="text-sm text-destructive" role="alert">
@@ -165,7 +165,7 @@ export function LoginForm() {
           placeholder="••••••••"
           {...register("password")}
           aria-invalid={!!errors.password}
-          className="h-11 border-slate-200 bg-slate-50/50 focus-visible:bg-white"
+          className="h-11 border-slate-200 bg-slate-50/50 text-slate-900 caret-slate-900 placeholder:text-slate-400 focus-visible:bg-white"
         />
         {errors.password && (
           <p className="text-sm text-destructive" role="alert">

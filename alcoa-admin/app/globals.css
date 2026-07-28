@@ -248,6 +248,39 @@
     -webkit-text-fill-color: var(--foreground) !important;
     caret-color: var(--foreground);
   }
+
+  /* Login stays light even if html still has .dark after client-side logout */
+  .login-surface {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #0f172a;
+    --card: #ffffff;
+    --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
+    --primary: #1d3a6c;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: color-mix(in srgb, #1d3a6c 10%, #ffffff);
+    --accent-foreground: #1d3a6c;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #1d3a6c;
+  }
+
+  .login-surface input:-webkit-autofill,
+  .login-surface input:-webkit-autofill:hover,
+  .login-surface input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+    box-shadow: 0 0 0 1000px #f8fafc inset !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #0f172a;
+  }
 }
 
 @layer utilities {

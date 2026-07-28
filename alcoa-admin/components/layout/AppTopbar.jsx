@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Menu, LogOut, Sun, Moon, ChevronDown, Search } from "lucide-react";
 import { useTheme } from "@wrksz/themes/client";
@@ -42,7 +41,6 @@ function ThemeToggle() {
 
 export function AppTopbar({ onToggleSidebar }) {
   const { data: session } = useSession();
-  const router = useRouter();
   const { setOpen: setCommandOpen } = useCommandPalette();
   const [isMac, setIsMac] = useState(false);
 
@@ -63,7 +61,10 @@ export function AppTopbar({ onToggleSidebar }) {
   async function handleSignOut() {
     await signOut({ redirect: false });
     toast.success("Signed out successfully");
-    router.push("/login");
+    // Full navigation so login remounts with forced light theme (avoids dark-mode input clash)
+    window.setTimeout(() => {
+      window.location.assign("/login");
+    }, 400);
   }
 
   return (

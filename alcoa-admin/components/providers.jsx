@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 import { AppLoadingChrome } from "@/components/app-loading-chrome";
 
-export function Providers({ children }) {
+export function Providers({ children, forcedTheme }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -30,6 +30,7 @@ export function Providers({ children }) {
       attribute="class"
       defaultTheme="system"
       enableSystem
+      forcedTheme={forcedTheme}
       disableTransitionOnChange={false}
       storage="localStorage"
       storageKey="theme"
