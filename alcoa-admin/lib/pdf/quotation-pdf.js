@@ -893,6 +893,44 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           <td class="summary-value net-total-value amount-col">${formatPdfSummaryAmount(displayBalance)}</td>
         </tr>`
       : "";
+
+    const chargeSummaryRows = [
+      Number(deliveryCharges) > 0
+        ? `
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Delivery</td>
+          <td class="summary-value amount-col">${formatPdfAmount(deliveryCharges)}</td>
+        </tr>`
+        : "",
+      Number(installationCharges) > 0
+        ? `
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Installation</td>
+          <td class="summary-value amount-col">${formatPdfAmount(installationCharges)}</td>
+        </tr>`
+        : "",
+      Number(pickupCharges) > 0
+        ? `
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Pickup</td>
+          <td class="summary-value amount-col">${formatPdfAmount(pickupCharges)}</td>
+        </tr>`
+        : "",
+      Number(discountValue) > 0
+        ? `
+        <tr class="items-summary-row">
+          <td colspan="7"></td>
+          <td colspan="2" class="summary-label">Discount${
+            discountType === "percentage" ? ` (${discount}%)` : ""
+          }</td>
+          <td class="summary-value amount-col">-${formatPdfAmount(discountValue)}</td>
+        </tr>`
+        : "",
+    ].join("");
+
     return `
       <tfoot class="items-totals-foot">
         <tr class="items-grand-total-row">
@@ -906,7 +944,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           <td></td>
           <td></td>
           <td></td>
-        </tr>
+        </tr>${chargeSummaryRows}
         <tr class="items-summary-row">
           <td colspan="7"></td>
           <td colspan="2" class="summary-label">Total w/o VAT</td>
