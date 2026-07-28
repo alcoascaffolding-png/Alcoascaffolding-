@@ -145,10 +145,10 @@ export function LoginForm() {
           placeholder="admin@alcoascaffolding.ae"
           {...register("email")}
           aria-invalid={!!errors.email}
-          className="h-11 border-slate-200 bg-slate-50/50 text-slate-900 caret-slate-900 placeholder:text-slate-400 focus-visible:bg-white"
+          className="login-input h-11 border-slate-200 !bg-slate-50 !text-slate-900 caret-slate-900 placeholder:!text-slate-400 focus-visible:!bg-white focus-visible:!ring-[#1d3a6c]"
         />
         {errors.email && (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-sm text-red-600" role="alert">
             {errors.email.message}
           </p>
         )}
@@ -165,10 +165,10 @@ export function LoginForm() {
           placeholder="••••••••"
           {...register("password")}
           aria-invalid={!!errors.password}
-          className="h-11 border-slate-200 bg-slate-50/50 text-slate-900 caret-slate-900 placeholder:text-slate-400 focus-visible:bg-white"
+          className="login-input h-11 border-slate-200 !bg-slate-50 !text-slate-900 caret-slate-900 placeholder:!text-slate-400 focus-visible:!bg-white focus-visible:!ring-[#1d3a6c]"
         />
         {errors.password && (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-sm text-red-600" role="alert">
             {errors.password.message}
           </p>
         )}
@@ -178,7 +178,7 @@ export function LoginForm() {
         type="submit"
         disabled={isLoading}
         aria-busy={isLoading || undefined}
-        className="h-11 w-full gap-2"
+        className="login-submit h-11 w-full gap-2 !bg-[#1d3a6c] !text-white hover:!bg-[#152d56]"
       >
         {isLoading ? (
           <>

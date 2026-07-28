@@ -271,6 +271,60 @@
     --border: #e2e8f0;
     --input: #e2e8f0;
     --ring: #1d3a6c;
+    /* Tailwind @theme tokens (bg-primary / bg-background resolve here) */
+    --color-background: #ffffff;
+    --color-foreground: #0f172a;
+    --color-card: #ffffff;
+    --color-card-foreground: #0f172a;
+    --color-primary: #1d3a6c;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #f1f5f9;
+    --color-secondary-foreground: #0f172a;
+    --color-muted: #f1f5f9;
+    --color-muted-foreground: #64748b;
+    --color-accent: color-mix(in srgb, #1d3a6c 10%, #ffffff);
+    --color-accent-foreground: #1d3a6c;
+    --color-destructive: #dc2626;
+    --color-destructive-foreground: #ffffff;
+    --color-border: #e2e8f0;
+    --color-input: #e2e8f0;
+    --color-ring: #1d3a6c;
+  }
+
+  .login-surface input,
+  .login-surface input.login-input {
+    color-scheme: light;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #0f172a !important;
+  }
+
+  .login-surface input:focus,
+  .login-surface input:focus-visible,
+  .login-surface input.login-input:focus,
+  .login-surface input.login-input:focus-visible {
+    background-color: #ffffff !important;
+  }
+
+  .login-surface input::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+  }
+
+  .login-surface button.login-submit {
+    background-color: #1d3a6c !important;
+    color: #ffffff !important;
+  }
+
+  .login-surface button.login-submit:hover:not(:disabled) {
+    background-color: #152d56 !important;
+  }
+
+  .login-surface button[aria-label="Show password"],
+  .login-surface button[aria-label="Hide password"] {
+    color: #64748b !important;
   }
 
   .login-surface input:-webkit-autofill,

@@ -31,6 +31,7 @@ export function Providers({ children, forcedTheme }) {
       defaultTheme="system"
       enableSystem
       forcedTheme={forcedTheme}
+      enableColorScheme={!forcedTheme}
       disableTransitionOnChange={false}
       storage="localStorage"
       storageKey="theme"
