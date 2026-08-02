@@ -4,6 +4,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
+import { normalizeOptionalObjectId } from "@/lib/normalize-object-id";
 import { parseRequestBody } from "@/lib/validate-request";
 import { quotationCreateSchema } from "@/lib/schemas/quotation";
 import { Customer, Quotation } from "@/lib/mongoose-models";
@@ -102,7 +103,8 @@ export const POST = withErrorHandler(async (request) => {
     throw new AppError("Valid until must be on or after quote date", 400);
   }
 
-  const { customer: _dropCustomer, ...rest } = body;
+  const { customer: _dropCustomer, bankAccount: _dropBank, ...rest } = body;
+  const bankAccount = normalizeOptionalObjectId(body.bankAccount);
   const payload = {
     ...rest,
     customer: customerId,
@@ -112,6 +114,7 @@ export const POST = withErrorHandler(async (request) => {
     currency: body.currency || "AED",
     discountType: body.discountType || "fixed",
   };
+  if (bankAccount) payload.bankAccount = bankAccount;
 
   if (!payload.quoteNumber) {
     payload.quoteNumber = await Quotation.generateQuoteNumber(quoteDate);

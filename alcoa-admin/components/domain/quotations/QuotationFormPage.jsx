@@ -528,6 +528,12 @@ export function QuotationFormPage({ id }) {
       } else {
         delete payload.customer;
       }
+      const bankId = String(values.bankAccount || "").trim();
+      if (bankId && bankId !== "__none__") {
+        payload.bankAccount = bankId;
+      } else {
+        delete payload.bankAccount;
+      }
 
       const url = isEdit ? `/api/quotations/${id}` : "/api/quotations";
       const method = isEdit ? "PATCH" : "POST";

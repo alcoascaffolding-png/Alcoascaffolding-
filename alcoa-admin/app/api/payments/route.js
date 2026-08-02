@@ -4,6 +4,7 @@ import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler } from "@/lib/api-error";
 import { createListHandlers } from "@/lib/crud-factory";
 import { createPaymentWithAllocation } from "@/lib/payment-service";
+import { normalizeOptionalObjectId } from "@/lib/normalize-object-id";
 
 const { GET } = createListHandlers(() => import("@/models/Payment"), "Payment", "payments");
 
@@ -25,8 +26,7 @@ const POST = withErrorHandler(async (request) => {
     vendor: body.vendor,
     vendorName: body.vendorName,
     paymentMethod: body.paymentMethod,
-    bankAccount:
-      body.bankAccount && body.bankAccount !== "__none__" ? body.bankAccount : undefined,
+    bankAccount: normalizeOptionalObjectId(body.bankAccount),
     reference: body.reference,
     notes: body.notes,
     paymentDate: body.paymentDate,

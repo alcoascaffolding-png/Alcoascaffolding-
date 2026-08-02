@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Customer from "@/models/Customer";
 import { AppError } from "@/lib/api-error";
 import { getLinkedCustomerId } from "@/lib/map-customer-to-quotation";
+import { normalizeOptionalObjectId } from "@/lib/normalize-object-id";
 
 function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -150,9 +151,9 @@ export function applyQuotationPatch(doc, body) {
     doc.markModified("bankDetails");
   }
   if (Object.prototype.hasOwnProperty.call(body, "bankAccount")) {
-    const raw = body.bankAccount;
-    if (raw && mongoose.Types.ObjectId.isValid(String(raw))) {
-      doc.bankAccount = new mongoose.Types.ObjectId(String(raw));
+    const bankAccountId = normalizeOptionalObjectId(body.bankAccount);
+    if (bankAccountId) {
+      doc.bankAccount = bankAccountId;
     } else {
       doc.set("bankAccount", undefined);
     }

@@ -4,6 +4,7 @@ import { withErrorHandler } from "@/lib/api-error";
 import { createListHandlers } from "@/lib/crud-factory";
 import { authorizeApi } from "@/lib/api-guard";
 import { createReceiptWithPayment } from "@/lib/receipt-service";
+import { normalizeOptionalObjectId } from "@/lib/normalize-object-id";
 import { logAudit } from "@/lib/audit-log";
 
 const { GET } = createListHandlers(() => import("@/models/Receipt"), "Receipt", "receipts");
@@ -25,8 +26,7 @@ const POST = withErrorHandler(async (request) => {
     customer: body.customer,
     customerName: body.customerName,
     paymentMethod: body.paymentMethod,
-    bankAccount:
-      body.bankAccount && body.bankAccount !== "__none__" ? body.bankAccount : undefined,
+    bankAccount: normalizeOptionalObjectId(body.bankAccount),
     reference: body.reference,
     notes: body.notes,
     receiptDate: body.receiptDate,

@@ -88,6 +88,8 @@ export const quotationCreateSchema = z
     internalNotes: z.string().optional(),
     termsAndConditions: z.string().optional(),
     quoteNumber: z.string().optional(),
+    /** Empty / "__none__" kept as-is here; API normalizes before Mongoose. */
+    bankAccount: z.union([z.string(), z.null()]).optional(),
   })
   .passthrough();
 
