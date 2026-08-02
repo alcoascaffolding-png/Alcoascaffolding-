@@ -11,24 +11,74 @@ function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Yearly sequential PO numbers: PO-YYYY-#### (independent of PI / sales docs). */
-export async function generatePONumber(baseDate = new Date()) {
-  const y = new Date(baseDate).getFullYear();
-  const prefix = `PO-${y}-`;
-  const count = await PurchaseOrder.countDocuments({
-    poNumber: { $regex: `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}` },
-  });
-  return `${prefix}${String(count + 1).padStart(4, "0")}`;
+/** dd + mm + yy from document date — e.g. 2 Aug 2026 → 020826 */
+function purchaseDocDatePart(baseDate) {
+  const d = new Date(baseDate);
+  if (Number.isNaN(d.getTime())) {
+    throw new AppError("Invalid date for purchase document number", 400);
+  }
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}${mm}${yy}`;
 }
 
-/** Yearly sequential PI numbers: PI-YYYY-#### (never copies the source PO number). */
+/**
+ * Next 4-digit sequence for the calendar year (resets each year).
+ * Considers new POddmmyy#### / PIddmmyy#### and legacy PO-YYYY-#### / PI-YYYY-####.
+ */
+async function nextYearlyPurchaseSequence(Model, field, prefix, year) {
+  const yy = String(year).slice(-2);
+  const newFmt = new RegExp(`^${prefix}\\d{4}${yy}\\d{4}$`);
+  const legacyFmt = new RegExp(`^${prefix}-${year}-(\\d{4})$`);
+  const docs = await Model.find({
+    $or: [
+      { [field]: { $regex: newFmt } },
+      { [field]: { $regex: `^${escapeRegex(`${prefix}-${year}-`)}` } },
+    ],
+  })
+    .select(field)
+    .lean();
+
+  let max = 0;
+  for (const doc of docs) {
+    const v = String(doc[field] || "");
+    let seq = 0;
+    if (newFmt.test(v)) {
+      seq = parseInt(v.slice(-4), 10) || 0;
+    } else {
+      const m = v.match(legacyFmt);
+      if (m) seq = parseInt(m[1], 10) || 0;
+    }
+    if (seq > max) max = seq;
+  }
+  return max + 1;
+}
+
+/** Yearly sequential PO numbers: POddmmyy#### e.g. PO0208260001 (independent of PI / sales docs). */
+export async function generatePONumber(baseDate = new Date()) {
+  const d = new Date(baseDate);
+  const datePart = purchaseDocDatePart(d);
+  const seq = await nextYearlyPurchaseSequence(
+    PurchaseOrder,
+    "poNumber",
+    "PO",
+    d.getFullYear()
+  );
+  return `PO${datePart}${String(seq).padStart(4, "0")}`;
+}
+
+/** Yearly sequential PI numbers: PIddmmyy#### e.g. PI0208260001 (never copies the source PO number). */
 export async function generatePurchaseInvoiceNumber(baseDate = new Date()) {
-  const y = new Date(baseDate).getFullYear();
-  const prefix = `PI-${y}-`;
-  const count = await PurchaseInvoice.countDocuments({
-    invoiceNumber: { $regex: `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}` },
-  });
-  return `${prefix}${String(count + 1).padStart(4, "0")}`;
+  const d = new Date(baseDate);
+  const datePart = purchaseDocDatePart(d);
+  const seq = await nextYearlyPurchaseSequence(
+    PurchaseInvoice,
+    "invoiceNumber",
+    "PI",
+    d.getFullYear()
+  );
+  return `PI${datePart}${String(seq).padStart(4, "0")}`;
 }
 
 export function normalizePurchaseLineItems(items = []) {
@@ -131,19 +181,20 @@ export async function syncPurchaseOrderStock(prevDoc, nextDoc, userId) {
   return false;
 }
 
-/** Convert PO → PI: fresh PI-YYYY-####, linked via purchaseOrder FK. */
+/** Convert PO → PI: fresh PIddmmyy####, linked via purchaseOrder FK. */
 export async function createPurchaseInvoiceFromPO(po, userId) {
   const existing = await PurchaseInvoice.findOne({ purchaseOrder: po._id });
   if (existing) return existing;
 
   const { items, subtotal, vatAmount, total } = recalculatePurchaseTotals(po.items);
+  const invoiceDate = new Date();
 
   return PurchaseInvoice.create({
-    invoiceNumber: await generatePurchaseInvoiceNumber(po.orderDate || new Date()),
+    invoiceNumber: await generatePurchaseInvoiceNumber(invoiceDate),
     vendor: po.vendor,
     vendorName: po.vendorName,
     purchaseOrder: po._id,
-    invoiceDate: new Date(),
+    invoiceDate,
     dueDate: po.deliveryDate,
     paymentStatus: "unpaid",
     items,

@@ -798,7 +798,12 @@ async function seed() {
     const vatAmount = parseFloat((subtotal * 0.05).toFixed(2));
     const status = PO_STATUSES[i % PO_STATUSES.length];
     purchaseOrderDocs.push({
-      poNumber: `PO-2026-${String(i + 1).padStart(4, "0")}`,
+      poNumber: (() => {
+        const dd = String(orderDate.getDate()).padStart(2, "0");
+        const mm = String(orderDate.getMonth() + 1).padStart(2, "0");
+        const yy = String(orderDate.getFullYear()).slice(-2);
+        return `PO${dd}${mm}${yy}${String(i + 1).padStart(4, "0")}`;
+      })(),
       vendor: vendor._id,
       vendorName: vendor.companyName,
       orderDate,
@@ -826,7 +831,12 @@ async function seed() {
     const paymentStatus = PI_STATUSES[i % PI_STATUSES.length];
     const paidAmount = paymentStatus === "paid" ? po.total : paymentStatus === "partially_paid" ? parseFloat((po.total * 0.5).toFixed(2)) : 0;
     return {
-      invoiceNumber: `PI-2026-${String(i + 1).padStart(4, "0")}`,
+      invoiceNumber: (() => {
+        const dd = String(invoiceDate.getDate()).padStart(2, "0");
+        const mm = String(invoiceDate.getMonth() + 1).padStart(2, "0");
+        const yy = String(invoiceDate.getFullYear()).slice(-2);
+        return `PI${dd}${mm}${yy}${String(i + 1).padStart(4, "0")}`;
+      })(),
       vendor: vendor._id,
       vendorName: vendor.companyName,
       purchaseOrder: po._id,

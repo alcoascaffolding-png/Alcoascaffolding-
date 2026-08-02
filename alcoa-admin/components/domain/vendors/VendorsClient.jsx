@@ -24,7 +24,7 @@ const schema = z.object({
 
 const statusColors = { active: "success", inactive: "secondary", blocked: "destructive" };
 const columns = [
-  { accessorKey: "vendorCode", header: "Code", size: 90 },
+  { accessorKey: "vendorCode", header: "Code", size: 130 },
   { accessorKey: "companyName", header: "Company", cell: ({ row }) => <span className="font-medium">{row.original.companyName}</span> },
   { accessorKey: "contactPerson", header: "Contact" },
   { accessorKey: "vatNumber", header: "VAT/TRN", size: 110 },

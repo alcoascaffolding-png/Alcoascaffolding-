@@ -1,6 +1,10 @@
 /**
- * Migrate document numbers: QT (quotation), SO (sales order), SI (sales invoice).
- * Each module keeps an independent sequence (numbers are not shared across types).
+ * Migrate document numbers to PREFIX + ddmmyy + #### (yearly sequential).
+ * Each module (QT / SO / SI) keeps an independent sequence — numbers are never
+ * shared or copied across types.
+ *
+ * Already-valid new-format IDs are left unchanged. Legacy PREFIX + YYMMDD + 3
+ * random digits and other shapes are reassigned.
  *
  * Run (dry-run):  npm run migrate:document-numbers
  * Apply changes:  npm run migrate:document-numbers -- --apply
@@ -14,7 +18,6 @@ import { pathToFileURL } from "url";
 import { getMongoDbName } from "../lib/db.js";
 import {
   formatDocumentNumber,
-  randomDocumentSuffix,
   DOCUMENT_NUMBER_REGEX,
   DOCUMENT_PREFIX,
 } from "../lib/document-number.js";
@@ -35,25 +38,55 @@ async function loadModel(name, file) {
   return mod.default;
 }
 
-function hasDocumentPrefix(value, prefix) {
-  return Boolean(value && new RegExp(`^${prefix}\\d{9}$`).test(value));
+/** True when value already matches the current PREFIXddmmyy#### format for this module. */
+function hasCurrentFormat(value, prefix) {
+  return Boolean(value && new RegExp(`^${prefix}\\d{10}$`).test(String(value)));
 }
 
-function allocateNumber(usedSet, baseDate, prefix) {
-  for (let i = 0; i < 200; i++) {
-    const candidate = formatDocumentNumber(prefix, baseDate, randomDocumentSuffix());
+/**
+ * Allocate next yearly sequential number for a module, tracking in-memory used set
+ * so batch migration does not collide before writes.
+ */
+function allocateNumber(usedSet, yearSeqMap, baseDate, prefix) {
+  const d = new Date(baseDate);
+  const year = d.getFullYear();
+  const key = `${prefix}:${year}`;
+  let seq = yearSeqMap.get(key) || 0;
+
+  for (let i = 0; i < 10000; i++) {
+    seq += 1;
+    const candidate = formatDocumentNumber(prefix, d, seq);
     if (!usedSet.has(candidate)) {
       usedSet.add(candidate);
+      yearSeqMap.set(key, seq);
       return candidate;
     }
   }
-  throw new Error(`Could not allocate unique number for date ${baseDate}`);
+  throw new Error(`Could not allocate unique number for ${prefix} year ${year}`);
 }
 
-function seedUsedFromExisting(docs, field, usedSet) {
+function seedUsedAndSeqFromExisting(docs, field, prefix, usedSet, yearSeqMap) {
+  const newFmtByYear = (year) => {
+    const yy = String(year).slice(-2);
+    return new RegExp(`^${prefix}\\d{4}${yy}\\d{4}$`);
+  };
+
   for (const doc of docs) {
     const v = doc[field];
-    if (v && DOCUMENT_NUMBER_REGEX.test(v)) usedSet.add(v);
+    if (!v) continue;
+    const s = String(v);
+    if (DOCUMENT_NUMBER_REGEX.test(s) && s.startsWith(prefix)) {
+      usedSet.add(s);
+      // Extract year from ddmmyy (positions 6-7 after prefix are yy)
+      const yy = s.slice(6, 8);
+      const year = 2000 + parseInt(yy, 10);
+      const seq = parseInt(s.slice(-4), 10) || 0;
+      if (newFmtByYear(year).test(s)) {
+        const key = `${prefix}:${year}`;
+        const prev = yearSeqMap.get(key) || 0;
+        if (seq > prev) yearSeqMap.set(key, seq);
+      }
+    }
   }
 }
 
@@ -74,62 +107,50 @@ async function main() {
   ]);
 
   const used = new Set();
-  seedUsedFromExisting(quotations, "quoteNumber", used);
-  seedUsedFromExisting(orders, "orderNumber", used);
-  seedUsedFromExisting(invoices, "invoiceNumber", used);
+  const yearSeq = new Map();
+
+  seedUsedAndSeqFromExisting(quotations, "quoteNumber", DOCUMENT_PREFIX.QUOTATION, used, yearSeq);
+  seedUsedAndSeqFromExisting(orders, "orderNumber", DOCUMENT_PREFIX.SALES_ORDER, used, yearSeq);
+  seedUsedAndSeqFromExisting(invoices, "invoiceNumber", DOCUMENT_PREFIX.SALES_INVOICE, used, yearSeq);
 
   const quoteNewById = new Map();
   const orderNewById = new Map();
   const invoiceNewById = new Map();
 
   for (const q of quotations) {
-    if (hasDocumentPrefix(q.quoteNumber, DOCUMENT_PREFIX.QUOTATION)) {
+    if (hasCurrentFormat(q.quoteNumber, DOCUMENT_PREFIX.QUOTATION)) {
       quoteNewById.set(String(q._id), q.quoteNumber);
       continue;
     }
     const baseDate = q.quoteDate || q.createdAt || new Date();
-    const next = allocateNumber(used, baseDate, DOCUMENT_PREFIX.QUOTATION);
-    quoteNewById.set(String(q._id), next);
-  }
-
-  const orderByQuotation = new Map();
-  for (const o of orders) {
-    const qid = o.quotation ? String(o.quotation) : null;
-    if (qid) orderByQuotation.set(qid, o);
+    quoteNewById.set(
+      String(q._id),
+      allocateNumber(used, yearSeq, baseDate, DOCUMENT_PREFIX.QUOTATION)
+    );
   }
 
   for (const o of orders) {
-    const qid = o.quotation ? String(o.quotation) : null;
-    if (qid && quoteNewById.has(qid)) {
-      orderNewById.set(String(o._id), quoteNewById.get(qid));
-      continue;
-    }
-    if (hasDocumentPrefix(o.orderNumber, DOCUMENT_PREFIX.SALES_ORDER)) {
+    if (hasCurrentFormat(o.orderNumber, DOCUMENT_PREFIX.SALES_ORDER)) {
       orderNewById.set(String(o._id), o.orderNumber);
       continue;
     }
     const baseDate = o.orderDate || o.createdAt || new Date();
-    orderNewById.set(String(o._id), allocateNumber(used, baseDate, DOCUMENT_PREFIX.SALES_ORDER));
-  }
-
-  const invoiceByOrder = new Map();
-  for (const inv of invoices) {
-    const sid = inv.salesOrder ? String(inv.salesOrder) : null;
-    if (sid) invoiceByOrder.set(sid, inv);
+    orderNewById.set(
+      String(o._id),
+      allocateNumber(used, yearSeq, baseDate, DOCUMENT_PREFIX.SALES_ORDER)
+    );
   }
 
   for (const inv of invoices) {
-    const sid = inv.salesOrder ? String(inv.salesOrder) : null;
-    if (sid && orderNewById.has(sid)) {
-      invoiceNewById.set(String(inv._id), orderNewById.get(sid));
-      continue;
-    }
-    if (hasDocumentPrefix(inv.invoiceNumber, DOCUMENT_PREFIX.SALES_INVOICE)) {
+    if (hasCurrentFormat(inv.invoiceNumber, DOCUMENT_PREFIX.SALES_INVOICE)) {
       invoiceNewById.set(String(inv._id), inv.invoiceNumber);
       continue;
     }
     const baseDate = inv.invoiceDate || inv.createdAt || new Date();
-    invoiceNewById.set(String(inv._id), allocateNumber(used, baseDate, DOCUMENT_PREFIX.SALES_INVOICE));
+    invoiceNewById.set(
+      String(inv._id),
+      allocateNumber(used, yearSeq, baseDate, DOCUMENT_PREFIX.SALES_INVOICE)
+    );
   }
 
   let quoteUpdates = 0;

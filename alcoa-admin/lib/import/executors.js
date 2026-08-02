@@ -1,13 +1,15 @@
 import { connectDB } from "@/lib/db";
 import { logAudit } from "@/lib/audit-log";
 import { assertValidCategory } from "@/lib/category-service";
+import {
+  formatVendorCode,
+  nextYearlyVendorSequence,
+} from "@/lib/vendor-code";
 import Product from "@/models/Product";
 import Vendor from "@/models/Vendor";
 import Customer from "@/models/Customer";
 import BankAccount from "@/models/BankAccount";
 import ContactMessage from "@/models/ContactMessage";
-
-const VENDOR_CODE_PREFIX = "VND";
 
 async function resolveVendorIdByCode(code, cache) {
   if (!code) return undefined;
@@ -97,24 +99,15 @@ export async function importProducts(rows, userId) {
 export async function importVendors(rows, userId) {
   const result = { created: 0, updated: 0, failed: 0, errors: [] };
 
-  const vendors = await Vendor.find({
-    vendorCode: { $regex: `^${VENDOR_CODE_PREFIX}-\\d+$` },
-  })
-    .select("vendorCode")
-    .lean();
-
-  let maxCode = vendors.reduce((highest, vendor) => {
-    const match = String(vendor.vendorCode || "").match(/^VND-(\d+)$/);
-    const n = match ? Number(match[1]) : 0;
-    return Number.isFinite(n) && n > highest ? n : highest;
-  }, 0);
+  const today = new Date();
+  let nextSeq = await nextYearlyVendorSequence(today.getFullYear());
 
   for (const { rowNumber, data } of rows) {
     try {
       let vendorCode = data.vendorCode?.trim();
       if (!vendorCode) {
-        maxCode += 1;
-        vendorCode = `${VENDOR_CODE_PREFIX}-${String(maxCode).padStart(3, "0")}`;
+        vendorCode = formatVendorCode(today, nextSeq);
+        nextSeq += 1;
       }
 
       const category = await assertValidCategory("vendor", data.category || "Supplier");

@@ -7,26 +7,9 @@ import { logAudit } from "@/lib/audit-log";
 import Vendor from "@/models/Vendor";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 import { assertValidCategory } from "@/lib/category-service";
+import { generateVendorCode } from "@/lib/vendor-code";
 
 const { GET } = createListHandlers(() => import("@/models/Vendor"), "Vendor", "vendors");
-
-const VENDOR_CODE_PREFIX = "VND";
-
-async function generateVendorCode() {
-  const vendors = await Vendor.find({
-    vendorCode: { $regex: `^${VENDOR_CODE_PREFIX}-\\d+$` },
-  })
-    .select("vendorCode")
-    .lean();
-
-  const max = vendors.reduce((highest, vendor) => {
-    const match = String(vendor.vendorCode || "").match(/^VND-(\d+)$/);
-    const n = match ? Number(match[1]) : 0;
-    return Number.isFinite(n) && n > highest ? n : highest;
-  }, 0);
-
-  return `${VENDOR_CODE_PREFIX}-${String(max + 1).padStart(3, "0")}`;
-}
 
 const POST = withErrorHandler(async (request) => {
   const session = await authorizeApi("vendors", "write");

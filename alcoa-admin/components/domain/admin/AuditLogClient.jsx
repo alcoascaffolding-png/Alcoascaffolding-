@@ -4,8 +4,17 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDate } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const actionColors = {
   create: "success",
@@ -14,6 +23,19 @@ const actionColors = {
   send_email: "warning",
   status_change: "outline",
 };
+
+/** Compact list-filter trigger — clear contrast like form/status selects, not washed-out. */
+const filterTriggerClassName =
+  "h-9 w-full min-w-[9.5rem] sm:w-[11.5rem] rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground shadow-sm hover:bg-muted/50 focus:ring-2 focus:ring-ring/30 focus:ring-offset-1 [&>span]:text-foreground [&_svg]:opacity-60";
+
+const filterContentClassName =
+  "rounded-lg border-border/80 bg-popover p-1 shadow-md";
+
+const filterItemClassName =
+  "cursor-pointer rounded-md py-2 pl-8 pr-3 text-sm font-medium focus:bg-accent focus:text-accent-foreground";
+
+const filterLabelClassName =
+  "px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground";
 
 const columns = [
   {
@@ -82,35 +104,89 @@ export function AuditLogClient() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <Select value={resource} onValueChange={setResource}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className={cn(filterTriggerClassName, "sm:w-[12.5rem]")}>
             <SelectValue placeholder="All modules" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All modules</SelectItem>
-            <SelectItem value="quotations">Quotations</SelectItem>
-            <SelectItem value="sales-orders">Sales orders</SelectItem>
-            <SelectItem value="sales-invoices">Tax invoices</SelectItem>
-            <SelectItem value="delivery-notes">Delivery notes</SelectItem>
-            <SelectItem value="purchase-orders">Purchase orders</SelectItem>
-            <SelectItem value="purchase-invoices">Purchase invoices</SelectItem>
-            <SelectItem value="products">Products</SelectItem>
-            <SelectItem value="receipts">Receipts</SelectItem>
-            <SelectItem value="payments">Payments</SelectItem>
-            <SelectItem value="users">Users</SelectItem>
+          <SelectContent className={filterContentClassName} position="popper">
+            <div className={filterLabelClassName}>Filter by module</div>
+            <SelectItem value="all" className={filterItemClassName}>
+              All modules
+            </SelectItem>
+            <SelectSeparator className="my-1 bg-border/60" />
+            <SelectGroup>
+              <SelectLabel className={cn(filterLabelClassName, "pl-2 font-semibold")}>
+                Sales
+              </SelectLabel>
+              <SelectItem value="quotations" className={filterItemClassName}>
+                Quotations
+              </SelectItem>
+              <SelectItem value="sales-orders" className={filterItemClassName}>
+                Sales orders
+              </SelectItem>
+              <SelectItem value="sales-invoices" className={filterItemClassName}>
+                Tax invoices
+              </SelectItem>
+              <SelectItem value="delivery-notes" className={filterItemClassName}>
+                Delivery notes
+              </SelectItem>
+              <SelectItem value="receipts" className={filterItemClassName}>
+                Receipts
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator className="my-1 bg-border/60" />
+            <SelectGroup>
+              <SelectLabel className={cn(filterLabelClassName, "pl-2 font-semibold")}>
+                Purchases
+              </SelectLabel>
+              <SelectItem value="purchase-orders" className={filterItemClassName}>
+                Purchase orders
+              </SelectItem>
+              <SelectItem value="purchase-invoices" className={filterItemClassName}>
+                Purchase invoices
+              </SelectItem>
+              <SelectItem value="payments" className={filterItemClassName}>
+                Payments
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator className="my-1 bg-border/60" />
+            <SelectGroup>
+              <SelectLabel className={cn(filterLabelClassName, "pl-2 font-semibold")}>
+                Other
+              </SelectLabel>
+              <SelectItem value="products" className={filterItemClassName}>
+                Products
+              </SelectItem>
+              <SelectItem value="users" className={filterItemClassName}>
+                Users
+              </SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
+
         <Select value={action} onValueChange={setAction}>
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className={cn(filterTriggerClassName, "sm:w-[10.5rem]")}>
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All actions</SelectItem>
-            <SelectItem value="create">Create</SelectItem>
-            <SelectItem value="update">Update</SelectItem>
-            <SelectItem value="delete">Delete</SelectItem>
-            <SelectItem value="send_email">Send email</SelectItem>
+          <SelectContent className={filterContentClassName} position="popper">
+            <div className={filterLabelClassName}>Filter by action</div>
+            <SelectItem value="all" className={filterItemClassName}>
+              All actions
+            </SelectItem>
+            <SelectSeparator className="my-1 bg-border/60" />
+            <SelectItem value="create" className={filterItemClassName}>
+              Create
+            </SelectItem>
+            <SelectItem value="update" className={filterItemClassName}>
+              Update
+            </SelectItem>
+            <SelectItem value="delete" className={filterItemClassName}>
+              Delete
+            </SelectItem>
+            <SelectItem value="send_email" className={filterItemClassName}>
+              Send email
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
