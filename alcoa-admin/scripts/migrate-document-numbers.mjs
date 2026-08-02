@@ -1,6 +1,6 @@
 /**
- * Migrate document numbers: QT (quotation), SO (standalone order), SI (standalone invoice).
- * Linked order uses quotation number; linked invoice uses order number.
+ * Migrate document numbers: QT (quotation), SO (sales order), SI (sales invoice).
+ * Each module keeps an independent sequence (numbers are not shared across types).
  *
  * Run (dry-run):  npm run migrate:document-numbers
  * Apply changes:  npm run migrate:document-numbers -- --apply
@@ -36,7 +36,7 @@ async function loadModel(name, file) {
 }
 
 function hasDocumentPrefix(value, prefix) {
-  return Boolean(value && new RegExp(`^${prefix}\\d{11}$`).test(value));
+  return Boolean(value && new RegExp(`^${prefix}\\d{9}$`).test(value));
 }
 
 function allocateNumber(usedSet, baseDate, prefix) {

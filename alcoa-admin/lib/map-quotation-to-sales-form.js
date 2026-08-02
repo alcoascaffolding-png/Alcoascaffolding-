@@ -7,7 +7,17 @@ export const QUOTATION_CONVERSION_EXCLUDED_STATUSES = [
   "converted_to_invoice",
   "rejected",
   "expired",
+  "draft",
+  "sent",
+  "viewed",
 ];
+
+/** Only Accepted (and legacy approved) quotations can be converted. */
+export const QUOTATION_CONVERTIBLE_STATUSES = ["accepted", "approved"];
+
+export function isQuotationConvertibleStatus(status) {
+  return QUOTATION_CONVERTIBLE_STATUSES.includes(String(status || ""));
+}
 
 export function getLinkedId(ref) {
   if (ref == null) return null;
@@ -63,7 +73,8 @@ export function quotationToSalesFormPatch(q) {
 export function buildQuotationSourceOptions(quotationList, linkedQuotationId) {
   const eligible = (quotationList || []).filter((q) => {
     if (linkedQuotationId && String(q._id) === String(linkedQuotationId)) return true;
-    return !QUOTATION_CONVERSION_EXCLUDED_STATUSES.includes(q.status);
+    if (QUOTATION_CONVERSION_EXCLUDED_STATUSES.includes(q.status)) return false;
+    return isQuotationConvertibleStatus(q.status);
   });
   return [
     { value: "__none__", label: "— None —" },

@@ -47,18 +47,6 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   }
 
   if (existing) {
-    if (!String(existing.invoiceNumber || "").startsWith("SI")) {
-      const repair = await SalesInvoice.findById(existing._id);
-      if (repair) {
-        repair.invoiceNumber = await resolveInvoiceNumberForCreate(
-          { invoiceDate: repair.invoiceDate || new Date() },
-          { Quotation, SalesOrder, SalesInvoice }
-        );
-        repair.recalculateTotals();
-        await repair.save();
-        existing = repair.toObject();
-      }
-    }
     if (order.quotation) {
       await Quotation.findByIdAndUpdate(order.quotation, {
         $set: {
@@ -113,7 +101,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   const dueDate = new Date(invoiceDate.getTime() + 30 * 86400000);
 
   const invoiceNumber = await resolveInvoiceNumberForCreate(
-    { salesOrderId: soid, invoiceDate },
+    { invoiceDate },
     { Quotation, SalesOrder, SalesInvoice }
   );
 

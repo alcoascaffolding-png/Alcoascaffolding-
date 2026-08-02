@@ -74,6 +74,7 @@ export function QuotationStatusChanger({
     return (
       <Badge
         variant="secondary"
+        title="Set by Convert to Sales Order / Invoice — not editable here"
         className="h-9 gap-2 rounded-md border px-3 font-medium whitespace-nowrap"
       >
         <span className={`h-2 w-2 rounded-full ${DISPLAY_DOTS[value] || "bg-muted-foreground"}`} />

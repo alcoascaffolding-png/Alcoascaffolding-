@@ -102,12 +102,15 @@ export const POST = withErrorHandler(async (request) => {
   }
 
   const qid = toObjectId(quotationRef);
-  if (qid) payload.quotation = qid;
+  if (qid) {
+    const sourceQuote = await Quotation.findById(qid).select("_id").lean();
+    if (!sourceQuote) throw new AppError("Quotation not found", 404);
+    payload.quotation = qid;
+  }
 
   try {
     payload.orderNumber = await resolveOrderNumberForCreate(
       {
-        quotationId: qid,
         orderDate: payload.orderDate,
         orderNumber,
       },

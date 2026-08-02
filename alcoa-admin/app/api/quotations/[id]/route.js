@@ -4,7 +4,7 @@ import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import { logAudit } from "@/lib/audit-log";
 import { applyQuotationPatch, normalizeQuotationPatchCustomer } from "@/lib/quotation-save";
-import { ensureSalesOrderFromQuotation } from "@/lib/convert-quotation-to-sales-order";
+import { ensureSalesOrderFromQuotation, QUOTATION_CONVERTIBLE_STATUSES } from "@/lib/convert-quotation-to-sales-order";
 import { ensureSalesInvoiceFromQuotation } from "@/lib/convert-quotation-to-invoice";
 import {
   markQuotationConvertedFromSalesOrder,
@@ -47,15 +47,30 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   const patchBody = await normalizeQuotationPatchCustomer(body, session.user.id);
   applyQuotationPatch(doc, patchBody);
   doc.lastModifiedBy = session.user.id;
-  await doc.save();
 
   const nextStatus = doc.status;
-  let conversion = null;
+  const enteringSalesOrderConversion =
+    ["converted", "converted_to_sales_order"].includes(nextStatus) &&
+    !["converted", "converted_to_sales_order"].includes(prevStatus);
+  const enteringInvoiceConversion =
+    nextStatus === "converted_to_invoice" && prevStatus !== "converted_to_invoice";
 
   if (
-    ["converted", "converted_to_sales_order"].includes(nextStatus) &&
+    (enteringSalesOrderConversion || enteringInvoiceConversion) &&
+    !QUOTATION_CONVERTIBLE_STATUSES.includes(prevStatus) &&
     !["converted", "converted_to_sales_order"].includes(prevStatus)
   ) {
+    throw new AppError(
+      "Only Accepted quotations can be converted to a sales order or tax invoice.",
+      400
+    );
+  }
+
+  await doc.save();
+
+  let conversion = null;
+
+  if (enteringSalesOrderConversion) {
     try {
       const result = await ensureSalesOrderFromQuotation(doc._id, session.user.id);
       conversion = {
@@ -86,7 +101,7 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
       orderNumber: result.orderNumber,
       salesOrderId: String(result.salesOrder._id),
     };
-  } else if (nextStatus === "converted_to_invoice") {
+  } else if (enteringInvoiceConversion) {
     try {
       const result = await ensureSalesInvoiceFromQuotation(doc._id, session.user.id);
       conversion = {

@@ -39,7 +39,7 @@ export const GET = withErrorHandler(async (request, context) => {
     existing.invoiceNumber = await resolveInvoiceNumberForCreate(
       {
         invoiceDate: existing.invoiceDate || new Date(),
-        invoiceNumber: undefined,
+        salesInvoiceId: existing._id,
       },
       { Quotation, SalesOrder, SalesInvoice },
     );

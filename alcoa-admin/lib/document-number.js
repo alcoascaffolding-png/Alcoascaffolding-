@@ -1,9 +1,7 @@
 /**
  * Document IDs: PREFIX + YY + MM + DD + 3 random digits (e.g. QT260424837, SO260424512).
- * - Quotation: always QT
- * - Standalone sales order: SO
- * - Standalone sales invoice: SI
- * Linked child documents keep their own prefixes (SO / SI / DN).
+ * Each module (quotation, sales order, invoice, delivery note) gets its own independent
+ * number. Conversion links documents by foreign key — numbers are never reused across types.
  */
 
 export const DOCUMENT_PREFIX = {
@@ -15,8 +13,15 @@ export const DOCUMENT_PREFIX = {
 
 const VALID_PREFIXES = Object.values(DOCUMENT_PREFIX);
 
-/** @type {RegExp} */
-export const DOCUMENT_NUMBER_REGEX = /^(QT|SO|SI|DN)\d{11}$/;
+/** PREFIX + YYMMDD + 3 digits — e.g. QT260802646 (2 letters + 9 digits). */
+export const DOCUMENT_NUMBER_REGEX = /^(QT|SO|SI|DN)\d{9}$/;
+
+/** YYMMDD### portion after a 2-letter prefix. */
+export function documentNumberSuffix(documentNumber) {
+  const s = String(documentNumber || "").trim().toUpperCase();
+  if (!DOCUMENT_NUMBER_REGEX.test(s)) return null;
+  return s.slice(2);
+}
 
 export function formatDocumentNumber(prefix, baseDate, randomSuffix) {
   const p = String(prefix || "").toUpperCase();
@@ -85,9 +90,9 @@ export async function generateNewDocumentNumber(
   return generateUniqueDocumentNumber(prefix, isAvailable, baseDate);
 }
 
-/** Sales order: always SOYYMMDD### unless manually supplied. */
+/** Sales order: always a new SOYYMMDD### (manual or converted from quotation). */
 export async function resolveOrderNumberForCreate(
-  { quotationId, orderDate, orderNumber },
+  { orderDate, orderNumber, salesOrderId },
   models
 ) {
   if (orderNumber && String(orderNumber).trim()) {
@@ -96,13 +101,14 @@ export async function resolveOrderNumberForCreate(
   return generateNewDocumentNumber(
     models,
     DOCUMENT_PREFIX.SALES_ORDER,
-    orderDate || new Date()
+    orderDate || new Date(),
+    salesOrderId ? { salesOrderId } : {}
   );
 }
 
-/** Sales invoice: always SIYYMMDD### unless manually supplied. */
+/** Sales invoice: always a new SIYYMMDD### (manual or converted). */
 export async function resolveInvoiceNumberForCreate(
-  { salesOrderId, invoiceDate, invoiceNumber },
+  { invoiceDate, invoiceNumber, salesInvoiceId },
   models
 ) {
   if (invoiceNumber && String(invoiceNumber).trim()) {
@@ -111,11 +117,12 @@ export async function resolveInvoiceNumberForCreate(
   return generateNewDocumentNumber(
     models,
     DOCUMENT_PREFIX.SALES_INVOICE,
-    invoiceDate || new Date()
+    invoiceDate || new Date(),
+    salesInvoiceId ? { salesInvoiceId } : {}
   );
 }
 
-/** Delivery note: always DNYYMMDD### (never reuse SO number). */
+/** Delivery note: always DNYYMMDD###. */
 export async function resolveDeliveryNoteNumberForCreate(
   { deliveryDate, deliveryNoteNumber },
   models

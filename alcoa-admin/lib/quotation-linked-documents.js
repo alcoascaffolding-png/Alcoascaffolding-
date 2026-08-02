@@ -22,12 +22,24 @@ export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
       .select("_id orderNumber status total currency")
       .lean();
   }
+  // Backward compatibility: older rows may have reused the quotation number as orderNumber.
+  if (!salesOrder && quoteNumber) {
+    salesOrder = await SalesOrder.findOne({ orderNumber: quoteNumber })
+      .select("_id orderNumber status total currency")
+      .lean();
+    if (salesOrder && qid && !salesOrder.quotation) {
+      await SalesOrder.findByIdAndUpdate(salesOrder._id, { quotation: qid });
+    }
+  }
   if (salesOrder && !String(salesOrder.orderNumber || "").startsWith("SO")) {
     const repaired = await SalesOrder.findById(salesOrder._id);
     if (repaired) {
       repaired.orderNumber = await resolveOrderNumberForCreate(
-        { orderDate: repaired.orderDate || new Date() },
-        { SalesOrder }
+        {
+          orderDate: repaired.orderDate || new Date(),
+          salesOrderId: repaired._id,
+        },
+        { Quotation, SalesOrder }
       );
       repaired.recalculateTotals();
       await repaired.save();
@@ -56,7 +68,10 @@ export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
     const repaired = await SalesInvoice.findById(salesInvoice._id);
     if (repaired) {
       repaired.invoiceNumber = await resolveInvoiceNumberForCreate(
-        { invoiceDate: repaired.invoiceDate || new Date() },
+        {
+          invoiceDate: repaired.invoiceDate || new Date(),
+          salesInvoiceId: repaired._id,
+        },
         { Quotation, SalesOrder, SalesInvoice }
       );
       repaired.recalculateTotals();

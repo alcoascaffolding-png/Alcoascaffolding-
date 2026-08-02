@@ -44,7 +44,7 @@ export const GET = withErrorHandler(async (request, context) => {
     existing.orderNumber = await resolveOrderNumberForCreate(
       {
         orderDate: existing.orderDate || new Date(),
-        orderNumber: undefined,
+        salesOrderId: existing._id,
       },
       { Quotation, SalesInvoice, SalesOrder },
     );

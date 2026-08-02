@@ -6,6 +6,27 @@ import { resolveOrderNumberForCreate } from "@/lib/document-number";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
 import { assertSufficientStockForLines } from "@/lib/stock-validation";
 
+/** Statuses that allow Convert to Sales Order / Invoice. */
+export const QUOTATION_CONVERTIBLE_STATUSES = ["accepted", "approved"];
+
+/** After Convert, status is flipped before ensure may re-run (PATCH path). */
+const QUOTATION_POST_CONVERT_STATUSES = [
+  "converted",
+  "converted_to_sales_order",
+  "converted_to_invoice",
+];
+
+export function assertQuotationConvertible(quotation, targetLabel = "sales document") {
+  const status = String(quotation?.status || "");
+  if (QUOTATION_CONVERTIBLE_STATUSES.includes(status)) return;
+  // Status PATCH saves `converted_*` before ensure creates the linked document.
+  if (QUOTATION_POST_CONVERT_STATUSES.includes(status)) return;
+  throw new AppError(
+    `Only Accepted quotations can be converted to a ${targetLabel}. Current status: ${status || "unknown"}.`,
+    400
+  );
+}
+
 function quotationItemsToOrderItems(items) {
   return (items || []).map((it) => {
     const qty = Number(it.quantity) || 1;
@@ -62,18 +83,6 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
   }
 
   if (existing) {
-    if (!String(existing.orderNumber || "").startsWith("SO")) {
-      const repair = await SalesOrder.findById(existing._id);
-      if (repair) {
-        repair.orderNumber = await resolveOrderNumberForCreate(
-          { orderDate: repair.orderDate || new Date() },
-          { SalesOrder }
-        );
-        repair.recalculateTotals();
-        await repair.save();
-        existing = repair.toObject();
-      }
-    }
     await markQuotationConvertedFromSalesOrder(qid, existing._id);
     return {
       created: false,
@@ -81,6 +90,8 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
       orderNumber: existing.orderNumber,
     };
   }
+
+  assertQuotationConvertible(q, "sales order");
 
   const items = quotationItemsToOrderItems(q.items);
   await assertSufficientStockForLines(items, { context: "Quotation to sales order conversion" });
@@ -92,7 +103,9 @@ export async function ensureSalesOrderFromQuotation(quotationId, createdByUserId
     Math.round((lineSubtotal * Number(q.vatPercentage || 5)) / 100 * 100) / 100;
 
   const orderNumber = await resolveOrderNumberForCreate(
-    { quotationId: qid, orderDate: q.quoteDate || new Date() },
+    {
+      orderDate: q.quoteDate || new Date(),
+    },
     { Quotation, SalesOrder }
   );
 

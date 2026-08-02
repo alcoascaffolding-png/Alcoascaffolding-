@@ -158,7 +158,10 @@ export function QuotationDetail({ id }) {
   const subject = q.subject || `Quotation ${q.quoteNumber}`;
   const hasSalesOrder = !!q.linked?.salesOrder;
   const hasSalesInvoice = !!q.linked?.salesInvoice;
-  const conversionDisabled = ["rejected", "expired"].includes(q.status);
+  const canConvert =
+    q.status === "accepted" || q.status === "approved"; /* approved = legacy Accepted */
+  const showConvertToSalesOrder = canConvert || hasSalesOrder;
+  const showConvertToInvoice = canConvert || hasSalesInvoice;
 
   return (
     <>
@@ -178,38 +181,42 @@ export function QuotationDetail({ id }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <AsyncButton
-            type="button"
-            variant="outline"
-            size="sm"
-            loading={convertMut.isPending && convertMut.variables === "sales-order"}
-            disabled={
-              hasSalesOrder ||
-              conversionDisabled ||
-              (convertMut.isPending && convertMut.variables !== "sales-order")
-            }
-            pendingLabel="Converting…"
-            onClick={() => convertMut.mutate("sales-order")}
-          >
-            <ShoppingCart className="h-4 w-4 mr-1" />
-            {hasSalesOrder ? "Sales Order Created" : "Convert to Sales Order"}
-          </AsyncButton>
-          <AsyncButton
-            type="button"
-            variant="outline"
-            size="sm"
-            loading={convertMut.isPending && convertMut.variables === "invoice"}
-            disabled={
-              hasSalesInvoice ||
-              conversionDisabled ||
-              (convertMut.isPending && convertMut.variables !== "invoice")
-            }
-            pendingLabel="Converting…"
-            onClick={() => convertMut.mutate("invoice")}
-          >
-            <Receipt className="h-4 w-4 mr-1" />
-            {hasSalesInvoice ? "Invoice Created" : "Convert to Invoice"}
-          </AsyncButton>
+          {showConvertToSalesOrder ? (
+            <AsyncButton
+              type="button"
+              variant="outline"
+              size="sm"
+              loading={convertMut.isPending && convertMut.variables === "sales-order"}
+              disabled={
+                hasSalesOrder ||
+                !canConvert ||
+                (convertMut.isPending && convertMut.variables !== "sales-order")
+              }
+              pendingLabel="Converting…"
+              onClick={() => convertMut.mutate("sales-order")}
+            >
+              <ShoppingCart className="h-4 w-4 mr-1" />
+              {hasSalesOrder ? "Sales Order Created" : "Convert to Sales Order"}
+            </AsyncButton>
+          ) : null}
+          {showConvertToInvoice ? (
+            <AsyncButton
+              type="button"
+              variant="outline"
+              size="sm"
+              loading={convertMut.isPending && convertMut.variables === "invoice"}
+              disabled={
+                hasSalesInvoice ||
+                !canConvert ||
+                (convertMut.isPending && convertMut.variables !== "invoice")
+              }
+              pendingLabel="Converting…"
+              onClick={() => convertMut.mutate("invoice")}
+            >
+              <Receipt className="h-4 w-4 mr-1" />
+              {hasSalesInvoice ? "Invoice Created" : "Convert to Invoice"}
+            </AsyncButton>
+          ) : null}
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
@@ -228,6 +235,7 @@ export function QuotationDetail({ id }) {
       <div className="space-y-6">
         {(hasSalesOrder ||
           hasSalesInvoice ||
+          canConvert ||
           ["converted", "converted_to_sales_order", "converted_to_invoice"].includes(q.status)) && (
           <Card className="border-emerald-500/30 bg-emerald-500/5">
             <CardHeader className="pb-2">
@@ -248,10 +256,15 @@ export function QuotationDetail({ id }) {
                     ({q.linked.salesOrder.status}) — {formatCurrency(q.linked.salesOrder.total)}
                   </span>
                 </p>
-              ) : (
+              ) : canConvert ? (
                 <p className="text-amber-700 dark:text-amber-400">
-                  No sales order linked yet. Use <strong>Convert to Sales Order</strong> if this
-                  quotation should become a sales order.
+                  No sales order linked yet. Use <strong>Convert to Sales Order</strong> above —
+                  status updates to Converted automatically (do not set Converted manually).
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Set status to <strong>Accepted</strong> before converting to a sales order or
+                  invoice.
                 </p>
               )}
               {q.linked?.salesInvoice ? (
@@ -268,7 +281,7 @@ export function QuotationDetail({ id }) {
                     ({q.linked.salesInvoice.status}) — {formatCurrency(q.linked.salesInvoice.total)}
                   </span>
                 </p>
-              ) : q.linked?.salesOrder ? (
+              ) : q.linked?.salesOrder && canConvert ? (
                 <p className="text-muted-foreground">
                   No tax invoice yet. Use <strong>Convert to Invoice</strong> or invoice the linked
                   sales order.

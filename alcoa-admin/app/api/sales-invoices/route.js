@@ -132,16 +132,27 @@ export const POST = withErrorHandler(async (request) => {
     if (d && !Number.isNaN(d.getTime())) payload.dueDate = d;
   }
 
-  const soid = toObjectId(salesOrderRef);
-  if (soid) payload.salesOrder = soid;
-
   const qid = toObjectId(quotationRef);
-  if (qid) payload.quotation = qid;
+  const soid = toObjectId(salesOrderRef);
+
+  if (soid) {
+    const sourceOrder = await SalesOrder.findById(soid).select("quotation").lean();
+    if (!sourceOrder) throw new AppError("Sales order not found", 404);
+    payload.salesOrder = soid;
+    if (!qid && sourceOrder.quotation) {
+      payload.quotation = sourceOrder.quotation;
+    }
+  }
+
+  if (qid) {
+    const sourceQuote = await Quotation.findById(qid).select("_id").lean();
+    if (!sourceQuote) throw new AppError("Quotation not found", 404);
+    payload.quotation = qid;
+  }
 
   try {
     payload.invoiceNumber = await resolveInvoiceNumberForCreate(
       {
-        salesOrderId: soid,
         invoiceDate: payload.invoiceDate,
         invoiceNumber,
       },
@@ -161,8 +172,8 @@ export const POST = withErrorHandler(async (request) => {
   applySalesInvoicePaymentFields(doc);
   await doc.save();
 
-  if (qid) {
-    await Quotation.findByIdAndUpdate(qid, {
+  if (payload.quotation) {
+    await Quotation.findByIdAndUpdate(payload.quotation, {
       $set: {
         status: "converted_to_invoice",
         convertedToInvoice: true,

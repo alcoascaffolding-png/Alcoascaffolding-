@@ -5,6 +5,7 @@ void Customer;
 import { AppError } from "@/lib/api-error";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
+import { assertQuotationConvertible } from "@/lib/convert-quotation-to-sales-order";
 
 function quotationItemsToInvoiceItems(items) {
   return (items || [])
@@ -79,18 +80,6 @@ export async function ensureSalesInvoiceFromQuotation(quotationId, createdByUser
   }
 
   if (existing) {
-    if (!String(existing.invoiceNumber || "").startsWith("SI")) {
-      const repair = await SalesInvoice.findById(existing._id);
-      if (repair) {
-        repair.invoiceNumber = await resolveInvoiceNumberForCreate(
-          { invoiceDate: repair.invoiceDate || new Date() },
-          { Quotation, SalesOrder, SalesInvoice }
-        );
-        repair.recalculateTotals();
-        await repair.save();
-        existing = repair.toObject();
-      }
-    }
     await Quotation.findByIdAndUpdate(qid, {
       $set: {
         status: "converted_to_invoice",
@@ -106,6 +95,8 @@ export async function ensureSalesInvoiceFromQuotation(quotationId, createdByUser
     };
   }
 
+  assertQuotationConvertible(q, "tax invoice");
+
   const items = quotationItemsToInvoiceItems(q.items);
   if (!items.length) {
     throw new AppError(
@@ -117,7 +108,9 @@ export async function ensureSalesInvoiceFromQuotation(quotationId, createdByUser
   const invoiceDate = new Date();
   const dueDate = new Date(invoiceDate.getTime() + 30 * 86400000);
   const invoiceNumber = await resolveInvoiceNumberForCreate(
-    { invoiceDate },
+    {
+      invoiceDate,
+    },
     { Quotation, SalesOrder, SalesInvoice }
   );
 
