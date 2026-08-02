@@ -18,8 +18,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
+
+/** Pagination-aware serial number column prepended to every list table. */
+const SERIAL_NUMBER_COLUMN = {
+  id: "_serial",
+  header: "S.No",
+  enableSorting: false,
+  size: 56,
+  cell: ({ row, table }) => {
+    const { pageIndex, pageSize } = table.getState().pagination;
+    return (
+      <span className="text-muted-foreground tabular-nums text-sm">
+        {pageIndex * pageSize + row.index + 1}
+      </span>
+    );
+  },
+};
 
 function SortableHeader({ column, children }) {
   if (!column.getCanSort()) {
@@ -87,6 +103,11 @@ export function DataTable({
   const pagination = paginationState ?? localPagination;
   const setPagination = onPaginationChange ?? setLocalPagination;
 
+  const columnsWithSerial = useMemo(
+    () => [SERIAL_NUMBER_COLUMN, ...columns],
+    [columns]
+  );
+
   useEffect(() => {
     if (!serverSearch) return;
     setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
@@ -94,7 +115,7 @@ export function DataTable({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: columnsWithSerial,
     state: { sorting, columnFilters, globalFilter, pagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -262,7 +283,7 @@ export function DataTable({
               ))
             ) : (
               <TableRow className="bg-card hover:bg-card">
-                <TableCell colSpan={columns.length} className="h-auto p-0">
+                <TableCell colSpan={columnsWithSerial.length} className="h-auto p-0">
                   <EmptyState
                     icon={emptyIcon}
                     title={emptyMessage}
