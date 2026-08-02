@@ -424,7 +424,7 @@ export function SalesOrderFormPage({ id }) {
         {saveMut.isPending && (
           <BlockingSaveOverlay
             title={isEdit ? "Updating order…" : "Creating order…"}
-            description="Saving line items and totals."
+            description="Saving…"
           />
         )}
         <div className="flex items-center gap-3 mb-2">

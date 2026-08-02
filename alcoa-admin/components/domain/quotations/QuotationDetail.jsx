@@ -36,6 +36,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
+import { DocumentConvertMenu } from "@/components/domain/documents/DocumentConvertMenu";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
@@ -158,10 +159,26 @@ export function QuotationDetail({ id }) {
   const subject = q.subject || `Quotation ${q.quoteNumber}`;
   const hasSalesOrder = !!q.linked?.salesOrder;
   const hasSalesInvoice = !!q.linked?.salesInvoice;
-  const canConvert =
+  const isAccepted =
     q.status === "accepted" || q.status === "approved"; /* approved = legacy Accepted */
-  const showConvertToSalesOrder = canConvert || hasSalesOrder;
-  const showConvertToInvoice = canConvert || hasSalesInvoice;
+  const isConverted = [
+    "converted",
+    "converted_to_sales_order",
+    "converted_to_invoice",
+  ].includes(q.status);
+  /** Accepted (or already converted) — both convert actions stay available independently. */
+  const canConvertEither = isAccepted || isConverted;
+  const hasBillableLines = (q.items || []).some((it) => {
+    const qty = Number(it.quantity) || 0;
+    const rate = Number(it.ratePerUnit ?? it.unitPrice) || 0;
+    const sub = Number(it.subtotal ?? it.taxableAmount) || 0;
+    return sub > 0 || qty * rate > 0;
+  });
+  const canCreateSalesOrder = canConvertEither && !hasSalesOrder && hasBillableLines;
+  const canCreateInvoice = canConvertEither && !hasSalesInvoice && hasBillableLines;
+  const showConvertMenu = canConvertEither && (!hasSalesOrder || !hasSalesInvoice);
+  const showLinkedRow = hasSalesOrder || hasSalesInvoice;
+  const convertBlockedNoAmount = canConvertEither && !hasBillableLines && (!hasSalesOrder || !hasSalesInvoice);
 
   return (
     <>
@@ -181,41 +198,39 @@ export function QuotationDetail({ id }) {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {showConvertToSalesOrder ? (
-            <AsyncButton
-              type="button"
-              variant="outline"
-              size="sm"
-              loading={convertMut.isPending && convertMut.variables === "sales-order"}
-              disabled={
-                hasSalesOrder ||
-                !canConvert ||
-                (convertMut.isPending && convertMut.variables !== "sales-order")
+          {showConvertMenu ? (
+            <DocumentConvertMenu
+              loading={convertMut.isPending}
+              disabled={convertBlockedNoAmount}
+              title={
+                convertBlockedNoAmount
+                  ? "Set line item rates before converting — this quotation has AED 0.00 totals"
+                  : undefined
               }
-              pendingLabel="Converting…"
-              onClick={() => convertMut.mutate("sales-order")}
-            >
-              <ShoppingCart className="h-4 w-4 mr-1" />
-              {hasSalesOrder ? "Sales Order Created" : "Convert to Sales Order"}
-            </AsyncButton>
-          ) : null}
-          {showConvertToInvoice ? (
-            <AsyncButton
-              type="button"
-              variant="outline"
-              size="sm"
-              loading={convertMut.isPending && convertMut.variables === "invoice"}
-              disabled={
-                hasSalesInvoice ||
-                !canConvert ||
-                (convertMut.isPending && convertMut.variables !== "invoice")
-              }
-              pendingLabel="Converting…"
-              onClick={() => convertMut.mutate("invoice")}
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              {hasSalesInvoice ? "Invoice Created" : "Convert to Invoice"}
-            </AsyncButton>
+              menuLabel="Create from this quotation"
+              items={[
+                {
+                  key: "sales-order",
+                  label: "Sales Order",
+                  icon: ShoppingCart,
+                  disabled: !canCreateSalesOrder,
+                  done: hasSalesOrder,
+                  onSelect: () => {
+                    if (canCreateSalesOrder) convertMut.mutate("sales-order");
+                  },
+                },
+                {
+                  key: "invoice",
+                  label: "Tax Invoice",
+                  icon: Receipt,
+                  disabled: !canCreateInvoice,
+                  done: hasSalesInvoice,
+                  onSelect: () => {
+                    if (canCreateInvoice) convertMut.mutate("invoice");
+                  },
+                },
+              ]}
+            />
           ) : null}
           <DocumentDetailToolbar
             sending={sending}
@@ -233,63 +248,39 @@ export function QuotationDetail({ id }) {
       </div>
 
       <div className="space-y-6">
-        {(hasSalesOrder ||
-          hasSalesInvoice ||
-          canConvert ||
-          ["converted", "converted_to_sales_order", "converted_to_invoice"].includes(q.status)) && (
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Linked sales documents</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0 space-y-2 text-sm">
-              {q.linked?.salesOrder ? (
-                <p>
-                  <span className="text-muted-foreground">Sales order: </span>
-                  <Link
-                    href={`/sales-orders/${q.linked.salesOrder._id}`}
-                    className="font-mono font-medium text-primary hover:underline"
-                  >
-                    {q.linked.salesOrder.orderNumber}
-                  </Link>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    ({q.linked.salesOrder.status}) — {formatCurrency(q.linked.salesOrder.total)}
-                  </span>
-                </p>
-              ) : canConvert ? (
-                <p className="text-amber-700 dark:text-amber-400">
-                  No sales order linked yet. Use <strong>Convert to Sales Order</strong> above —
-                  status updates to Converted automatically (do not set Converted manually).
-                </p>
-              ) : (
-                <p className="text-muted-foreground">
-                  Set status to <strong>Accepted</strong> before converting to a sales order or
-                  invoice.
-                </p>
-              )}
-              {q.linked?.salesInvoice ? (
-                <p>
-                  <span className="text-muted-foreground">Tax invoice: </span>
-                  <Link
-                    href={`/sales-invoices/${q.linked.salesInvoice._id}`}
-                    className="font-mono font-medium text-primary hover:underline"
-                  >
-                    {q.linked.salesInvoice.invoiceNumber}
-                  </Link>
-                  <span className="text-muted-foreground">
-                    {" "}
-                    ({q.linked.salesInvoice.status}) — {formatCurrency(q.linked.salesInvoice.total)}
-                  </span>
-                </p>
-              ) : q.linked?.salesOrder && canConvert ? (
-                <p className="text-muted-foreground">
-                  No tax invoice yet. Use <strong>Convert to Invoice</strong> or invoice the linked
-                  sales order.
-                </p>
-              ) : null}
-            </CardContent>
-          </Card>
-        )}
+        {convertBlockedNoAmount ? (
+          <p className="text-sm text-muted-foreground">
+            Totals are <span className="font-medium text-foreground">AED 0.00</span> — set line rates
+            in Edit before converting.
+          </p>
+        ) : null}
+
+        {showLinkedRow ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="text-xs uppercase tracking-wide">Linked</span>
+            {hasSalesOrder ? (
+              <Link
+                href={`/sales-orders/${q.linked.salesOrder._id}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {q.linked.salesOrder.orderNumber}
+              </Link>
+            ) : null}
+            {hasSalesOrder && hasSalesInvoice ? (
+              <span className="text-border" aria-hidden>
+                ·
+              </span>
+            ) : null}
+            {hasSalesInvoice ? (
+              <Link
+                href={`/sales-invoices/${q.linked.salesInvoice._id}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {q.linked.salesInvoice.invoiceNumber}
+              </Link>
+            ) : null}
+          </p>
+        ) : null}
 
         {/* PDF-style header info — above line items */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -5,14 +5,16 @@ void Customer;
 import { AppError } from "@/lib/api-error";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { formatCustomerAddressFromRecord } from "@/lib/map-sales-order-for-quotation-pdf";
-import { assertQuotationConvertible } from "@/lib/convert-quotation-to-sales-order";
+import {
+  assertQuotationConvertible,
+  assertQuotationHasBillableLines,
+  resolveQuotationLineBilling,
+} from "@/lib/convert-quotation-to-sales-order";
 
 function quotationItemsToInvoiceItems(items) {
   return (items || [])
     .map((it) => {
-      const qty = Math.max(Number(it.quantity) || 0, 0.01);
-      const rate = Number(it.ratePerUnit) || 0;
-      const total = Number(it.subtotal ?? qty * rate);
+      const { quantity: qty, unitPrice: rate, total } = resolveQuotationLineBilling(it);
       return {
         product: it.product || undefined,
         description:
@@ -27,7 +29,7 @@ function quotationItemsToInvoiceItems(items) {
         quantity: qty,
         unit: it.unit || "Nos",
         unitPrice: rate,
-        total: total > 0 ? total : qty * rate,
+        total,
       };
     })
     .filter((it) => it.total > 0);
@@ -42,6 +44,7 @@ function paymentStatusFor({ total, paidAmount, balance }) {
 
 /**
  * Create or return a Tax Invoice linked to a quotation.
+ * New invoices get a fresh SI number (never copies quoteNumber).
  * If the quote already has a Sales Order, the invoice is also linked to that order.
  */
 export async function ensureSalesInvoiceFromQuotation(quotationId, createdByUserId) {
@@ -96,13 +99,11 @@ export async function ensureSalesInvoiceFromQuotation(quotationId, createdByUser
   }
 
   assertQuotationConvertible(q, "tax invoice");
+  assertQuotationHasBillableLines(q, "tax invoice");
 
   const items = quotationItemsToInvoiceItems(q.items);
   if (!items.length) {
-    throw new AppError(
-      "Quotation line items have no billable amounts. Check quantities and prices.",
-      400
-    );
+    assertQuotationHasBillableLines(q, "tax invoice");
   }
 
   const invoiceDate = new Date();

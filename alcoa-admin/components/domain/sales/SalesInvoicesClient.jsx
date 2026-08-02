@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+// Tax invoices are permanent — delete UI disabled.
+// import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
 import {
@@ -11,19 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog";
+// import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+// import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { ExportButton } from "@/components/data-table/ExportButton";
@@ -66,8 +68,9 @@ async function fetchStats() {
 export function SalesInvoicesClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const qc = useQueryClient();
-  const [deleteId, setDeleteId] = useState(null);
+  // Tax invoices are permanent — delete UI disabled.
+  // const qc = useQueryClient();
+  // const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
   const paymentFilter = searchParams.get("paymentStatus") || "all";
@@ -111,20 +114,21 @@ export function SalesInvoicesClient() {
       statsQueryKey: ["sales-invoices-stats"],
     });
 
-  const deleteMut = useMutation({
-    mutationFn: async (id) => {
-      const res = await fetch(`/api/sales-invoices/${id}`, { method: "DELETE" });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sales-invoices"] });
-      qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
-      setDeleteId(null);
-      toast.success("Tax invoice deleted");
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  // Tax invoices are permanent — delete UI disabled.
+  // const deleteMut = useMutation({
+  //   mutationFn: async (id) => {
+  //     const res = await fetch(`/api/sales-invoices/${id}`, { method: "DELETE" });
+  //     const d = await res.json();
+  //     if (!d.success) throw new Error(d.error);
+  //   },
+  //   onSuccess: () => {
+  //     qc.invalidateQueries({ queryKey: ["sales-invoices"] });
+  //     qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
+  //     setDeleteId(null);
+  //     toast.success("Tax invoice deleted");
+  //   },
+  //   onError: (e) => toast.error(e.message),
+  // });
 
   const outstanding = stats?.outstanding ?? 0;
 
@@ -215,7 +219,8 @@ export function SalesInvoicesClient() {
             onSendEmail={() => sendEmail(iid)}
             onSendWhatsApp={() => sendWhatsApp(iid)}
             onCopyWhatsAppLink={() => copyWhatsAppLink(iid)}
-            onDelete={() => setDeleteId(iid)}
+            // Tax invoices are permanent — delete UI disabled.
+            // onDelete={() => setDeleteId(iid)}
           />
         );
       },
@@ -291,6 +296,7 @@ export function SalesInvoicesClient() {
         }
       />
 
+      {/* Tax invoices are permanent — delete UI disabled.
       <AlertDialog
         open={!!deleteId}
         onOpenChange={(open) => {
@@ -326,6 +332,7 @@ export function SalesInvoicesClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      */}
     </>
   );
 }

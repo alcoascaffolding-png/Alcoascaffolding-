@@ -352,7 +352,7 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
         {saveMut.isPending && (
           <BlockingSaveOverlay
             title={isEdit ? "Updating customer…" : "Creating customer…"}
-            description="Please wait — saving company, contact, and address."
+            description="Saving…"
           />
         )}
 

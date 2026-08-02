@@ -35,6 +35,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
+import { DocumentConvertMenu } from "@/components/domain/documents/DocumentConvertMenu";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
 import { SalesOrderStatusChanger } from "@/components/domain/sales/SalesOrderStatusChanger";
@@ -170,6 +171,16 @@ export function SalesOrderDetail({ id }) {
   const customerPhone = resolveDocumentCustomerPhone(o);
   const linkedInvoiceId = o.linkedSalesInvoice?._id ? String(o.linkedSalesInvoice._id) : null;
   const hasInvoice = !!linkedInvoiceId;
+  const quotation =
+    o.quotation && typeof o.quotation === "object" ? o.quotation : null;
+  const quotationId = quotation?._id
+    ? String(quotation._id)
+    : o.quotation != null && typeof o.quotation !== "object"
+      ? String(o.quotation)
+      : null;
+  const quotationNumber = quotation?.quoteNumber;
+  const showConvertMenu = !hasInvoice && o.status !== "cancelled";
+  const showLinkedRow = !!(quotationId && quotationNumber) || hasInvoice;
 
   return (
     <>
@@ -213,29 +224,22 @@ export function SalesOrderDetail({ id }) {
               Create Delivery Note
             </Button>
           </Link>
-          {hasInvoice ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/sales-invoices/${linkedInvoiceId}`)}
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              View Tax Invoice
-            </Button>
-          ) : (
-            <AsyncButton
-              type="button"
-              variant="outline"
-              size="sm"
+          {showConvertMenu ? (
+            <DocumentConvertMenu
               loading={convertToInvoiceMut.isPending}
-              disabled={o.status === "cancelled"}
-              pendingLabel="Converting…"
-              onClick={() => convertToInvoiceMut.mutate()}
-            >
-              <Receipt className="h-4 w-4 mr-1" />
-              Convert to Invoice
-            </AsyncButton>
-          )}
+              menuLabel="Create from this sales order"
+              items={[
+                {
+                  key: "invoice",
+                  label: "Tax Invoice",
+                  icon: Receipt,
+                  disabled: convertToInvoiceMut.isPending,
+                  done: false,
+                  onSelect: () => convertToInvoiceMut.mutate(),
+                },
+              ]}
+            />
+          ) : null}
           <DocumentDetailToolbar
             sending={sending}
             showWhatsApp={showWhatsApp}
@@ -252,6 +256,33 @@ export function SalesOrderDetail({ id }) {
       </div>
 
       <div className="space-y-6">
+        {showLinkedRow ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="text-xs uppercase tracking-wide">Linked</span>
+            {quotationId && quotationNumber ? (
+              <Link
+                href={`/quotations/${quotationId}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {quotationNumber}
+              </Link>
+            ) : null}
+            {quotationId && quotationNumber && hasInvoice ? (
+              <span className="text-border" aria-hidden>
+                ·
+              </span>
+            ) : null}
+            {hasInvoice ? (
+              <Link
+                href={`/sales-invoices/${linkedInvoiceId}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {o.linkedSalesInvoice.invoiceNumber}
+              </Link>
+            ) : null}
+          </p>
+        ) : null}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -278,67 +309,6 @@ export function SalesOrderDetail({ id }) {
               />
               <InfoRowAlways label="Delivery Date" value={formatDate(o.deliveryDate)} />
               <InfoRowAlways label="Payment Terms" value="Cash/CDC" />
-              {o.quotation && (
-                <div className="pt-3 border-t border-border/60 mt-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-                    Linked quotation
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">
-                      {typeof o.quotation === "object" ? o.quotation.quoteNumber : "—"}
-                    </span>
-                    {typeof o.quotation === "object" && o.quotation.status != null && (
-                      <Badge variant="secondary" className="text-xs font-normal capitalize">
-                        {String(o.quotation.status).replace(/_/g, " ")}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      const qid =
-                        typeof o.quotation === "object" && o.quotation._id != null
-                          ? String(o.quotation._id)
-                          : String(o.quotation);
-                      router.push(`/quotations/${qid}`);
-                    }}
-                  >
-                    View quotation
-                  </Button>
-                </div>
-              )}
-              {o.linkedSalesInvoice && (
-                <div className="pt-3 border-t border-border/60 mt-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-                    Linked tax invoice
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">
-                      {o.linkedSalesInvoice.invoiceNumber}
-                    </span>
-                    {o.linkedSalesInvoice.paymentStatus != null && (
-                      <Badge variant="secondary" className="text-xs font-normal capitalize">
-                        {String(o.linkedSalesInvoice.paymentStatus).replace(/_/g, " ")}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() =>
-                      router.push(`/sales-invoices/${String(o.linkedSalesInvoice._id)}`)
-                    }
-                  >
-                    <Receipt className="h-4 w-4 mr-1" />
-                    View tax invoice
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

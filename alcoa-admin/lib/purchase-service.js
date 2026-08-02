@@ -11,6 +11,7 @@ function escapeRegex(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Yearly sequential PO numbers: PO-YYYY-#### (independent of PI / sales docs). */
 export async function generatePONumber(baseDate = new Date()) {
   const y = new Date(baseDate).getFullYear();
   const prefix = `PO-${y}-`;
@@ -20,6 +21,7 @@ export async function generatePONumber(baseDate = new Date()) {
   return `${prefix}${String(count + 1).padStart(4, "0")}`;
 }
 
+/** Yearly sequential PI numbers: PI-YYYY-#### (never copies the source PO number). */
 export async function generatePurchaseInvoiceNumber(baseDate = new Date()) {
   const y = new Date(baseDate).getFullYear();
   const prefix = `PI-${y}-`;
@@ -129,6 +131,7 @@ export async function syncPurchaseOrderStock(prevDoc, nextDoc, userId) {
   return false;
 }
 
+/** Convert PO → PI: fresh PI-YYYY-####, linked via purchaseOrder FK. */
 export async function createPurchaseInvoiceFromPO(po, userId) {
   const existing = await PurchaseInvoice.findOne({ purchaseOrder: po._id });
   if (existing) return existing;

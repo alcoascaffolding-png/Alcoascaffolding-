@@ -12,8 +12,6 @@ import {
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 import { resolveDocumentBankDetails } from "@/lib/resolve-document-bank-details";
-import { assertSalesInvoiceSafeToDelete } from "@/lib/sales-document-delete-guards";
-
 void Customer;
 
 function toObjectId(value) {
@@ -132,17 +130,11 @@ export const PATCH = withErrorHandler(async (request, context) => {
   return apiSuccess(populated);
 });
 
-export const DELETE = withErrorHandler(async (request, context) => {
-  const session = await authorizeApi("sales-invoices", "delete");
-
-  const params =
-    context.params && typeof context.params.then === "function"
-      ? await context.params
-      : context.params;
-
-  await connectDB();
-  await assertSalesInvoiceSafeToDelete(params.id);
-  const doc = await SalesInvoice.findByIdAndDelete(params.id);
-  if (!doc) throw new AppError("Tax Invoice not found", 404);
-  return apiSuccess({ deleted: true });
+export const DELETE = withErrorHandler(async () => {
+  await authorizeApi("sales-invoices", "delete");
+  // Tax invoices are permanent statutory records — never delete via API.
+  throw new AppError(
+    "Tax invoices are permanent records and cannot be deleted.",
+    403
+  );
 });

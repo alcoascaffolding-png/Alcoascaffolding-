@@ -571,7 +571,7 @@ export function QuotationFormPage({ id }) {
         {saveMut.isPending && (
           <BlockingSaveOverlay
             title={isEdit ? "Updating quotation…" : "Creating quotation…"}
-            description="Please wait — saving line items and totals."
+            description="Saving…"
           />
         )}
         <div className="flex items-center gap-3 mb-2">

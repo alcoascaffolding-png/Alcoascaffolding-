@@ -498,7 +498,7 @@ export function DeliveryNoteFormPage({ id }) {
         {saveMut.isPending && (
           <BlockingSaveOverlay
             title={isEdit ? "Updating delivery note…" : "Creating delivery note…"}
-            description="Saving delivery details and line items."
+            description="Saving…"
           />
         )}
         <div className="flex items-center gap-3 mb-2">

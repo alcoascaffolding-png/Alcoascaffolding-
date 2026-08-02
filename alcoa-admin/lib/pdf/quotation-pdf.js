@@ -1054,15 +1054,22 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               </table>
             </div>`;
 
+  // PO-only: Accounts + Manager. Quotations / sales docs: company + customer.
+  const signatureVariant = isPurchaseOrder ? "purchase-order" : "quotation";
+  const leftSignLabel =
+    signatureVariant === "purchase-order" ? "ACCOUNTS" : "For ALCOA ALUMINIUM SCAFFOLDING";
+  const rightSignLabel =
+    signatureVariant === "purchase-order" ? "MANAGER" : "CUSTOMER'S SIGNATURE";
+
   const bankSignaturesHtml = `
           <div class="bank-signatures-wrap">${bankBlockHtml}
             <div class="signatures-row">
               <div class="sign-box sign-box-company">
-                <div class="sign-label">ACCOUNTS</div>
+                <div class="sign-label">${leftSignLabel}</div>
                 <div class="sign-line"></div>
               </div>
               <div class="sign-box sign-box-customer">
-                <div class="sign-label">MANAGER</div>
+                <div class="sign-label">${rightSignLabel}</div>
                 <div class="sign-line"></div>
               </div>
             </div>

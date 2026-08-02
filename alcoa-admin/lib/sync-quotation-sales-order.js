@@ -17,11 +17,16 @@ export async function markQuotationConvertedFromSalesOrder(quotationId, salesOrd
     salesOrderId && mongoose.Types.ObjectId.isValid(String(salesOrderId))
       ? new mongoose.Types.ObjectId(String(salesOrderId))
       : undefined;
+
+  const existing = await Quotation.findById(qid).select("status").lean();
   const set = {
-    status: "converted_to_sales_order",
     convertedToOrder: true,
     convertedAt: new Date(),
   };
+  // Keep invoice-converted status if an invoice already exists; otherwise mark SO conversion.
+  if (existing?.status !== "converted_to_invoice") {
+    set.status = "converted_to_sales_order";
+  }
   if (orderId) set.orderId = orderId;
   await Quotation.findByIdAndUpdate(qid, {
     $set: set,

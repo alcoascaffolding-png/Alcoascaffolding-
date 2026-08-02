@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { mapDeliveryNoteItemsForDisplay } from "@/lib/map-delivery-note-for-pdf";
@@ -126,21 +127,35 @@ export function DeliveryNoteDetail({ id }) {
             <Badge variant="secondary">Return / off-hire</Badge>
           )}
         </div>
-        <DocumentDetailToolbar
-          sending={sending}
-          showWhatsApp={showWhatsApp}
-          hasEmail={!!customerEmail}
-          hasPhone={!!customerPhone}
-          onDownloadPdf={downloadPdf}
-          onSendEmail={sendEmail}
-          onSendWhatsApp={sendWhatsApp}
-          onCopyWhatsAppLink={copyWhatsAppLink}
-          onEdit={() => router.push(`/delivery-notes/${id}/edit`)}
-          onDelete={() => setShowDelete(true)}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <DocumentDetailToolbar
+            sending={sending}
+            showWhatsApp={showWhatsApp}
+            hasEmail={!!customerEmail}
+            hasPhone={!!customerPhone}
+            onDownloadPdf={downloadPdf}
+            onSendEmail={sendEmail}
+            onSendWhatsApp={sendWhatsApp}
+            onCopyWhatsAppLink={copyWhatsAppLink}
+            onEdit={() => router.push(`/delivery-notes/${id}/edit`)}
+            onDelete={() => setShowDelete(true)}
+          />
+        </div>
       </div>
 
       <div className="space-y-6">
+        {salesOrder ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="text-xs uppercase tracking-wide">Linked</span>
+            <Link
+              href={`/sales-orders/${String(salesOrder._id)}`}
+              className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+            >
+              {salesOrder.orderNumber}
+            </Link>
+          </p>
+        ) : null}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -170,23 +185,6 @@ export function DeliveryNoteDetail({ id }) {
               />
               <InfoRow label="Driver" value={n.driverName} />
               <InfoRow label="Vehicle" value={n.vehicleNumber} />
-              {salesOrder && (
-                <div className="pt-3 border-t border-border/60 mt-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-                    Linked sales order
-                  </p>
-                  <span className="font-mono text-sm font-medium">{salesOrder.orderNumber}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 block"
-                    onClick={() => router.push(`/sales-orders/${String(salesOrder._id)}`)}
-                  >
-                    View sales order
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

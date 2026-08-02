@@ -1,7 +1,6 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
   AdminRouteSkeleton,
@@ -49,30 +48,25 @@ export function CompactLoading({ className }) {
 }
 
 /**
- * Full-screen save overlay — skeleton pulse + readable status text.
+ * Compact full-screen save overlay — spinner + short status (no bulky card chrome).
  */
 export function BlockingSaveOverlay({ title, description }) {
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/60 backdrop-blur-[2px]"
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="flex min-w-[280px] max-w-sm flex-col items-center gap-4 rounded-xl border border-border/80 bg-card px-8 py-8 shadow-lg animate-in fade-in zoom-in-95 duration-200">
-        <div className="relative flex h-16 w-16 items-center justify-center">
-          <span className="absolute inset-0 rounded-full bg-primary/10 animate-pulse" />
-          <BrandSpinner size="lg" />
-        </div>
-        <div className="space-y-1 text-center">
-          <p className="text-sm font-semibold text-foreground">{title}</p>
+      <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-card/95 px-4 py-3 shadow-md animate-in fade-in zoom-in-95 duration-150">
+        <BrandSpinner size="sm" className="text-primary" />
+        <div className="min-w-0 leading-tight">
+          <p className="text-sm font-medium text-foreground">{title}</p>
           {description ? (
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-[220px]">
+              {description}
+            </p>
           ) : null}
-        </div>
-        <div className="flex w-full flex-col gap-2 pt-1">
-          <Skeleton className="h-1.5 w-full rounded-full" />
-          <Skeleton className="h-1.5 w-4/5 rounded-full mx-auto" />
         </div>
       </div>
     </div>

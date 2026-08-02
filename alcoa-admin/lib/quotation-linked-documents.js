@@ -23,6 +23,7 @@ export async function getLinkedDocumentsForQuotation(quotationId, quoteNumber) {
       .lean();
   }
   // Backward compatibility: older rows may have reused the quotation number as orderNumber.
+  // New converts always allocate an independent SO… number.
   if (!salesOrder && quoteNumber) {
     salesOrder = await SalesOrder.findOne({ orderNumber: quoteNumber })
       .select("_id orderNumber status total currency")

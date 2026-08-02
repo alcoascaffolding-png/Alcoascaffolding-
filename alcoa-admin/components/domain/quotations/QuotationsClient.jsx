@@ -228,7 +228,7 @@ export function QuotationsClient() {
           />
         </div>
       ),
-      size: 160,
+      size: 140,
     },
     {
       id: "actions",

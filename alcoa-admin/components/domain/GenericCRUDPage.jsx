@@ -20,7 +20,7 @@ import { Form } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus } from "lucide-react";
 import { ImportButton } from "@/components/data-table/ImportButton";
 import { IMPORTABLE_RESOURCES } from "@/lib/import/schemas";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
@@ -224,6 +224,20 @@ export function GenericCRUDPage({
     enableSorting: false,
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
+        {detailPath && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title="View"
+            onClick={(e) => {
+              e.stopPropagation();
+              router.push(`${detailPath}/${String(row.original._id)}`);
+            }}
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+        )}
         {extraRowActions?.(row.original)}
         {FormFields && allowEdit && canWrite && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
@@ -240,7 +254,7 @@ export function GenericCRUDPage({
         )}
       </div>
     ),
-    size: 110,
+    size: detailPath ? 140 : 110,
   };
 
   const columns = [...externalColumns, actionColumn];
@@ -335,7 +349,7 @@ export function GenericCRUDPage({
             {saveMut.isPending && (
               <BlockingSaveOverlay
                 title={isEditing ? `Updating ${singular.toLowerCase()}…` : `Creating ${singular.toLowerCase()}…`}
-                description="Please wait while we save your changes."
+                description="Saving…"
               />
             )}
             <DialogHeader className="shrink-0 space-y-1 border-b border-border/80 bg-background px-5 py-5 text-left sm:px-8">

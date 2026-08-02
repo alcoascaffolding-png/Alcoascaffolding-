@@ -1,7 +1,7 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { DocumentStatusChanger } from "@/components/domain/documents/DocumentStatusChanger";
+import { cn } from "@/lib/utils";
 
 /**
  * Statuses staff can set manually.
@@ -30,6 +30,13 @@ const DISPLAY_LABELS = {
   converted_to_invoice: "Converted to Invoice",
 };
 
+/** Shorter labels for table cells. */
+const COMPACT_LABELS = {
+  converted: "Converted",
+  converted_to_sales_order: "Converted · SO",
+  converted_to_invoice: "Converted · Invoice",
+};
+
 const DISPLAY_DOTS = {
   draft: "bg-muted-foreground",
   sent: "bg-sky-500",
@@ -39,8 +46,14 @@ const DISPLAY_DOTS = {
   rejected: "bg-destructive",
   expired: "bg-amber-500",
   converted: "bg-emerald-700",
-  converted_to_sales_order: "bg-emerald-700",
+  converted_to_sales_order: "bg-emerald-600",
   converted_to_invoice: "bg-purple-600",
+};
+
+const COMPACT_TEXT = {
+  converted: "text-emerald-700 dark:text-emerald-400",
+  converted_to_sales_order: "text-emerald-700 dark:text-emerald-400",
+  converted_to_invoice: "text-purple-700 dark:text-purple-300",
 };
 
 /** System-set after conversion — not editable from this dropdown. */
@@ -70,16 +83,52 @@ export function QuotationStatusChanger({
   listQueryKey = ["quotations"],
   statsQueryKey = ["quotations-stats"],
 }) {
+  const compact = size === "sm";
+
   if (LOCKED_STATUSES.has(value)) {
+    const label = compact
+      ? COMPACT_LABELS[value] || DISPLAY_LABELS[value]
+      : DISPLAY_LABELS[value] || value;
+    const title = DISPLAY_LABELS[value] || value;
+
+    if (compact) {
+      return (
+        <span
+          title={`${title} — set by Convert (not editable here)`}
+          className={cn(
+            "inline-flex h-7 items-center gap-1.5 px-1.5 text-xs font-medium whitespace-nowrap",
+            COMPACT_TEXT[value] || "text-muted-foreground"
+          )}
+        >
+          <span
+            className={cn("h-1.5 w-1.5 shrink-0 rounded-full", DISPLAY_DOTS[value])}
+          />
+          {label}
+        </span>
+      );
+    }
+
+    const lockedTone =
+      value === "converted_to_invoice"
+        ? "border-purple-400/70 bg-purple-50 text-purple-950 dark:border-purple-500/50 dark:bg-purple-950/40 dark:text-purple-100"
+        : "border-emerald-600/70 bg-emerald-50 text-emerald-950 dark:border-emerald-500/50 dark:bg-emerald-950/40 dark:text-emerald-100";
+
     return (
-      <Badge
-        variant="secondary"
+      <span
         title="Set by Convert to Sales Order / Invoice — not editable here"
-        className="h-9 gap-2 rounded-md border px-3 font-medium whitespace-nowrap"
+        className={cn(
+          "inline-flex h-10 items-center gap-2 rounded-md border px-3.5 text-sm font-semibold shadow-sm whitespace-nowrap",
+          lockedTone
+        )}
       >
-        <span className={`h-2 w-2 rounded-full ${DISPLAY_DOTS[value] || "bg-muted-foreground"}`} />
-        {DISPLAY_LABELS[value] || value}
-      </Badge>
+        <span
+          className={cn(
+            "h-2.5 w-2.5 rounded-full ring-2 ring-white/80",
+            DISPLAY_DOTS[value] || "bg-muted-foreground"
+          )}
+        />
+        {label}
+      </span>
     );
   }
 

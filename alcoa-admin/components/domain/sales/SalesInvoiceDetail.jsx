@@ -1,24 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { AsyncButton } from "@/components/ui/async-button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+// Tax invoices are permanent — delete UI disabled.
+// import { useState } from "react";
+// import { useMutation, useQueryClient } from "@tanstack/react-query";
+// import { AsyncButton } from "@/components/ui/async-button";
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog";
+// import { toast } from "sonner";
 import { ArrowLeft, Truck, Banknote } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/utils";
@@ -60,8 +61,9 @@ function InfoRowAlways({ label, value }) {
 
 export function SalesInvoiceDetail({ id }) {
   const router = useRouter();
-  const qc = useQueryClient();
-  const [showDelete, setShowDelete] = useState(false);
+  // Tax invoices are permanent — delete UI disabled.
+  // const qc = useQueryClient();
+  // const [showDelete, setShowDelete] = useState(false);
 
   const { data: invoice, isLoading, error } = useQuery({
     queryKey: ["sales-invoices", "detail", id],
@@ -108,20 +110,21 @@ export function SalesInvoiceDetail({ id }) {
     statsQueryKey: ["sales-invoices-stats"],
   });
 
-  const deleteMut = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/sales-invoices/${id}`, { method: "DELETE" });
-      const d = await res.json();
-      if (!d.success) throw new Error(d.error);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sales-invoices"] });
-      qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
-      toast.success("Tax invoice deleted");
-      router.push("/sales-invoices");
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  // Tax invoices are permanent — delete UI disabled.
+  // const deleteMut = useMutation({
+  //   mutationFn: async () => {
+  //     const res = await fetch(`/api/sales-invoices/${id}`, { method: "DELETE" });
+  //     const d = await res.json();
+  //     if (!d.success) throw new Error(d.error);
+  //   },
+  //   onSuccess: () => {
+  //     qc.invalidateQueries({ queryKey: ["sales-invoices"] });
+  //     qc.invalidateQueries({ queryKey: ["sales-invoices-stats"] });
+  //     toast.success("Tax invoice deleted");
+  //     router.push("/sales-invoices");
+  //   },
+  //   onError: (e) => toast.error(e.message),
+  // });
 
   if (isLoading) return <DetailRecordSkeleton />;
   if (error) return <div className="text-destructive py-12 text-center">{error.message}</div>;
@@ -147,6 +150,19 @@ export function SalesInvoiceDetail({ id }) {
   const customerPhone = resolveDocumentCustomerPhone(inv);
   const paid = Number(inv.paidAmount || 0);
   const balance = Math.max(0, invoiceTotal - paid);
+  const quotation =
+    inv.quotation && typeof inv.quotation === "object" ? inv.quotation : null;
+  const quotationId = quotation?._id
+    ? String(quotation._id)
+    : inv.quotation != null && typeof inv.quotation !== "object"
+      ? String(inv.quotation)
+      : null;
+  const quotationNumber = quotation?.quoteNumber;
+  const salesOrderObj =
+    inv.salesOrder && typeof inv.salesOrder === "object" ? inv.salesOrder : null;
+  const salesOrderNumber = salesOrderObj?.orderNumber;
+  const showLinkedRow =
+    !!(quotationId && quotationNumber) || !!(salesOrderId && salesOrderNumber);
 
   return (
     <>
@@ -202,12 +218,40 @@ export function SalesInvoiceDetail({ id }) {
             onSendWhatsApp={sendWhatsApp}
             onCopyWhatsAppLink={copyWhatsAppLink}
             onEdit={() => router.push(`/sales-invoices/${id}/edit`)}
-            onDelete={() => setShowDelete(true)}
+            // Tax invoices are permanent — delete UI disabled.
+            // onDelete={() => setShowDelete(true)}
           />
         </div>
       </div>
 
       <div className="space-y-6">
+        {showLinkedRow ? (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="text-xs uppercase tracking-wide">Linked</span>
+            {quotationId && quotationNumber ? (
+              <Link
+                href={`/quotations/${quotationId}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {quotationNumber}
+              </Link>
+            ) : null}
+            {quotationId && quotationNumber && salesOrderId && salesOrderNumber ? (
+              <span className="text-border" aria-hidden>
+                ·
+              </span>
+            ) : null}
+            {salesOrderId && salesOrderNumber ? (
+              <Link
+                href={`/sales-orders/${salesOrderId}`}
+                className="font-mono text-sm font-medium text-foreground hover:text-primary hover:underline"
+              >
+                {salesOrderNumber}
+              </Link>
+            ) : null}
+          </p>
+        ) : null}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
@@ -236,70 +280,6 @@ export function SalesInvoiceDetail({ id }) {
               />
               <InfoRowAlways label="Paid" value={paid.toFixed(2)} />
               <InfoRowAlways label="Balance" value={balance.toFixed(2)} valueClassName="font-medium" />
-              {inv.quotation && (
-                <div className="pt-3 border-t border-border/60 mt-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-                    Linked quotation
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">
-                      {typeof inv.quotation === "object" ? inv.quotation.quoteNumber : "—"}
-                    </span>
-                    {typeof inv.quotation === "object" && inv.quotation.status != null && (
-                      <Badge variant="secondary" className="text-xs font-normal capitalize">
-                        {String(inv.quotation.status).replace(/_/g, " ")}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      const qid =
-                        typeof inv.quotation === "object" && inv.quotation._id != null
-                          ? String(inv.quotation._id)
-                          : String(inv.quotation);
-                      router.push(`/quotations/${qid}`);
-                    }}
-                  >
-                    View quotation
-                  </Button>
-                </div>
-              )}
-              {inv.salesOrder && (
-                <div className="pt-3 border-t border-border/60 mt-2">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium mb-2">
-                    Linked sales order
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm font-medium">
-                      {typeof inv.salesOrder === "object" ? inv.salesOrder.orderNumber : "—"}
-                    </span>
-                    {typeof inv.salesOrder === "object" && inv.salesOrder.status != null && (
-                      <Badge variant="secondary" className="text-xs font-normal capitalize">
-                        {String(inv.salesOrder.status).replace(/_/g, " ")}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => {
-                      const sid =
-                        typeof inv.salesOrder === "object" && inv.salesOrder._id != null
-                          ? String(inv.salesOrder._id)
-                          : String(inv.salesOrder);
-                      router.push(`/sales-orders/${sid}`);
-                    }}
-                  >
-                    View sales order
-                  </Button>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -466,6 +446,7 @@ export function SalesInvoiceDetail({ id }) {
         </Card>
       </div>
 
+      {/* Tax invoices are permanent — delete UI disabled.
       <AlertDialog
         open={showDelete}
         onOpenChange={(open) => {
@@ -495,6 +476,7 @@ export function SalesInvoiceDetail({ id }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      */}
     </>
   );
 }

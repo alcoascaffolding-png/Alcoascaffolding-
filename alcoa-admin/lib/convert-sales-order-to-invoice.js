@@ -13,6 +13,7 @@ export const SALES_ORDER_INVOICE_STATUS = CONVERT_TO_INVOICE_STATUS;
 
 /**
  * When a sales order is marked invoiced, ensure a linked sales invoice exists.
+ * New invoices always get a fresh SI number (never copies orderNumber).
  *
  * @returns {{ created: boolean, salesInvoice: object, invoiceNumber: string }}
  */
@@ -39,6 +40,7 @@ export async function ensureSalesInvoiceFromSalesOrder(salesOrderId, createdByUs
   }
 
   let existing = await SalesInvoice.findOne({ salesOrder: soid }).lean();
+  // Legacy: older converts reused orderNumber as invoiceNumber (no longer done on create).
   if (!existing && order.orderNumber) {
     existing = await SalesInvoice.findOne({ invoiceNumber: order.orderNumber }).lean();
     if (existing && !existing.salesOrder) {

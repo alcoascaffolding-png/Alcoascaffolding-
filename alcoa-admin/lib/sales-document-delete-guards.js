@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import SalesOrder from "@/models/SalesOrder";
 import SalesInvoice from "@/models/SalesInvoice";
 import DeliveryNote from "@/models/DeliveryNote";
-import Receipt from "@/models/Receipt";
 import { AppError } from "@/lib/api-error";
 
 function toObjectId(id) {
@@ -38,7 +37,7 @@ export async function assertSalesOrderSafeToDelete(salesOrderId) {
 
   if (invoice) {
     throw new AppError(
-      `Cannot delete sales order — linked tax invoice ${invoice.invoiceNumber} exists. Delete the invoice first.`,
+      `Cannot delete sales order — linked tax invoice ${invoice.invoiceNumber} exists. Tax invoices are permanent and cannot be removed.`,
       409
     );
   }
@@ -51,37 +50,12 @@ export async function assertSalesOrderSafeToDelete(salesOrderId) {
 }
 
 /**
- * Tax invoices are statutory records and must be retained. Removal is only allowed
- * for an explicitly cancelled invoice with no money and no receipts against it.
+ * Tax invoices are statutory records and must be retained permanently.
+ * Always blocks delete — no conditional exceptions.
  */
-export async function assertSalesInvoiceSafeToDelete(invoiceId) {
-  const iid = toObjectId(invoiceId);
-  if (!iid) return;
-
-  const invoice = await SalesInvoice.findById(iid)
-    .select("invoiceNumber paymentStatus paidAmount")
-    .lean();
-  if (!invoice) return;
-
-  if (Number(invoice.paidAmount || 0) > 0) {
-    throw new AppError(
-      `Cannot delete tax invoice ${invoice.invoiceNumber} — payments are recorded against it. Tax invoices are kept permanently; set the status to "cancelled" instead.`,
-      409
-    );
-  }
-
-  const receiptCount = await Receipt.countDocuments({ invoices: iid });
-  if (receiptCount > 0) {
-    throw new AppError(
-      `Cannot delete tax invoice ${invoice.invoiceNumber} — ${receiptCount} receipt(s) reference it. Delete those receipts first.`,
-      409
-    );
-  }
-
-  if (invoice.paymentStatus !== "cancelled") {
-    throw new AppError(
-      `Tax invoices are kept permanently. Set ${invoice.invoiceNumber} to "cancelled" first if it was raised in error.`,
-      409
-    );
-  }
+export async function assertSalesInvoiceSafeToDelete(_invoiceId) {
+  throw new AppError(
+    "Tax invoices are permanent records and cannot be deleted.",
+    403
+  );
 }

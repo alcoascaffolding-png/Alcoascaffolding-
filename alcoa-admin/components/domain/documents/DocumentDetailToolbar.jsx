@@ -87,16 +87,18 @@ export function DocumentDetailToolbar({
       <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onEdit}>
         <Pencil className="h-4 w-4 mr-1" /> Edit
       </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="text-destructive border-destructive"
-        disabled={busy}
-        onClick={onDelete}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+      {onDelete ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-destructive border-destructive"
+          disabled={busy}
+          onClick={onDelete}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      ) : null}
     </div>
   );
 }
