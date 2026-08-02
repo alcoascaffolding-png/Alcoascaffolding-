@@ -368,7 +368,7 @@ export function GenericCRUDPage({
                 className="flex min-h-0 flex-1 flex-col"
                 aria-busy={saveMut.isPending}
               >
-                <div className="flex-1 overflow-y-auto bg-muted/20 px-5 py-6 dark:bg-muted/10 sm:px-8 sm:py-8">
+                <div className="flex-1 overflow-y-auto bg-muted/20 px-5 py-6 pb-10 dark:bg-muted/10 sm:px-8 sm:py-8 sm:pb-12">
                   <div className="mx-auto max-w-4xl space-y-8">
                     <FormFields control={form.control} isEditing={isEditing} />
                   </div>

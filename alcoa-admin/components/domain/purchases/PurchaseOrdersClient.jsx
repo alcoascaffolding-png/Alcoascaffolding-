@@ -118,36 +118,56 @@ function PurchaseOrderFormFields({ control }) {
   }, [vendorId, vendorsData, setValue]);
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <VendorSelectField control={control} />
-        <FormTextField control={control} name="vendorName" label="Vendor name" />
-        <FormTextField control={control} name="orderDate" label="Order date" type="date" />
-        <FormTextField control={control} name="deliveryDate" label="Expected delivery" type="date" />
-        <FormSelectField control={control} name="status" label="Status" options={statusOptions} />
-        <FormTextField
+    <div className="space-y-8 pb-4">
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">Order details</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Vendor, dates, status, and payment terms.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <VendorSelectField control={control} />
+          <FormTextField control={control} name="vendorName" label="Vendor name" />
+          <FormTextField control={control} name="orderDate" label="Order date" type="date" />
+          <FormTextField control={control} name="deliveryDate" label="Expected delivery" type="date" />
+          <FormSelectField control={control} name="status" label="Status" options={statusOptions} />
+          <FormTextField
+            control={control}
+            name="paymentTerms"
+            label="Payment terms"
+            placeholder="e.g. 30 Days — blank uses the vendor's terms"
+          />
+        </div>
+      </section>
+
+      <section>
+        <PurchaseLineItemsFields />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">Delivery & terms</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Address and terms printed on the LPO. Leave terms blank to use the standard set.
+          </p>
+        </div>
+        <FormTextAreaField
           control={control}
-          name="paymentTerms"
-          label="Payment terms"
-          placeholder="e.g. 30 Days — blank uses the vendor's terms"
+          name="deliveryAddress"
+          label="Deliver to"
+          rows={3}
+          placeholder="Delivery address printed on the LPO"
         />
-      </div>
-      <PurchaseLineItemsFields />
-      <FormTextAreaField
-        control={control}
-        name="deliveryAddress"
-        label="Deliver to"
-        rows={2}
-        placeholder="Delivery address printed on the LPO"
-      />
-      <FormTextAreaField
-        control={control}
-        name="termsAndConditions"
-        label="Terms & Conditions"
-        rows={5}
-        placeholder="Leave blank to print the standard LPO terms"
-      />
-      <FormTextAreaField control={control} name="notes" label="Notes" rows={2} />
+        <FormTextAreaField
+          control={control}
+          name="termsAndConditions"
+          label="Terms & Conditions"
+          rows={5}
+          placeholder="Leave blank to print the standard LPO terms"
+        />
+        <FormTextAreaField control={control} name="notes" label="Notes" rows={2} />
+      </section>
     </div>
   );
 }

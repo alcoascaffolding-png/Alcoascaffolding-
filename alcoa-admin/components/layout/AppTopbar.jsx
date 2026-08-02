@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
-import { Menu, LogOut, Sun, Moon, ChevronDown, Search } from "lucide-react";
+import { Menu, LogOut, Sun, Moon, ChevronDown, Search, Maximize, Minimize2 } from "lucide-react";
 import { useTheme } from "@wrksz/themes/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +35,61 @@ function ThemeToggle() {
       <Sun className="h-4 w-4 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
       <span className="sr-only">Toggle theme</span>
+    </Button>
+  );
+}
+
+function FullscreenToggle() {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    function syncFullscreen() {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    }
+    syncFullscreen();
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreen);
+  }, []);
+
+  async function toggleFullscreen() {
+    const root = document.documentElement;
+    const canEnter = typeof root.requestFullscreen === "function";
+    const canExit = typeof document.exitFullscreen === "function";
+
+    if (!canEnter && !canExit) {
+      toast.error("Fullscreen is not supported in this browser");
+      return;
+    }
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await root.requestFullscreen();
+      }
+    } catch {
+      toast.error("Unable to toggle fullscreen");
+    }
+  }
+
+  const label = isFullscreen ? "Exit fullscreen" : "Enter fullscreen";
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-9 w-9"
+      onClick={toggleFullscreen}
+      aria-label={label}
+      title={label}
+    >
+      {isFullscreen ? (
+        <Minimize2 className="h-4 w-4" />
+      ) : (
+        <Maximize className="h-4 w-4" />
+      )}
+      <span className="sr-only">{label}</span>
     </Button>
   );
 }
@@ -110,7 +165,7 @@ export function AppTopbar({ onToggleSidebar }) {
       {/* Right section */}
       <div className="flex items-center gap-2">
         <ThemeToggle />
-
+        <FullscreenToggle />
         <NotificationCenter />
 
         {/* User menu */}

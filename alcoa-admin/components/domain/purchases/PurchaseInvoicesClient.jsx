@@ -136,26 +136,44 @@ function PurchaseInvoiceFormFields({ control }) {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <VendorSelectField control={control} />
-        <FormTextField control={control} name="vendorName" label="Vendor name" />
-        <FormSelectField control={control} name="purchaseOrder" label="Purchase order" options={poOptions} />
-        <FormTextField control={control} name="invoiceDate" label="Invoice date" type="date" />
-        <FormTextField control={control} name="dueDate" label="Due date" type="date" />
-        <FormSelectField
-          control={control}
-          name="paymentStatus"
-          label="Payment status"
-          options={[
-            { value: "unpaid", label: "Unpaid" },
-            { value: "partially_paid", label: "Partially paid" },
-            { value: "paid", label: "Paid" },
-          ]}
-        />
-      </div>
-      <PurchaseLineItemsFields />
-      <FormTextAreaField control={control} name="notes" label="Notes" rows={2} />
+    <div className="space-y-8 pb-4">
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">Invoice details</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Vendor, linked PO, dates, and payment status.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <VendorSelectField control={control} />
+          <FormTextField control={control} name="vendorName" label="Vendor name" />
+          <FormSelectField control={control} name="purchaseOrder" label="Purchase order" options={poOptions} />
+          <FormTextField control={control} name="invoiceDate" label="Invoice date" type="date" />
+          <FormTextField control={control} name="dueDate" label="Due date" type="date" />
+          <FormSelectField
+            control={control}
+            name="paymentStatus"
+            label="Payment status"
+            options={[
+              { value: "unpaid", label: "Unpaid" },
+              { value: "partially_paid", label: "Partially paid" },
+              { value: "paid", label: "Paid" },
+            ]}
+          />
+        </div>
+      </section>
+
+      <section>
+        <PurchaseLineItemsFields />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight">Notes</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">Optional internal notes for this invoice.</p>
+        </div>
+        <FormTextAreaField control={control} name="notes" label="Notes" rows={2} />
+      </section>
     </div>
   );
 }

@@ -3,21 +3,22 @@
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
   FormTextField,
   FormNumberField,
   FormSelectField,
-  FormLineItemCell,
-  FormLineItemDeleteCell,
-  formLineItemLabelClassName,
-  formLineItemRowClassNameCompact,
 } from "@/components/forms/form-fields";
 import { ProductPicker } from "@/components/shared/ProductPicker";
+import { formatCurrency } from "@/lib/utils";
 import { Plus, Trash2 } from "lucide-react";
 
 const unitOpts = ["Nos", "Set", "M", "Sqm"].map((v) => ({ value: v, label: v }));
 
 const defaultLine = { description: "", product: "", quantity: 1, unit: "Nos", unitPrice: 0 };
+
+const fieldLabel =
+  "text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block";
 
 export function PurchaseLineItemsFields() {
   const { control, setValue } = useFormContext();
@@ -32,75 +33,152 @@ export function PurchaseLineItemsFields() {
   const total = Math.round((subtotal + vat) * 100) / 100;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium">Line items</p>
-        <Button type="button" variant="outline" size="sm" onClick={() => append({ ...defaultLine })}>
-          <Plus className="h-3.5 w-3.5 mr-1" />
-          Add line
-        </Button>
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold tracking-tight">Line items</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Pick a catalogue product or enter a description manually.
+        </p>
       </div>
 
-      {fields.map((field, index) => (
-        <div key={field.id} className={formLineItemRowClassNameCompact}>
-          <div className="col-span-12">
-            <p className={formLineItemLabelClassName}>Product (optional)</p>
-            <ProductPicker
-              value={items[index]?.product || ""}
-              quoteType="sales"
-              onSelect={(product) => {
-                if (!product) {
-                  setValue(`items.${index}.product`, "");
-                  return;
-                }
-                setValue(`items.${index}.product`, String(product._id));
-                setValue(`items.${index}.description`, product.name);
-                setValue(
-                  `items.${index}.unitPrice`,
-                  Number(product.purchasePrice) || Number(product.sellingPrice) || 0
-                );
-                setValue(`items.${index}.unit`, product.unit || "Nos");
-              }}
-            />
-          </div>
-          <FormLineItemCell className="col-span-12 sm:col-span-5">
-            <FormTextField
-              control={control}
-              name={`items.${index}.description`}
-              label="Description"
-              placeholder="Item description"
-            />
-          </FormLineItemCell>
-          <FormLineItemCell className="col-span-4 sm:col-span-2">
-            <FormNumberField control={control} name={`items.${index}.quantity`} label="Qty" min={0.01} />
-          </FormLineItemCell>
-          <FormLineItemCell className="col-span-4 sm:col-span-2">
-            <FormSelectField control={control} name={`items.${index}.unit`} label="Unit" options={unitOpts} />
-          </FormLineItemCell>
-          <FormLineItemCell className="col-span-4 sm:col-span-2">
-            <FormNumberField control={control} name={`items.${index}.unitPrice`} label="Unit price" min={0} />
-          </FormLineItemCell>
-          <div className="col-span-12 sm:col-span-1">
-            <FormLineItemDeleteCell>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-destructive"
-                disabled={fields.length <= 1}
-                onClick={() => remove(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </FormLineItemDeleteCell>
-          </div>
-        </div>
-      ))}
+      <div className="space-y-4">
+        {fields.map((field, index) => {
+          const qty = Number(items[index]?.quantity) || 0;
+          const unitPrice = Number(items[index]?.unitPrice) || 0;
+          const lineAmount = Math.round(qty * unitPrice * 100) / 100;
+          const title = items[index]?.description?.trim() || `Line item ${index + 1}`;
 
-      <div className="text-sm text-right space-y-1 text-muted-foreground">
-        <p>Subtotal: AED {subtotal.toFixed(2)}</p>
-        <p>VAT (5%): AED {vat.toFixed(2)}</p>
-        <p className="font-semibold text-foreground">Total: AED {total.toFixed(2)}</p>
+          return (
+            <div
+              key={field.id}
+              className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm"
+            >
+              <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium leading-none">{title}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Item {index + 1} of {fields.length}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                  disabled={fields.length <= 1}
+                  onClick={() => remove(index)}
+                  aria-label={`Remove item ${index + 1}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4 p-4">
+                <div>
+                  <p className={fieldLabel}>Product (optional)</p>
+                  <ProductPicker
+                    value={items[index]?.product || ""}
+                    quoteType="sales"
+                    onSelect={(product) => {
+                      if (!product) {
+                        setValue(`items.${index}.product`, "");
+                        return;
+                      }
+                      setValue(`items.${index}.product`, String(product._id));
+                      setValue(`items.${index}.description`, product.name);
+                      setValue(
+                        `items.${index}.unitPrice`,
+                        Number(product.purchasePrice) || Number(product.sellingPrice) || 0
+                      );
+                      setValue(`items.${index}.unit`, product.unit || "Nos");
+                    }}
+                  />
+                </div>
+
+                <FormTextField
+                  control={control}
+                  name={`items.${index}.description`}
+                  label="Description"
+                  placeholder="Item description"
+                />
+
+                <div className="grid grid-cols-2 gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-3">
+                  <FormNumberField
+                    control={control}
+                    name={`items.${index}.quantity`}
+                    label="Qty"
+                    min={0.01}
+                  />
+                  <FormSelectField
+                    control={control}
+                    name={`items.${index}.unit`}
+                    label="Unit"
+                    options={unitOpts}
+                  />
+                  <FormNumberField
+                    control={control}
+                    name={`items.${index}.unitPrice`}
+                    label="Unit price"
+                    min={0}
+                    className="col-span-2 sm:col-span-1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t bg-muted/20 px-4 py-2.5 text-sm">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Qty × Price
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    {qty} × {unitPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2 sm:ml-auto">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    Amount
+                  </span>
+                  <span className="text-base font-semibold tabular-nums text-primary">
+                    {formatCurrency(lineAmount)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11 w-full border-dashed text-sm font-medium"
+        onClick={() => append({ ...defaultLine })}
+      >
+        <Plus className="h-4 w-4 mr-1.5" />
+        Add line
+      </Button>
+
+      <Separator className="my-1" />
+
+      <div className="ml-auto w-full space-y-1.5 border-t pt-3 text-sm sm:max-w-sm">
+        <div className="flex justify-between gap-6">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+        </div>
+        <div className="flex justify-between gap-6">
+          <span className="text-muted-foreground">VAT (5%)</span>
+          <span className="tabular-nums">{formatCurrency(vat)}</span>
+        </div>
+        <Separator />
+        <div className="flex justify-between gap-6 text-base font-bold">
+          <span>Total</span>
+          <span className="tabular-nums text-primary">{formatCurrency(total)}</span>
+        </div>
       </div>
     </div>
   );
