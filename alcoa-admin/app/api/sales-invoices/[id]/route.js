@@ -12,6 +12,7 @@ import {
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 import { resolveDocumentBankDetails } from "@/lib/resolve-document-bank-details";
+import { assertSalesInvoiceSafeToDelete } from "@/lib/sales-document-delete-guards";
 
 void Customer;
 
@@ -140,6 +141,7 @@ export const DELETE = withErrorHandler(async (request, context) => {
       : context.params;
 
   await connectDB();
+  await assertSalesInvoiceSafeToDelete(params.id);
   const doc = await SalesInvoice.findByIdAndDelete(params.id);
   if (!doc) throw new AppError("Tax Invoice not found", 404);
   return apiSuccess({ deleted: true });

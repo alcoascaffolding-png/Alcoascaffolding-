@@ -50,6 +50,9 @@ const POST = withErrorHandler(async (request) => {
     vatAmount,
     total,
     currency: body.currency || "AED",
+    paymentTerms: body.paymentTerms,
+    deliveryAddress: body.deliveryAddress,
+    termsAndConditions: body.termsAndConditions,
     notes: body.notes,
     createdBy: session.user.id,
   });

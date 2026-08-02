@@ -104,29 +104,37 @@ export function ProductPicker({ value, onSelect, quoteType = "rental", disabled 
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
-          className="h-11 w-full justify-between rounded-lg font-normal"
+          className={cn(
+            "h-11 w-full justify-between rounded-lg border-input bg-background px-3 font-normal shadow-none",
+            "hover:bg-background hover:border-ring/40",
+            selectedId === NONE && "text-muted-foreground"
+          )}
         >
-          <span className="truncate text-left">{displayLabel}</span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <span className="truncate text-left text-sm">{displayLabel}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[min(400px,calc(100vw-2rem))] p-0" align="start">
-        <div className="p-2 border-b">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] p-0"
+        align="start"
+        sideOffset={4}
+      >
+        <div className="border-b p-2.5">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search code or name…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 h-8"
+              className="h-9 pl-8"
               autoFocus
             />
           </div>
         </div>
-        <div className="max-h-[min(280px,50vh)] overflow-y-auto p-1">
+        <div className="max-h-[min(280px,50vh)] overflow-y-auto p-1.5">
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-muted/60"
+            className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-muted/70"
             onClick={() => {
               onSelect(null);
               setOpen(false);

@@ -4,6 +4,7 @@ import {
   Users,
   UserCog,
   FileText,
+  FileSignature,
   ShoppingCart,
   Receipt,
   Package,
@@ -64,6 +65,10 @@ export const ADMIN_NAV_GROUPS = [
       { name: "Receipts", href: "/receipts", icon: CreditCard },
       { name: "Payments", href: "/payments", icon: Wallet },
     ],
+  },
+  {
+    label: "Documents",
+    items: [{ name: "Letterhead", href: "/letterhead", icon: FileSignature }],
   },
   {
     label: "Settings",

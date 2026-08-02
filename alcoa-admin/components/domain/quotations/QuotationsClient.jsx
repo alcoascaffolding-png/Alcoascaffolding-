@@ -48,6 +48,25 @@ const STATUS_FILTERS = [
   { value: "expired", label: "Expired" },
 ];
 
+/** Nothing is ever auto-deleted — these presets only narrow the visible window. */
+const PERIOD_FILTERS = [
+  { value: "all", label: "All time", months: null },
+  { value: "1m", label: "Last 1 month", months: 1 },
+  { value: "2m", label: "Last 2 months", months: 2 },
+  { value: "3m", label: "Last 3 months", months: 3 },
+  { value: "6m", label: "Last 6 months", months: 6 },
+  { value: "12m", label: "Last 12 months", months: 12 },
+];
+
+function periodStartDate(value) {
+  const preset = PERIOD_FILTERS.find((p) => p.value === value);
+  if (!preset?.months) return null;
+  const d = new Date();
+  d.setMonth(d.getMonth() - preset.months);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().split("T")[0];
+}
+
 async function fetchQuotations(params = {}) {
   const qs = new URLSearchParams(params).toString();
   const res = await fetch(`${API_QUOTATIONS}?${qs}`);
@@ -72,6 +91,7 @@ export function QuotationsClient() {
   const debouncedSearch = useDebouncedValue(searchInput, 350);
 
   const statusFilter = searchParams.get("status") || "all";
+  const periodFilter = searchParams.get("period") || "all";
 
   const listParams = useMemo(() => {
     const params = {
@@ -80,8 +100,10 @@ export function QuotationsClient() {
     };
     if (statusFilter && statusFilter !== "all") params.status = statusFilter;
     if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    const from = periodStartDate(periodFilter);
+    if (from) params.dateFrom = from;
     return params;
-  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch]);
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, debouncedSearch, periodFilter]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["quotations", listParams],
@@ -114,14 +136,17 @@ export function QuotationsClient() {
     onError: (e) => toast.error(e.message),
   });
 
-  function setStatusFilter(value) {
+  function setUrlFilter(key, value) {
     const params = new URLSearchParams(searchParams.toString());
-    if (!value || value === "all") params.delete("status");
-    else params.set("status", value);
+    if (!value || value === "all") params.delete(key);
+    else params.set(key, value);
     setPagination((p) => ({ ...p, pageIndex: 0 }));
     const qs = params.toString();
     router.replace(qs ? `/quotations?${qs}` : "/quotations", { scroll: false });
   }
+
+  const setStatusFilter = (value) => setUrlFilter("status", value);
+  const setPeriodFilter = (value) => setUrlFilter("period", value);
 
   const statItems =
     stats &&
@@ -251,7 +276,7 @@ export function QuotationsClient() {
         onPaginationChange={setPagination}
         onRowClick={(row) => router.push(`/quotations/${String(row._id)}`)}
         emptyMessage={
-          statusFilter !== "all" || debouncedSearch
+          statusFilter !== "all" || periodFilter !== "all" || debouncedSearch
             ? "No quotations match your filters."
             : "No quotations yet. Create your first quotation."
         }
@@ -263,6 +288,18 @@ export function QuotationsClient() {
               </SelectTrigger>
               <SelectContent>
                 {STATUS_FILTERS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
+              <SelectTrigger className="h-8 w-[170px]">
+                <SelectValue placeholder="Period" />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_FILTERS.map((f) => (
                   <SelectItem key={f.value} value={f.value}>
                     {f.label}
                   </SelectItem>

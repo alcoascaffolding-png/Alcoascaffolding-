@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   FormTextField, FormSelectField, FormTextAreaField, FormNumberField,
   formInputClassName, numericTextInputProps, setValueAsNumber,
-  FormLineItemCell, FormLineItemDeleteCell, formLineItemLabelClassName, formNativeSelectClassName,
+  FormLineItemCell, formLineItemLabelClassName, formNativeSelectClassName,
 } from "@/components/forms/form-fields";
 import { Label } from "@/components/ui/label";
 import {
@@ -28,7 +28,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { AsyncButton } from "@/components/ui/async-button";
 import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { itemAmountWithVat, quotationDisplaySubtotal } from "@/lib/quotation-display";
 import {
@@ -414,6 +414,25 @@ export function QuotationFormPage({ id }) {
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
 
+  const itemRowRefs = useRef([]);
+  const pendingFocusIndexRef = useRef(null);
+
+  /** Append to the end of the list, then bring the new row into view. */
+  const addLineItem = useCallback(() => {
+    pendingFocusIndexRef.current = fields.length;
+    append({ ...defaultItem });
+  }, [append, fields.length]);
+
+  useEffect(() => {
+    const target = pendingFocusIndexRef.current;
+    if (target === null) return;
+    pendingFocusIndexRef.current = null;
+    const row = itemRowRefs.current[target];
+    if (!row) return;
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    row.querySelector("input")?.focus({ preventScroll: true });
+  }, [fields.length]);
+
   const watchedItems = form.watch("items");
   const quoteType = form.watch("quoteType") || "rental";
   const vatPct = form.watch("vatPercentage");
@@ -602,149 +621,248 @@ export function QuotationFormPage({ id }) {
 
         {/* Line items */}
         <Card>
-          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-base">Line Items</CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={() => append({ ...defaultItem })}>
-              <Plus className="h-4 w-4 mr-1" /> Add Item
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">
-              Line totals match the PDF: taxable amount, VAT ({vatPct}%) amount, and amount including VAT.
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base tracking-tight">Line Items</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Amounts include VAT at {vatPct}% — matching the quotation PDF.
             </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-4">
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-2 items-start p-3 rounded-lg border bg-muted/20">
-                  <div className="col-span-12">
-                    <label className={formLineItemLabelClassName}>Product (catalogue)</label>
-                    <ProductPicker
-                      value={watchedItems[index]?.productId || ""}
-                      quoteType={quoteType}
-                      onSelect={(product) => {
-                        if (!product) {
-                          form.setValue(`items.${index}.productId`, "");
-                          return;
-                        }
-                        const mapped = mapProductToQuotationLine(product, quoteType);
-                        if (!mapped) return;
-                        form.setValue(`items.${index}.productId`, mapped.productId);
-                        form.setValue(`items.${index}.equipmentType`, mapped.equipmentType);
-                        form.setValue(`items.${index}.equipmentCode`, mapped.equipmentCode || "");
-                        form.setValue(`items.${index}.description`, mapped.description || "");
-                        form.setValue(`items.${index}.specifications`, mapped.specifications || "");
-                        form.setValue(`items.${index}.unit`, mapped.unit || "Nos");
-                        form.setValue(`items.${index}.ratePerUnit`, mapped.ratePerUnit);
-                        form.setValue(`items.${index}.currentStock`, mapped.currentStock ?? 0);
-                      }}
-                    />
-                    <div className="mt-1">
-                      <StockWarningBadge
-                        currentStock={watchedItems[index]?.currentStock}
-                        quantity={watchedItems[index]?.quantity}
-                      />
-                    </div>
-                  </div>
-                  <FormLineItemCell className="col-span-12 md:col-span-4">
-                    <label className={formLineItemLabelClassName}>Equipment Type *</label>
-                    <Input className={formInputClassName} placeholder="Aluminium Tower 4m" {...form.register(`items.${index}.equipmentType`)} />
-                    {form.formState.errors.items?.[index]?.equipmentType && (
-                      <p className="text-xs text-destructive mt-1">{form.formState.errors.items[index].equipmentType.message}</p>
-                    )}
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-12 md:col-span-4">
-                    <label className={formLineItemLabelClassName}>Description</label>
-                    <Input className={formInputClassName} placeholder="Optional details" {...form.register(`items.${index}.description`)} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-12 md:col-span-4">
-                    <label className={formLineItemLabelClassName}>Specifications</label>
-                    <Input className={formInputClassName} placeholder="Optional" {...form.register(`items.${index}.specifications`)} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-6 md:col-span-2">
-                    <label className={formLineItemLabelClassName}>Size</label>
-                    <Input className={formInputClassName} placeholder="e.g. 8m" {...form.register(`items.${index}.size`)} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-6 md:col-span-2">
-                    <label className={formLineItemLabelClassName}>Wt (KG)</label>
-                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.weight`, { setValueAs: setValueAsNumber(0) })} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-6 md:col-span-2">
-                    <label className={formLineItemLabelClassName}>CBM</label>
-                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.cbm`, { setValueAs: setValueAsNumber(0) })} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-4 md:col-span-1">
-                    <label className={formLineItemLabelClassName}>Qty</label>
-                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.quantity`, { setValueAs: setValueAsNumber(1) })} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-4 md:col-span-1">
-                    <label className={formLineItemLabelClassName}>Unit</label>
-                    <Input className={formInputClassName} placeholder="Nos" {...form.register(`items.${index}.unit`)} />
-                  </FormLineItemCell>
-                  <FormLineItemCell className="col-span-4 md:col-span-2">
-                    <label className={formLineItemLabelClassName}>Rate (AED)</label>
-                    <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.ratePerUnit`, { setValueAs: setValueAsNumber(0) })} />
-                  </FormLineItemCell>
-                  {(quoteType === "rental" || quoteType === "both") && (
-                    <>
-                      <FormLineItemCell className="col-span-4 md:col-span-1">
-                        <label className={formLineItemLabelClassName}>Rental duration</label>
-                        <Input className={formInputClassName} {...numericTextInputProps} {...form.register(`items.${index}.rentalDurationValue`, { setValueAs: setValueAsNumber(0) })} />
-                      </FormLineItemCell>
-                      <FormLineItemCell className="col-span-4 md:col-span-1">
-                        <label className={formLineItemLabelClassName}>Period</label>
-                        <select
-                          className={formNativeSelectClassName}
-                          {...form.register(`items.${index}.rentalDurationUnit`)}
-                        >
-                          <option value="day">Day</option>
-                          <option value="week">Week</option>
-                          <option value="month">Month</option>
-                        </select>
-                      </FormLineItemCell>
-                    </>
-                  )}
-                  <div className="col-span-12 md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                    <div>
-                      <span className="text-xs text-muted-foreground block">Taxable Amount</span>
-                      <span className="font-medium tabular-nums">
-                        {(Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0)).toFixed(2)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block">VAT ({vatPct}%) Amount</span>
-                      <span className="font-medium tabular-nums">
-                        {((Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0)) * Number(vatPct || 0) / 100).toFixed(2)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground block">Amount (AED)</span>
-                      <span className="font-semibold tabular-nums">
-                        {itemAmountWithVat(
-                          {
-                            ...watchedItems[index],
-                            taxableAmount: Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0),
-                            vatAmount: (Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0) * Number(vatPct || 0)) / 100,
-                            subtotal: Number(watchedItems[index]?.quantity || 0) * Number(watchedItems[index]?.ratePerUnit || 0),
-                          },
-                          vatPct
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="col-span-12 md:col-span-1">
-                    <FormLineItemDeleteCell>
+              {fields.map((field, index) => {
+                const qty = Number(watchedItems[index]?.quantity || 0);
+                const rate = Number(watchedItems[index]?.ratePerUnit || 0);
+                const taxable = qty * rate;
+                const vatAmt = (taxable * Number(vatPct || 0)) / 100;
+                const amountIncVat = itemAmountWithVat(
+                  {
+                    ...watchedItems[index],
+                    taxableAmount: taxable,
+                    vatAmount: vatAmt,
+                    subtotal: taxable,
+                  },
+                  vatPct
+                );
+                const showRental = quoteType === "rental" || quoteType === "both";
+                const fieldLabel = "text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block";
+
+                return (
+                  <div
+                    key={field.id}
+                    ref={(el) => {
+                      itemRowRefs.current[index] = el;
+                    }}
+                    className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm"
+                  >
+                    <div className="flex items-center justify-between gap-3 border-b bg-muted/30 px-4 py-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-[11px] font-semibold text-primary-foreground">
+                          {index + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium leading-none truncate">
+                            {watchedItems[index]?.equipmentType || `Line item ${index + 1}`}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            Item {index + 1} of {fields.length}
+                          </p>
+                        </div>
+                      </div>
                       <Button
-                        type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive"
-                        onClick={() => remove(index)} disabled={fields.length === 1}
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => remove(index)}
+                        disabled={fields.length === 1}
+                        aria-label={`Remove item ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                    </FormLineItemDeleteCell>
+                    </div>
+
+                    <div className="space-y-4 p-4">
+                      <div>
+                        <label className={fieldLabel}>Catalogue product</label>
+                        <ProductPicker
+                          value={watchedItems[index]?.productId || ""}
+                          quoteType={quoteType}
+                          onSelect={(product) => {
+                            if (!product) {
+                              form.setValue(`items.${index}.productId`, "");
+                              return;
+                            }
+                            const mapped = mapProductToQuotationLine(product, quoteType);
+                            if (!mapped) return;
+                            form.setValue(`items.${index}.productId`, mapped.productId);
+                            form.setValue(`items.${index}.equipmentType`, mapped.equipmentType);
+                            form.setValue(`items.${index}.equipmentCode`, mapped.equipmentCode || "");
+                            form.setValue(`items.${index}.description`, mapped.description || "");
+                            form.setValue(`items.${index}.specifications`, mapped.specifications || "");
+                            form.setValue(`items.${index}.unit`, mapped.unit || "Nos");
+                            form.setValue(`items.${index}.ratePerUnit`, mapped.ratePerUnit);
+                            form.setValue(`items.${index}.currentStock`, mapped.currentStock ?? 0);
+                          }}
+                        />
+                        <div className="mt-1.5">
+                          <StockWarningBadge
+                            currentStock={watchedItems[index]?.currentStock}
+                            quantity={watchedItems[index]?.quantity}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="md:col-span-1">
+                          <label className={fieldLabel}>Equipment type *</label>
+                          <Input
+                            className={formInputClassName}
+                            placeholder="Aluminium Tower 4m"
+                            {...form.register(`items.${index}.equipmentType`)}
+                          />
+                          {form.formState.errors.items?.[index]?.equipmentType && (
+                            <p className="text-xs text-destructive mt-1">
+                              {form.formState.errors.items[index].equipmentType.message}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>Description</label>
+                          <Input
+                            className={formInputClassName}
+                            placeholder="Optional details"
+                            {...form.register(`items.${index}.description`)}
+                          />
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>Specifications</label>
+                          <Input
+                            className={formInputClassName}
+                            placeholder="Optional"
+                            {...form.register(`items.${index}.specifications`)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className={fieldLabel}>Size</label>
+                          <Input
+                            className={formInputClassName}
+                            placeholder="e.g. 8m"
+                            {...form.register(`items.${index}.size`)}
+                          />
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>Weight (KG)</label>
+                          <Input
+                            className={formInputClassName}
+                            {...numericTextInputProps}
+                            {...form.register(`items.${index}.weight`, { setValueAs: setValueAsNumber(0) })}
+                          />
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>CBM</label>
+                          <Input
+                            className={formInputClassName}
+                            {...numericTextInputProps}
+                            {...form.register(`items.${index}.cbm`, { setValueAs: setValueAsNumber(0) })}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        className={`grid grid-cols-2 gap-3 rounded-lg border bg-muted/20 p-3 ${
+                          showRental ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-3"
+                        }`}
+                      >
+                        <div>
+                          <label className={fieldLabel}>Qty</label>
+                          <Input
+                            className={formInputClassName}
+                            {...numericTextInputProps}
+                            {...form.register(`items.${index}.quantity`, { setValueAs: setValueAsNumber(1) })}
+                          />
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>Unit</label>
+                          <Input
+                            className={formInputClassName}
+                            placeholder="Nos"
+                            {...form.register(`items.${index}.unit`)}
+                          />
+                        </div>
+                        <div>
+                          <label className={fieldLabel}>Rate (AED)</label>
+                          <Input
+                            className={formInputClassName}
+                            {...numericTextInputProps}
+                            {...form.register(`items.${index}.ratePerUnit`, { setValueAs: setValueAsNumber(0) })}
+                          />
+                        </div>
+                        {showRental && (
+                          <>
+                            <div>
+                              <label className={fieldLabel}>Duration</label>
+                              <Input
+                                className={formInputClassName}
+                                {...numericTextInputProps}
+                                {...form.register(`items.${index}.rentalDurationValue`, {
+                                  setValueAs: setValueAsNumber(0),
+                                })}
+                              />
+                            </div>
+                            <div>
+                              <label className={fieldLabel}>Period</label>
+                              <select
+                                className={formNativeSelectClassName}
+                                {...form.register(`items.${index}.rentalDurationUnit`)}
+                              >
+                                <option value="day">Day</option>
+                                <option value="week">Week</option>
+                                <option value="month">Month</option>
+                              </select>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t bg-muted/20 px-4 py-2.5 text-sm">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Taxable</span>
+                        <span className="font-medium tabular-nums">{taxable.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          VAT {vatPct}%
+                        </span>
+                        <span className="font-medium tabular-nums">{vatAmt.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2 sm:ml-auto">
+                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          Amount
+                        </span>
+                        <span className="text-base font-semibold tabular-nums text-primary">
+                          AED {amountIncVat.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <Separator className="my-4" />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full border-dashed text-sm font-medium"
+              onClick={addLineItem}
+            >
+              <Plus className="h-4 w-4 mr-1.5" /> Add Item
+            </Button>
+
+            <Separator className="my-2" />
 
             {/* Totals */}
             <div className="w-full sm:max-w-sm sm:ml-auto grid grid-cols-1 gap-4 text-sm">

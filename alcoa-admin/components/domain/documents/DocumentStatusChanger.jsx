@@ -77,8 +77,12 @@ export function DocumentStatusChanger({
     onError: (e) => toast.error(e.message),
   });
 
-  const triggerSizeCls = size === "sm" ? "h-8 px-2 py-1 text-xs min-w-[120px] w-full sm:w-[150px]" : "h-9 min-w-[130px] w-full sm:w-[160px]";
+  const triggerSizeCls =
+    size === "sm"
+      ? "h-8 min-w-[140px] w-auto max-w-full px-2.5 text-xs"
+      : "h-9 min-w-[160px] w-auto max-w-full px-3";
   const currentDot = options.find((o) => o.value === value)?.dotClassName || "bg-muted-foreground";
+  const currentLabel = options.find((o) => o.value === value)?.label;
 
   return (
     <Select
@@ -89,16 +93,20 @@ export function DocumentStatusChanger({
       disabled={mut.isPending}
     >
       <SelectTrigger className={triggerSizeCls}>
-        <span className="flex items-center gap-2">
-          <span className={`h-2 w-2 rounded-full ${currentDot}`} />
-          {mut.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <SelectValue />}
+        <span className="flex min-w-0 items-center gap-2">
+          <span className={`h-2 w-2 shrink-0 rounded-full ${currentDot}`} />
+          {mut.isPending ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <span className="truncate whitespace-nowrap">{currentLabel || <SelectValue />}</span>
+          )}
         </span>
       </SelectTrigger>
       <SelectContent>
         {options.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
-            <span className="flex items-center gap-2">
-              <span className={`h-2 w-2 rounded-full ${opt.dotClassName || "bg-muted-foreground"}`} />
+            <span className="flex items-center gap-2 whitespace-nowrap">
+              <span className={`h-2 w-2 shrink-0 rounded-full ${opt.dotClassName || "bg-muted-foreground"}`} />
               {opt.label}
             </span>
           </SelectItem>

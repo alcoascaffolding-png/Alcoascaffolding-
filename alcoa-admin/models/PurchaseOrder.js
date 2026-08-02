@@ -30,6 +30,11 @@ const purchaseOrderSchema = new mongoose.Schema(
     vatAmount: { type: Number, default: 0, min: 0 },
     total: { type: Number, default: 0, min: 0 },
     currency: { type: String, default: "AED" },
+    /** Printed on the LPO; blank falls back to the vendor's agreed terms. */
+    paymentTerms: { type: String, trim: true },
+    deliveryAddress: { type: String, trim: true },
+    /** Blank prints the standard LPO terms from lib/pdf/purchase-order-terms.js. */
+    termsAndConditions: { type: String, trim: true },
     notes: { type: String, trim: true },
     /** True after inbound stock was increased for status received */
     stockApplied: { type: Boolean, default: false },

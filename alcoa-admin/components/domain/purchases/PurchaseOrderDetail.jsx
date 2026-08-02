@@ -12,6 +12,10 @@ import { ArrowLeft, FileDown, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
+import {
+  fetchDocumentPdfBlob,
+  saveBlobAsPdfDownload,
+} from "@/lib/document-outbound-client";
 
 const statusColors = {
   draft: "outline",
@@ -25,6 +29,7 @@ const statusColors = {
 export function PurchaseOrderDetail({ id }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const { data: po, isLoading, error } = useQuery({
     queryKey: ["purchase-orders", "detail", id],
@@ -82,27 +87,22 @@ export function PurchaseOrderDetail({ id }) {
           <Button
             size="sm"
             variant="outline"
+            disabled={downloading}
             onClick={async () => {
+              setDownloading(true);
               try {
-                const res = await fetch(`/api/purchase-orders/${id}/pdf`);
-                if (!res.ok) {
-                  const d = await res.json().catch(() => ({}));
-                  throw new Error(d.error || "PDF failed");
-                }
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${po.poNumber}.pdf`;
-                a.click();
-                URL.revokeObjectURL(url);
+                const blob = await fetchDocumentPdfBlob("/api/purchase-orders", id);
+                saveBlobAsPdfDownload(blob, po.poNumber);
+                toast.success("PDF downloaded");
               } catch (e) {
-                alert(e.message);
+                toast.error(e.message);
+              } finally {
+                setDownloading(false);
               }
             }}
           >
             <FileDown className="h-4 w-4 mr-1" />
-            Download PDF
+            {downloading ? "Preparing…" : "Download PDF"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => router.push(`/purchase-orders?edit=${id}`)}>
             Edit

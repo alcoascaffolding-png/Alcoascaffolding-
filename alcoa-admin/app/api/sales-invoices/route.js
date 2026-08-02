@@ -76,6 +76,7 @@ export const POST = withErrorHandler(async (request) => {
 
   const {
     customer: _dropCustomer,
+    quotation: quotationRef,
     salesOrder: salesOrderRef,
     invoiceDate: invoiceDateRaw,
     dueDate: dueRaw,
@@ -134,6 +135,9 @@ export const POST = withErrorHandler(async (request) => {
   const soid = toObjectId(salesOrderRef);
   if (soid) payload.salesOrder = soid;
 
+  const qid = toObjectId(quotationRef);
+  if (qid) payload.quotation = qid;
+
   try {
     payload.invoiceNumber = await resolveInvoiceNumberForCreate(
       {
@@ -156,5 +160,17 @@ export const POST = withErrorHandler(async (request) => {
   });
   applySalesInvoicePaymentFields(doc);
   await doc.save();
+
+  if (qid) {
+    await Quotation.findByIdAndUpdate(qid, {
+      $set: {
+        status: "converted_to_invoice",
+        convertedToInvoice: true,
+        invoiceId: doc._id,
+        convertedAt: new Date(),
+      },
+    });
+  }
+
   return apiSuccess(doc, 201);
 });

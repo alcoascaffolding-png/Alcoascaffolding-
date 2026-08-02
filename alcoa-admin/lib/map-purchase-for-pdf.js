@@ -1,3 +1,29 @@
+import { buildPurchaseOrderTerms } from "@/lib/pdf/purchase-order-terms";
+import { getQuotationCompanyName } from "@/lib/quotation-brand";
+
+/** Vendor may be an ObjectId, a populated doc, or missing entirely. */
+function readVendor(doc) {
+  const v = doc?.vendor;
+  return v && typeof v === "object" && !("_bsontype" in v) && (v.companyName || v.address)
+    ? v
+    : null;
+}
+
+function joinVendorAddress(vendor) {
+  if (!vendor) return "";
+  return [vendor.address, vendor.emirate, vendor.country]
+    .map((p) => String(p || "").trim())
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatPdfDate(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 function mapPurchaseLineItemsForPdf(items, vatPct = 5) {
   return (items || []).map((row) => {
     const qty = Number(row.quantity) || 0;
@@ -32,17 +58,32 @@ function resolveVatPct(doc) {
 export function mapPurchaseOrderForPdf(po) {
   const vatPct = resolveVatPct(po);
   const items = mapPurchaseLineItemsForPdf(po.items, vatPct);
+  const vendor = readVendor(po);
+  const paymentTerms =
+    String(po.paymentTerms || "").trim() ||
+    String(vendor?.paymentTerms || "").trim() ||
+    "As per vendor agreement";
+  const deliveryAddress = String(po.deliveryAddress || "").trim();
+
   return {
     quoteNumber: po.poNumber,
-    customerName: po.vendorName,
-    customerAddress: "",
-    customerEmail: "",
-    customerPhone: "",
-    customerTRN: "",
-    contactPersonName: "",
+    customerName: vendor?.companyName || po.vendorName,
+    customerAddress: joinVendorAddress(vendor),
+    customerEmail: vendor?.email || "",
+    customerPhone: vendor?.phone || vendor?.whatsapp || "",
+    customerTRN: vendor?.vatNumber || "",
+    contactPersonName: vendor?.contactPerson || "",
     subject: `Purchase Order ${po.poNumber}`,
-    paymentTerms: "As per vendor agreement",
-    deliveryTerms: po.deliveryDate ? "Per delivery date below" : "As agreed",
+    paymentTerms,
+    deliveryTerms: deliveryAddress || (po.deliveryDate ? "Per delivery date shown" : "As agreed"),
+    deliveryAddress,
+    termsAndConditions:
+      String(po.termsAndConditions || "").trim() ||
+      buildPurchaseOrderTerms({
+        companyName: getQuotationCompanyName(),
+        paymentTerms,
+        deliveryDateText: formatPdfDate(po.deliveryDate),
+      }),
     status: po.status,
     items,
     subtotal: Number(po.subtotal) || 0,
@@ -66,16 +107,20 @@ export function mapPurchaseInvoiceForPdf(inv) {
   const items = mapPurchaseLineItemsForPdf(inv.items, vatPct);
   const balance =
     inv.balance != null ? Number(inv.balance) : Math.max(0, (inv.total || 0) - (inv.paidAmount || 0));
+  const vendor = readVendor(inv);
   return {
     quoteNumber: inv.invoiceNumber,
-    customerName: inv.vendorName,
-    customerAddress: "",
-    customerEmail: "",
-    customerPhone: "",
-    customerTRN: "",
-    contactPersonName: "",
+    customerName: vendor?.companyName || inv.vendorName,
+    customerAddress: joinVendorAddress(vendor),
+    customerEmail: vendor?.email || "",
+    customerPhone: vendor?.phone || vendor?.whatsapp || "",
+    customerTRN: vendor?.vatNumber || "",
+    contactPersonName: vendor?.contactPerson || "",
     subject: `Purchase Invoice ${inv.invoiceNumber}`,
-    paymentTerms: "As per vendor agreement",
+    paymentTerms:
+      String(inv.paymentTerms || "").trim() ||
+      String(vendor?.paymentTerms || "").trim() ||
+      "As per vendor agreement",
     status: inv.paymentStatus,
     paymentStatus: inv.paymentStatus,
     paidAmount: Number(inv.paidAmount) || 0,

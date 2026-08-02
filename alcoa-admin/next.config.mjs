@@ -3,34 +3,36 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * PDF header/footer art, fonts, and logo are read from disk at render time, so every
+ * route that generates a PDF needs them traced into its serverless bundle.
+ */
+const PDF_TRACED_FILES = [
+  "./assets/**",
+  "./assets/fonts/**",
+  "./public/brand/**",
+  "./lib/pdf/**",
+  "./lib/map-sales-order-for-quotation-pdf.js",
+];
+
+const PDF_ROUTE_GLOBS = [
+  "/api/quotations/**",
+  "/api/sales-orders/**",
+  "/api/sales-invoices/**",
+  "/api/delivery-notes/**",
+  "/api/purchase-orders/**",
+  "/api/purchase-invoices/**",
+  "/api/letterhead/**",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Monorepo / Vercel: trace files from repo root so serverless output includes deps correctly.
   outputFileTracingRoot: path.join(__dirname, ".."),
 
-  // Include quotation PDF header/footer art + logo in serverless bundles (Vercel production).
-  outputFileTracingIncludes: {
-    "/api/quotations/**": [
-      "./assets/**",
-      "./assets/fonts/**",
-      "./public/brand/**",
-      "./lib/pdf/**",
-    ],
-    "/api/sales-orders/**": [
-      "./assets/**",
-      "./assets/fonts/**",
-      "./public/brand/**",
-      "./lib/pdf/**",
-      "./lib/map-sales-order-for-quotation-pdf.js",
-    ],
-    "/api/sales-invoices/**": [
-      "./assets/**",
-      "./assets/fonts/**",
-      "./public/brand/**",
-      "./lib/pdf/**",
-      "./lib/map-sales-order-for-quotation-pdf.js",
-    ],
-  },
+  outputFileTracingIncludes: Object.fromEntries(
+    PDF_ROUTE_GLOBS.map((route) => [route, PDF_TRACED_FILES])
+  ),
 
   // External packages that should not be bundled for server components
   // Needed for mongoose, playwright-core, twilio, etc.

@@ -12,6 +12,10 @@ import { ArrowLeft, Banknote, FileDown, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
+import {
+  fetchDocumentPdfBlob,
+  saveBlobAsPdfDownload,
+} from "@/lib/document-outbound-client";
 
 const payColors = {
   unpaid: "destructive",
@@ -23,6 +27,7 @@ const payColors = {
 export function PurchaseInvoiceDetail({ id }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const { data: inv, isLoading, error } = useQuery({
     queryKey: ["purchase-invoices", "detail", id],
@@ -82,27 +87,22 @@ export function PurchaseInvoiceDetail({ id }) {
           <Button
             size="sm"
             variant="outline"
+            disabled={downloading}
             onClick={async () => {
+              setDownloading(true);
               try {
-                const res = await fetch(`/api/purchase-invoices/${id}/pdf`);
-                if (!res.ok) {
-                  const d = await res.json().catch(() => ({}));
-                  throw new Error(d.error || "PDF failed");
-                }
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `${inv.invoiceNumber}.pdf`;
-                a.click();
-                URL.revokeObjectURL(url);
+                const blob = await fetchDocumentPdfBlob("/api/purchase-invoices", id);
+                saveBlobAsPdfDownload(blob, inv.invoiceNumber);
+                toast.success("PDF downloaded");
               } catch (e) {
-                alert(e.message);
+                toast.error(e.message);
+              } finally {
+                setDownloading(false);
               }
             }}
           >
             <FileDown className="h-4 w-4 mr-1" />
-            Download PDF
+            {downloading ? "Preparing…" : "Download PDF"}
           </Button>
           {balance > 0.01 && inv.paymentStatus !== "paid" && (
             <Link href={`/payments?invoice=${id}`}>

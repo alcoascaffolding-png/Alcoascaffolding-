@@ -29,6 +29,26 @@ function buildQuotationFilter(searchParams) {
   if (searchParams.get("quoteType")) filter.quoteType = searchParams.get("quoteType");
   if (searchParams.get("customer")) filter.customer = searchParams.get("customer");
 
+  // Date window is inclusive and matches the Date column (quoteDate).
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const range = {};
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    if (!Number.isNaN(from.getTime())) {
+      from.setHours(0, 0, 0, 0);
+      range.$gte = from;
+    }
+  }
+  if (dateTo) {
+    const to = new Date(dateTo);
+    if (!Number.isNaN(to.getTime())) {
+      to.setHours(23, 59, 59, 999);
+      range.$lte = to;
+    }
+  }
+  if (Object.keys(range).length) filter.quoteDate = range;
+
   const searchFilter = buildRegexSearchFilter(searchParams.get("search"), [
     "quoteNumber",
     "customerName",
@@ -51,9 +71,10 @@ export const GET = withErrorHandler(async (request) => {
   const skip = (page - 1) * limit;
   const filter = buildQuotationFilter(searchParams);
 
+  // quoteDate first so the list order matches the visible Date column.
   const [items, total] = await Promise.all([
     Quotation.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ quoteDate: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .populate("customer", DOCUMENT_CUSTOMER_CONTACT_POPULATE)

@@ -33,6 +33,9 @@ const poSchema = z.object({
   deliveryDate: z.string().optional(),
   status: z.enum(["draft", "sent", "confirmed", "partially_received", "received", "cancelled"]),
   items: z.array(lineItemSchema).min(1, "At least one line item"),
+  paymentTerms: z.string().optional(),
+  deliveryAddress: z.string().optional(),
+  termsAndConditions: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -43,6 +46,9 @@ const defaultValues = {
   deliveryDate: "",
   status: "draft",
   items: [{ description: "", product: "", quantity: 1, unit: "Nos", unitPrice: 0 }],
+  paymentTerms: "",
+  deliveryAddress: "",
+  termsAndConditions: "",
   notes: "",
 };
 
@@ -119,8 +125,28 @@ function PurchaseOrderFormFields({ control }) {
         <FormTextField control={control} name="orderDate" label="Order date" type="date" />
         <FormTextField control={control} name="deliveryDate" label="Expected delivery" type="date" />
         <FormSelectField control={control} name="status" label="Status" options={statusOptions} />
+        <FormTextField
+          control={control}
+          name="paymentTerms"
+          label="Payment terms"
+          placeholder="e.g. 30 Days — blank uses the vendor's terms"
+        />
       </div>
       <PurchaseLineItemsFields />
+      <FormTextAreaField
+        control={control}
+        name="deliveryAddress"
+        label="Deliver to"
+        rows={2}
+        placeholder="Delivery address printed on the LPO"
+      />
+      <FormTextAreaField
+        control={control}
+        name="termsAndConditions"
+        label="Terms & Conditions"
+        rows={5}
+        placeholder="Leave blank to print the standard LPO terms"
+      />
       <FormTextAreaField control={control} name="notes" label="Notes" rows={2} />
     </div>
   );
@@ -150,6 +176,9 @@ function mapPurchaseDocToForm(item) {
             unitPrice: row.unitPrice,
           }))
         : defaultValues.items,
+    paymentTerms: item.paymentTerms || "",
+    deliveryAddress: item.deliveryAddress || "",
+    termsAndConditions: item.termsAndConditions || "",
     notes: item.notes || "",
   };
 }

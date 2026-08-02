@@ -9,6 +9,7 @@ import {
   getQuotationFooterDataUri,
 } from "@/lib/quotation-brand";
 import { COMPANY_BANK_DETAILS } from "@/lib/company-bank-details";
+import { buildPurchaseOrderTerms } from "./purchase-order-terms";
 
 /** Bank block for PDF layout (set by prepare*ForPdf via enrichDocumentWithBankDetails). */
 function getQuotationPdfBankDetails(quotation) {
@@ -706,6 +707,7 @@ function buildQuotationPdfLayout(quotation, options = {}) {
     preparedBy = "",
     paymentTerms = "Cash/CDC",
     deliveryTerms = "7-10 days from date of order",
+    deliveryAddress = "",
     status = "",
     paymentStatus = "",
     paidAmount = 0,
@@ -772,7 +774,9 @@ function buildQuotationPdfLayout(quotation, options = {}) {
               <tr><td class="mini-label">PO No</td><td>${quoteNumber || "-"}</td></tr>
               <tr><td class="mini-label">Order Date</td><td>${formatDate(quoteDate)}</td></tr>
               <tr><td class="mini-label">Status</td><td>${String(status || "-").replace(/_/g, " ")}</td></tr>
-              <tr><td class="mini-label">Delivery Date</td><td>${formatDate(validUntil)}</td></tr>`
+              <tr><td class="mini-label">Delivery Date</td><td>${formatDate(validUntil)}</td></tr>
+              <tr><td class="mini-label">Payment Terms</td><td>${escapeHtml(paymentTerms || "As per vendor agreement")}</td></tr>
+              <tr><td class="mini-label">Deliver To</td><td>${escapeHtml(deliveryAddress || companyName)}</td></tr>`
         : isPurchaseInvoice
           ? `
               <tr><td class="mini-label">Invoice No</td><td>${quoteNumber || "-"}</td></tr>
@@ -808,12 +812,14 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 2. Payment terms: ${paymentTerms}.
 3. Please quote invoice number on all remittances.
 4. Late payment may incur charges per our credit terms.`
-      : isPurchase
-        ? `1. All amounts are in AED unless otherwise stated.
-2. Goods/services as per the line items above.
-3. Delivery and payment per vendor agreement.
-4. This document is for internal procurement records.`
-      : `1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
+      : isPurchaseOrder
+        ? buildPurchaseOrderTerms({ companyName, paymentTerms, deliveryDateText: formatDate(validUntil) })
+        : isPurchaseInvoice
+          ? `1. All amounts are in ${currency} unless otherwise stated.
+2. Payment terms: ${paymentTerms}.
+3. Goods/services received as per the line items above.
+4. Quote the invoice number on all remittances.`
+          : `1. All prices quoted are in AED (UAE Dirhams) unless otherwise stated.
 2. This quotation is valid for 30 days from the date of issue.
 3. Payment terms: ${paymentTerms}.
 4. Delivery terms: ${deliveryTerms}.
@@ -1034,8 +1040,10 @@ function buildQuotationPdfLayout(quotation, options = {}) {
           <div class="footer-main">${footerImageBlock}</div>
         </div>`;
 
-  const bankSignaturesHtml = `
-          <div class="bank-signatures-wrap">
+  // An LPO is money going out — our receiving bank details don't belong on it.
+  const bankBlockHtml = isPurchaseOrder
+    ? ""
+    : `
             <div class="bank-title-main">BANK DETAILS</div>
             <div class="bank-table-wrap">
               <table class="bank-table-full">
@@ -1044,14 +1052,17 @@ function buildQuotationPdfLayout(quotation, options = {}) {
                 <tr><td class="mini-label">Account no</td><td>${pdfBank.accountNumber}</td></tr>
                 <tr><td class="mini-label">IBAN</td><td>${pdfBank.iban}</td></tr>
               </table>
-            </div>
+            </div>`;
+
+  const bankSignaturesHtml = `
+          <div class="bank-signatures-wrap">${bankBlockHtml}
             <div class="signatures-row">
               <div class="sign-box sign-box-company">
-                <div class="sign-label">For ALCOA ALUMINIUM SCAFFOLDING</div>
+                <div class="sign-label">ACCOUNTS</div>
                 <div class="sign-line"></div>
               </div>
               <div class="sign-box sign-box-customer">
-                <div class="sign-label">CUSTOMER'S SIGNATURE</div>
+                <div class="sign-label">MANAGER</div>
                 <div class="sign-line"></div>
               </div>
             </div>

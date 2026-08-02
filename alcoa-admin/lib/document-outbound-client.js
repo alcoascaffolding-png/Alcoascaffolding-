@@ -8,8 +8,16 @@ import { singleFlight } from "@/lib/single-flight";
 export function fetchDocumentPdfBlob(apiBase, id) {
   const key = `pdf:${apiBase}:${id}`;
   return singleFlight(key, async () => {
-    const res = await fetch(`${apiBase}/${id}/pdf`);
+    const res = await fetch(`${apiBase}/${id}/pdf`, {
+      credentials: "same-origin",
+      headers: { Accept: "application/pdf" },
+    });
     const contentType = res.headers.get("content-type") || "";
+
+    // Auth middleware answers with the login HTML instead of a 401.
+    if (res.redirected && /\/login/.test(res.url)) {
+      throw new Error("Your session expired. Sign in again and retry the download.");
+    }
 
     if (!res.ok) {
       let message = `HTTP ${res.status}`;
@@ -41,14 +49,18 @@ export function fetchDocumentPdfBlob(apiBase, id) {
 export function saveBlobAsPdfDownload(blob, fileBaseName) {
   const name = String(fileBaseName || "document").replace(/\.pdf$/i, "");
   const url = URL.createObjectURL(blob);
-  try {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${name}.pdf`;
-    a.click();
-  } finally {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${name}.pdf`;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  // Revoking in the same tick cancels the download in Chrome/Firefox.
+  window.setTimeout(() => {
+    a.remove();
     URL.revokeObjectURL(url);
-  }
+  }, 10000);
 }
 
 export function postDocumentSendEmail(apiBase, id) {

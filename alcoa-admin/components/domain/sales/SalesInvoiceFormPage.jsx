@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
@@ -34,6 +34,12 @@ import {
 } from "@/lib/sales-line-item-structured";
 import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
 import { mapProductToSalesLine } from "@/lib/map-product-to-quotation-line";
+import {
+  buildQuotationSourceOptions,
+  getLinkedId,
+  quotationItemsToFormLines,
+  quotationToSalesFormPatch,
+} from "@/lib/map-quotation-to-sales-form";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -49,6 +55,23 @@ const lineItemSchema = z.object({
   currentStock: z.coerce.number().optional(),
 });
 
+/**
+ * Mirrors SalesInvoice.recalculateTotals so the on-screen preview matches what the
+ * server stores: charges are added first, then discount, then VAT.
+ */
+function computeInvoiceBeforeVat(lineSubtotal, values) {
+  const withCharges =
+    Number(lineSubtotal || 0) +
+    Number(values?.deliveryCharges || 0) +
+    Number(values?.installationCharges || 0) +
+    Number(values?.pickupCharges || 0);
+  const discountRaw = Number(values?.discount || 0);
+  if (discountRaw <= 0) return Math.max(0, withCharges);
+  const discountValue =
+    values?.discountType === "percentage" ? (withCharges * discountRaw) / 100 : discountRaw;
+  return Math.max(0, withCharges - discountValue);
+}
+
 const invoiceSchema = z
   .object({
     customer: z.string().optional(),
@@ -57,6 +80,7 @@ const invoiceSchema = z
     customerEmail: z.string().email().optional().or(z.literal("")),
     customerPhone: z.string().optional(),
     customerTRN: z.string().optional(),
+    quotation: z.string().optional(),
     salesOrder: z.string().optional(),
     invoiceDate: z.string(),
     dueDate: z.string().optional(),
@@ -65,13 +89,19 @@ const invoiceSchema = z
     items: z.array(lineItemSchema).min(1, "At least one line item"),
     pricingMode: z.enum(["rental", "sales"]).default("rental"),
     vatPercentage: z.coerce.number().min(0).max(100).default(5),
+    deliveryCharges: z.coerce.number().min(0).default(0),
+    installationCharges: z.coerce.number().min(0).default(0),
+    pickupCharges: z.coerce.number().min(0).default(0),
+    discount: z.coerce.number().min(0).default(0),
+    discountType: z.enum(["percentage", "fixed"]).default("fixed"),
     notes: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    const subtotal = (data.items || []).reduce(
+    const lineSubtotal = (data.items || []).reduce(
       (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
       0
     );
+    const subtotal = computeInvoiceBeforeVat(lineSubtotal, data);
     const vat = (subtotal * Number(data.vatPercentage || 0)) / 100;
     const total = subtotal + vat;
     const paid = Number(data.paidAmount) || 0;
@@ -142,6 +172,7 @@ export function SalesInvoiceFormPage({ id }) {
       customerEmail: "",
       customerPhone: "",
       customerTRN: "",
+      quotation: "__none__",
       salesOrder: "__none__",
       invoiceDate: today,
       dueDate: defaultDue,
@@ -150,6 +181,11 @@ export function SalesInvoiceFormPage({ id }) {
       items: [{ ...defaultItem }],
       pricingMode: "rental",
       vatPercentage: 5,
+      deliveryCharges: 0,
+      installationCharges: 0,
+      pickupCharges: 0,
+      discount: 0,
+      discountType: "fixed",
       notes: "",
     },
   });
@@ -186,6 +222,7 @@ export function SalesInvoiceFormPage({ id }) {
       customerPhone: existing.customerPhone || "",
       customerTRN:
         existing.customerTRN || custObj?.vatRegistrationNumber || "",
+      quotation: getLinkedId(existing.quotation) || "__none__",
       salesOrder: salesOrderId,
       invoiceDate: fmt(existing.invoiceDate) || today,
       dueDate: fmt(existing.dueDate),
@@ -196,6 +233,11 @@ export function SalesInvoiceFormPage({ id }) {
           ? existing.items.map(mapExistingLineItemToForm)
           : [{ ...defaultItem }],
       vatPercentage: vatPctVal,
+      deliveryCharges: Number(existing.deliveryCharges) || 0,
+      installationCharges: Number(existing.installationCharges) || 0,
+      pickupCharges: Number(existing.pickupCharges) || 0,
+      discount: Number(existing.discount) || 0,
+      discountType: existing.discountType || "fixed",
       notes: existing.notes || "",
     });
   }, [existing, form]);
@@ -223,6 +265,17 @@ export function SalesInvoiceFormPage({ id }) {
     queryKey: ["sales-orders", "sales-invoice-form"],
     queryFn: async () => {
       const res = await fetch("/api/sales-orders?limit=200");
+      const d = await res.json();
+      if (!d.success) throw new Error(d.error);
+      return d.data.items || [];
+    },
+    staleTime: 30 * 1000,
+  });
+
+  const { data: quotationList } = useQuery({
+    queryKey: ["quotations", "sales-invoice-form"],
+    queryFn: async () => {
+      const res = await fetch("/api/quotations?limit=200");
       const d = await res.json();
       if (!d.success) throw new Error(d.error);
       return d.data.items || [];
@@ -268,6 +321,102 @@ export function SalesInvoiceFormPage({ id }) {
     ];
   }, [customerList, isEdit, existing]);
 
+  const loadedInvoiceQuotationId = useMemo(
+    () => getLinkedId(existing?.quotation),
+    [existing]
+  );
+
+  const lastSyncedQuotationRef = useRef("__none__");
+
+  useEffect(() => {
+    if (!isEdit) {
+      lastSyncedQuotationRef.current = "__none__";
+      return;
+    }
+    if (!existing) return;
+    lastSyncedQuotationRef.current = loadedInvoiceQuotationId || "__none__";
+  }, [isEdit, existing, loadedInvoiceQuotationId]);
+
+  const selectedQuotationId = useWatch({ control: form.control, name: "quotation" });
+
+  /** Pull the full quotation (customer, line items, charges) onto this invoice. */
+  const applyQuotationToForm = useCallback(
+    (q) => {
+      if (!q) return;
+      lastSyncedQuotationRef.current = String(q._id ?? selectedQuotationId);
+
+      const patch = quotationToSalesFormPatch(q);
+      const setIf = (name, value) => {
+        if (value !== undefined && value !== null && value !== "") {
+          form.setValue(name, value, { shouldDirty: true });
+        }
+      };
+      setIf("customer", patch.customer);
+      setIf("customerName", patch.customerName);
+      setIf("customerAddress", patch.customerAddress);
+      setIf("customerEmail", patch.customerEmail);
+      setIf("customerPhone", patch.customerPhone);
+      setIf("customerTRN", patch.customerTRN);
+      setIf("notes", patch.notes);
+      form.setValue("vatPercentage", patch.vatPercentage, { shouldDirty: true });
+      form.setValue("deliveryCharges", patch.deliveryCharges, { shouldDirty: true });
+      form.setValue("installationCharges", patch.installationCharges, { shouldDirty: true });
+      form.setValue("pickupCharges", patch.pickupCharges, { shouldDirty: true });
+      form.setValue("discount", patch.discount, { shouldDirty: true });
+      form.setValue("discountType", patch.discountType, { shouldDirty: true });
+
+      const lines = quotationItemsToFormLines(q.items);
+      if (!lines.length) {
+        toast.info("That quotation has no line items to import.");
+        return;
+      }
+      form.setValue("items", lines, { shouldDirty: true });
+      toast.success(
+        `Imported ${lines.length} line item${lines.length === 1 ? "" : "s"} from ${q.quoteNumber || "quotation"}`
+      );
+    },
+    [form, selectedQuotationId]
+  );
+
+  useEffect(() => {
+    if (!selectedQuotationId || selectedQuotationId === "__none__") return;
+    if (String(selectedQuotationId) === String(lastSyncedQuotationRef.current)) return;
+
+    // List payloads are lean and may omit items — fall back to the detail endpoint.
+    const fromList = quotationList?.find((x) => String(x._id) === String(selectedQuotationId));
+    if (fromList?.items?.length) {
+      applyQuotationToForm(fromList);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/quotations/${selectedQuotationId}`);
+        const d = await res.json();
+        if (cancelled) return;
+        if (!d.success) {
+          lastSyncedQuotationRef.current = String(selectedQuotationId);
+          toast.error(d.error || "Could not load that quotation.");
+          return;
+        }
+        applyQuotationToForm(d.data);
+      } catch (err) {
+        if (cancelled) return;
+        lastSyncedQuotationRef.current = String(selectedQuotationId);
+        toast.error(err?.message || "Could not load that quotation.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedQuotationId, quotationList, applyQuotationToForm]);
+
+  const quotationSelectOptions = useMemo(
+    () => buildQuotationSourceOptions(quotationList, loadedInvoiceQuotationId),
+    [quotationList, loadedInvoiceQuotationId]
+  );
+
   const loadedInvoiceSalesOrderId = useMemo(() => {
     if (!existing?.salesOrder) return null;
     const so = existing.salesOrder;
@@ -295,10 +444,24 @@ export function SalesInvoiceFormPage({ id }) {
   const vatPct = form.watch("vatPercentage") ?? 5;
   const paidAmount = form.watch("paidAmount") ?? 0;
 
-  const subtotal = (watchedItems || []).reduce(
+  const chargeValues = useWatch({
+    control: form.control,
+    name: ["deliveryCharges", "installationCharges", "pickupCharges", "discount", "discountType"],
+  });
+  const [deliveryCharges, installationCharges, pickupCharges, discount, discountType] =
+    chargeValues || [];
+
+  const lineSubtotal = (watchedItems || []).reduce(
     (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
     0
   );
+  const subtotal = computeInvoiceBeforeVat(lineSubtotal, {
+    deliveryCharges,
+    installationCharges,
+    pickupCharges,
+    discount,
+    discountType,
+  });
   const vatAmount = (subtotal * Number(vatPct || 0)) / 100;
   const grandTotal = subtotal + vatAmount;
   const balance = Math.max(0, grandTotal - Number(paidAmount || 0));
@@ -306,8 +469,9 @@ export function SalesInvoiceFormPage({ id }) {
   const saveMut = useMutation({
     mutationFn: async (values) => {
       const items = values.items.map(buildLineItemSavePayload);
-      const lineSubtotal = items.reduce((s, it) => s + it.total, 0);
-      const vat = (lineSubtotal * Number(values.vatPercentage ?? 5)) / 100;
+      const lineTotal = items.reduce((s, it) => s + it.total, 0);
+      const beforeVat = computeInvoiceBeforeVat(lineTotal, values);
+      const vat = (beforeVat * Number(values.vatPercentage ?? 5)) / 100;
       const paid = Number(values.paidAmount) || 0;
 
       const payload = {
@@ -321,10 +485,22 @@ export function SalesInvoiceFormPage({ id }) {
         paymentStatus: values.paymentStatus,
         paidAmount: paid,
         items,
+        vatPercentage: Number(values.vatPercentage ?? 5),
         vatAmount: vat,
+        deliveryCharges: Number(values.deliveryCharges) || 0,
+        installationCharges: Number(values.installationCharges) || 0,
+        pickupCharges: Number(values.pickupCharges) || 0,
+        discount: Number(values.discount) || 0,
+        discountType: values.discountType || "fixed",
         notes: values.notes || undefined,
         currency: "AED",
       };
+
+      if (values.quotation && values.quotation !== "__none__") {
+        payload.quotation = String(values.quotation);
+      } else if (isEdit) {
+        payload.quotation = null;
+      }
 
       if (values.customer && values.customer !== "__none__") {
         payload.customer = String(values.customer);
@@ -400,6 +576,14 @@ export function SalesInvoiceFormPage({ id }) {
             control={form.control}
             name="customerAddress"
             label="Address"
+            className="md:col-span-2"
+          />
+          <FormSelectField
+            control={form.control}
+            name="quotation"
+            label="Create from quotation (optional)"
+            description="Selecting a quotation imports its customer details, all line items, and charges into this invoice."
+            options={quotationSelectOptions}
             className="md:col-span-2"
           />
           <FormSelectField
@@ -526,9 +710,74 @@ export function SalesInvoiceFormPage({ id }) {
                 </div>
               </div>
             ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+              <FormNumberField
+                control={form.control}
+                name="deliveryCharges"
+                label="Delivery charges (AED)"
+              />
+              <FormNumberField
+                control={form.control}
+                name="installationCharges"
+                label="Installation charges (AED)"
+              />
+              <FormNumberField
+                control={form.control}
+                name="pickupCharges"
+                label="Pickup charges (AED)"
+              />
+              <FormNumberField control={form.control} name="discount" label="Discount" />
+              <FormSelectField
+                control={form.control}
+                name="discountType"
+                label="Discount type"
+                options={[
+                  { value: "fixed", label: "Fixed (AED)" },
+                  { value: "percentage", label: "Percentage (%)" },
+                ]}
+              />
+            </div>
+
             <div className="flex flex-col items-end gap-1 text-sm pt-2">
               <div>
-                Subtotal <strong>{formatCurrency(subtotal)}</strong>
+                Line items <strong>{formatCurrency(lineSubtotal)}</strong>
+              </div>
+              {Number(deliveryCharges) > 0 && (
+                <div>
+                  Delivery <strong>{formatCurrency(Number(deliveryCharges))}</strong>
+                </div>
+              )}
+              {Number(installationCharges) > 0 && (
+                <div>
+                  Installation <strong>{formatCurrency(Number(installationCharges))}</strong>
+                </div>
+              )}
+              {Number(pickupCharges) > 0 && (
+                <div>
+                  Pickup <strong>{formatCurrency(Number(pickupCharges))}</strong>
+                </div>
+              )}
+              {Number(discount) > 0 && (
+                <div className="text-emerald-600">
+                  Discount
+                  {discountType === "percentage" ? ` (${discount}%)` : ""}{" "}
+                  <strong>
+                    -
+                    {formatCurrency(
+                      Math.max(
+                        0,
+                        lineSubtotal +
+                          Number(deliveryCharges || 0) +
+                          Number(installationCharges || 0) +
+                          Number(pickupCharges || 0) -
+                          subtotal
+                      )
+                    )}
+                  </strong>
+                </div>
+              )}
+              <div>
+                Total w/o VAT <strong>{formatCurrency(subtotal)}</strong>
               </div>
               <div>
                 VAT ({vatPct}%) <strong>{formatCurrency(vatAmount)}</strong>

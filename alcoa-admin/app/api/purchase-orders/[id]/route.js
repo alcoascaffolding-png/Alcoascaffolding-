@@ -58,6 +58,9 @@ export const PATCH = withErrorHandler(async (request, context) => {
   if (body.orderDate) doc.orderDate = new Date(body.orderDate);
   if (body.deliveryDate) doc.deliveryDate = new Date(body.deliveryDate);
   if (body.status) doc.status = body.status;
+  if (body.paymentTerms !== undefined) doc.paymentTerms = body.paymentTerms;
+  if (body.deliveryAddress !== undefined) doc.deliveryAddress = body.deliveryAddress;
+  if (body.termsAndConditions !== undefined) doc.termsAndConditions = body.termsAndConditions;
   if (body.notes !== undefined) doc.notes = body.notes;
 
   if (body.items) {

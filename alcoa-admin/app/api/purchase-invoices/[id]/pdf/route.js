@@ -6,6 +6,8 @@ import { connectDB } from "@/lib/db";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import PurchaseInvoice from "@/models/PurchaseInvoice";
+// Registers the Vendor schema so the populate below can resolve it.
+import "@/models/Vendor";
 import { generatePurchaseInvoicePDF } from "@/lib/pdf/purchase-document-pdf";
 
 async function resolveParams(context) {
@@ -19,7 +21,12 @@ export const GET = withErrorHandler(async (request, context) => {
   const params = await resolveParams(context);
 
   await connectDB();
-  const inv = await PurchaseInvoice.findById(params.id).lean();
+  const inv = await PurchaseInvoice.findById(params.id)
+    .populate(
+      "vendor",
+      "companyName contactPerson email phone whatsapp address emirate country vatNumber paymentTerms"
+    )
+    .lean();
   if (!inv) throw new AppError("Purchase Invoice not found", 404);
   if (!inv.items?.length) {
     throw new AppError("Add at least one line item before downloading PDF.", 400);

@@ -36,14 +36,18 @@ const deliveryAddressSchema = z
   })
   .optional();
 
+/** Must stay in sync with the `status` enum on models/Quotation.js. */
 const quotationStatusSchema = z.enum([
   "draft",
   "sent",
   "viewed",
+  "accepted",
   "approved",
   "rejected",
   "expired",
   "converted",
+  "converted_to_sales_order",
+  "converted_to_invoice",
 ]);
 
 export const quotationCreateSchema = z

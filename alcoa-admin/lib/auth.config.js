@@ -7,6 +7,8 @@
  * can decode the session cookie after credentials sign-in.
  */
 
+import { STALE_SESSION_PARAM } from "./auth-constants";
+
 export const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
 export const authSession = {
@@ -39,8 +41,9 @@ export const authConfig = {
 
   callbacks: {
     authorized({ auth, request }) {
-      const { pathname } = request.nextUrl;
+      const { pathname, searchParams } = request.nextUrl;
       const isLoggedIn = !!(auth?.user?.email || auth?.user?.id);
+      const isStaleSession = searchParams.has(STALE_SESSION_PARAM);
 
       // Public paths — always allow
       if (
@@ -51,7 +54,7 @@ export const authConfig = {
         pathname.startsWith("/api/health")
       ) {
         // If logged in user visits /login, redirect to dashboard
-        if (isLoggedIn && pathname.startsWith("/login")) {
+        if (isLoggedIn && pathname.startsWith("/login") && !isStaleSession) {
           return Response.redirect(new URL("/", request.nextUrl));
         }
         return true;

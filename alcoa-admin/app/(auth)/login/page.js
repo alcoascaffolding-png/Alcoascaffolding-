@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/login-form";
 import { BrandLogo } from "@/components/auth/brand-logo";
 import { ForceLightTheme } from "@/components/auth/force-light-theme";
+import { StaleSessionReset } from "@/components/auth/stale-session-reset";
 import { Providers } from "@/components/providers";
 import { SessionProvider } from "@/components/auth/session-provider";
 import { RouteLoadingView } from "@/components/loading/loading-kit";
@@ -20,6 +21,9 @@ export default function LoginPage() {
     <Providers forcedTheme="light">
       <SessionProvider>
         <ForceLightTheme />
+        <Suspense fallback={null}>
+          <StaleSessionReset />
+        </Suspense>
         <div className="login-surface min-h-screen grid lg:grid-cols-2">
           {/* Left — brand */}
           <div
