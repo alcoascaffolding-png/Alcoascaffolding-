@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
 import { MessageSquare, Mail, Phone, Building2, Clock, Trash2, Eye, RefreshCw } from "lucide-react";
 import { ImportButton } from "@/components/data-table/ImportButton";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const STATUS_COLORS = {
   new: "info",
@@ -83,6 +84,9 @@ export function ContactMessagesClient() {
   const openId = searchParams.get("id");
   const [selectedMsg, setSelectedMsg] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const perms = usePermissions();
+  const canRemove =
+    perms.canWrite("contact-messages") && perms.canDelete("contact-messages");
   const filterStatus = searchParams.get("status") || "all";
   const filterType = searchParams.get("type") || "all";
 
@@ -207,9 +211,11 @@ export function ContactMessagesClient() {
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setSelectedMsg(row.original); }}>
             <Eye className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(row.original._id); }}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          {canRemove && (
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(row.original._id); }}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       ),
       size: 80,

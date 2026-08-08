@@ -38,6 +38,7 @@ import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentConvertMenu } from "@/components/domain/documents/DocumentConvertMenu";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
+import { usePermissions } from "@/hooks/use-permissions";
 import { SalesOrderStatusChanger } from "@/components/domain/sales/SalesOrderStatusChanger";
 
 function InfoRow({ label, value, valueClassName = "" }) {
@@ -62,6 +63,9 @@ function InfoRowAlways({ label, value }) {
 export function SalesOrderDetail({ id }) {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("sales-orders");
+  const canRemove = perms.canWrite("sales-orders") && perms.canDelete("sales-orders");
   const [showDelete, setShowDelete] = useState(false);
 
   const { data: order, isLoading, error } = useQuery({
@@ -249,8 +253,8 @@ export function SalesOrderDetail({ id }) {
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
             onCopyWhatsAppLink={copyWhatsAppLink}
-            onEdit={() => router.push(`/sales-orders/${id}/edit`)}
-            onDelete={() => setShowDelete(true)}
+            onEdit={canEdit ? () => router.push(`/sales-orders/${id}/edit`) : undefined}
+            onDelete={canRemove ? () => setShowDelete(true) : undefined}
           />
         </div>
       </div>

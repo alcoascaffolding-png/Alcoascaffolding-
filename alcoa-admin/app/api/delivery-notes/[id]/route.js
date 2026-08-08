@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { Customer, DeliveryNote, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 
@@ -127,6 +128,14 @@ export const PATCH = withErrorHandler(async (request, context) => {
     .populate("quotation", "quoteNumber status customerName")
     .lean();
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "delivery-notes",
+    resourceId: doc._id,
+    summary: `Updated delivery note ${doc.deliveryNoteNumber}`,
+  });
+
   return apiSuccess(populated);
 });
 
@@ -141,5 +150,12 @@ export const DELETE = withErrorHandler(async (request, context) => {
   await connectDB();
   const doc = await DeliveryNote.findByIdAndDelete(params.id);
   if (!doc) throw new AppError("Delivery Note not found", 404);
+  logAudit({
+    session,
+    action: "delete",
+    resource: "delivery-notes",
+    resourceId: doc._id,
+    summary: `Deleted delivery note ${doc.deliveryNoteNumber}`,
+  });
   return apiSuccess({ deleted: true });
 });

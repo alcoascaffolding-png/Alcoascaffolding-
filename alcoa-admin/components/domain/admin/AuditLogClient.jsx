@@ -21,6 +21,8 @@ const actionColors = {
   update: "info",
   delete: "destructive",
   send_email: "warning",
+  send_whatsapp: "warning",
+  import: "info",
   status_change: "outline",
 };
 
@@ -149,6 +151,9 @@ export function AuditLogClient() {
               <SelectItem value="payments" className={filterItemClassName}>
                 Payments
               </SelectItem>
+              <SelectItem value="vendors" className={filterItemClassName}>
+                Vendors
+              </SelectItem>
             </SelectGroup>
             <SelectSeparator className="my-1 bg-border/60" />
             <SelectGroup>
@@ -157,6 +162,18 @@ export function AuditLogClient() {
               </SelectLabel>
               <SelectItem value="products" className={filterItemClassName}>
                 Products
+              </SelectItem>
+              <SelectItem value="stock-adjustments" className={filterItemClassName}>
+                Stock adjustments
+              </SelectItem>
+              <SelectItem value="categories" className={filterItemClassName}>
+                Categories
+              </SelectItem>
+              <SelectItem value="bank-accounts" className={filterItemClassName}>
+                Bank accounts
+              </SelectItem>
+              <SelectItem value="contact-messages" className={filterItemClassName}>
+                Contact messages
               </SelectItem>
               <SelectItem value="users" className={filterItemClassName}>
                 Users
@@ -186,6 +203,9 @@ export function AuditLogClient() {
             </SelectItem>
             <SelectItem value="send_email" className={filterItemClassName}>
               Send email
+            </SelectItem>
+            <SelectItem value="send_whatsapp" className={filterItemClassName}>
+              Send WhatsApp
             </SelectItem>
           </SelectContent>
         </Select>

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import SalesOrder from "@/models/SalesOrder";
 import { generateSalesOrderPDF } from "@/lib/pdf/sales-document-pdf";
 import {
@@ -104,6 +105,7 @@ export const POST = withErrorHandler(async (request, context) => {
       });
       const result = await sendWhatsAppMessage(toPhone, message, null);
       await recordWhatsAppSent(orderId, toPhone, result.sid);
+      logWhatsAppAudit(session, orderId, order.orderNumber, toPhone);
       return apiSuccess({
         mode: "twilio",
         sent: true,
@@ -124,6 +126,7 @@ export const POST = withErrorHandler(async (request, context) => {
     const message = buildWhatsAppSalesOrderBody(order);
     const result = await sendWhatsAppMessage(toPhone, message, pdfUrl);
     await recordWhatsAppSent(orderId, toPhone, result.sid);
+    logWhatsAppAudit(session, orderId, order.orderNumber, toPhone);
     return apiSuccess({ mode: "twilio", sent: true, sid: result.sid, pdfUrl });
   }
 
@@ -149,8 +152,19 @@ export const POST = withErrorHandler(async (request, context) => {
   const waMeUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(textBody)}`;
 
   await recordWhatsAppSent(orderId, toPhone, "wa-me");
+  logWhatsAppAudit(session, orderId, order.orderNumber, toPhone);
   return apiSuccess({ mode: "wa_me", sent: true, waMeUrl, pdfUrl });
 });
+
+function logWhatsAppAudit(session, orderId, orderNumber, toPhone) {
+  logAudit({
+    session,
+    action: "send_whatsapp",
+    resource: "sales-orders",
+    resourceId: orderId,
+    summary: `Sent sales order ${orderNumber || orderId} via WhatsApp to ${toPhone}`,
+  });
+}
 
 async function recordWhatsAppSent(orderId, toPhone, messageSid) {
   await SalesOrder.findByIdAndUpdate(orderId, {

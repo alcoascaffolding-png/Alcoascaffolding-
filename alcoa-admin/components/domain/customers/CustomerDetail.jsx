@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /** Digits only for wa.me (E.164 without +) */
 function phoneToWhatsAppDigits(phone) {
@@ -67,6 +68,9 @@ const STATUS_MAP = {
 export function CustomerDetail({ id }) {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("customers");
+  const canRemove = perms.canWrite("customers") && perms.canDelete("customers");
   const [showDelete, setShowDelete] = useState(false);
 
   const { data: customer, isLoading, error } = useQuery({
@@ -138,12 +142,16 @@ export function CustomerDetail({ id }) {
           <Badge variant={STATUS_MAP[c.status] || "outline"} className="text-sm">
             {c.status}
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => router.push(`/customers/${id}/edit`)}>
-            <Pencil className="h-4 w-4 mr-1" /> Edit
-          </Button>
-          <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-white" onClick={() => setShowDelete(true)}>
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={() => router.push(`/customers/${id}/edit`)}>
+              <Pencil className="h-4 w-4 mr-1" /> Edit
+            </Button>
+          )}
+          {canRemove && (
+            <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-white" onClick={() => setShowDelete(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 

@@ -108,7 +108,7 @@ function coerceNumericFieldValue(raw, showZero) {
   return Number.isNaN(n) ? raw : n;
 }
 
-function FormPasswordControl({ field, resolvedPlaceholder, disabled, readOnly, className }) {
+function FormPasswordControl({ field, resolvedPlaceholder, disabled, readOnly, className, autoComplete }) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -119,6 +119,7 @@ function FormPasswordControl({ field, resolvedPlaceholder, disabled, readOnly, c
           placeholder={resolvedPlaceholder}
           disabled={disabled}
           readOnly={readOnly}
+          autoComplete={autoComplete ?? "new-password"}
           className={cn(className, "pr-10")}
           {...field}
           value={textDisplayValue(field.value)}
@@ -147,6 +148,7 @@ export function FormTextField({
   disabled,
   readOnly,
   className,
+  autoComplete,
 }) {
   const resolvedPlaceholder = defaultPlaceholder(label, placeholder);
 
@@ -165,6 +167,7 @@ export function FormTextField({
               resolvedPlaceholder={resolvedPlaceholder}
               disabled={disabled}
               readOnly={readOnly}
+              autoComplete={autoComplete}
               className={cn(
                 formInputClassName,
                 (disabled || readOnly) && "cursor-not-allowed bg-muted/40 text-muted-foreground"
@@ -177,6 +180,7 @@ export function FormTextField({
                 placeholder={resolvedPlaceholder}
                 disabled={disabled}
                 readOnly={readOnly}
+                autoComplete={autoComplete}
                 className={cn(
                   formInputClassName,
                   (disabled || readOnly) && "cursor-not-allowed bg-muted/40 text-muted-foreground"

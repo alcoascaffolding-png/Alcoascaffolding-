@@ -5,6 +5,7 @@ import { withErrorHandler } from "@/lib/api-error";
 import { createListHandlers } from "@/lib/crud-factory";
 import { createPaymentWithAllocation } from "@/lib/payment-service";
 import { normalizeOptionalObjectId } from "@/lib/normalize-object-id";
+import { logAudit } from "@/lib/audit-log";
 
 const { GET } = createListHandlers(() => import("@/models/Payment"), "Payment", "payments");
 
@@ -31,6 +32,14 @@ const POST = withErrorHandler(async (request) => {
     notes: body.notes,
     paymentDate: body.paymentDate,
     userId: session.user.id,
+  });
+
+  logAudit({
+    session,
+    action: "create",
+    resource: "payments",
+    resourceId: payment._id,
+    summary: `Recorded payment ${payment.paymentNumber || payment._id}`,
   });
 
   return apiSuccess(payment, 201);

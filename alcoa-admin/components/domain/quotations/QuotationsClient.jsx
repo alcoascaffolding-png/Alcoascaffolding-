@@ -34,6 +34,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const API_QUOTATIONS = "/api/quotations";
 
@@ -85,6 +86,9 @@ export function QuotationsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("quotations");
+  const canRemove = perms.canWrite("quotations") && perms.canDelete("quotations");
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
@@ -244,12 +248,12 @@ export function QuotationsClient() {
             hasEmail={!!resolveDocumentCustomerEmail(q)}
             hasPhone={!!resolveDocumentCustomerPhone(q)}
             onView={() => router.push(`/quotations/${qid}`)}
-            onEdit={() => router.push(`/quotations/${qid}/edit`)}
+            onEdit={canEdit ? () => router.push(`/quotations/${qid}/edit`) : undefined}
             onDownloadPdf={() => downloadPdf(qid, q.quoteNumber)}
             onSendEmail={() => sendEmail(qid)}
             onSendWhatsApp={() => sendWhatsApp(qid)}
             onCopyWhatsAppLink={() => copyWhatsAppLink(qid)}
-            onDelete={() => setDeleteId(qid)}
+            onDelete={canRemove ? () => setDeleteId(qid) : undefined}
           />
         );
       },

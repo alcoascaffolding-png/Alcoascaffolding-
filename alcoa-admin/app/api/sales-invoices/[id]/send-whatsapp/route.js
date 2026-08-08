@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import SalesInvoice from "@/models/SalesInvoice";
 import { prepareSalesInvoiceForPdf } from "@/lib/load-sales-invoice-for-pdf";
 import { generateSalesInvoicePDF } from "@/lib/pdf/sales-document-pdf";
@@ -108,6 +109,7 @@ export const POST = withErrorHandler(async (request, context) => {
       });
       const result = await sendWhatsAppMessage(toPhone, message, null);
       await recordWhatsAppSent(invoiceId, toPhone, result.sid);
+      logWhatsAppAudit(session, invoiceId, invoice.invoiceNumber, toPhone);
       return apiSuccess({
         mode: "twilio",
         sent: true,
@@ -128,6 +130,7 @@ export const POST = withErrorHandler(async (request, context) => {
     const message = buildWhatsAppSalesInvoiceBody(invoice);
     const result = await sendWhatsAppMessage(toPhone, message, pdfUrl);
     await recordWhatsAppSent(invoiceId, toPhone, result.sid);
+    logWhatsAppAudit(session, invoiceId, invoice.invoiceNumber, toPhone);
     return apiSuccess({ mode: "twilio", sent: true, sid: result.sid, pdfUrl });
   }
 
@@ -153,8 +156,19 @@ export const POST = withErrorHandler(async (request, context) => {
   const waMeUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(textBody)}`;
 
   await recordWhatsAppSent(invoiceId, toPhone, "wa-me");
+  logWhatsAppAudit(session, invoiceId, invoice.invoiceNumber, toPhone);
   return apiSuccess({ mode: "wa_me", sent: true, waMeUrl, pdfUrl });
 });
+
+function logWhatsAppAudit(session, invoiceId, invoiceNumber, toPhone) {
+  logAudit({
+    session,
+    action: "send_whatsapp",
+    resource: "sales-invoices",
+    resourceId: invoiceId,
+    summary: `Sent tax invoice ${invoiceNumber || invoiceId} via WhatsApp to ${toPhone}`,
+  });
+}
 
 async function recordWhatsAppSent(invoiceId, toPhone, messageSid) {
   await SalesInvoice.findByIdAndUpdate(invoiceId, {

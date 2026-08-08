@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { requireSession, requireManageUsers } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit-log";
 import User from "@/models/User";
 import { validatePasswordForSet } from "@/lib/schemas/password";
 import { sanitizePermissionList } from "@/lib/permission-catalog";
@@ -50,6 +51,14 @@ export const POST = withErrorHandler(async (request) => {
     isActive: body.isActive !== false,
     useCustomPermissions: !!body.useCustomPermissions,
     permissions: sanitizePermissionList(body.permissions),
+  });
+
+  logAudit({
+    session,
+    action: "create",
+    resource: "users",
+    resourceId: user._id,
+    summary: `Created user ${user.name || user.email}`,
   });
 
   return apiSuccess(user.getPublicProfile(), 201);

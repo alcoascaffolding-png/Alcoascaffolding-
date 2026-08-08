@@ -10,6 +10,7 @@ import {
 } from "@/lib/quotation-brand";
 import { COMPANY_BANK_DETAILS } from "@/lib/company-bank-details";
 import { buildPurchaseOrderTerms } from "./purchase-order-terms";
+import { formatPdfNumber, formatPdfCurrency } from "./format-number.js";
 
 /** Bank block for PDF layout (set by prepare*ForPdf via enrichDocumentWithBankDetails). */
 function getQuotationPdfBankDetails(quotation) {
@@ -40,22 +41,20 @@ function formatDate(date) {
 }
 
 function formatCurrency(amount, currency = "AED") {
-  return `${currency} ${Number(amount || 0).toLocaleString("en-AE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return formatPdfCurrency(amount, currency);
 }
 
-/** PDF table numbers — always 2 decimal places (e.g. 85.00). */
+/**
+ * PDF table numbers — UAE formatting: Western thousands grouping + 2 decimals
+ * (e.g. 1,234,567.89). See {@link formatPdfNumber}.
+ */
 function formatPdfAmount(value) {
-  return Number(value || 0).toFixed(2);
+  return formatPdfNumber(value);
 }
 
-/** Comma-grouped amounts for summary totals only (e.g. 3,21,323.32). */
+/** Summary totals — same UAE formatting as line items (kept for call-site clarity). */
 function formatPdfSummaryAmount(value) {
-  const n = Number(value || 0);
-  if (!Number.isFinite(n)) return "0.00";
-  return n.toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return formatPdfNumber(value);
 }
 
 /** Line total including VAT for PDF amount column. */

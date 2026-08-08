@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import PurchaseOrder from "@/models/PurchaseOrder";
 import {
   recalculatePurchaseTotals,
@@ -76,6 +77,14 @@ export const PATCH = withErrorHandler(async (request, context) => {
   const stockSaved = await syncPurchaseOrderReceived(doc, prevSnapshot, session.user.id);
   if (!stockSaved) await doc.save();
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "purchase-orders",
+    resourceId: doc._id,
+    summary: `Updated PO ${doc.poNumber}`,
+  });
+
   return apiSuccess(await PurchaseOrder.findById(doc._id).lean());
 });
 
@@ -86,5 +95,12 @@ export const DELETE = withErrorHandler(async (request, context) => {
   await connectDB();
   const doc = await PurchaseOrder.findByIdAndDelete(params.id);
   if (!doc) throw new AppError("Purchase Order not found", 404);
+  logAudit({
+    session,
+    action: "delete",
+    resource: "purchase-orders",
+    resourceId: doc._id,
+    summary: `Deleted PO ${doc.poNumber}`,
+  });
   return apiSuccess({ deleted: true });
 });

@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveInvoiceNumberForCreate } from "@/lib/document-number";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
@@ -182,6 +183,14 @@ export const POST = withErrorHandler(async (request) => {
       },
     });
   }
+
+  logAudit({
+    session,
+    action: "create",
+    resource: "sales-invoices",
+    resourceId: doc._id,
+    summary: `Created tax invoice ${doc.invoiceNumber}`,
+  });
 
   return apiSuccess(doc, 201);
 });

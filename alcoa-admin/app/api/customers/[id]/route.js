@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import Customer from "@/models/Customer";
 import { syncCustomerSnapshotsToDocuments } from "@/lib/sync-customer-to-documents";
 
@@ -63,6 +64,14 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
 
   await syncCustomerSnapshotsToDocuments(doc);
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "customers",
+    resourceId: doc._id,
+    summary: `Updated customer ${doc.displayName || doc.companyName || doc._id}`,
+  });
+
   return apiSuccess(doc.toJSON());
 });
 
@@ -72,5 +81,12 @@ export const DELETE = withErrorHandler(async (request, { params }) => {
   await connectDB();
   const customer = await Customer.findByIdAndDelete(params.id);
   if (!customer) throw new AppError("Customer not found", 404);
+  logAudit({
+    session,
+    action: "delete",
+    resource: "customers",
+    resourceId: customer._id,
+    summary: `Deleted customer ${customer.displayName || customer.companyName || customer._id}`,
+  });
   return apiSuccess({ deleted: true });
 });

@@ -25,7 +25,7 @@ import { ImportButton } from "@/components/data-table/ImportButton";
 import { IMPORTABLE_RESOURCES } from "@/lib/import/schemas";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
-import { canWriteResource, canDeleteDocuments, canManageUsers } from "@/lib/permissions";
+import { canWriteResource, canDeleteDocuments } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
 const EMPTY_LIST_PARAMS = {};
@@ -84,14 +84,13 @@ export function GenericCRUDPage({
   const user = session?.user;
   const permResource =
     permissionResource || (resource.includes("/") ? resource.split("/")[0] : resource);
-  const canWrite =
-    !!user &&
-    (permResource === "users" ? canManageUsers(user) : canWriteResource(user, permResource));
+  // `canWriteResource` already maps the "users" resource to manage-users capability.
+  const canWrite = !!user && canWriteResource(user, permResource);
+  // Delete requires BOTH the delete action and write access for the resource. For the
+  // "users" module this means an admin (full access) or a custom-permission user that was
+  // explicitly granted `users:delete` — matching server-side enforcement.
   const canDelete =
-    !!user &&
-    (permResource === "users"
-      ? canManageUsers(user)
-      : canDeleteDocuments(user, permResource) && canWriteResource(user, permResource));
+    !!user && canDeleteDocuments(user, permResource) && canWriteResource(user, permResource);
   const [editItem, setEditItem] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: defaultPageSize });

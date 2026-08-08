@@ -64,14 +64,16 @@ export function DocumentRowActionMenu({
         >
           <Eye className="mr-2 h-4 w-4" /> View
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
-          }}
-        >
-          <Pencil className="mr-2 h-4 w-4" /> Edit
-        </DropdownMenuItem>
+        {onEdit ? (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+          >
+            <Pencil className="mr-2 h-4 w-4" /> Edit
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={(e) => {

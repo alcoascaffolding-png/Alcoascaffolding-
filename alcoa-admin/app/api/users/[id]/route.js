@@ -1,7 +1,8 @@
 import { connectDB } from "@/lib/db";
 import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
-import { requireSession, requireManageUsers } from "@/lib/api-auth";
+import { requireSession, requireManageUsers, requireDelete } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit-log";
 import User from "@/models/User";
 import { validatePasswordForSet } from "@/lib/schemas/password";
 import { sanitizePermissionList } from "@/lib/permission-catalog";
@@ -58,12 +59,23 @@ export const PATCH = withErrorHandler(async (request, context) => {
   if (body.permissions !== undefined) user.permissions = sanitizePermissionList(body.permissions);
 
   await user.save();
+
+  logAudit({
+    session,
+    action: "update",
+    resource: "users",
+    resourceId: user._id,
+    summary: `Updated user ${user.name || user.email}`,
+  });
+
   return apiSuccess(user.getPublicProfile());
 });
 
 export const DELETE = withErrorHandler(async (request, context) => {
   const session = await requireSession();
   requireManageUsers(session);
+  // Deleting a user requires the explicit `users:delete` permission (admins have it implicitly).
+  requireDelete(session, "users");
 
   const params = await resolveParams(context);
   if (String(params.id) === String(session.user.id)) {
@@ -86,5 +98,14 @@ export const DELETE = withErrorHandler(async (request, context) => {
   }
 
   await user.deleteOne();
+
+  logAudit({
+    session,
+    action: "delete",
+    resource: "users",
+    resourceId: user._id,
+    summary: `Deleted user ${user.name || user.email}`,
+  });
+
   return apiSuccess({ deleted: true });
 });

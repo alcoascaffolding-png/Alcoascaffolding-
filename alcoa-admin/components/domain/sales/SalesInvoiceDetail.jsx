@@ -38,6 +38,7 @@ import {
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
+import { usePermissions } from "@/hooks/use-permissions";
 import { InvoicePaymentStatusChanger } from "@/components/domain/sales/InvoicePaymentStatusChanger";
 
 function InfoRow({ label, value, valueClassName = "" }) {
@@ -61,6 +62,8 @@ function InfoRowAlways({ label, value }) {
 
 export function SalesInvoiceDetail({ id }) {
   const router = useRouter();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("sales-invoices");
   // Tax invoices are permanent — delete UI disabled.
   // const qc = useQueryClient();
   // const [showDelete, setShowDelete] = useState(false);
@@ -217,7 +220,7 @@ export function SalesInvoiceDetail({ id }) {
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
             onCopyWhatsAppLink={copyWhatsAppLink}
-            onEdit={() => router.push(`/sales-invoices/${id}/edit`)}
+            onEdit={canEdit ? () => router.push(`/sales-invoices/${id}/edit`) : undefined}
             // Tax invoices are permanent — delete UI disabled.
             // onDelete={() => setShowDelete(true)}
           />

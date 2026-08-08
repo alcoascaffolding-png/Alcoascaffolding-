@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import Payment from "@/models/Payment";
 import { reversePaymentAllocation } from "@/lib/payment-service";
 
@@ -35,6 +36,14 @@ export const DELETE = withErrorHandler(async (request, context) => {
 
   await reversePaymentAllocation(doc);
   await doc.deleteOne();
+
+  logAudit({
+    session,
+    action: "delete",
+    resource: "payments",
+    resourceId: doc._id,
+    summary: `Deleted payment ${doc.paymentNumber || doc._id}`,
+  });
 
   return apiSuccess({ deleted: true });
 });

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { DeliveryNote } from "@/lib/mongoose-models";
 import { prepareDeliveryNoteForPdf } from "@/lib/load-delivery-note-for-pdf";
 import { resolveDocumentCustomerEmail } from "@/lib/resolve-document-customer";
@@ -47,6 +48,14 @@ export const POST = withErrorHandler(async (request, context) => {
         status: "sent",
       },
     },
+  });
+
+  logAudit({
+    session,
+    action: "send_email",
+    resource: "delivery-notes",
+    resourceId: id,
+    summary: `Emailed delivery note ${note.deliveryNoteNumber} to ${toEmail}`,
   });
 
   return apiSuccess({ sent: true, messageId: result.messageId });

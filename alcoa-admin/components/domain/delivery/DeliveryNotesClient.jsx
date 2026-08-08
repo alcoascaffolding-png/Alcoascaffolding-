@@ -34,6 +34,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const API = "/api/delivery-notes";
 
@@ -64,6 +65,9 @@ async function fetchStats() {
 export function DeliveryNotesClient() {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("delivery-notes");
+  const canRemove = perms.canWrite("delivery-notes") && perms.canDelete("delivery-notes");
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
@@ -189,12 +193,12 @@ export function DeliveryNotesClient() {
             hasEmail={!!resolveDocumentCustomerEmail(n)}
             hasPhone={!!(resolveDocumentCustomerPhone(n) || n.contactPersonPhone)}
             onView={() => router.push(`/delivery-notes/${nid}`)}
-            onEdit={() => router.push(`/delivery-notes/${nid}/edit`)}
+            onEdit={canEdit ? () => router.push(`/delivery-notes/${nid}/edit`) : undefined}
             onDownloadPdf={() => downloadPdf(nid, n.deliveryNoteNumber)}
             onSendEmail={() => sendEmail(nid)}
             onSendWhatsApp={() => sendWhatsApp(nid)}
             onCopyWhatsAppLink={() => copyWhatsAppLink(nid)}
-            onDelete={() => setDeleteId(nid)}
+            onDelete={canRemove ? () => setDeleteId(nid) : undefined}
           />
         );
       },

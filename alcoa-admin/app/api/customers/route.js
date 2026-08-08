@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import Customer from "@/models/Customer";
 import { buildRegexSearchFilter } from "@/lib/search-utils";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
@@ -54,5 +55,12 @@ export const POST = withErrorHandler(async (request) => {
   const patch = sanitizeMongoDocument(body);
 
   const customer = await Customer.create({ ...patch, createdBy: session.user.id });
+  logAudit({
+    session,
+    action: "create",
+    resource: "customers",
+    resourceId: customer._id,
+    summary: `Created customer ${customer.displayName || customer.companyName || customer._id}`,
+  });
   return apiSuccess(customer, 201);
 });

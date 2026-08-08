@@ -130,6 +130,14 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   const payload = { ...q, linked, resolvedBankDetails };
   if (conversion) payload.conversion = conversion;
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "quotations",
+    resourceId: doc._id,
+    summary: `Updated quotation ${doc.quoteNumber}`,
+  });
+
   return apiSuccess(payload);
 });
 
@@ -140,5 +148,12 @@ export const DELETE = withErrorHandler(async (request, { params }) => {
   await assertQuotationSafeToDelete(params.id);
   const q = await Quotation.findByIdAndDelete(params.id);
   if (!q) throw new AppError("Quotation not found", 404);
+  logAudit({
+    session,
+    action: "delete",
+    resource: "quotations",
+    resourceId: q._id,
+    summary: `Deleted quotation ${q.quoteNumber}`,
+  });
   return apiSuccess({ deleted: true });
 });

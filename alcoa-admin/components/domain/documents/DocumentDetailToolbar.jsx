@@ -84,9 +84,11 @@ export function DocumentDetailToolbar({
           Copy WhatsApp link
         </AsyncButton>
       )}
-      <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onEdit}>
-        <Pencil className="h-4 w-4 mr-1" /> Edit
-      </Button>
+      {onEdit ? (
+        <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onEdit}>
+          <Pencil className="h-4 w-4 mr-1" /> Edit
+        </Button>
+      ) : null}
       {onDelete ? (
         <Button
           type="button"

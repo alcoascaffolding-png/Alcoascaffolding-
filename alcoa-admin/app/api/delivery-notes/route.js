@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { resolveDeliveryNoteNumberForCreate } from "@/lib/document-number";
 import { syncDeliveryNoteStock } from "@/lib/stock-service";
@@ -166,6 +167,14 @@ export const POST = withErrorHandler(async (request) => {
     await syncDeliveryNoteStock(prev, doc, session.user.id);
     await syncSalesOrderOnDeliveryNote(prev, doc);
   }
+
+  logAudit({
+    session,
+    action: "create",
+    resource: "delivery-notes",
+    resourceId: doc._id,
+    summary: `Created delivery note ${doc.deliveryNoteNumber}`,
+  });
 
   return apiSuccess(doc, 201);
 });

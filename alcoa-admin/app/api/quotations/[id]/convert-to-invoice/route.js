@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { withErrorHandler } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { ensureSalesInvoiceFromQuotation } from "@/lib/convert-quotation-to-invoice";
 
 async function resolveParams(context) {
@@ -18,6 +19,16 @@ export const POST = withErrorHandler(async (request, context) => {
   await connectDB();
 
   const result = await ensureSalesInvoiceFromQuotation(params.id, session.user.id);
+
+  if (result.created) {
+    logAudit({
+      session,
+      action: "create",
+      resource: "sales-invoices",
+      resourceId: result.salesInvoice._id,
+      summary: `Created tax invoice ${result.invoiceNumber} from quotation`,
+    });
+  }
 
   return apiSuccess({
     created: result.created,

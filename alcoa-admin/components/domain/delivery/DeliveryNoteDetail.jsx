@@ -29,6 +29,7 @@ import {
 import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
+import { usePermissions } from "@/hooks/use-permissions";
 import { DeliveryNoteStatusChanger } from "@/components/domain/delivery/DeliveryNoteStatusChanger";
 
 function InfoRow({ label, value, valueClassName = "" }) {
@@ -53,6 +54,9 @@ function InfoRowAlways({ label, value }) {
 export function DeliveryNoteDetail({ id }) {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("delivery-notes");
+  const canRemove = perms.canWrite("delivery-notes") && perms.canDelete("delivery-notes");
   const [showDelete, setShowDelete] = useState(false);
 
   const { data: note, isLoading, error } = useQuery({
@@ -137,8 +141,8 @@ export function DeliveryNoteDetail({ id }) {
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
             onCopyWhatsAppLink={copyWhatsAppLink}
-            onEdit={() => router.push(`/delivery-notes/${id}/edit`)}
-            onDelete={() => setShowDelete(true)}
+            onEdit={canEdit ? () => router.push(`/delivery-notes/${id}/edit`) : undefined}
+            onDelete={canRemove ? () => setShowDelete(true) : undefined}
           />
         </div>
       </div>

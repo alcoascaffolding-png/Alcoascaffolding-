@@ -39,6 +39,7 @@ import { DetailRecordSkeleton } from "@/components/loading/skeleton-kit";
 import { DocumentConvertMenu } from "@/components/domain/documents/DocumentConvertMenu";
 import { DocumentDetailToolbar } from "@/components/domain/documents/DocumentDetailToolbar";
 import { useDocumentDetailOutbound } from "@/hooks/use-document-detail-outbound";
+import { usePermissions } from "@/hooks/use-permissions";
 import { QuotationStatusChanger } from "@/components/domain/quotations/QuotationStatusChanger";
 
 function InfoRow({ label, value, valueClassName = "" }) {
@@ -63,6 +64,9 @@ function InfoRowAlways({ label, value }) {
 export function QuotationDetail({ id }) {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("quotations");
+  const canRemove = perms.canWrite("quotations") && perms.canDelete("quotations");
   const [showDelete, setShowDelete] = useState(false);
 
   const { data: quotation, isLoading, error } = useQuery({
@@ -241,8 +245,8 @@ export function QuotationDetail({ id }) {
             onSendEmail={sendEmail}
             onSendWhatsApp={sendWhatsApp}
             onCopyWhatsAppLink={copyWhatsAppLink}
-            onEdit={() => router.push(`/quotations/${id}/edit`)}
-            onDelete={() => setShowDelete(true)}
+            onEdit={canEdit ? () => router.push(`/quotations/${id}/edit`) : undefined}
+            onDelete={canRemove ? () => setShowDelete(true) : undefined}
           />
         </div>
       </div>

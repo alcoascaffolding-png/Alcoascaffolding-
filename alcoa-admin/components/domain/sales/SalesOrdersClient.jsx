@@ -34,6 +34,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const API_ORDERS = "/api/sales-orders";
 
@@ -65,6 +66,9 @@ async function fetchStats() {
 export function SalesOrdersClient() {
   const router = useRouter();
   const qc = useQueryClient();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("sales-orders");
+  const canRemove = perms.canWrite("sales-orders") && perms.canDelete("sales-orders");
   const [deleteId, setDeleteId] = useState(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
@@ -200,12 +204,12 @@ export function SalesOrdersClient() {
             hasEmail={!!resolveDocumentCustomerEmail(o)}
             hasPhone={!!resolveDocumentCustomerPhone(o)}
             onView={() => router.push(`/sales-orders/${oid}`)}
-            onEdit={() => router.push(`/sales-orders/${oid}/edit`)}
+            onEdit={canEdit ? () => router.push(`/sales-orders/${oid}/edit`) : undefined}
             onDownloadPdf={() => downloadPdf(oid, o.orderNumber)}
             onSendEmail={() => sendEmail(oid)}
             onSendWhatsApp={() => sendWhatsApp(oid)}
             onCopyWhatsAppLink={() => copyWhatsAppLink(oid)}
-            onDelete={() => setDeleteId(oid)}
+            onDelete={canRemove ? () => setDeleteId(oid) : undefined}
           />
         );
       },

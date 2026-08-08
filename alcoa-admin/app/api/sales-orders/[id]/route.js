@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 
@@ -195,6 +196,14 @@ export const PATCH = withErrorHandler(async (request, context) => {
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .lean();
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "sales-orders",
+    resourceId: doc._id,
+    summary: `Updated sales order ${doc.orderNumber}`,
+  });
+
   return apiSuccess(invoicing ? { ...populated, invoicing } : populated);
 });
 
@@ -218,6 +227,14 @@ export const DELETE = withErrorHandler(async (request, context) => {
   if (prev?.quotation) {
     await revertQuotationFromConvertedToApproved(prev.quotation);
   }
+
+  logAudit({
+    session,
+    action: "delete",
+    resource: "sales-orders",
+    resourceId: doc._id,
+    summary: `Deleted sales order ${doc.orderNumber}`,
+  });
 
   return apiSuccess({ deleted: true });
 });

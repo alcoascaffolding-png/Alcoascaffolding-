@@ -10,6 +10,7 @@ import {
   computeQuotationItemPages,
   resolveQuotationPdfPagePlan,
 } from "./quotation-pdf.js";
+import { formatPdfNumber } from "./format-number.js";
 
 const PDF_VIEWPORT_WIDTH = 794;
 const PDF_VIEWPORT_HEIGHT = 1123;
@@ -37,7 +38,7 @@ function formatDate(date) {
 }
 
 function formatPdfAmount(value) {
-  return Number(value || 0).toFixed(2);
+  return formatPdfNumber(value);
 }
 
 function wrapPdfPage({ head, body, foot, first = false, pageBreak = true, fillClass = "pdf-page-fill" }) {

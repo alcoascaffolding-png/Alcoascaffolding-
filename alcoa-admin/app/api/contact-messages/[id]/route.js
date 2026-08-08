@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import ContactMessage from "@/models/ContactMessage";
 
 export const GET = withErrorHandler(async (request, { params }) => {
@@ -38,6 +39,14 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   const msg = await ContactMessage.findByIdAndUpdate(params.id, update, { new: true, runValidators: true });
   if (!msg) throw new AppError("Message not found", 404);
 
+  logAudit({
+    session,
+    action: "update",
+    resource: "contact-messages",
+    resourceId: msg._id,
+    summary: `Updated contact message from ${msg.name || msg.email || msg._id}`,
+  });
+
   return apiSuccess(msg);
 });
 
@@ -47,6 +56,14 @@ export const DELETE = withErrorHandler(async (request, { params }) => {
   await connectDB();
   const msg = await ContactMessage.findByIdAndDelete(params.id);
   if (!msg) throw new AppError("Message not found", 404);
+
+  logAudit({
+    session,
+    action: "delete",
+    resource: "contact-messages",
+    resourceId: msg._id,
+    summary: `Deleted contact message from ${msg.name || msg.email || msg._id}`,
+  });
 
   return apiSuccess({ deleted: true });
 });

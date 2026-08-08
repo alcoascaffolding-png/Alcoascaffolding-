@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { Customer, Quotation, SalesInvoice, SalesOrder } from "@/lib/mongoose-models";
 import { QUOTATION_CUSTOMER_POPULATE_FIELDS } from "@/lib/load-quotation-for-pdf";
 import {
@@ -127,6 +128,15 @@ export const PATCH = withErrorHandler(async (request, context) => {
     .populate("quotation", "quoteNumber status customerName totalAmount")
     .populate("salesOrder", "orderNumber status customerName total")
     .lean();
+
+  logAudit({
+    session,
+    action: "update",
+    resource: "sales-invoices",
+    resourceId: doc._id,
+    summary: `Updated tax invoice ${doc.invoiceNumber}`,
+  });
+
   return apiSuccess(populated);
 });
 

@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import { resolveQuotationCustomerId, coerceQuotationDate } from "@/lib/quotation-save";
 import { markQuotationConvertedFromSalesOrder } from "@/lib/sync-quotation-sales-order";
 import { resolveOrderNumberForCreate } from "@/lib/document-number";
@@ -132,5 +133,12 @@ export const POST = withErrorHandler(async (request) => {
 
   const doc = await SalesOrder.create({ ...payload, createdBy: session.user.id });
   if (qid) await markQuotationConvertedFromSalesOrder(qid, doc._id);
+  logAudit({
+    session,
+    action: "create",
+    resource: "sales-orders",
+    resourceId: doc._id,
+    summary: `Created sales order ${doc.orderNumber}`,
+  });
   return apiSuccess(doc, 201);
 });

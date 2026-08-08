@@ -4,6 +4,7 @@ import { apiSuccess } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { createListHandlers } from "@/lib/crud-factory";
+import { logAudit } from "@/lib/audit-log";
 import PurchaseInvoice from "@/models/PurchaseInvoice";
 import {
   generatePurchaseInvoiceNumber,
@@ -54,6 +55,14 @@ const POST = withErrorHandler(async (request) => {
     currency: body.currency || "AED",
     notes: body.notes,
     createdBy: session.user.id,
+  });
+
+  logAudit({
+    session,
+    action: "create",
+    resource: "purchase-invoices",
+    resourceId: doc._id,
+    summary: `Created purchase invoice ${doc.invoiceNumber}`,
   });
 
   return apiSuccess(doc, 201);

@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
 import { withErrorHandler, AppError } from "@/lib/api-error";
+import { logAudit } from "@/lib/audit-log";
 import StockAdjustment from "@/models/StockAdjustment";
 import { reverseStockAdjustment } from "@/lib/stock-service";
 
@@ -35,6 +36,14 @@ export const DELETE = withErrorHandler(async (request, context) => {
 
   await reverseStockAdjustment(doc);
   await doc.deleteOne();
+
+  logAudit({
+    session,
+    action: "delete",
+    resource: "stock-adjustments",
+    resourceId: doc._id,
+    summary: `Deleted stock adjustment ${doc.adjustmentType || doc._id}`,
+  });
 
   return apiSuccess({ deleted: true });
 });

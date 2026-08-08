@@ -39,6 +39,7 @@ import {
   resolveDocumentCustomerPhone,
 } from "@/lib/resolve-document-customer";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const API_INVOICES = "/api/sales-invoices";
 
@@ -68,6 +69,8 @@ async function fetchStats() {
 export function SalesInvoicesClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const perms = usePermissions();
+  const canEdit = perms.canWrite("sales-invoices");
   // Tax invoices are permanent — delete UI disabled.
   // const qc = useQueryClient();
   // const [deleteId, setDeleteId] = useState(null);
@@ -214,7 +217,7 @@ export function SalesInvoicesClient() {
             hasEmail={!!resolveDocumentCustomerEmail(inv)}
             hasPhone={!!resolveDocumentCustomerPhone(inv)}
             onView={() => router.push(`/sales-invoices/${iid}`)}
-            onEdit={() => router.push(`/sales-invoices/${iid}/edit`)}
+            onEdit={canEdit ? () => router.push(`/sales-invoices/${iid}/edit`) : undefined}
             onDownloadPdf={() => downloadPdf(iid, inv.invoiceNumber)}
             onSendEmail={() => sendEmail(iid)}
             onSendWhatsApp={() => sendWhatsApp(iid)}
