@@ -8,7 +8,7 @@ export function BrandLogo({ variant = "desktop", className = "", priority = fals
   return (
     <Image
       src={BRAND_LOGO_SRC}
-      alt="ALCOA Aluminium Scaffolding"
+      alt="ALCOA Aluminium Scaffolding."
       width={isMobile ? 240 : 320}
       height={isMobile ? 90 : 120}
       priority={priority}
