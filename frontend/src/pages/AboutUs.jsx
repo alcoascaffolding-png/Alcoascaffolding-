@@ -119,9 +119,9 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="About Alcoa Aluminium Scaffolding LLC — Scaffolding Rental Service Abu Dhabi Since 2008"
-        description="Alcoa Aluminium Scaffolding L.L.C - S.P.C is Abu Dhabi's trusted scaffolding rental service since 2008. 4.6★ Google rated. Musaffah 37 warehouse. ISO 9001:2015 certified."
-        keywords="Alcoa Aluminium Scaffolding LLC, alcoa scaffolding, best scaffolding company abu dhabi, scaffolding rental service abu dhabi, scaffolding company uae, scaffolding Musaffah 37, scaffolding company since 2008 uae, scaffolding company abu dhabi, aluminium scaffolding manufacturer uae"
+        title="About Alcoa Aluminium Scaffolding | Abu Dhabi UAE"
+        description="Alcoa Aluminium Scaffolding LLC — ISO 9001:2015 scaffolding supplier in Musaffah 37, Abu Dhabi. Rental, sale, erection & inspection across UAE."
+        keywords="Alcoa Aluminium Scaffolding LLC, scaffolding company abu dhabi, scaffolding company uae, scaffolding Musaffah 37, ISO certified scaffolding company abu dhabi, aluminium scaffolding manufacturer uae"
         canonical="/about-us"
       />
       {/* Hero Section */}
@@ -250,7 +250,7 @@ const AboutUs = () => {
 
           <div className="relative">
             {/* Timeline Line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-3 h-full bg-gradient-to-b from-gray-900 to-black dark:from-blue-400 dark:to-blue-500 shadow-xl border border-gray-700 dark:border-blue-500"></div>
+            <div className="absolute left-4 h-full w-1 -translate-x-1/2 bg-gradient-to-b from-gray-900 to-black shadow-xl dark:from-blue-400 dark:to-blue-500 md:left-1/2 md:w-3 md:border md:border-gray-700 md:dark:border-blue-500"></div>
 
             <div className="space-y-12">
               {timeline.map((event, index) => (
@@ -260,12 +260,12 @@ const AboutUs = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className={`flex items-center ${
+                  className={`relative block md:flex md:items-center ${
                     index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
                   }`}
                 >
-                  <div className="flex-1 px-8">
-                    <div className={`card ${index % 2 === 0 ? 'text-right' : 'text-left'}`}>
+                  <div className="w-full pl-11 md:flex-1 md:px-8">
+                    <div className={`card text-left ${index % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
                       <div className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-2">
                         {event.year}
                       </div>
@@ -279,9 +279,9 @@ const AboutUs = () => {
                   </div>
 
                   {/* Timeline Node */}
-                  <div className="w-8 h-8 bg-black dark:bg-blue-400 rounded-full border-4 border-white dark:border-gray-800 shadow-2xl z-10 ring-4 ring-gray-300 dark:ring-blue-600"></div>
+                  <div className="absolute left-0 top-6 z-10 h-8 w-8 rounded-full border-4 border-white bg-black shadow-2xl ring-4 ring-gray-300 dark:border-gray-800 dark:bg-blue-400 dark:ring-blue-600 md:static"></div>
 
-                  <div className="flex-1 px-8"></div>
+                  <div className="hidden flex-1 px-8 md:block"></div>
                 </motion.div>
               ))}
             </div>

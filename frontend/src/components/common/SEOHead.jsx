@@ -1,18 +1,20 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
+import { SITE_NAME, SITE_URL, DEFAULT_OG_IMAGE } from '../../data/businessFacts';
 
-const SITE_NAME = 'Alcoa Aluminium Scaffolding';
-const DEFAULT_IMAGE = 'https://alcoascaffolding.com/logo.jpeg';
-const BASE_URL = 'https://alcoascaffolding.com';
+const brandAlreadyInTitle = (title) =>
+  /alcoa/i.test(title || '') || new RegExp(SITE_NAME, 'i').test(title || '');
 
 const SEOHead = ({
   title,
   description,
   keywords,
   canonical,
-  ogImage = DEFAULT_IMAGE,
+  ogImage = DEFAULT_OG_IMAGE,
   ogType = 'website',
+  ogLocale = 'en_AE',
+  htmlLang,
   jsonLd,
   jsonLdExtra = [],
   breadcrumbs,
@@ -23,11 +25,13 @@ const SEOHead = ({
   const location = useLocation();
 
   const fullTitle = title
-    ? `${title} | ${SITE_NAME}`
-    : `Scaffolding Rental & Sale Abu Dhabi, United Arab Emirates | ${SITE_NAME}`;
+    ? brandAlreadyInTitle(title)
+      ? title
+      : `${title} | ${SITE_NAME}`
+    : `Scaffolding Rental Abu Dhabi & Dubai | ${SITE_NAME}`;
 
   const canonicalPath = canonical ?? location.pathname;
-  const canonicalUrl = `${BASE_URL}${canonicalPath === '/' ? '' : canonicalPath}`;
+  const canonicalUrl = `${SITE_URL}${canonicalPath === '/' ? '' : canonicalPath}`;
 
   const breadcrumbSchema = breadcrumbs
     ? {
@@ -37,7 +41,7 @@ const SEOHead = ({
           '@type': 'ListItem',
           position: index + 1,
           name: crumb.name,
-          item: `${BASE_URL}${crumb.path}`,
+          item: `${SITE_URL}${crumb.path}`,
         })),
       }
     : null;
@@ -62,8 +66,11 @@ const SEOHead = ({
     ...(Array.isArray(jsonLdExtra) ? jsonLdExtra : []),
   ].filter(Boolean);
 
+  const resolvedLang = htmlLang || (location.pathname.startsWith('/ar') ? 'ar' : 'en');
+
   return (
     <Helmet>
+      <html lang={resolvedLang} />
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       {keywords && <meta name="keywords" content={keywords} />}
@@ -71,7 +78,14 @@ const SEOHead = ({
       {alternates.map((alt) => (
         <link key={alt.hrefLang} rel="alternate" hrefLang={alt.hrefLang} href={alt.href} />
       ))}
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      <meta
+        name="robots"
+        content={
+          noindex
+            ? 'noindex, nofollow'
+            : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'
+        }
+      />
 
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={canonicalUrl} />
@@ -79,7 +93,7 @@ const SEOHead = ({
       {description && <meta property="og:description" content={description} />}
       <meta property="og:image" content={ogImage} />
       <meta property="og:site_name" content={SITE_NAME} />
-      <meta property="og:locale" content="en_AE" />
+      <meta property="og:locale" content={ogLocale} />
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />

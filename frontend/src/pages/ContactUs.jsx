@@ -802,8 +802,8 @@ const ContactUs = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Contact Alcoa Aluminium Scaffolding Abu Dhabi | Get a Free Quote"
-        description="Contact Alcoa Aluminium Scaffolding — Musaffah 37, Abu Dhabi. Get a scaffolding rental quote in under 30 minutes. Call +971 58 137 5601 or WhatsApp."
+        title="Contact Alcoa Scaffolding | Abu Dhabi +971 58 137 5601"
+        description="Contact Alcoa Scaffolding in Musaffah 37, Abu Dhabi UAE. Call, WhatsApp, or visit our warehouse. Fast response during business hours."
         keywords="scaffolding quote abu dhabi, contact alcoa scaffolding, scaffolding supplier Musaffah 37, scaffolding rental service abu dhabi, scaffolding near me uae, scaffolding hire abu dhabi, Alcoa Aluminium Scaffolding LLC contact"
         canonical="/contact-us"
       />

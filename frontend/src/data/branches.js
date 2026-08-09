@@ -1,27 +1,37 @@
-// Branch data for Alcoa Aluminium Scaffolding locations
-// Updated for Abu Dhabi, UAE operations
-import { EMAIL_SALES, EMAIL_INFO } from './contactInfo';
+import {
+  EMAIL_SALES,
+  EMAIL_INFO,
+  PHONE_PRIMARY,
+  PHONE_SECONDARY,
+  PHONE_FAX,
+  STREET_ADDRESS,
+  ADDRESS_LOCALITY,
+  ADDRESS_REGION,
+  ADDRESS_COUNTRY_NAME,
+  GEO,
+  OPENING_HOURS,
+} from './businessFacts';
 
 export const branchesData = [
   {
     id: 'abu-dhabi-hq',
-    name: 'Abu Dhabi Headquarters',
+    name: 'Abu Dhabi Headquarters — Musaffah 37',
     type: 'headquarters',
     address: {
-      street: 'Musaffah Industrial Area',
-      city: 'Abu Dhabi',
-      state: 'Abu Dhabi',
-      postcode: '00000',
-      country: 'UAE'
+      street: STREET_ADDRESS,
+      city: ADDRESS_LOCALITY,
+      state: ADDRESS_REGION,
+      postcode: '',
+      country: ADDRESS_COUNTRY_NAME,
     },
     contact: {
-      phone: '+971 58 137 5601',
-      phone2: '+971 50 926 8038',
-      fax: '+971 58 137 5602',
+      phone: PHONE_PRIMARY,
+      phone2: PHONE_SECONDARY,
+      fax: PHONE_FAX,
       email: EMAIL_SALES,
       email2: EMAIL_INFO,
       manager: 'Syed Tawakal',
-      managerTitle: 'Regional Director'
+      managerTitle: 'Regional Director',
     },
     services: [
       'MS Scaffolding Rent',
@@ -35,51 +45,40 @@ export const branchesData = [
       'Aluminium Scaffolding',
       'Fiberglass Ladder',
       'A Type Ladder',
-      'Ladder Manufacturers'
+      'Ladder Manufacturers',
     ],
     hours: {
-      monday: '8am - 6pm',
-      tuesday: '8am - 6pm',
-      wednesday: '8am - 6pm',
-      thursday: '8am - 6pm',
-      friday: '8am - 6pm',
-      saturday: '8am - 6pm',
-      sunday: 'Emergency Only'
+      monday: OPENING_HOURS.monday.label,
+      tuesday: OPENING_HOURS.tuesday.label,
+      wednesday: OPENING_HOURS.wednesday.label,
+      thursday: OPENING_HOURS.thursday.label,
+      friday: OPENING_HOURS.friday.label,
+      saturday: OPENING_HOURS.saturday.label,
+      sunday: OPENING_HOURS.sunday.label,
     },
     specialties: ['High-rise Projects', 'Industrial Constructions', 'Marine Scaffolding'],
-    established: '2008',
-    staffCount: 45,
-    warehouseSize: '5,000 sqm',
-    serviceRadius: '150 km',
-    coordinates: { lat: 24.2992, lng: 54.6973 }
-  }
+    // Unconfirmed operational claims — display lightly, not in schema
+    established: null,
+    staffCount: null,
+    warehouseSize: null,
+    serviceRadius: 'UAE-wide delivery from Musaffah 37',
+    coordinates: { lat: GEO.latitude, lng: GEO.longitude },
+  },
 ];
 
-// Helper functions
-export const getBranchById = (id) => {
-  return branchesData.find(branch => branch.id === id);
-};
+export const getBranchById = (id) => branchesData.find((branch) => branch.id === id);
 
-export const getBranchesByState = (state) => {
-  return branchesData.filter(branch => branch.address.state === state);
-};
+export const getBranchesByState = (state) =>
+  branchesData.filter((branch) => branch.address.state === state);
 
-export const getHeadquarters = () => {
-  return branchesData.find(branch => branch.type === 'headquarters');
-};
+export const getHeadquarters = () =>
+  branchesData.find((branch) => branch.type === 'headquarters');
 
-export const getAllBranches = () => {
-  return branchesData.filter(branch => branch.type === 'branch');
-};
+export const getAllBranches = () =>
+  branchesData.filter((branch) => branch.type === 'branch');
 
-export const getBranchesWithService = (service) => {
-  return branchesData.filter(branch => 
-    branch.services.includes(service)
-  );
-};
+export const getBranchesWithService = (service) =>
+  branchesData.filter((branch) => branch.services.includes(service));
 
-export const getBranchesWithSpecialty = (specialty) => {
-  return branchesData.filter(branch => 
-    branch.specialties.includes(specialty)
-  );
-};
+export const getBranchesWithSpecialty = (specialty) =>
+  branchesData.filter((branch) => branch.specialties.includes(specialty));

@@ -471,7 +471,7 @@ const ServicesPage = () => {
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title="Construction Scaffolding UAE | Rental, Installation & Erection Abu Dhabi | Alcoa"
-        description="Construction scaffolding UAE — rental, installation, erection, and delivery in Abu Dhabi, United Arab Emirates and Musaffah. Certified erection crews, HSE documentation, AED 35/day."
+        description="Construction scaffolding UAE — rental, installation, erection, and delivery in Abu Dhabi, Musaffah 37 & Dubai. ISO 9001:2015. Free quote from Alcoa."
         keywords="construction scaffolding UAE, scaffolding equipment UAE, scaffolding installation Abu Dhabi, scaffolding erection Abu Dhabi, scaffolding erection crew UAE, scaffold rental price Abu Dhabi, industrial scaffolding Abu Dhabi, MEP scaffolding Abu Dhabi, scaffolding for construction Abu Dhabi, scaffolding supplier Abu Dhabi"
         canonical="/construction-scaffolding-uae"
       />

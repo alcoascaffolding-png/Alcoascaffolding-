@@ -29,7 +29,7 @@ const BackToTop = () => {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 w-12 h-12 bg-brand-primary-600 hover:bg-brand-primary-700 dark:bg-brand-primary-500 dark:hover:bg-brand-primary-600 text-white rounded-full shadow-lg dark:shadow-2xl flex items-center justify-center transition-colors"
+          className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-50 flex h-12 w-12 items-center justify-center rounded-full bg-brand-primary-600 text-white shadow-lg transition-colors hover:bg-brand-primary-700 dark:bg-brand-primary-500 dark:shadow-2xl dark:hover:bg-brand-primary-600"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           aria-label="Back to top"

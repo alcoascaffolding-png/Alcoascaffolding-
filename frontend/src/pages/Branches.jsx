@@ -275,8 +275,8 @@ const Branches = () => {
    
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Alcoa Scaffolding Warehouse — Musaffah 37 Abu Dhabi | Address & Hours"
-        description="Alcoa Aluminium Scaffolding warehouse: Ar Rahmah 4 St., Musaffah 37, Abu Dhabi. Walk-in hire Mon–Sat 8am–6pm. Same-day collection. 4.6★ rated scaffolding rental service."
+        title="Alcoa Scaffolding Locations UAE | Abu Dhabi, Dubai & More"
+        description="Alcoa Scaffolding locations UAE — main warehouse Musaffah 37, Abu Dhabi. Delivery to Dubai, Sharjah & emirates. Walk-in Mon–Sat 8am–6pm."
         keywords="scaffolding warehouse Musaffah 37, alcoa scaffolding address abu dhabi, alcoa scaffolding Musaffah, scaffolding supplier Musaffah 37, scaffolding near me Musaffah, scaffolding contractor abu dhabi, alcoa scaffolding branches"
         canonical="/branches"
       />
@@ -306,7 +306,7 @@ const Branches = () => {
         <div className="container-custom">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             {/* Search */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative w-full max-w-md flex-1">
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted dark:text-text-muted-dark w-4 h-4" />
               <input
                 type="text"
@@ -318,11 +318,11 @@ const Branches = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="grid w-full grid-cols-1 items-center gap-3 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap">
               <select
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
-                className="form-input min-w-32"
+                className="form-input min-w-0"
               >
                 <option value="all">All States</option>
                 {states.map(state => (
@@ -333,7 +333,7 @@ const Branches = () => {
               <select
                 value={selectedService}
                 onChange={(e) => setSelectedService(e.target.value)}
-                className="form-input min-w-48"
+                className="form-input min-w-0"
               >
                 <option value="all">All Services</option>
                 {services.map(service => (
@@ -342,7 +342,7 @@ const Branches = () => {
               </select>
 
               {/* View Toggle */}
-              <div className="flex rounded-lg border border-border-light dark:border-border-dark">
+              <div className="flex justify-self-start rounded-lg border border-border-light dark:border-border-dark">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`px-3 py-2 text-sm rounded-l-lg transition-colors ${

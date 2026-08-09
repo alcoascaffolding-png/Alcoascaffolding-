@@ -9,101 +9,72 @@ import Projects from '../components/sections/Projects';
 import Testimonials from '../components/sections/Testimonials';
 import ContactCTA from '../components/sections/ContactCTA';
 import SEOHead from '../components/common/SEOHead';
-
-const homeJsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'Alcoa Aluminium Scaffolding',
-    legalName: 'Alcoa Aluminium Scaffolding L.L.C - S.P.C',
-    description: 'Scaffolding rental service in Abu Dhabi, United Arab Emirates. Aluminium scaffolding, cuplock systems, ladders, and erection crews. Musaffah 37 warehouse with same-day delivery.',
-    url: 'https://alcoascaffolding.com',
-    telephone: '+971581375601',
-    email: 'sales@alcoascaffolding.com',
-    contactPoint: [
-      {
-        '@type': 'ContactPoint',
-        contactType: 'sales',
-        email: 'sales@alcoascaffolding.com',
-        telephone: '+971581375601',
-      },
-      {
-        '@type': 'ContactPoint',
-        contactType: 'customer support',
-        email: 'info@alcoascaffolding.com',
-      },
-    ],
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: "Ar Rahmah 4 St., Musaffah 37, Al Mantaqah As Sinai'yah 1 Street, Office 11, 1st Floor",
-      addressLocality: 'Musaffah',
-      addressRegion: 'Abu Dhabi',
-      addressCountry: 'AE',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: 24.3570,
-      longitude: 54.5080,
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.6',
-      reviewCount: '5',
-      bestRating: '5',
-    },
-    areaServed: ['Abu Dhabi', 'Musaffah', 'Yas Island', 'KIZAD', 'United Arab Emirates'],
-    serviceType: 'Scaffolding Rental Service',
-    priceRange: 'AED 35–1100',
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Alcoa Aluminium Scaffolding',
-    url: 'https://alcoascaffolding.com',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://alcoascaffolding.com/services?q={search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
-  },
-];
+import {
+  buildLocalBusinessSchema,
+  buildOrganizationSchema,
+  buildWebSiteSchema,
+} from '../utils/schemaBuilders';
+import { SITE_URL, PHONE_PRIMARY, STREET_ADDRESS_SHORT, ISO_CERT } from '../data/businessFacts';
+import { Link } from 'react-router-dom';
 
 const homeFaq = [
   {
     q: 'How much does scaffolding rental cost in Abu Dhabi?',
-    a: 'Aluminium mobile tower rental in Abu Dhabi, United Arab Emirates starts from AED 35–60 per day. Weekly packages from AED 200 and monthly from AED 600. Contact Alcoa for a site-specific quote including delivery.',
+    a: `Scaffolding rental in Abu Dhabi is quoted per equipment type, height, quantity, and hire duration (daily, weekly, or monthly). Contact Alcoa at ${PHONE_PRIMARY} or WhatsApp for a free site-specific AED quote from Musaffah 37.`,
   },
   {
     q: 'Does Alcoa provide scaffolding erection and installation in Abu Dhabi?',
-    a: 'Yes. Our certified erection crews install, inspect, and dismantle scaffolding on site across Abu Dhabi and Musaffah. Installation is quoted per site visit based on tower height, access complexity, and duration.',
+    a: 'Yes. Our erection crews install, inspect, and dismantle scaffolding on site across Abu Dhabi and Musaffah. Installation is quoted per site visit based on tower height, access complexity, and duration.',
   },
   {
     q: 'Does Alcoa deliver scaffolding to Abu Dhabi and Musaffah?',
-    a: 'Yes. Our Musaffah warehouse dispatches across Abu Dhabi industrial zones, Yas Island, Saadiyat, KIZAD, and Reem Island. Same-day delivery on in-stock items when confirmed before 2 PM.',
-  },
-  {
-    q: 'What is the best scaffolding company in Abu Dhabi?',
-    a: 'Alcoa Aluminium Scaffolding has served Abu Dhabi contractors since 2008 with certified equipment, 24/7 WhatsApp support, and on-site erection crews. ISO 9001:2015 certified with zero major incidents on record.',
+    a: `Yes. Our Musaffah 37 warehouse (${STREET_ADDRESS_SHORT}) dispatches across Abu Dhabi industrial zones, Yas Island, Saadiyat, KIZAD, Reem Island, and Dubai. Warehouse pickup is available Mon–Sat 8am–6pm.`,
   },
   {
     q: 'What scaffolding types does Alcoa supply in UAE?',
-    a: 'Aluminium mobile towers, steel cuplock systems, ladders (aluminium and fiberglass), couplers, prop jacks, GI/MS pipe, and wooden planks — for rent and sale. Weekly and monthly hire rates reduce the daily cost.',
+    a: 'Aluminium mobile towers, steel cuplock systems, ladders (aluminium and fiberglass), couplers, prop jacks, GI/MS pipe, wooden and steel planks — for rent and sale. See our products and services pages for the full range.',
+  },
+  {
+    q: 'Is Alcoa an ISO certified scaffolding company?',
+    a: `Yes. Alcoa Aluminium Scaffolding is ${ISO_CERT.standard} certified (certificate ${ISO_CERT.number}) for manufacturing, supply, erection, dismantling, rental and maintenance of aluminium/steel scaffolding and ladders.`,
+  },
+  {
+    q: 'Can I rent scaffolding for just 1 day in UAE?',
+    a: 'Yes — minimum hire is typically one day subject to availability. Weekly and monthly packages are available for longer projects. Confirm terms when you request a quote.',
+  },
+  {
+    q: 'Do you supply scaffolding for oil and gas or industrial sites?',
+    a: 'Yes. We supply industrial scaffolding and access equipment for contractors working on industrial, petrochemical-adjacent, and heavy commercial projects in Abu Dhabi, Musaffah, and KIZAD. HSE documentation available on request.',
+  },
+  {
+    q: 'Where is Alcoa Scaffolding located?',
+    a: `Alcoa Aluminium Scaffolding LLC is based at ${STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi, UAE. Call ${PHONE_PRIMARY} or visit our FAQ and contact pages for maps and directions.`,
   },
 ];
 
 const Home = () => {
   const hreflang = [
-    { hrefLang: 'en-AE', href: 'https://alcoascaffolding.com/' },
-    { hrefLang: 'ar-AE', href: 'https://alcoascaffolding.com/ar' },
-    { hrefLang: 'x-default', href: 'https://alcoascaffolding.com/' },
+    { hrefLang: 'en-AE', href: `${SITE_URL}/` },
+    { hrefLang: 'ar-AE', href: `${SITE_URL}/ar` },
+    { hrefLang: 'x-default', href: `${SITE_URL}/` },
+  ];
+
+  const homeJsonLd = [
+    buildOrganizationSchema(),
+    buildLocalBusinessSchema({
+      description:
+        'Aluminium and steel scaffolding rental and sale in Abu Dhabi, Musaffah 37, Dubai and UAE. ISO 9001:2015 certified supplier with erection and inspection services.',
+      serviceType: 'Scaffolding Rental Service',
+    }),
+    buildWebSiteSchema(),
   ];
 
   return (
     <div className="min-h-screen">
       <SEOHead
-        title="Scaffolding Rental Service Abu Dhabi | Alcoa Aluminium Scaffolding UAE"
-        description="Alcoa Aluminium Scaffolding — 4.6★ scaffolding rental service in Abu Dhabi, UAE. Musaffah 37 warehouse. Cuplock, mobile towers, ladders from AED 35/day. Erection crews available."
-        keywords="scaffolding rental service Abu Dhabi, scaffolding rental Abu Dhabi, scaffolding hire Abu Dhabi, Alcoa Aluminium Scaffolding LLC, scaffolding company UAE, scaffolding erection Abu Dhabi, scaffolding installation Abu Dhabi, industrial scaffolding Abu Dhabi, scaffolding Musaffah 37, alcoa scaffolding, scaffolding near me UAE, scaffolding Musaffah, weekly scaffolding rental, monthly scaffolding hire UAE, scaffolding Abu Dhabi UAE"
+        title="Scaffolding Rental Abu Dhabi & Dubai | Alcoa UAE"
+        description="Rent or buy aluminium & steel scaffolding across UAE. Serving Abu Dhabi, Musaffah 37, Dubai. ISO 9001:2015. Call Alcoa for a free quote!"
+        keywords="scaffolding rental Abu Dhabi, scaffolding rental Dubai, aluminium scaffolding UAE, scaffolding company Abu Dhabi, scaffolding supplier Abu Dhabi, scaffolding Musaffah, scaffolding hire UAE, scaffolding near me UAE"
         canonical="/"
         jsonLd={homeJsonLd}
         faq={homeFaq}
@@ -117,10 +88,49 @@ const Home = () => {
       <Testimonials />
       <Certification />
       <ServiceCategories />
+
+      <section className="section-padding py-12 bg-gray-50 dark:bg-gray-900">
+        <div className="container-custom max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            Scaffolding rental FAQ — Abu Dhabi & UAE
+          </h2>
+          <div className="space-y-4">
+            {homeFaq.map((item) => (
+              <details
+                key={item.q}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm group"
+              >
+                <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer list-none flex justify-between items-center">
+                  {item.q}
+                  <span className="text-blue-600 group-open:rotate-45 transition-transform text-xl leading-none">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+            More answers on our{' '}
+            <Link to="/faq" className="text-blue-600 hover:underline">
+              FAQ page
+            </Link>
+            ,{' '}
+            <Link to="/scaffolding-rental-dubai" className="text-blue-600 hover:underline">
+              Dubai rental
+            </Link>
+            , and{' '}
+            <Link to="/scaffolding-rental-musaffah" className="text-blue-600 hover:underline">
+              Musaffah warehouse
+            </Link>{' '}
+            pages.
+          </p>
+        </div>
+      </section>
+
       <ContactCTA />
     </div>
   );
 };
 
 export default Home;
-

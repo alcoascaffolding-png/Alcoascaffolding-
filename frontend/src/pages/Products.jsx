@@ -58,7 +58,7 @@ const Products = () => {
         'Warehouse operations',
         'Event setup'
       ],
-      price: 'From AED 150/day',
+      price: 'Quote on request',
       category: 'aluminium'
     },
     {
@@ -89,7 +89,7 @@ const Products = () => {
         'Industrial facilities',
         'Commercial buildings'
       ],
-      price: 'From AED 50/day',
+      price: 'Quote on request',
       category: 'ladders'
     },
     {
@@ -142,7 +142,7 @@ const Products = () => {
         'Types': 'Double, Swivel, Putlog, Sleeve, Beam',
         'Standards': 'BS EN 74, AS/NZS 1576.2',
         'Finish': 'Hot-dip galvanized',
-        'Pricing': 'From AED 3/piece/day'
+        'Pricing': 'Quote on request'
       },
       applications: [
         'Tube and fitting scaffolding',
@@ -151,7 +151,7 @@ const Products = () => {
         'Façade access systems',
         'Industrial maintenance'
       ],
-      price: 'From AED 3/day',
+      price: 'Quote on request',
       category: 'couplers'
     }
   ];
@@ -290,9 +290,9 @@ const Products = () => {
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                       <dl className="space-y-2">
                         {Object.entries(product.specifications).map(([key, value]) => (
-                          <div key={key} className="flex justify-between items-start gap-3 text-sm">
-                            <dt className="text-gray-600 dark:text-gray-400 whitespace-nowrap">{key}:</dt>
-                            <dd className="text-gray-900 dark:text-gray-100 font-medium text-right">{value}</dd>
+                          <div key={key} className="flex items-start justify-between gap-3 text-sm">
+                            <dt className="min-w-0 text-gray-600 dark:text-gray-400">{key}:</dt>
+                            <dd className="min-w-0 break-words text-right font-medium text-gray-900 dark:text-gray-100">{value}</dd>
                           </div>
                         ))}
                       </dl>

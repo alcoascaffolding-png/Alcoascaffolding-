@@ -1,34 +1,38 @@
 export const blogPosts = [
   {
     slug: 'scaffolding-rental-cost-abu-dhabi-2026',
-    title: 'Scaffolding Rental Cost in Abu Dhabi 2026 — Complete Pricing Guide',
+    title: 'Scaffolding Rental Prices in UAE 2026 (Complete Guide)',
     excerpt:
-      'Daily, weekly, and monthly scaffolding hire rates in Abu Dhabi, United Arab Emirates. Aluminium towers from AED 35/day, cuplock systems, delivery zones, and what affects your quote.',
+      'How scaffolding rental pricing works in Abu Dhabi and the UAE — daily, weekly, and monthly hire, what drives your quote, and how to request accurate AED pricing from Musaffah 37.',
     date: '2026-06-01',
-    readTime: '8 min',
-    keywords: 'scaffolding rental price Abu Dhabi, scaffolding cost UAE, scaffolding hire rates',
+    readTime: '9 min',
+    keywords: 'scaffolding rental price uae, scaffolding rental price abu dhabi, scaffolding cost UAE, scaffolding hire rates',
     faq: [
       {
         q: 'How much does scaffolding rental cost per day in Abu Dhabi?',
-        a: 'Aluminium mobile tower rental in Abu Dhabi, United Arab Emirates typically ranges from AED 35 to AED 60 per day depending on tower height and width. Steel cuplock systems range from AED 40 to AED 75 per bay per day.',
+        a: 'Daily rates depend on tower type, height, quantity, and accessories. Alcoa provides free AED quotes from Musaffah 37 — call +971 58 137 5601 with your equipment list.',
       },
       {
         q: 'Is delivery included in scaffolding rental price?',
-        a: 'Delivery is quoted separately. Abu Dhabi and Musaffah delivery typically costs AED 150–350 depending on zone. Musaffah pickup from our warehouse is free.',
+        a: 'Delivery is usually quoted separately based on zone and load size. Musaffah 37 warehouse pickup is available during business hours.',
       },
     ],
     sections: [
       {
-        heading: 'Average daily scaffolding rental rates in Abu Dhabi (2026)',
-        body: 'Based on Alcoa Aluminium Scaffolding fleet rates across Abu Dhabi projects: single-width aluminium towers AED 35–45/day; double-width towers AED 45–60/day; steel cuplock vertical standards AED 8–15/piece/day; full cuplock bay sets AED 40–75/day; A-type ladders AED 25–40/day. Weekly hires reduce the effective daily rate by 15–25%. Monthly contracts from AED 600 for standard towers.',
+        heading: 'How scaffolding rental pricing works in Abu Dhabi (2026)',
+        body: 'UAE scaffolding hire is almost always quoted per project rather than a single public rate card. Aluminium mobile towers, steel cuplock bays, ladders, and couplers each price differently. Hire period (daily, weekly, monthly), delivery distance from Musaffah 37, and whether erection crews are included all change the total. Use this guide to prepare a clean enquiry so your quote is accurate the first time.',
       },
       {
         heading: 'What affects your scaffolding quote in Abu Dhabi?',
-        body: 'Height and deck area drive the base rate. Access constraints (high-rise vs ground-level industrial sites) affect erection labour. Duration discounts apply after 7 and 28 days. Yas Island and KIZAD may incur different delivery than central Musaffah. Optional services — erection, inspection, night delivery — are line-item quoted.',
+        body: 'Height and deck area drive the base rate. Access constraints (high-rise vs ground-level industrial sites) affect erection labour. Duration discounts typically improve after multi-day and monthly commitments. Yas Island, KIZAD, Dubai, and Northern Emirates may have different delivery line items than central Musaffah. Optional services — erection, inspection, weekend dispatch — are quoted as separate lines.',
+      },
+      {
+        heading: 'Daily vs weekly vs monthly scaffolding hire',
+        body: 'Daily hire suits short access windows. Weekly packages suit painting, facade, and MEP programmes lasting one to four weeks. Monthly hire usually lowers the effective daily cost for long construction or industrial campaigns. Ask Alcoa to show all three options on your quote so you can compare.',
       },
       {
         heading: 'How to get the best scaffolding rental price',
-        body: 'Book weekly or monthly when possible. Consolidate deliveries to one drop. Pick up small items from Musaffah if you operate in Abu Dhabi. Share accurate tower counts and heights on first contact — revised orders mid-rental cost more. Alcoa quotes via WhatsApp in under 30 minutes: +971 58 137 5601.',
+        body: 'Book weekly or monthly when your programme allows. Consolidate deliveries to one drop. Pick up small items from Musaffah 37 if you operate nearby. Share accurate tower counts and heights on first contact — revised orders mid-rental cost more. WhatsApp or call +971 58 137 5601 during Mon–Sat 8am–6pm.',
       },
     ],
   },
@@ -53,7 +57,7 @@ export const blogPosts = [
     sections: [
       {
         heading: 'When aluminium scaffolding wins in the UAE',
-        body: 'Aluminium mobile towers excel for MEP, painting, signage, and light maintenance. They are 3–4× lighter than steel tube systems — faster to move on Abu Dhabi sites with manual handling rules. Corrosion resistance suits coastal Yas Island and Reem Island projects. Typical hire from AED 35/day with 10-minute setup for trained crews.',
+        body: 'Aluminium mobile towers excel for MEP, painting, signage, and light maintenance. They are 3–4× lighter than steel tube systems — faster to move on Abu Dhabi sites with manual handling rules. Corrosion resistance suits coastal Yas Island and Reem Island projects. Hire terms are quoted per height and duration — ask Alcoa for current AED rates.',
       },
       {
         heading: 'When steel cuplock is the better choice',
@@ -218,7 +222,7 @@ export const blogPosts = [
       },
       {
         heading: 'MEP and maintenance scaffolding on industrial facilities',
-        body: 'For MEP access, pipe inspection, and light maintenance within ADNOC-adjacent plants, aluminium mobile towers offer the fastest setup with the lowest manual handling risk. Single-width towers from AED 35/day; double-width from AED 45/day. Fiberglass ladders are mandatory near live electrical equipment and are available from Alcoa\'s ladder range. All aluminium towers include outrigger stabilisers and wheel locks as standard.',
+        body: 'For MEP access, pipe inspection, and light maintenance within ADNOC-adjacent plants, aluminium mobile towers offer the fastest setup with the lowest manual handling risk. Single- and double-width towers are available for hire with fiberglass ladders recommended near live electrical equipment. All aluminium towers can include outrigger stabilisers and wheel locks as specified — request a quote for your plant access list.',
       },
     ],
   },
@@ -233,11 +237,11 @@ export const blogPosts = [
     faq: [
       {
         q: 'How much is weekly scaffolding rental in Abu Dhabi?',
-        a: 'Weekly scaffolding rental in Abu Dhabi typically ranges from AED 200–350 per week for a single-width aluminium tower and AED 250–450 per week for steel cuplock bay sets. Weekly packages reduce the effective daily rate by 15–20% versus daily hire.',
+        a: 'Weekly scaffolding rental in Abu Dhabi is quoted per tower or bay set and usually improves the effective daily rate versus pure daily hire. Share your equipment list with Alcoa for a written AED weekly package.',
       },
       {
         q: 'How much is monthly scaffolding hire in Abu Dhabi?',
-        a: 'Monthly scaffolding hire in Abu Dhabi starts from AED 600 for a standard aluminium tower. Cuplock systems start from AED 800 per bay per month. Monthly contracts reduce the daily equivalent by 20–30% and are ideal for projects running 4+ weeks.',
+        a: 'Monthly scaffolding hire in Abu Dhabi is ideal for projects running 4+ weeks and usually lowers the effective daily rate. Request a monthly AED quote for aluminium towers or cuplock bay sets from Musaffah 37.',
       },
       {
         q: 'Is it cheaper to rent or buy scaffolding in UAE?',
@@ -251,19 +255,77 @@ export const blogPosts = [
     sections: [
       {
         heading: 'Daily vs weekly vs monthly scaffolding rates in Abu Dhabi (2026)',
-        body: 'Based on Alcoa fleet rates for Abu Dhabi projects: single-width aluminium tower AED 35–45/day, AED 200–280/week, AED 600–900/month. Double-width tower AED 45–60/day, AED 280–350/week, AED 800–1100/month. Steel cuplock standard AED 8–15/piece/day; full bay set AED 40–75/day, AED 250–450/week, AED 800–1400/month. A-type ladders AED 25–40/day, AED 120–250/week. Couplers AED 3–15/piece/day. Weekly hire saves 15–20% over daily; monthly hire saves 20–30%.',
+        body: 'Ask for three columns on every quote: daily, weekly, and monthly. Aluminium towers, cuplock bays, ladders, and couplers each follow different unit pricing. Weekly and monthly packages usually improve the effective daily rate on longer programmes — confirm the exact AED figures for your equipment list with Alcoa before mobilisation.',
       },
       {
         heading: 'When to choose weekly scaffolding hire in Abu Dhabi',
-        body: 'Weekly hire suits projects of 5–28 days: painting, facade cleaning, MEP maintenance runs, and short construction phases. If your project is likely to extend, locking in a weekly rate from day one avoids higher daily charges. Alcoa allows extensions on weekly hires with pro-rata pricing — request this when booking.',
+        body: 'Weekly hire suits projects of roughly 5–28 days: painting, facade cleaning, MEP maintenance runs, and short construction phases. If your project is likely to extend, locking a weekly rate early often beats stacking pure daily charges. Request extension terms when booking.',
       },
       {
         heading: 'When to choose monthly scaffolding rental in Abu Dhabi',
-        body: 'Monthly contracts are the cost-effective choice for long-duration access: high-rise façade works, ongoing refinery maintenance turnarounds, KIZAD construction phases, and Yas Island development projects. Monthly hire also simplifies invoicing — one line item per month rather than per-day tracking. Alcoa offers flexible monthly scaffolding rental with agreed return dates and extension options.',
+        body: 'Monthly contracts suit long-duration access: high-rise façade works, industrial maintenance campaigns, KIZAD construction phases, and Yas Island development projects. Monthly hire also simplifies invoicing. Alcoa offers flexible monthly scaffolding rental with agreed return dates and extension options.',
       },
       {
         heading: 'How to negotiate the best scaffolding rental rate in Abu Dhabi',
-        body: 'Share accurate tower counts and heights on first contact — revised orders mid-rental cost more. Consolidate deliveries to a single drop and pick up small items (couplers, ladders) from our Musaffah warehouse to avoid delivery charges. Book weekly or monthly upfront rather than extending from daily. Ask about buy-back pricing if you plan to purchase and resell equipment at project end. WhatsApp Alcoa on +971 58 137 5601 for a written quote within 30 minutes during business hours.',
+        body: 'Share accurate tower counts and heights on first contact. Consolidate deliveries to a single drop and pick up small items from Musaffah 37 when practical. Book weekly or monthly upfront rather than extending from daily. WhatsApp Alcoa on +971 58 137 5601 for a written quote during business hours.',
+      },
+    ],
+  },
+  {
+    slug: 'how-to-choose-scaffolding-company-uae',
+    title: 'How to Choose a Scaffolding Company in UAE (10 Things to Check)',
+    excerpt:
+      'A practical buyer checklist for scaffolding rental and sale in Abu Dhabi and Dubai — safety, stock, delivery, documentation, and ISO credentials.',
+    date: '2026-07-10',
+    readTime: '8 min',
+    keywords: 'how to choose scaffolding company uae, scaffolding company abu dhabi, reliable scaffolding contractor abu dhabi',
+    faq: [
+      {
+        q: 'What should I check before hiring a scaffolding company in Abu Dhabi?',
+        a: 'Confirm warehouse location, equipment condition, insurance/HSE documentation, delivery capability, erection options, and whether the company is ISO certified for relevant activities.',
+      },
+    ],
+    sections: [
+      {
+        heading: '1–3: Location, stock, and response time',
+        body: 'Prefer a supplier with a real UAE warehouse you can visit. Alcoa operates from Musaffah 37, Abu Dhabi. Ask whether the towers and cuplock components you need are in stock today. Measure response time on WhatsApp or phone — urgent site work needs suppliers who answer during business hours.',
+      },
+      {
+        heading: '4–6: Safety, documentation, and certifications',
+        body: 'Request clarity on inspection support, erection competency, and quality management. Alcoa is ISO 9001:2015 certified for manufacturing, supply, erection, dismantling, rental and maintenance of aluminium/steel scaffolding and ladders. Ask for written quotes and load lists.',
+      },
+      {
+        heading: '7–10: Delivery, crews, hire flexibility, and after-sales',
+        body: 'Confirm Dubai and emirates delivery if needed. Ask about scaffolding with erection/dismantling crews. Compare daily, weekly, and monthly options. Check how returns, damage, and extensions are handled. A reliable contractor explains these terms before mobilisation — not after.',
+      },
+    ],
+  },
+  {
+    slug: 'types-of-scaffolding-uae-construction',
+    title: 'Types of Scaffolding Used in UAE Construction Projects',
+    excerpt:
+      'Overview of aluminium mobile towers, cuplock, cantilever, stairway towers, and tube-and-coupler systems commonly used on Abu Dhabi and Dubai sites.',
+    date: '2026-07-12',
+    readTime: '8 min',
+    keywords: 'types of scaffolding uae, types of scaffolding used in uae construction, cuplock scaffolding abu dhabi',
+    faq: [
+      {
+        q: 'What types of scaffolding are common in UAE construction?',
+        a: 'Aluminium mobile towers, steel cuplock systems, cantilever configurations, stairway towers, rolling platforms, and tube-and-coupler with clamps are widely used depending on load and access needs.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Aluminium mobile towers',
+        body: 'Lightweight towers for MEP, painting, fit-out, and maintenance. Fast to move when fitted with castors and outriggers. Popular for villa and commercial interior work in Abu Dhabi and Dubai.',
+      },
+      {
+        heading: 'Steel cuplock systems',
+        body: 'Modular heavy-duty access for industrial and high-rise perimeter work. Standards and ledgers lock without loose fittings. Common on KIZAD and large Abu Dhabi industrial programmes.',
+      },
+      {
+        heading: 'Cantilever, stairway, and specialty access',
+        body: 'Cantilever scaffolds clear ground obstacles. Stairway towers improve vertical circulation. Rolling platforms suit short elevated tasks. Alcoa stocks these systems for rent and sale from Musaffah 37 — request a recommendation based on height and load.',
       },
     ],
   },

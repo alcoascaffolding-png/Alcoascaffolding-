@@ -2,83 +2,85 @@ export const arabicPages = {
   home: {
     path: '/ar',
     enPath: '/',
-    title: 'تأجير سقالات أبوظبي | أفضل شركة سقالات في الإمارات | Alcoa',
+    title: 'سقالات للإيجار أبوظبي ودبي | شركة Alcoa الإمارات',
     description:
-      'تأجير وبيع السقالات في أبوظبي، الإمارات العربية المتحدة والمصفح. سقالات ألومنيوم، cuplock فولاذي، وسلالم من 35 درهم/يوم. توصيل سريع وأطقم تركيب معتمدة.',
-    h1: 'تأجير السقالات في أبوظبي، الإمارات العربية المتحدة',
+      'تأجير وبيع السقالات في أبوظبي والمصفح 37 ودبي. سقالات ألومنيوم وcuplock وسلالم. ISO 9001:2015. اتصل للحصول على عرض سعر.',
+    h1: 'تأجير السقالات في أبوظبي ودبي والإمارات',
     intro:
-      'Alcoa Aluminium Scaffolding شركة إماراتية رائدة في تأجير وبيع سقالات الألومنيوم، أبراج الجوال، السقالات الفولاذية cuplock، والسلالم منذ 2008. مقرنا في المصفح — أبوظبي — مع توصيل يومي لجميع مناطق أبوظبي والمصفح ويا سيلاند وKIZAD. أسعار واضحة تبدأ من 35 درهم إماراتي في اليوم، مع خصومات للإيجار الأسبوعي والشهري.',
+      'Alcoa Aluminium Scaffolding شركة سقالات في الإمارات مقرها المصفح 37، أبوظبي. نوفر تأجير وبيع سقالات الألومنيوم، أبراج الجوال، السقالات الفولاذية cuplock، والسلالم مع خدمات التركيب والتفتيش. خدمة لمناطق أبوظبي ودبي والشارقة وبقية الإمارات. للحصول على أسعار السقالات في الإمارات تواصل معنا عبر الهاتف أو واتساب.',
     cta: 'احصل على عرض سعر',
     call: 'اتصل الآن',
-    keywords: 'تأجير سقالات أبوظبي، سقالات ألومنيوم الإمارات، أفضل شركة سقالات أبوظبي، سقالات المصفح، تأجير سقالات KIZAD',
+    keywords:
+      'سقالات للإيجار أبوظبي, سقالات للإيجار دبي, شركة سقالات في الإمارات, سقالات مصفح, أسعار السقالات في الإمارات, تأجير سقالات أبوظبي, سقالات ألومنيوم دبي',
   },
   products: {
     path: '/ar/products',
-    enPath: '/products',
-    title: 'سقالات ألومنيوم أبوظبي | سلالم وcuplock فولاذي | Alcoa الإمارات',
-    description: 'سقالات ألومنيوم أبوظبي، سلالم ألومنيوم وفايبر جلاس، ونظام cuplock فولاذي — للتأجير والبيع في الإمارات العربية المتحدة. أسعار AED مع توصيل للمصفح وأبوظبي.',
-    h1: 'منتجات السقالات في أبوظبي، الإمارات',
+    enPath: '/aluminum-scaffolding-abu-dhabi',
+    title: 'سقالات ألومنيوم أبوظبي | سلالم وcuplock | Alcoa',
+    description:
+      'سقالات ألومنيوم أبوظبي، سلالم، ونظام cuplock فولاذي — للتأجير والبيع من مستودع المصفح 37.',
+    h1: 'منتجات السقالات في أبوظبي والإمارات',
     intro:
-      'نوفر سقالات ألومنيوم خفيفة الوزن بأبراج فردية ومزدوجة، سلالم ألومنيوم وفايبر جلاس، ومكونات cuplock فولاذية، بالإضافة إلى مشابك وcouplers كاملة. جميع المنتجات متوفرة للتأجير أو الشراء مع توصيل لأبوظبي والمصفح وياس آيلاند وKIZAD.',
+      'نوفر سقالات ألومنيوم خفيفة الوزن، سلالم ألومنيوم وفايبر جلاس، ومكونات cuplock فولاذية، بالإضافة إلى المشابك والوصلات. متوفرة للتأجير أو الشراء مع توصيل لأبوظبي ودبي والمصفح.',
     items: [
       { title: 'سقالات ألومنيوم أبوظبي', path: '/products/aluminium-scaffolding' },
       { title: 'سلالم — ألومنيوم وفايبر جلاس', path: '/products/ladders' },
       { title: 'سقالات cuplock فولاذية', path: '/products/steel-cuplock-scaffolding' },
       { title: 'مشابك ووصلات (Couplers)', path: '/products/couplers' },
+      { title: 'سقالات للبيع', path: '/scaffolding-for-sale' },
     ],
-    keywords: 'سقالات ألومنيوم أبوظبي، تأجير سقالات الإمارات، cuplock أبوظبي، سلالم للإيجار الإمارات، سقالات للبيع أبوظبي',
+    keywords: 'سقالات ألومنيوم أبوظبي, سقالات ألومنيوم دبي, سقالات للبيع دبي, سقالات حديد الإمارات',
   },
   contact: {
     path: '/ar/contact-us',
     enPath: '/contact-us',
-    title: 'تواصل مع Alcoa Scaffolding | عرض سعر سقالات أبوظبي',
-    description: 'تواصل مع Alcoa للحصول على عرض سعر سقالات في أبوظبي، الإمارات العربية المتحدة. نرد خلال 30 دقيقة. +971 58 137 5601',
-    h1: 'احصل على عرض سعر — سقالات أبوظبي والمصفح',
+    title: 'تواصل مع Alcoa Scaffolding | أبوظبي +971 58 137 5601',
+    description:
+      'تواصل مع Alcoa في المصفح 37، أبوظبي. هاتف وواتساب للحصول على عرض سعر سقالات.',
+    h1: 'تواصل مع Alcoa — سقالات أبوظبي والمصفح',
     intro:
-      'للحصول على عرض سعر سريع، اتصل أو راسلنا عبر واتساب على +971 58 137 5601. فريقنا يرد خلال 30 دقيقة في ساعات العمل. نخدم المصفح M-40 وM-45 وأبوظبي وياس آيلاند وKIZAD.',
+      'للحصول على عرض سعر، اتصل أو راسلنا عبر واتساب على +971 58 137 5601. ساعات العمل: الاثنين–السبت 8ص–6م. العنوان: شارع الرحمة 4، المصفح 37، أبوظبي.',
     phone: '+971 58 137 5601',
     email: 'sales@alcoascaffolding.com',
     emailInfo: 'info@alcoascaffolding.com',
-    keywords: 'عرض سعر سقالات أبوظبي، تواصل شركة سقالات الإمارات، سقالات المصفح، Alcoa أبوظبي',
+    keywords: 'تأجير سقالات أبوظبي, شركة سقالات في الإمارات, سقالات مصفح',
   },
   services: {
     path: '/ar/services',
-    enPath: '/services',
-    title: 'خدمات السقالات أبوظبي | تركيب وتأجير وتفتيش | Alcoa الإمارات',
-    description: 'تأجير سقالات، توصيل، تركيب وفك، تفتيش السلامة، وتدريب في أبوظبي، الإمارات العربية المتحدة والمصفح. أطقم تركيب معتمدة وتوثيق HSE.',
-    h1: 'خدمات السقالات في أبوظبي، الإمارات العربية المتحدة',
+    enPath: '/construction-scaffolding-uae',
+    title: 'خدمات السقالات أبوظبي | تركيب وتأجير وتفتيش | Alcoa',
+    description:
+      'تأجير سقالات، توصيل، تركيب وفك، تفتيش، وتوريد عمالة في أبوظبي ودبي من المصفح 37.',
+    h1: 'خدمات السقالات في أبوظبي والإمارات',
     intro:
-      'نقدم تأجير السقالات، التوصيل 24/7، التركيب والفك، فحص السلامة، والتدريب لمقاولي أبوظبي والمصفح. مستودعنا في المصفح M-40 مع توصيل يومي لجميع مناطق أبوظبي الصناعية. أطقم تركيب معتمدة مع توثيق HSE لمواقع ADNOC وKIZAD.',
+      'نقدم تأجير السقالات، التوصيل، التركيب والفك، فحص السلامة، وتوريد أطقم التركيب لمقاولي أبوظبي ودبي. مستودعنا في المصفح 37 مع تغطية لمناطق الإمارات.',
     links: [
       { title: 'تأجير سقالات أبوظبي', path: '/scaffolding-rental-abu-dhabi' },
+      { title: 'تأجير سقالات دبي', path: '/scaffolding-rental-dubai' },
       { title: 'تأجير سقالات المصفح', path: '/scaffolding-rental-musaffah' },
-      { title: 'سقالات KIZAD أبوظبي', path: '/scaffolding-rental-kizad' },
       { title: 'سقالات ألومنيوم', path: '/services/aluminium-scaffolding' },
-      { title: 'توصيل السقالات', path: '/services/scaffolding-delivery' },
       { title: 'تركيب السقالات', path: '/services/installation' },
-      { title: 'فحص السلامة', path: '/services/safety-inspections' },
+      { title: 'فحص السلامة', path: '/services/inspections' },
+      { title: 'الأسئلة الشائعة', path: '/faq' },
     ],
-    keywords: 'خدمات السقالات أبوظبي، تركيب سقالات الإمارات، تأجير سقالات المصفح، سقالات KIZAD، تفتيش سلامة السقالات الإمارات',
+    keywords: 'سقالات بناء أبوظبي, معدات البناء للإيجار دبي, نقالة بناء الإمارات',
   },
 };
 
 export const hreflangPairs = {
   '/': { en: 'https://alcoascaffolding.com/', ar: 'https://alcoascaffolding.com/ar' },
-  '/products': {
-    en: 'https://alcoascaffolding.com/products',
+  '/aluminum-scaffolding-abu-dhabi': {
+    en: 'https://alcoascaffolding.com/aluminum-scaffolding-abu-dhabi',
     ar: 'https://alcoascaffolding.com/ar/products',
   },
   '/contact-us': {
     en: 'https://alcoascaffolding.com/contact-us',
     ar: 'https://alcoascaffolding.com/ar/contact-us',
   },
-  '/services': {
-    en: 'https://alcoascaffolding.com/services',
+  '/construction-scaffolding-uae': {
+    en: 'https://alcoascaffolding.com/construction-scaffolding-uae',
     ar: 'https://alcoascaffolding.com/ar/services',
   },
 };
 
-export const getHreflangForPath = (pathname) => {
-  const normalized = pathname.replace(/\/$/, '') || '/';
-  return hreflangPairs[normalized] ?? null;
-};
+export const getArabicPage = (key) => arabicPages[key] || null;

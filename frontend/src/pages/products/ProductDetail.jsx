@@ -9,6 +9,8 @@ import Breadcrumbs from '../../components/common/Breadcrumbs';
 import { getCategoryIcon } from '../../data/productImageMap';
 import { getServicePricing } from '../../utils/serviceRichContent';
 import SEOHead from '../../components/common/SEOHead';
+import { buildProductSchema } from '../../utils/schemaBuilders';
+import { SITE_URL } from '../../data/businessFacts';
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -39,25 +41,48 @@ const ProductDetail = () => {
   const categoryFaq = [
     {
       q: `How much does ${productCategory.category.toLowerCase()} cost in Abu Dhabi?`,
-      a: `Rental from AED ${categoryPricing.daily[0]}–${categoryPricing.daily[1]} per ${categoryPricing.unit} per day. Monthly packages from AED ${categoryPricing.monthly?.[0] ?? categoryPricing.daily[0] * 20}.`,
+      a: `${productCategory.category} is quoted per ${categoryPricing.unit} based on quantity and hire duration. Contact Alcoa for a free AED quote from Musaffah 37.`,
     },
     {
       q: `Do you deliver ${productCategory.category.toLowerCase()} across UAE?`,
-      a: 'Yes — Abu Dhabi, United Arab Emirates and Musaffah with same-day dispatch on in-stock items.',
+      a: 'Yes — Abu Dhabi, Dubai, Musaffah 37 and wider UAE. Warehouse pickup available Mon–Sat 8am–6pm.',
     },
   ];
+
+  const PRODUCT_SEO = {
+    'aluminium-scaffolding': {
+      title: 'Aluminium Scaffolding UAE | Rental & Sale | Alcoa Abu Dhabi',
+      description:
+        'Buy or rent aluminium scaffolding in UAE. Lightweight systems from Musaffah 37. Abu Dhabi, Dubai & Musaffah delivery.',
+    },
+    ladders: {
+      title: 'Aluminium Ladder UAE | Ladder Rental Abu Dhabi | Alcoa',
+      description:
+        'Aluminium and fiberglass ladder rental and sale in Abu Dhabi UAE. A-type, extension & platform ladders. Free quote.',
+    },
+  };
+  const productSeo = PRODUCT_SEO[productId] || {
+    title: `${productCategory.title} | Buy or Rent in UAE | Alcoa`,
+    description: `Buy or rent ${productCategory.category.toLowerCase()} in Abu Dhabi & Dubai UAE. Fast supply from Musaffah 37. Contact Alcoa today!`,
+  };
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title={`${productCategory.title} | Buy or Rent in UAE | Alcoa Scaffold`}
-        description={`Buy or rent premium ${productCategory.category.toLowerCase()} in Abu Dhabi, United Arab Emirates. High-quality scaffolding systems with fast delivery. Contact us today!`}
+        title={productSeo.title}
+        description={productSeo.description}
         keywords={`${productCategory.category} UAE, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
         canonical={`/products/${productId}`}
+        jsonLd={buildProductSchema({
+          name: productCategory.title,
+          description: productCategory.description,
+          url: `${SITE_URL}/products/${productId}`,
+          category: productCategory.category,
+        })}
         faq={categoryFaq}
         breadcrumbs={[
           { name: 'Home', path: '/' },
-          { name: 'Products', path: '/products' },
+          { name: 'Products', path: '/aluminum-scaffolding-abu-dhabi' },
           { name: productCategory.title, path: `/products/${productId}` },
         ]}
       />
@@ -87,7 +112,7 @@ const ProductDetail = () => {
               {productCategory.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
-              {productCategory.description} Rental from AED {categoryPricing.daily[0]}–{categoryPricing.daily[1]}/day.
+              {productCategory.description} {categoryPricing.note}
             </p>
           </motion.div>
         </div>
@@ -150,9 +175,9 @@ const ProductDetail = () => {
                     </h4>
                     <dl className="space-y-1">
                       {Object.entries(product.quickDetails).slice(0, 2).map(([key, value]) => (
-                        <div key={key} className="flex justify-between text-xs">
-                          <dt className="text-gray-600 dark:text-gray-400">{key}:</dt>
-                          <dd className="text-gray-900 dark:text-white font-medium">{value}</dd>
+                        <div key={key} className="flex items-start justify-between gap-3 text-xs">
+                          <dt className="min-w-0 text-gray-600 dark:text-gray-400">{key}:</dt>
+                          <dd className="min-w-0 break-words text-right font-medium text-gray-900 dark:text-white">{value}</dd>
                         </div>
                       ))}
                     </dl>

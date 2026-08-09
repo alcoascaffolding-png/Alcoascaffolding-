@@ -3,12 +3,23 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import SEOHead from '../components/common/SEOHead';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import { getPostBySlug } from '../data/blogPosts';
+import { buildArticleSchema } from '../utils/schemaBuilders';
+import { SITE_URL } from '../data/businessFacts';
 
 const BlogPost = () => {
   const { slug } = useParams();
   const post = getPostBySlug(slug);
 
   if (!post) return <Navigate to="/blog" replace />;
+
+  const articleUrl = `${SITE_URL}/blog/${post.slug}`;
+  const articleSchema = buildArticleSchema({
+    headline: post.title,
+    description: post.excerpt,
+    url: articleUrl,
+    datePublished: post.date,
+    dateModified: post.updated || post.date,
+  });
 
   return (
     <article className="min-h-screen bg-surface-light dark:bg-surface-dark">
@@ -17,6 +28,8 @@ const BlogPost = () => {
         description={post.excerpt}
         keywords={post.keywords}
         canonical={`/blog/${post.slug}`}
+        ogType="article"
+        jsonLd={articleSchema}
         faq={post.faq}
         breadcrumbs={[
           { name: 'Home', path: '/' },
@@ -44,7 +57,9 @@ const BlogPost = () => {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 {section.heading}
               </h2>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{section.body}</p>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                {section.body}
+              </p>
             </section>
           ))}
           {post.faq?.length > 0 && (
@@ -60,11 +75,14 @@ const BlogPost = () => {
               </dl>
             </section>
           )}
-          <div className="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <Link to="/contact-us" className="btn-primary mr-4">
+          <div className="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-4">
+            <Link to="/contact-us" className="btn-primary">
               Get a Quote
             </Link>
-            <Link to="/blog" className="text-blue-600 hover:underline">
+            <Link to="/faq" className="btn-secondary">
+              Pricing FAQ
+            </Link>
+            <Link to="/blog" className="text-blue-600 hover:underline self-center">
               ← Back to Blog
             </Link>
           </div>

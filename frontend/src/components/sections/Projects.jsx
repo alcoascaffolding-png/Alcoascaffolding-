@@ -195,7 +195,7 @@ const Projects = () => {
             >
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col">
                 {/* Project Image */}
-                <div className="relative aspect-video bg-gradient-to-br from-blue-100 to-slate-100 dark:from-blue-900/20 dark:to-slate-900/20 mb-6 -mx-6 -mt-6">
+                <div className="relative aspect-video bg-gradient-to-br from-blue-100 to-slate-100 dark:from-blue-900/20 dark:to-slate-900/20">
                   <div className="w-full h-full flex items-center justify-center">
                     {/* Placeholder icon - replace with actual project images */}
                     <svg
@@ -208,7 +208,7 @@ const Projects = () => {
                   </div>
 
                   {/* Difficulty Badge */}
-                  <div className={`absolute top-8 right-8 px-3 py-1 rounded-lg text-xs font-semibold ${getDifficultyColor(project.stats.difficulty)}`}>
+                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-lg text-xs font-semibold ${getDifficultyColor(project.stats.difficulty)}`}>
                     {project.stats.difficulty}
                   </div>
 

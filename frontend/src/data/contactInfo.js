@@ -1,4 +1,27 @@
-export const EMAIL_SALES = 'sales@alcoascaffolding.com';
-export const EMAIL_INFO = 'info@alcoascaffolding.com';
+export {
+  EMAIL_SALES,
+  EMAIL_INFO,
+  PHONE_PRIMARY,
+  PHONE_PRIMARY_E164,
+  PHONE_SECONDARY,
+  PHONE_SECONDARY_E164,
+  WHATSAPP_NUMBER,
+  WHATSAPP_DEFAULT_MESSAGE,
+  STREET_ADDRESS,
+  STREET_ADDRESS_SHORT,
+  FULL_ADDRESS,
+  SITE_URL,
+  SITE_NAME,
+  LEGAL_NAME,
+  OPENING_HOURS_SUMMARY,
+  MAPS_SEARCH_URL,
+  MAPS_EMBED_URL,
+  SOCIAL,
+  ISO_CERT,
+  whatsappUrl,
+  telHref,
+} from './businessFacts';
+
+import { EMAIL_SALES, EMAIL_INFO } from './businessFacts';
 
 export const COMPANY_EMAILS = [EMAIL_SALES, EMAIL_INFO];
