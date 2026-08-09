@@ -46,6 +46,8 @@ export function GenericCRUDPage({
   FormFields,
   statCards,
   allowEdit = true,
+  /** Optional per-row predicate to gate the inline edit action (default: allow) */
+  canEditRow,
   mapItemToForm,
   initialOpenCreate = false,
   presetValues = null,
@@ -300,7 +302,7 @@ export function GenericCRUDPage({
           </Button>
         )}
         {extraRowActions?.(row.original)}
-        {FormFields && allowEdit && canWrite && (
+        {FormFields && allowEdit && canWrite && (!canEditRow || canEditRow(row.original)) && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); openEdit(row.original); }}>
             <Pencil className="h-3.5 w-3.5" />
           </Button>

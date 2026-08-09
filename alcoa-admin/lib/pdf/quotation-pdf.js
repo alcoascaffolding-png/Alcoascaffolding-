@@ -45,14 +45,14 @@ function formatCurrency(amount, currency = "AED") {
 }
 
 /**
- * PDF table numbers — UAE formatting: Western thousands grouping + 2 decimals
- * (e.g. 1,234,567.89). See {@link formatPdfNumber}.
+ * PDF table numbers — 2 decimals, no thousand separators.
+ * See {@link formatPdfNumber}.
  */
 function formatPdfAmount(value) {
   return formatPdfNumber(value);
 }
 
-/** Summary totals — same UAE formatting as line items (kept for call-site clarity). */
+/** Summary totals — same formatting as line items (kept for call-site clarity). */
 function formatPdfSummaryAmount(value) {
   return formatPdfNumber(value);
 }
@@ -88,7 +88,11 @@ function formatAmountInWords(num) {
       return (
         convert(Math.floor(n / 1000000)) + " Million" + (n % 1000000 !== 0 ? " " + convert(n % 1000000) : "")
       );
-    return amount.toLocaleString();
+    return (
+      convert(Math.floor(n / 1000000000)) +
+      " Billion" +
+      (n % 1000000000 !== 0 ? " " + convert(n % 1000000000) : "")
+    );
   }
 
   const intPart = Math.floor(amount);
@@ -827,14 +831,16 @@ function buildQuotationPdfLayout(quotation, options = {}) {
 7. Any damage to equipment will be charged to the client.
 8. ${companyName} reserves the right to withdraw or revise this quotation without prior notice.`;
 
-  const discountValue =
-    discountType === "percentage" ? (subtotal * discount) / 100 : discount;
-  const beforeVAT =
-    subtotal +
+  // Percentage discount applies to the charged base (line subtotal + charges), matching the
+  // model's recalculateTotals so the printed "Total w/o VAT" reconciles to the stored net total.
+  const chargedBase =
+    Number(subtotal || 0) +
     Number(deliveryCharges || 0) +
     Number(installationCharges || 0) +
-    Number(pickupCharges || 0) -
-    Number(discountValue || 0);
+    Number(pickupCharges || 0);
+  const discountValue =
+    discountType === "percentage" ? (chargedBase * discount) / 100 : discount;
+  const beforeVAT = chargedBase - Number(discountValue || 0);
   const displaySubtotal = Math.max(0, Number(beforeVAT || 0));
   const sumWeight = items.reduce((s, it) => s + Number(it.weight || 0), 0);
   const sumCbm = items.reduce((s, it) => s + Number(it.cbm || 0), 0);

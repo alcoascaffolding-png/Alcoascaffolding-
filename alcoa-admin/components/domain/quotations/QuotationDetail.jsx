@@ -23,7 +23,6 @@ import Link from "next/link";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
 import {
   itemAmountWithVat,
-  quotationDisplaySubtotal,
 } from "@/lib/quotation-display";
 import { displayBankDetailsFromDocument } from "@/lib/resolve-document-bank-details";
 import {
@@ -158,7 +157,16 @@ export function QuotationDetail({ id }) {
   const customerEmail = resolveDocumentCustomerEmail(q);
   const customerPhone = resolveDocumentCustomerPhone(q);
   const vatPct = q.vatPercentage ?? 5;
-  const displaySubtotal = quotationDisplaySubtotal(q);
+  // Pre-discount line subtotal so the summary reconciles: Subtotal − Discount (+charges) + VAT = Total.
+  const rawSubtotal = Number(q.subtotal || 0);
+  const deliveryCharges = Number(q.deliveryCharges || 0);
+  const installationCharges = Number(q.installationCharges || 0);
+  const pickupCharges = Number(q.pickupCharges || 0);
+  const discountRaw = Number(q.discount || 0);
+  const discountValue =
+    q.discountType === "percentage"
+      ? ((rawSubtotal + deliveryCharges + installationCharges + pickupCharges) * discountRaw) / 100
+      : discountRaw;
   const bank = displayBankDetailsFromDocument(q);
   const subject = q.subject || `Quotation ${q.quoteNumber}`;
   const hasSalesOrder = !!q.linked?.salesOrder;
@@ -413,38 +421,33 @@ export function QuotationDetail({ id }) {
             <div className="flex flex-col items-end gap-2 text-sm">
               <div className="flex gap-8 w-full max-w-sm justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span className="tabular-nums">{displaySubtotal.toFixed(2)}</span>
+                <span className="tabular-nums">{rawSubtotal.toFixed(2)}</span>
               </div>
-              {q.deliveryCharges > 0 && (
+              {deliveryCharges > 0 && (
                 <div className="flex gap-8 w-full max-w-sm justify-between">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span className="tabular-nums">{Number(q.deliveryCharges).toFixed(2)}</span>
+                  <span className="tabular-nums">{deliveryCharges.toFixed(2)}</span>
                 </div>
               )}
-              {q.installationCharges > 0 && (
+              {installationCharges > 0 && (
                 <div className="flex gap-8 w-full max-w-sm justify-between">
                   <span className="text-muted-foreground">Installation</span>
-                  <span className="tabular-nums">{Number(q.installationCharges).toFixed(2)}</span>
+                  <span className="tabular-nums">{installationCharges.toFixed(2)}</span>
                 </div>
               )}
-              {q.pickupCharges > 0 && (
+              {pickupCharges > 0 && (
                 <div className="flex gap-8 w-full max-w-sm justify-between">
                   <span className="text-muted-foreground">Pickup</span>
-                  <span className="tabular-nums">{Number(q.pickupCharges).toFixed(2)}</span>
+                  <span className="tabular-nums">{pickupCharges.toFixed(2)}</span>
                 </div>
               )}
-              {q.discount > 0 && (
+              {discountValue > 0 && (
                 <div className="flex gap-8 w-full max-w-sm justify-between text-emerald-600">
                   <span>
                     Discount
-                    {q.discountType === "percentage" ? ` (${q.discount}%)` : ""}
+                    {q.discountType === "percentage" ? ` (${discountRaw}%)` : ""}
                   </span>
-                  <span className="tabular-nums">
-                    -{" "}
-                    {q.discountType === "percentage"
-                      ? ((q.subtotal * q.discount) / 100).toFixed(2)
-                      : Number(q.discount).toFixed(2)}
-                  </span>
+                  <span className="tabular-nums">- {discountValue.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex gap-8 w-full max-w-sm justify-between">

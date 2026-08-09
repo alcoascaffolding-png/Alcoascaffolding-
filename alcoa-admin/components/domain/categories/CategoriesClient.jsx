@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { z } from "zod";
+import { Eye } from "lucide-react";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
+import { StatusToggleAction } from "@/components/domain/StatusToggleAction";
 import {
   FormTextField,
   FormTextAreaField,
@@ -10,6 +13,14 @@ import {
 } from "@/components/forms/form-fields";
 import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const schema = z.object({
   name: z.string().min(1, "Name required"),
@@ -129,6 +140,39 @@ const DEFAULT_VALUES = {
   description: "",
 };
 
+function CategoryViewDialog({ category, onClose }) {
+  const c = category;
+  return (
+    <Dialog open={!!c} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {c?.name}
+            {c && (
+              <Badge variant={c.isActive !== false ? "success" : "secondary"}>
+                {c.isActive !== false ? "Active" : "Inactive"}
+              </Badge>
+            )}
+          </DialogTitle>
+          <DialogDescription>Read-only category details.</DialogDescription>
+        </DialogHeader>
+        {c && (
+          <div className="mt-2 space-y-2 text-sm">
+            <div className="flex items-start justify-between gap-4 py-2 border-b">
+              <span className="text-muted-foreground">Sort order</span>
+              <span className="font-medium">{c.sortOrder ?? 0}</span>
+            </div>
+            <div className="flex flex-col gap-1 py-2">
+              <span className="text-muted-foreground">Description</span>
+              <span className="font-medium">{c.description || "—"}</span>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ModuleCategoryFormFields({ control, moduleType }) {
   return <CategoryFormFields control={control} config={MODULE_CONFIG[moduleType]} />;
 }
@@ -152,36 +196,63 @@ const MODULE_FORM_FIELDS = {
 export function ModuleCategoriesClient({ moduleType }) {
   const config = MODULE_CONFIG[moduleType];
   const FormFields = MODULE_FORM_FIELDS[moduleType];
+  const [viewItem, setViewItem] = useState(null);
+  const optionsKey = [["category-options", config.categoryType]];
 
   return (
-    <GenericCRUDPage
-      resource={config.apiResource}
-      permissionResource={config.permissionResource}
-      title={config.title}
-      resourceSingular={config.resourceSingular}
-      description={config.description}
-      columns={columns}
-      schema={schema}
-      serverPagination
-      serverSearch
-      defaultPageSize={50}
-      defaultSorting={[{ id: "sortOrder", desc: false }]}
-      mapItemToForm={mapItemToForm}
-      defaultValues={DEFAULT_VALUES}
-      FormFields={FormFields}
-      prepareSavePayload={(values) => ({
-        ...values,
-        name: values.name.trim(),
-        type: config.categoryType,
-      })}
-      invalidateQueryKeys={[["category-options", config.categoryType]]}
-      statCards={(s) => [
-        { label: "Total", value: s.total ?? 0 },
-        { label: "Active", value: s.active ?? 0 },
-        { label: "Inactive", value: s.inactive ?? 0 },
-      ]}
-      emptyMessage="No categories yet. Add your first category."
-    />
+    <>
+      <GenericCRUDPage
+        resource={config.apiResource}
+        permissionResource={config.permissionResource}
+        title={config.title}
+        resourceSingular={config.resourceSingular}
+        description={config.description}
+        columns={columns}
+        schema={schema}
+        serverPagination
+        serverSearch
+        defaultPageSize={50}
+        defaultSorting={[{ id: "sortOrder", desc: false }]}
+        mapItemToForm={mapItemToForm}
+        defaultValues={DEFAULT_VALUES}
+        FormFields={FormFields}
+        prepareSavePayload={(values) => ({
+          ...values,
+          name: values.name.trim(),
+          type: config.categoryType,
+        })}
+        invalidateQueryKeys={optionsKey}
+        extraRowActions={(row) => (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="View"
+              onClick={(e) => {
+                e.stopPropagation();
+                setViewItem(row);
+              }}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </Button>
+            <StatusToggleAction
+              resource={config.apiResource}
+              item={row}
+              label="category"
+              invalidateKeys={optionsKey}
+            />
+          </>
+        )}
+        statCards={(s) => [
+          { label: "Total", value: s.total ?? 0 },
+          { label: "Active", value: s.active ?? 0 },
+          { label: "Inactive", value: s.inactive ?? 0 },
+        ]}
+        emptyMessage="No categories yet. Add your first category."
+      />
+      <CategoryViewDialog category={viewItem} onClose={() => setViewItem(null)} />
+    </>
   );
 }
 

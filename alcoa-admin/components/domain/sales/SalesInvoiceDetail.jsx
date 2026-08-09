@@ -141,7 +141,22 @@ export function SalesInvoiceDetail({ id }) {
   const lineVat = displayItems.reduce((sum, item) => sum + Number(item.vatAmount || 0), 0);
   const subtotal = Number(inv.subtotal || 0) > 0 ? Number(inv.subtotal || 0) : lineSubtotal;
   const vatAmount = Number(inv.vatAmount || 0) > 0 ? Number(inv.vatAmount || 0) : lineVat;
-  const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
+  // Use the stored VAT rate for the label (matches the edit form). Back-computing
+  // vatAmount/subtotal divides by the pre-discount base and shows a misleading %.
+  const vatPct =
+    Number(inv.vatPercentage) > 0
+      ? Number(inv.vatPercentage)
+      : subtotal > 0
+        ? Math.round((vatAmount / subtotal) * 10000) / 100
+        : 5;
+  const deliveryCharges = Number(inv.deliveryCharges || 0);
+  const installationCharges = Number(inv.installationCharges || 0);
+  const pickupCharges = Number(inv.pickupCharges || 0);
+  const discountRaw = Number(inv.discount || 0);
+  const discountValue =
+    inv.discountType === "percentage"
+      ? ((subtotal + deliveryCharges + installationCharges + pickupCharges) * discountRaw) / 100
+      : discountRaw;
   const invoiceTotal =
     Number(inv.total || 0) > 0 ? Number(inv.total || 0) : subtotal + vatAmount;
   const bank = displayBankDetailsFromDocument(inv);
@@ -351,6 +366,33 @@ export function SalesInvoiceDetail({ id }) {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="tabular-nums">{subtotal.toFixed(2)}</span>
               </div>
+              {deliveryCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className="tabular-nums">{deliveryCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {installationCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Installation</span>
+                  <span className="tabular-nums">{installationCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {pickupCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Pickup</span>
+                  <span className="tabular-nums">{pickupCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {discountValue > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between text-emerald-600">
+                  <span>
+                    Discount
+                    {inv.discountType === "percentage" ? ` (${discountRaw}%)` : ""}
+                  </span>
+                  <span className="tabular-nums">- {discountValue.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex gap-8 w-full max-w-sm justify-between">
                 <span className="text-muted-foreground">VAT ({vatPct}%)</span>
                 <span className="tabular-nums">{vatAmount.toFixed(2)}</span>

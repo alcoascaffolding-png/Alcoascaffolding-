@@ -1,4 +1,3 @@
-import { createDetailHandlers } from "@/lib/crud-factory";
 import { connectDB } from "@/lib/db";
 import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
@@ -7,8 +6,32 @@ import { createStockAdjustment } from "@/lib/stock-service";
 import { logAudit } from "@/lib/audit-log";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 import { assertValidCategory } from "@/lib/category-service";
+import Quotation from "@/models/Quotation";
+import SalesOrder from "@/models/SalesOrder";
+import SalesInvoice from "@/models/SalesInvoice";
+import DeliveryNote from "@/models/DeliveryNote";
+import PurchaseOrder from "@/models/PurchaseOrder";
+import PurchaseInvoice from "@/models/PurchaseInvoice";
 
-const { DELETE } = createDetailHandlers(() => import("@/models/Product"), "Product", "products");
+/** Transactional documents that reference a product via their `items[].product`. */
+const PRODUCT_REFERENCE_SOURCES = [
+  [Quotation, "quotation"],
+  [SalesOrder, "sales order"],
+  [SalesInvoice, "sales invoice"],
+  [DeliveryNote, "delivery note"],
+  [PurchaseOrder, "purchase order"],
+  [PurchaseInvoice, "purchase invoice"],
+];
+
+async function findProductReferences(productId) {
+  const results = await Promise.all(
+    PRODUCT_REFERENCE_SOURCES.map(async ([Model, label]) => {
+      const count = await Model.countDocuments({ "items.product": productId });
+      return { label, count };
+    })
+  );
+  return results.filter((r) => r.count > 0);
+}
 
 const GET = withErrorHandler(async (request, { params }) => {
   await authorizeApi("products", "read");
@@ -85,6 +108,39 @@ const PATCH = withErrorHandler(async (request, { params }) => {
   });
 
   return apiSuccess(doc);
+});
+
+const DELETE = withErrorHandler(async (request, { params }) => {
+  const session = await authorizeApi("products", "delete");
+  await connectDB();
+  const Product = (await import("@/models/Product")).default;
+
+  const existing = await Product.findById(params.id);
+  if (!existing) throw new AppError("Product not found", 404);
+
+  const references = await findProductReferences(params.id);
+  if (references.length) {
+    const detail = references
+      .map((r) => `${r.count} ${r.label}${r.count === 1 ? "" : "s"}`)
+      .join(", ");
+    throw new AppError(
+      `Cannot delete "${existing.name}": it is referenced by ${detail}. Deactivate the product instead to hide it from pickers while preserving history.`,
+      400
+    );
+  }
+
+  await existing.deleteOne();
+
+  logAudit({
+    userId: session.user.id,
+    userEmail: session.user.email,
+    action: "delete",
+    resource: "products",
+    resourceId: existing._id,
+    summary: `delete Product ${existing._id}`,
+  });
+
+  return apiSuccess({ deleted: true });
 });
 
 export { GET, PATCH, DELETE };

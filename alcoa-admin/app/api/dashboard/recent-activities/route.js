@@ -18,7 +18,7 @@ export const GET = withErrorHandler(async (request) => {
   const [recentOrders, recentMessages, recentQuotations] = await Promise.all([
     SalesOrder.find().sort({ createdAt: -1 }).limit(5).select("orderNumber customerName total status createdAt").lean(),
     ContactMessage.find().sort({ createdAt: -1 }).limit(limit).select("type name email status priority createdAt").lean(),
-    Quotation.find().sort({ createdAt: -1 }).limit(5).select("quoteNumber customerName totalAmount status createdAt").lean(),
+    Quotation.find().sort({ createdAt: -1 }).limit(5).select("quoteNumber customerName totalAmount status validUntil createdAt").lean(),
   ]);
 
   return apiSuccess({ orders: recentOrders, messages: recentMessages, quotations: recentQuotations });

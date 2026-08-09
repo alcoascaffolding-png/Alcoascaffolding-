@@ -19,6 +19,9 @@ import {
   FormLineItemDeleteCell,
   formLineItemLabelClassName,
   formLineItemRowClassName,
+  formInputClassName,
+  formLabelClassName,
+  formItemClassName,
 } from "@/components/forms/form-fields";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -35,6 +38,9 @@ import {
 import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
 import { mapProductToSalesLine } from "@/lib/map-product-to-quotation-line";
 import { formErrorToastMessage } from "@/lib/form-error-summary";
+
+/** Company policy: VAT is a fixed 5% everywhere and cannot be edited by users. */
+const VAT_PERCENTAGE = 5;
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -142,11 +148,7 @@ export function SalesOrderFormPage({ id }) {
         : q != null
           ? String(q)
           : "__none__";
-    const lineSub = (existing.items || []).reduce((s, it) => s + Number(it.total || 0), 0);
-    const vatPctVal =
-      lineSub > 0 && existing.vatAmount != null
-        ? Math.round((Number(existing.vatAmount) / lineSub) * 10000) / 100
-        : 5;
+    // VAT is a fixed 5% (company policy) — the stored/derived rate is intentionally ignored on edit.
     form.reset({
       customer: customerId,
       customerName: existing.customerName || "",
@@ -161,7 +163,7 @@ export function SalesOrderFormPage({ id }) {
           ? existing.items.map(mapExistingLineItemToForm)
           : [{ ...defaultItem }],
       pricingMode: "rental",
-      vatPercentage: vatPctVal,
+      vatPercentage: VAT_PERCENTAGE,
       notes: existing.notes || "",
     });
   }, [existing, form]);
@@ -266,7 +268,7 @@ export function SalesOrderFormPage({ id }) {
       form.setValue("customerName", q.customerName || "", { shouldDirty: true });
       form.setValue("customerEmail", q.customerEmail || "", { shouldDirty: true });
       form.setValue("customerPhone", q.customerPhone || "", { shouldDirty: true });
-      form.setValue("vatPercentage", Number(q.vatPercentage ?? 5), { shouldDirty: true });
+      form.setValue("vatPercentage", VAT_PERCENTAGE, { shouldDirty: true });
       if (q.notes) form.setValue("notes", q.notes, { shouldDirty: true });
       const lines = q.items.map((it) => {
         const desc =
@@ -348,7 +350,7 @@ export function SalesOrderFormPage({ id }) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
   const watchedItems = form.watch("items");
   const pricingMode = form.watch("pricingMode") || "rental";
-  const vatPct = form.watch("vatPercentage") ?? 5;
+  const vatPct = VAT_PERCENTAGE;
 
   const subtotal = (watchedItems || []).reduce(
     (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitPrice || 0),
@@ -361,7 +363,7 @@ export function SalesOrderFormPage({ id }) {
     mutationFn: async (values) => {
       const items = values.items.map(buildLineItemSavePayload);
       const lineSubtotal = items.reduce((s, it) => s + it.total, 0);
-      const vat = (lineSubtotal * Number(values.vatPercentage ?? 5)) / 100;
+      const vat = (lineSubtotal * VAT_PERCENTAGE) / 100;
 
       const payload = {
         customerName: values.customerName,
@@ -371,6 +373,7 @@ export function SalesOrderFormPage({ id }) {
         deliveryDate: values.deliveryDate || undefined,
         status: values.status,
         items,
+        vatPercentage: VAT_PERCENTAGE,
         vatAmount: vat,
         notes: values.notes || undefined,
         currency: "AED",
@@ -486,12 +489,12 @@ export function SalesOrderFormPage({ id }) {
               label="Status"
               options={statusOpts}
             />
-            <FormNumberField
-              control={form.control}
-              name="vatPercentage"
-              label="VAT %"
-              className="md:col-span-2"
-            />
+            <div className={`${formItemClassName} md:col-span-2`}>
+              <span className={formLabelClassName}>VAT %</span>
+              <div className={`${formInputClassName} flex items-center bg-muted/40 text-muted-foreground`}>
+                {VAT_PERCENTAGE}% (fixed)
+              </div>
+            </div>
             <FormSelectField
               control={form.control}
               name="pricingMode"

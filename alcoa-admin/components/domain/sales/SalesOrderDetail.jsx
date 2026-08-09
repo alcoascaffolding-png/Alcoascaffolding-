@@ -165,7 +165,22 @@ export function SalesOrderDetail({ id }) {
   const fulfillment = o.deliveryFulfillment;
   const subtotal = Number(o.subtotal || 0);
   const vatAmount = Number(o.vatAmount || 0);
-  const vatPct = subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
+  // Use the stored VAT rate for the label (matches the edit form). Back-computing
+  // vatAmount/subtotal divides by the pre-discount base and shows a misleading %.
+  const vatPct =
+    Number(o.vatPercentage) > 0
+      ? Number(o.vatPercentage)
+      : subtotal > 0
+        ? Math.round((vatAmount / subtotal) * 10000) / 100
+        : 5;
+  const deliveryCharges = Number(o.deliveryCharges || 0);
+  const installationCharges = Number(o.installationCharges || 0);
+  const pickupCharges = Number(o.pickupCharges || 0);
+  const discountRaw = Number(o.discount || 0);
+  const discountValue =
+    o.discountType === "percentage"
+      ? ((subtotal + deliveryCharges + installationCharges + pickupCharges) * discountRaw) / 100
+      : discountRaw;
   const displayItems = mapSalesOrderItemsForDisplay(o);
   const bank = displayBankDetailsFromDocument(o);
   const subject = `Sales Order ${o.orderNumber}`;
@@ -429,6 +444,33 @@ export function SalesOrderDetail({ id }) {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="tabular-nums">{subtotal.toFixed(2)}</span>
               </div>
+              {deliveryCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className="tabular-nums">{deliveryCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {installationCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Installation</span>
+                  <span className="tabular-nums">{installationCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {pickupCharges > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between">
+                  <span className="text-muted-foreground">Pickup</span>
+                  <span className="tabular-nums">{pickupCharges.toFixed(2)}</span>
+                </div>
+              )}
+              {discountValue > 0 && (
+                <div className="flex gap-8 w-full max-w-sm justify-between text-emerald-600">
+                  <span>
+                    Discount
+                    {o.discountType === "percentage" ? ` (${discountRaw}%)` : ""}
+                  </span>
+                  <span className="tabular-nums">- {discountValue.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex gap-8 w-full max-w-sm justify-between">
                 <span className="text-muted-foreground">VAT ({vatPct}%)</span>
                 <span className="tabular-nums">{vatAmount.toFixed(2)}</span>

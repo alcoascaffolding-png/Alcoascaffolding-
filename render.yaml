@@ -1,46 +1,52 @@
 # Render deployment configuration
-# NOTE: The new Next.js admin panel (alcoa-admin/) is deployed to Vercel.
-# Only the legacy Express backend is deployed here.
-# The old admin-panel/ (Vite static site) has been replaced by the new Next.js app.
-services:
-  # Legacy Express Backend (kept running during Next.js migration overlap)
-  # Once all API routes are migrated to Next.js Route Handlers,
-  # this service can be decommissioned.
-  - type: web
-    name: alcoa-scaffolding-backend
-    env: node
-    rootDirectory: backend
-    buildCommand: npm install && npx playwright install chromium
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: RESEND_API_KEY
-        sync: false
-      - key: RESEND_FROM_EMAIL
-        value: sales@alcoascaffolding.com
-      - key: COMPANY_EMAIL
-        value: sales@alcoascaffolding.com
-      - key: SUPPORT_EMAIL
-        value: sales@alcoascaffolding.com
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGODB_DB_NAME
-        value: alcoa-admin-prod
-      - key: APP_ENV
-        value: production
-      - key: JWT_SECRET
-        sync: false
-      - key: FRONTEND_URL
-        value: https://alcoascaffolding.com
-      - key: COMPANY_NAME
-        value: Alcoa Aluminium Scaffolding
-      - key: LOG_LEVEL
-        value: info
-      - key: TIMEZONE
-        value: Asia/Dubai
+# NOTE: The new Next.js admin panel (alcoa-admin/) is deployed to Vercel, not here.
+# As of 2026-08-09 the legacy Express backend is DECOMMISSIONED (see below) and the
+# old admin-panel/ (Vite static site) has been replaced by the new Next.js app.
+# No active Render services remain defined in this file.
+services: []
+  # DECOMMISSIONED 2026-08-09: Legacy Express backend (backend/, node server.js).
+  # All APIs are now served by the Next.js admin app (alcoa-admin/, deployed to Vercel),
+  # which is fully self-contained. This service is NOT used by the admin app but was
+  # still deployed here against the SAME production MongoDB (MONGODB_DB_NAME: alcoa-admin-prod),
+  # a data-integrity risk. Commented out (recoverable) to prevent redeploys.
+  # IMPORTANT: Removing it from render.yaml does NOT delete an already-created Render
+  # service — it must ALSO be suspended and then deleted in the Render dashboard.
+  # See DECOMMISSION_LEGACY_BACKEND.md at repo root for the exact manual steps.
+  # - type: web
+  #   name: alcoa-scaffolding-backend
+  #   env: node
+  #   rootDirectory: backend
+  #   buildCommand: npm install && npx playwright install chromium
+  #   startCommand: npm start
+  #   envVars:
+  #     - key: NODE_ENV
+  #       value: production
+  #     - key: PORT
+  #       value: 10000
+  #     - key: RESEND_API_KEY
+  #       sync: false
+  #     - key: RESEND_FROM_EMAIL
+  #       value: sales@alcoascaffolding.com
+  #     - key: COMPANY_EMAIL
+  #       value: sales@alcoascaffolding.com
+  #     - key: SUPPORT_EMAIL
+  #       value: sales@alcoascaffolding.com
+  #     - key: MONGODB_URI
+  #       sync: false
+  #     - key: MONGODB_DB_NAME
+  #       value: alcoa-admin-prod
+  #     - key: APP_ENV
+  #       value: production
+  #     - key: JWT_SECRET
+  #       sync: false
+  #     - key: FRONTEND_URL
+  #       value: https://alcoascaffolding.com
+  #     - key: COMPANY_NAME
+  #       value: Alcoa Aluminium Scaffolding
+  #     - key: LOG_LEVEL
+  #       value: info
+  #     - key: TIMEZONE
+  #       value: Asia/Dubai
 
   # DECOMMISSIONED: Old Vite static admin panel
   # Replaced by alcoa-admin/ Next.js app deployed to Vercel

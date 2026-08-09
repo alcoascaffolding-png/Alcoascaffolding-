@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { z } from "zod";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useWatch } from "react-hook-form";
+import { Eye } from "lucide-react";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import {
   FormTextField,
@@ -13,7 +15,23 @@ import {
 } from "@/components/forms/form-fields";
 import { FormSection, FormGrid } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
+
+const SOURCE_LABELS = {
+  manual: "Manual adjustment",
+  product_edit: "Product form edit",
+  purchase_order: "Purchase order",
+  delivery_note: "Delivery note",
+  stock_adjustment: "Stock adjustment",
+};
 
 const adjustmentTypeOptions = [
   { value: "increase", label: "Increase stock" },
@@ -58,6 +76,68 @@ const defaultValues = {
 };
 
 const typeColors = { increase: "success", decrease: "destructive", correction: "warning" };
+
+/** Only manually created adjustments are editable — auto ledger entries are immutable. */
+function isManualAdjustment(row) {
+  return !row?.sourceType || row.sourceType === "manual";
+}
+
+function mapAdjustmentToForm(item) {
+  const isCorrection = item.adjustmentType === "correction";
+  return {
+    product: item.product ? String(item.product) : "",
+    adjustmentType: item.adjustmentType || "increase",
+    quantity: isCorrection ? 0 : item.quantity ?? 0,
+    correctionNewStock: isCorrection ? item.newStock ?? 0 : 0,
+    reason: item.reason || "",
+    notes: item.notes || "",
+  };
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 border-b last:border-0">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-sm font-medium text-right">{value ?? "—"}</span>
+    </div>
+  );
+}
+
+function StockAdjustmentViewDialog({ adjustment, onClose }) {
+  const open = !!adjustment;
+  const a = adjustment;
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="font-mono text-sm">{a?.adjustmentNumber}</span>
+            {a && (
+              <Badge variant={typeColors[a.adjustmentType]}>{a.adjustmentType}</Badge>
+            )}
+          </DialogTitle>
+          <DialogDescription>Read-only stock adjustment details.</DialogDescription>
+        </DialogHeader>
+        {a && (
+          <div className="mt-2">
+            <DetailRow label="Product" value={a.productName} />
+            <DetailRow label="Quantity" value={a.quantity} />
+            <DetailRow label="Stock before" value={a.previousStock} />
+            <DetailRow label="Stock after" value={a.newStock} />
+            <DetailRow label="Reason" value={a.reason} />
+            <DetailRow label="Notes" value={a.notes} />
+            <DetailRow
+              label="Source"
+              value={SOURCE_LABELS[a.sourceType] || a.sourceType || "Manual adjustment"}
+            />
+            {a.sourceNumber && <DetailRow label="Reference" value={a.sourceNumber} />}
+            <DetailRow label="Date" value={formatDate(a.createdAt)} />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const columns = [
   { accessorKey: "adjustmentNumber", header: "Adj #", size: 120 },
@@ -173,6 +253,7 @@ function StockAdjustmentFormFields({ control }) {
 export function StockAdjustmentsClient() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
+  const [viewItem, setViewItem] = useState(null);
 
   const presetValues = productId
     ? {
@@ -183,20 +264,38 @@ export function StockAdjustmentsClient() {
     : null;
 
   return (
-    <GenericCRUDPage
-      resource="stock-adjustments"
-      title="Stock Adjustments"
-      resourceSingular="Stock adjustment"
-      emptyMessage="No stock adjustments yet."
-      emptyDescription="Record additions, damage, or corrections to on-hand inventory here."
-      columns={columns}
-      schema={stockAdjustmentSchema}
-      defaultValues={defaultValues}
-      FormFields={StockAdjustmentFormFields}
-      allowEdit={false}
-      initialOpenCreate={!!productId}
-      presetValues={presetValues}
-      statCards={(s) => [{ label: "Total Adjustments", value: s.total }]}
-    />
+    <>
+      <GenericCRUDPage
+        resource="stock-adjustments"
+        title="Stock Adjustments"
+        resourceSingular="Stock adjustment"
+        emptyMessage="No stock adjustments yet."
+        emptyDescription="Record additions, damage, or corrections to on-hand inventory here."
+        columns={columns}
+        schema={stockAdjustmentSchema}
+        defaultValues={defaultValues}
+        FormFields={StockAdjustmentFormFields}
+        mapItemToForm={mapAdjustmentToForm}
+        canEditRow={isManualAdjustment}
+        initialOpenCreate={!!productId}
+        presetValues={presetValues}
+        extraRowActions={(row) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            title="View"
+            onClick={(e) => {
+              e.stopPropagation();
+              setViewItem(row);
+            }}
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Button>
+        )}
+        statCards={(s) => [{ label: "Total Adjustments", value: s.total }]}
+      />
+      <StockAdjustmentViewDialog adjustment={viewItem} onClose={() => setViewItem(null)} />
+    </>
   );
 }

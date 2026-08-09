@@ -6,6 +6,11 @@ import { logAudit } from "@/lib/audit-log";
 import { buildRegexSearchFilter } from "@/lib/search-utils";
 import { sanitizeMongoDocument } from "@/lib/mongo-sanitize";
 import { assertValidCategory } from "@/lib/category-service";
+import {
+  lowStockQuery,
+  outOfStockQuery,
+  criticalStockQuery,
+} from "@/lib/inventory-utils";
 
 function sanitizePreferredVendor(value) {
   if (value == null || value === "" || value === "__none__") return undefined;
@@ -31,26 +36,11 @@ function buildProductFilter(searchParams) {
   if (active === "false") and.push({ isActive: false });
 
   if (stock === "low") {
-    and.push({ isActive: { $ne: false } });
-    and.push({
-      $expr: {
-        $and: [
-          { $gt: ["$minStock", 0] },
-          { $lte: ["$currentStock", "$minStock"] },
-          { $gt: ["$currentStock", 0] },
-        ],
-      },
-    });
+    and.push(lowStockQuery());
   } else if (stock === "out") {
-    and.push({ isActive: { $ne: false }, currentStock: { $lte: 0 } });
+    and.push(outOfStockQuery());
   } else if (stock === "critical") {
-    and.push({ isActive: { $ne: false } });
-    and.push({
-      $or: [
-        { currentStock: { $lte: 0 } },
-        { $expr: { $and: [{ $gt: ["$minStock", 0] }, { $lte: ["$currentStock", "$minStock"] }] } },
-      ],
-    });
+    and.push(criticalStockQuery());
   }
 
   if (and.length === 0) return {};

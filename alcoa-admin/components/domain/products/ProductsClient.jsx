@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { VendorSelectField } from "@/components/shared/PurchaseLineItemsFields";
 import { CategorySelectField } from "@/components/shared/CategorySelectField";
 import { ExportButton } from "@/components/data-table/ExportButton";
+import { StatusToggleAction } from "@/components/domain/StatusToggleAction";
 
 const productSchema = z.object({
   itemCode: z.string().min(1, "Item code required"),
@@ -278,6 +279,9 @@ export function ProductsClient() {
       mapItemToForm={mapProductToForm}
       prepareSavePayload={prepareProductPayload}
       FormFields={ProductFormFields}
+      extraRowActions={(row) => (
+        <StatusToggleAction resource="products" item={row} label="product" />
+      )}
       statCards={(s) => [
         { label: "Total Products", value: s.total ?? 0 },
         { label: "Active", value: s.active ?? s.total ?? 0 },

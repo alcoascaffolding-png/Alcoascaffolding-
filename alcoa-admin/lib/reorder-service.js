@@ -1,5 +1,6 @@
 import Product from "@/models/Product";
 import Vendor from "@/models/Vendor";
+import { criticalStockQuery } from "@/lib/inventory-utils";
 
 void Vendor;
 
@@ -34,17 +35,7 @@ export function pickSuggestedVendorFromLines(lines = []) {
  * Build purchase order line items from low/out-of-stock products.
  */
 export async function buildLowStockReorderLines() {
-  const products = await Product.find({
-    isActive: { $ne: false },
-    $or: [
-      { currentStock: { $lte: 0 } },
-      {
-        $expr: {
-          $and: [{ $gt: ["$minStock", 0] }, { $lte: ["$currentStock", "$minStock"] }],
-        },
-      },
-    ],
-  })
+  const products = await Product.find(criticalStockQuery())
     .populate("preferredVendor", "companyName vendorCode")
     .sort({ currentStock: 1, name: 1 })
     .lean();

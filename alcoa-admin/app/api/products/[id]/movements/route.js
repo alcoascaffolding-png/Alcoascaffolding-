@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { apiSuccess, apiError } from "@/lib/api-response";
+import { apiSuccess } from "@/lib/api-response";
 import { withErrorHandler, AppError } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import StockAdjustment from "@/models/StockAdjustment";

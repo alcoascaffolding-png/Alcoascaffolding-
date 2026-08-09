@@ -7,6 +7,7 @@ import ContactMessage from "@/models/ContactMessage";
 import PurchaseOrder from "@/models/PurchaseOrder";
 import StockAdjustment from "@/models/StockAdjustment";
 import { markOverdueSalesInvoices, markOverduePurchaseInvoices } from "@/lib/mark-overdue-invoices";
+import { lowStockQuery, outOfStockQuery } from "@/lib/inventory-utils";
 
 /**
  * Build computed in-app notifications from live database state.
@@ -25,16 +26,12 @@ export async function buildAdminNotifications() {
     recentOrders,
     recentAdjustments,
   ] = await Promise.all([
-    Product.find({
-      isActive: { $ne: false },
-      minStock: { $gt: 0 },
-      $expr: { $and: [{ $lte: ["$currentStock", "$minStock"] }, { $gt: ["$currentStock", 0] }] },
-    })
+    Product.find(lowStockQuery())
       .select("name itemCode currentStock minStock")
       .sort({ currentStock: 1 })
       .limit(5)
       .lean(),
-    Product.find({ isActive: { $ne: false }, currentStock: { $lte: 0 } })
+    Product.find(outOfStockQuery())
       .select("name itemCode currentStock")
       .sort({ name: 1 })
       .limit(5)
@@ -55,16 +52,9 @@ export async function buildAdminNotifications() {
       .lean(),
   ]);
 
-  const lowStockCount = await Product.countDocuments({
-    isActive: { $ne: false },
-    minStock: { $gt: 0 },
-    $expr: { $and: [{ $lte: ["$currentStock", "$minStock"] }, { $gt: ["$currentStock", 0] }] },
-  });
+  const lowStockCount = await Product.countDocuments(lowStockQuery());
 
-  const outOfStockCount = await Product.countDocuments({
-    isActive: { $ne: false },
-    currentStock: { $lte: 0 },
-  });
+  const outOfStockCount = await Product.countDocuments(outOfStockQuery());
 
   const notifications = [];
 

@@ -35,11 +35,11 @@ export function mapSalesOrderForQuotationPdf(order) {
     status: order.status,
     items,
     subtotal,
-    deliveryCharges: 0,
-    installationCharges: 0,
-    pickupCharges: 0,
-    discount: 0,
-    discountType: "fixed",
+    deliveryCharges: Number(order.deliveryCharges || 0),
+    installationCharges: Number(order.installationCharges || 0),
+    pickupCharges: Number(order.pickupCharges || 0),
+    discount: Number(order.discount || 0),
+    discountType: order.discountType === "percentage" ? "percentage" : "fixed",
     vatPercentage: vatPct,
     vatAmount,
     totalAmount: Number(order.total || 0),
@@ -127,6 +127,11 @@ function mapLineItemsForDisplay(doc, vatPct) {
 }
 
 function resolveVatPct(doc) {
+  // Prefer the stored VAT rate — that is the document's intended label. Back-computing
+  // vatAmount/subtotal divides by the PRE-discount base and yields a misleading percentage
+  // (e.g. 3.43% instead of 5%). Only fall back to derivation for legacy docs missing the field.
+  const stored = Number(doc.vatPercentage);
+  if (stored > 0) return stored;
   const subtotal = Number(doc.subtotal || 0);
   const vatAmount = Number(doc.vatAmount || 0);
   return subtotal > 0 ? Math.round((vatAmount / subtotal) * 10000) / 100 : 5;
@@ -144,10 +149,7 @@ export function mapSalesInvoiceForQuotationPdf(invoice) {
   const subtotal =
     Number(invoice.subtotal || 0) > 0 ? Number(invoice.subtotal || 0) : fallbackSubtotal;
   const vatAmount = Number(invoice.vatAmount || 0);
-  const vatPct =
-    subtotal > 0
-      ? Math.round((vatAmount / subtotal) * 10000) / 100
-      : resolveVatPct(invoice);
+  const vatPct = resolveVatPct(invoice);
   const items = mapLineItemsForPdf(invoice, vatPct);
   const cust = invoice.customer && typeof invoice.customer === "object" ? invoice.customer : null;
   const customerAddress = invoice.customerAddress || formatCustomerAddressFromRecord(cust);
@@ -174,11 +176,11 @@ export function mapSalesInvoiceForQuotationPdf(invoice) {
     balance,
     items,
     subtotal,
-    deliveryCharges: 0,
-    installationCharges: 0,
-    pickupCharges: 0,
-    discount: 0,
-    discountType: "fixed",
+    deliveryCharges: Number(invoice.deliveryCharges || 0),
+    installationCharges: Number(invoice.installationCharges || 0),
+    pickupCharges: Number(invoice.pickupCharges || 0),
+    discount: Number(invoice.discount || 0),
+    discountType: invoice.discountType === "percentage" ? "percentage" : "fixed",
     vatPercentage: vatPct,
     vatAmount,
     totalAmount: total,

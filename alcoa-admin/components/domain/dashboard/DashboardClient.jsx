@@ -19,7 +19,7 @@ import {
   DashboardChartSkeleton,
   DashboardActivityListSkeleton,
 } from "@/components/loading/skeleton-kit";
-import { formatCurrency, formatRelativeTime } from "@/lib/utils";
+import { formatCurrency, formatRelativeTime, isQuotationDerivedExpired } from "@/lib/utils";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -76,6 +76,21 @@ const statusBadgeMap = {
 function StatusBadge({ status }) {
   const map = statusBadgeMap[status] || { variant: "secondary", label: status };
   return <Badge variant={map.variant}>{map.label}</Badge>;
+}
+
+/**
+ * Quotation status badge with display-time derived "Expired" (amber) treatment —
+ * mirrors the list/detail behaviour without overwriting the stored status.
+ */
+function QuotationStatusBadge({ quotation }) {
+  if (isQuotationDerivedExpired(quotation)) {
+    return (
+      <Badge className="border-transparent bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+        Expired
+      </Badge>
+    );
+  }
+  return <StatusBadge status={quotation.status} />;
 }
 
 export function DashboardClient() {
@@ -478,7 +493,7 @@ export function DashboardClient() {
                     href={`/quotations/${q._id}`}
                     title={q.quoteNumber}
                     subtitle={`${q.customerName} · ${formatCurrency(q.totalAmount)}`}
-                    trailing={<StatusBadge status={q.status} />}
+                    trailing={<QuotationStatusBadge quotation={q} />}
                   />
                 ))}
                 {!activities?.quotations?.length && (

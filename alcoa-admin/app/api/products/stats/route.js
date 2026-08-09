@@ -4,6 +4,7 @@ import { withErrorHandler } from "@/lib/api-error";
 import { authorizeApi } from "@/lib/api-guard";
 import Product from "@/models/Product";
 import StockAdjustment from "@/models/StockAdjustment";
+import { activeStockExpr, lowStockExpr, outOfStockExpr } from "@/lib/inventory-utils";
 
 export const GET = withErrorHandler(async () => {
   await authorizeApi("products", "read");
@@ -19,27 +20,12 @@ export const GET = withErrorHandler(async () => {
         active: { $sum: { $cond: [{ $ne: ["$isActive", false] }, 1, 0] } },
         lowStock: {
           $sum: {
-            $cond: [
-              {
-                $and: [
-                  { $ne: ["$isActive", false] },
-                  { $gt: ["$minStock", 0] },
-                  { $lte: ["$currentStock", "$minStock"] },
-                  { $gt: ["$currentStock", 0] },
-                ],
-              },
-              1,
-              0,
-            ],
+            $cond: [{ $and: [activeStockExpr(), lowStockExpr()] }, 1, 0],
           },
         },
         outOfStock: {
           $sum: {
-            $cond: [
-              { $and: [{ $ne: ["$isActive", false] }, { $lte: ["$currentStock", 0] }] },
-              1,
-              0,
-            ],
+            $cond: [{ $and: [activeStockExpr(), outOfStockExpr()] }, 1, 0],
           },
         },
         inventoryValue: {

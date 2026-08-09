@@ -19,7 +19,8 @@ const quotationItemSchema = z.object({
     .optional(),
   ratePerUnit: z.coerce.number().min(0),
   taxableAmount: z.coerce.number().min(0).optional(),
-  vatPercentage: z.coerce.number().min(0).max(100).optional(),
+  // VAT is a fixed 5% (company policy); default here so missing values still persist 5.
+  vatPercentage: z.coerce.number().min(0).max(100).default(5),
   vatAmount: z.coerce.number().min(0).optional(),
   subtotal: z.coerce.number().min(0).optional(),
   itemImage: z.string().optional(),
@@ -80,7 +81,8 @@ export const quotationCreateSchema = z
     pickupCharges: z.coerce.number().min(0).optional(),
     discount: z.coerce.number().min(0).optional(),
     discountType: z.enum(["percentage", "fixed"]).optional(),
-    vatPercentage: z.coerce.number().min(0).max(100).optional(),
+    // VAT is a fixed 5% (company policy); default here so missing values still persist 5.
+    vatPercentage: z.coerce.number().min(0).max(100).default(5),
     currency: z.string().optional(),
     deliveryAddress: deliveryAddressSchema,
     deliveryDate: z.union([z.string(), z.date()]).optional(),

@@ -46,6 +46,9 @@ import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCust
 import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
 import { mapProductToQuotationLine } from "@/lib/map-product-to-quotation-line";
 
+/** Company policy: VAT is a fixed 5% everywhere and cannot be edited by users. */
+const VAT_PERCENTAGE = 5;
+
 const lineItemSchema = z.object({
   productId: z.string().optional(),
   equipmentType: z.string().min(1, "Enter an equipment type"),
@@ -186,7 +189,7 @@ function mapQuotationToFormValues(existing) {
     pickupCharges: Number(existing.pickupCharges) || 0,
     discount: Number(existing.discount) || 0,
     discountType: existing.discountType === "percentage" ? "percentage" : "fixed",
-    vatPercentage: Number(existing.vatPercentage) || 5,
+    vatPercentage: VAT_PERCENTAGE,
     notes: existing.notes ?? "",
     termsAndConditions: existing.termsAndConditions ?? "",
     bankDetails: existing.bankDetails || {
@@ -435,7 +438,7 @@ export function QuotationFormPage({ id }) {
 
   const watchedItems = form.watch("items");
   const quoteType = form.watch("quoteType") || "rental";
-  const vatPct = form.watch("vatPercentage");
+  const vatPct = VAT_PERCENTAGE;
   const deliveryCharges = form.watch("deliveryCharges") || 0;
   const installationCharges = form.watch("installationCharges") || 0;
   const pickupCharges = form.watch("pickupCharges") || 0;
@@ -461,7 +464,7 @@ export function QuotationFormPage({ id }) {
 
   const saveMut = useMutation({
     mutationFn: async (values) => {
-      const docVatPct = Number(values.vatPercentage ?? 5);
+      const docVatPct = VAT_PERCENTAGE;
       const items = values.items.map((item) => {
         const taxable = Number(item.quantity || 0) * Number(item.ratePerUnit || 0);
         const lineVat = (taxable * docVatPct) / 100;
@@ -497,7 +500,7 @@ export function QuotationFormPage({ id }) {
       const pickupCharges = Number(values.pickupCharges) || 0;
       const discount = Number(values.discount) || 0;
       const discountType = values.discountType === "percentage" ? "percentage" : "fixed";
-      const vatPct = Number(values.vatPercentage ?? 5);
+      const vatPct = VAT_PERCENTAGE;
       const beforeVAT = quotationDisplaySubtotal({
         subtotal: lineSubtotal,
         deliveryCharges,
@@ -940,8 +943,10 @@ export function QuotationFormPage({ id }) {
                   <Input className={formInputClassName} {...numericTextInputProps} {...form.register("discount", { setValueAs: setValueAsNumber(0) })} />
                 </FormLineItemCell>
                 <FormLineItemCell>
-                  <label className={formLineItemLabelClassName}>VAT % (quotation)</label>
-                  <Input className={formInputClassName} {...numericTextInputProps} {...form.register("vatPercentage", { setValueAs: setValueAsNumber(5) })} />
+                  <label className={formLineItemLabelClassName}>VAT (fixed)</label>
+                  <div className={`${formInputClassName} flex items-center bg-muted/50 text-muted-foreground`}>
+                    {VAT_PERCENTAGE}%
+                  </div>
                 </FormLineItemCell>
               </div>
               <div className="space-y-1.5 text-sm border-t pt-3">

@@ -19,6 +19,49 @@ export async function generateAdjustmentNumber() {
 }
 
 /**
+ * Given a starting stock level and an adjustment request, compute the resulting
+ * stock level and the effective (absolute) quantity. Single source of truth for
+ * both create and edit so the two paths can never diverge.
+ */
+export function computeStockChange({
+  baseStock,
+  adjustmentType,
+  quantity,
+  correctionNewStock,
+  rejectBelowZero = false,
+  productName = "this product",
+}) {
+  const base = Number(baseStock) || 0;
+  let qty = Math.abs(Number(quantity) || 0);
+  let newStock;
+
+  if (adjustmentType === "increase") {
+    if (qty <= 0) throw new AppError("Quantity must be greater than zero", 400);
+    newStock = base + qty;
+  } else if (adjustmentType === "decrease") {
+    if (qty <= 0) throw new AppError("Quantity must be greater than zero", 400);
+    if (rejectBelowZero && qty > base) {
+      throw new AppError(
+        `Cannot remove ${qty} units — only ${base} in stock for ${productName}.`,
+        400
+      );
+    }
+    newStock = Math.max(0, base - qty);
+  } else if (adjustmentType === "correction") {
+    newStock = Number(correctionNewStock);
+    if (Number.isNaN(newStock)) {
+      throw new AppError("New stock level is required for correction", 400);
+    }
+    newStock = Math.max(0, newStock);
+    qty = Math.abs(newStock - base);
+  } else {
+    throw new AppError("Invalid adjustment type", 400);
+  }
+
+  return { newStock, quantity: qty };
+}
+
+/**
  * Create a stock adjustment and update product.currentStock.
  */
 export async function createStockAdjustment({
@@ -42,28 +85,14 @@ export async function createStockAdjustment({
   if (!product) throw new AppError("Product not found", 404);
 
   const previousStock = Number(product.currentStock) || 0;
-  let newStock = previousStock;
-  let qty = Math.abs(Number(quantity) || 0);
-
-  if (adjustmentType === "increase") {
-    if (qty <= 0) throw new AppError("Quantity must be greater than zero", 400);
-    newStock = previousStock + qty;
-  } else if (adjustmentType === "decrease") {
-    if (qty <= 0) throw new AppError("Quantity must be greater than zero", 400);
-    if (rejectBelowZero && qty > previousStock) {
-      throw new AppError(
-        `Cannot remove ${qty} units — only ${previousStock} in stock for ${product.name}.`,
-        400
-      );
-    }
-    newStock = Math.max(0, previousStock - qty);
-  } else if (adjustmentType === "correction") {
-    newStock = Math.max(0, Number(correctionNewStock));
-    if (Number.isNaN(newStock)) throw new AppError("New stock level is required for correction", 400);
-    qty = Math.abs(newStock - previousStock);
-  } else {
-    throw new AppError("Invalid adjustment type", 400);
-  }
+  const { newStock, quantity: qty } = computeStockChange({
+    baseStock: previousStock,
+    adjustmentType,
+    quantity,
+    correctionNewStock,
+    rejectBelowZero,
+    productName: product.name,
+  });
 
   product.currentStock = newStock;
   await product.save();
@@ -87,13 +116,116 @@ export async function createStockAdjustment({
   return { adjustment, product };
 }
 
-/** Reverse a stock adjustment on delete. */
+/**
+ * Reverse a stock adjustment (used on delete). Applies the INVERSE of the
+ * adjustment's original delta to the product's *current* stock rather than
+ * resetting to the historical `previousStock`. This keeps stock correct even
+ * when later adjustments have since been recorded for the same product.
+ */
 export async function reverseStockAdjustment(adjustment) {
   const product = await Product.findById(adjustment.product);
   if (!product) return;
 
-  product.currentStock = Math.max(0, Number(adjustment.previousStock) || 0);
+  const delta = (Number(adjustment.newStock) || 0) - (Number(adjustment.previousStock) || 0);
+  const current = Number(product.currentStock) || 0;
+  product.currentStock = Math.max(0, current - delta);
   await product.save();
+}
+
+/**
+ * Edit a *manual* stock adjustment while keeping product stock consistent.
+ *
+ * Strategy: reverse the original delta, then apply the new delta. Because both
+ * operations act on the product's *current* stock (not a historical snapshot),
+ * the product's `currentStock` stays correct regardless of any adjustments
+ * recorded after this one. System-generated adjustments (delivery notes, POs,
+ * product-form edits) are immutable ledger entries and cannot be edited here.
+ */
+export async function editStockAdjustment({
+  adjustmentId,
+  productId,
+  adjustmentType,
+  quantity,
+  correctionNewStock,
+  reason,
+  notes,
+  rejectBelowZero = true,
+}) {
+  const adjustment = await StockAdjustment.findById(adjustmentId);
+  if (!adjustment) throw new AppError("Stock Adjustment not found", 404);
+
+  if (adjustment.sourceType && adjustment.sourceType !== "manual") {
+    throw new AppError(
+      "System-generated stock adjustments cannot be edited. Delete the source document instead.",
+      400
+    );
+  }
+
+  const targetProductId = productId ? String(productId) : String(adjustment.product);
+  if (!mongoose.Types.ObjectId.isValid(targetProductId)) {
+    throw new AppError("Valid product is required", 400);
+  }
+  const productChanged = targetProductId !== String(adjustment.product);
+  const originalDelta =
+    (Number(adjustment.newStock) || 0) - (Number(adjustment.previousStock) || 0);
+
+  const targetProduct = await Product.findById(targetProductId);
+  if (!targetProduct) throw new AppError("Product not found", 404);
+
+  // Determine the base stock the new adjustment is applied on top of, having
+  // removed the effect of the original adjustment.
+  let oldProduct = null;
+  let baseStock;
+
+  if (productChanged) {
+    oldProduct = await Product.findById(adjustment.product);
+    if (oldProduct) {
+      const reversed = (Number(oldProduct.currentStock) || 0) - originalDelta;
+      if (reversed < 0) {
+        throw new AppError(
+          `Cannot move this adjustment — reversing it would drive ${oldProduct.name} stock negative.`,
+          400
+        );
+      }
+      oldProduct.currentStock = Math.max(0, reversed);
+    }
+    baseStock = Number(targetProduct.currentStock) || 0;
+  } else {
+    baseStock = (Number(targetProduct.currentStock) || 0) - originalDelta;
+    if (baseStock < 0) {
+      throw new AppError(
+        `Cannot edit this adjustment — reversing the original change would drive ${targetProduct.name} stock negative.`,
+        400
+      );
+    }
+  }
+
+  const { newStock, quantity: qty } = computeStockChange({
+    baseStock,
+    adjustmentType,
+    quantity,
+    correctionNewStock,
+    rejectBelowZero,
+    productName: targetProduct.name,
+  });
+
+  // Persist stock changes (validated above so this cannot half-apply into an
+  // invalid negative state).
+  if (oldProduct) await oldProduct.save();
+  targetProduct.currentStock = newStock;
+  await targetProduct.save();
+
+  adjustment.product = targetProduct._id;
+  adjustment.productName = targetProduct.name;
+  adjustment.adjustmentType = adjustmentType;
+  adjustment.quantity = qty;
+  adjustment.previousStock = baseStock;
+  adjustment.newStock = newStock;
+  adjustment.reason = reason || undefined;
+  adjustment.notes = notes || undefined;
+  await adjustment.save();
+
+  return { adjustment, product: targetProduct };
 }
 
 async function findProductForDeliveryLine(line) {
