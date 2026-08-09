@@ -48,15 +48,15 @@ import { mapProductToQuotationLine } from "@/lib/map-product-to-quotation-line";
 
 const lineItemSchema = z.object({
   productId: z.string().optional(),
-  equipmentType: z.string().min(1, "Required"),
+  equipmentType: z.string().min(1, "Enter an equipment type"),
   description: z.string().optional(),
   specifications: z.string().optional(),
   size: z.string().optional(),
   weight: z.coerce.number().min(0).optional(),
   cbm: z.coerce.number().min(0).optional(),
-  quantity: z.coerce.number().min(1),
+  quantity: z.coerce.number({ invalid_type_error: "Enter a quantity" }).min(1, "Quantity must be at least 1"),
   unit: z.string().default("Nos"),
-  ratePerUnit: z.coerce.number().min(0),
+  ratePerUnit: z.coerce.number({ invalid_type_error: "Enter a rate" }).min(0, "Rate can't be negative"),
   vatPercentage: z.coerce.number().min(0).max(100).default(5),
   taxableAmount: z.coerce.number().min(0).optional(),
   subtotal: z.coerce.number().min(0).default(0),
@@ -69,14 +69,14 @@ const lineItemSchema = z.object({
 const quotationSchema = z.object({
   /** Optional Mongo ObjectId — links quote to CRM customer; otherwise server matches/creates by company name */
   customer: z.string().optional(),
-  customerName: z.string().min(1, "Customer name required"),
-  customerEmail: z.string().email().optional().or(z.literal("")),
+  customerName: z.string().min(1, "Enter the customer / company name"),
+  customerEmail: z.string().email("Enter a valid email address").optional().or(z.literal("")),
   customerPhone: z.string().optional(),
   customerAddress: z.string().optional(),
   customerTRN: z.string().optional(),
   contactPersonName: z.string().optional(),
-  quoteDate: z.string(),
-  validUntil: z.string(),
+  quoteDate: z.string().min(1, "Choose a quote date"),
+  validUntil: z.string().min(1, "Choose a valid-until date"),
   quoteType: z.string().default("rental"),
   subject: z.string().optional(),
   salesExecutive: z.string().optional(),
@@ -563,6 +563,44 @@ export function QuotationFormPage({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  /**
+   * Turn react-hook-form's nested error object into a short, human-readable
+   * message so the Update/Create button never fails silently.
+   */
+  const handleInvalid = useCallback((errors) => {
+    const labels = {
+      customerName: "Customer / company name",
+      customerEmail: "Customer email",
+      quoteDate: "Quote date",
+      validUntil: "Valid until date",
+      vatPercentage: "VAT %",
+      items: "Line items",
+    };
+
+    const messages = [];
+    if (errors.items) {
+      if (Array.isArray(errors.items)) {
+        errors.items.forEach((item, i) => {
+          if (!item) return;
+          const firstField = Object.keys(item)[0];
+          const fieldMsg = item[firstField]?.message || "is missing or invalid";
+          messages.push(`Line item ${i + 1}: ${fieldMsg}`);
+        });
+      } else if (errors.items.message) {
+        messages.push(errors.items.message);
+      }
+    }
+
+    Object.entries(errors).forEach(([key, err]) => {
+      if (key === "items" || !err?.message) return;
+      messages.push(`${labels[key] || key}: ${err.message}`);
+    });
+
+    const summary = messages.slice(0, 3).join(" · ") || "Please check the highlighted fields.";
+    const extra = messages.length > 3 ? ` (+${messages.length - 3} more)` : "";
+    toast.error(`Please fix the following before saving — ${summary}${extra}`);
+  }, []);
+
   if (isEdit && loadingExisting) {
     return <QuotationFormEditSkeleton />;
   }
@@ -570,7 +608,7 @@ export function QuotationFormPage({ id }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+        onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
         className="space-y-6 relative"
         aria-busy={saveMut.isPending}
       >

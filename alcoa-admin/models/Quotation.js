@@ -183,7 +183,10 @@ quotationSchema.statics.generateQuoteNumber = async function (baseDate = new Dat
 
 quotationSchema.pre("save", function (next) {
   if (this.items?.length) this.calculateTotals();
-  if (this.validUntil < new Date() && this.status === "sent") this.status = "expired";
+  // Note: expiry is derived for display (see `isExpired` virtual and the
+  // "Valid Until" highlight in the UI). We intentionally do NOT rewrite
+  // `status` here — doing so silently overrode manual status changes (e.g.
+  // setting "Sent" on a quote past its valid-until flipped it to "Expired").
   next();
 });
 
