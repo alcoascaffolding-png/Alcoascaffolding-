@@ -40,6 +40,7 @@ import {
   quotationItemsToFormLines,
   quotationToSalesFormPatch,
 } from "@/lib/map-quotation-to-sales-form";
+import { formErrorToastMessage } from "@/lib/form-error-summary";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -534,6 +535,23 @@ export function SalesInvoiceFormPage({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const handleInvalid = useCallback((errors) => {
+    toast.error(
+      formErrorToastMessage(errors, {
+        labels: {
+          customerName: "Customer name",
+          customerEmail: "Customer email",
+          customerAddress: "Customer address",
+          invoiceDate: "Invoice date",
+          dueDate: "Due date",
+          paymentStatus: "Payment status",
+          paidAmount: "Paid amount",
+          vatPercentage: "VAT %",
+        },
+      })
+    );
+  }, []);
+
   if (isEdit && loadingExisting) {
     return <QuotationFormEditSkeleton />;
   }
@@ -541,7 +559,7 @@ export function SalesInvoiceFormPage({ id }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+        onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
         className="space-y-6 relative"
         aria-busy={saveMut.isPending}
       >
@@ -805,7 +823,7 @@ export function SalesInvoiceFormPage({ id }) {
           <AsyncButton
             type="submit"
             loading={saveMut.isPending}
-            idleLabel={isEdit ? "Save changes" : "Create tax invoice"}
+            idleLabel={isEdit ? "Update Tax Invoice" : "Create Tax Invoice"}
             pendingLabel={isEdit ? "Updating…" : "Creating…"}
           />
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={saveMut.isPending}>

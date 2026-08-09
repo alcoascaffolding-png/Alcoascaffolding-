@@ -145,16 +145,14 @@ quotationSchema.index({ status: 1, quoteDate: -1 });
 quotationSchema.index({ customer: 1, status: 1 });
 quotationSchema.index({ createdAt: -1 });
 
+// Derived-expiry (display/query-time only — never rewrites `status`): a quote is
+// expired when it is still in an OPEN state (draft/sent/viewed) and its
+// `validUntil` has passed. Terminal states (accepted/approved/rejected/converted*)
+// are never derived-expired.
 quotationSchema.virtual("isExpired").get(function () {
   return (
-    this.validUntil < new Date() &&
-    ![
-      "accepted",
-      "approved",
-      "converted",
-      "converted_to_sales_order",
-      "converted_to_invoice",
-    ].includes(this.status)
+    ["draft", "sent", "viewed"].includes(this.status) &&
+    this.validUntil < new Date()
   );
 });
 

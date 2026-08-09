@@ -1,8 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FormSection } from "@/components/forms/form-layout";
 import {
   FormTextField,
@@ -12,6 +20,12 @@ import {
 import { UserPermissionsFields } from "@/components/domain/users/UserPermissionsFields";
 import { ROLE_LABELS } from "@/lib/permissions";
 import { formatDate } from "@/lib/utils";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
 
 const userSchema = z
   .object({
@@ -177,6 +191,16 @@ function mapUserToForm(item) {
 }
 
 export function UsersClient() {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+
+  const extraListParams = useMemo(() => {
+    const params = {};
+    if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+    if (roleFilter && roleFilter !== "all") params.role = roleFilter;
+    return params;
+  }, [statusFilter, roleFilter]);
+
   return (
     <GenericCRUDPage
       resource="users"
@@ -186,9 +210,39 @@ export function UsersClient() {
       emptyMessage="No users yet. Add your first admin account to get started."
       columns={columns}
       schema={userSchema}
+      extraListParams={extraListParams}
       defaultValues={defaultValues}
       FormFields={UserFormFields}
       mapItemToForm={mapUserToForm}
+      toolbarExtra={
+        <>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-[150px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="h-8 w-[160px]">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              {roleOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      }
       prepareSavePayload={(values, isEdit) => {
         const payload = { ...values };
         // Internal form-only flag — never send to the API.

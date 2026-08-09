@@ -45,6 +45,44 @@ export function isLocalCalendarDayBeforeToday(dateInput) {
 }
 
 /**
+ * Open quotation statuses that can be *derived* into "Expired" for display.
+ * Terminal/committed states (accepted, approved, rejected, converted*) are
+ * never shown as expired.
+ */
+export const OPEN_QUOTATION_STATUSES = ["draft", "sent", "viewed"];
+
+/**
+ * A quotation is DERIVED-EXPIRED when its `validUntil` calendar day is before
+ * today AND its stored status is still open (draft/sent/viewed). This is a
+ * read/display-time derivation only — the stored status is never overwritten.
+ * @param {{ status?: string, validUntil?: unknown }} quotation
+ */
+export function isQuotationDerivedExpired(quotation) {
+  if (!quotation) return false;
+  return (
+    OPEN_QUOTATION_STATUSES.includes(quotation.status) &&
+    isLocalCalendarDayBeforeToday(quotation.validUntil)
+  );
+}
+
+/**
+ * Format a date to DD/MM/YYYY, HH:MM (24h) — used where the time of day matters (e.g. audit log).
+ */
+export function formatDateTime(date) {
+  if (!date) return "";
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+/**
  * Format a date to relative time (e.g. "2 hours ago")
  */
 export function formatRelativeTime(date) {

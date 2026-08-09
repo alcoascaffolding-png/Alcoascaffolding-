@@ -187,6 +187,8 @@ export function StockAdjustmentsClient() {
       resource="stock-adjustments"
       title="Stock Adjustments"
       resourceSingular="Stock adjustment"
+      emptyMessage="No stock adjustments yet."
+      emptyDescription="Record additions, damage, or corrections to on-hand inventory here."
       columns={columns}
       schema={stockAdjustmentSchema}
       defaultValues={defaultValues}

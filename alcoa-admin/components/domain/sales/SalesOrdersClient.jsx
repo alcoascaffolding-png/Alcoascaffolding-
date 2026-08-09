@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
@@ -114,9 +115,9 @@ export function SalesOrdersClient() {
       qc.invalidateQueries({ queryKey: ["sales-orders"] });
       qc.invalidateQueries({ queryKey: ["sales-orders-stats"] });
       setDeleteId(null);
-      toast.success("Sales order deleted");
+      toast.success(TOAST.deleted("Sales order"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
 
   const statItems =

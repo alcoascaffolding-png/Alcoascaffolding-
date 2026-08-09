@@ -96,6 +96,10 @@ function triggerToneFor(value, size) {
  * @param {Array<unknown>} [props.statsQueryKey]
  * @param {Array<unknown>[]} [props.extraInvalidateQueryKeys]  Additional query keys to invalidate (e.g. form pickers).
  * @param {(data: unknown) => string} [props.getSuccessMessage]  Optional toast message from API response.
+ * @param {{label:string,dotClassName?:string,toneValue?:string}} [props.displayOverride]
+ *   Presentational-only override for the trigger (label, dot, tone). The editable
+ *   Select value/options stay the real stored status — used to show a *derived*
+ *   state (e.g. "Expired") without changing the value sent to the server.
  */
 export function DocumentStatusChanger({
   id,
@@ -110,6 +114,7 @@ export function DocumentStatusChanger({
   successMessage = "Status updated",
   extraInvalidateQueryKeys = [],
   getSuccessMessage,
+  displayOverride,
 }) {
   const qc = useQueryClient();
   const compact = size === "sm";
@@ -147,8 +152,9 @@ export function DocumentStatusChanger({
   });
 
   const current = options.find((o) => o.value === value);
-  const currentDot = current?.dotClassName || "bg-muted-foreground";
-  const currentLabel = current?.label;
+  const currentDot = displayOverride?.dotClassName || current?.dotClassName || "bg-muted-foreground";
+  const currentLabel = displayOverride?.label || current?.label;
+  const toneValue = displayOverride?.toneValue || value;
 
   return (
     <Select
@@ -164,7 +170,7 @@ export function DocumentStatusChanger({
           compact
             ? "h-7 min-w-0 border-0 px-1.5 text-xs font-medium [&_svg]:h-3.5 [&_svg]:w-3.5 [&_svg]:opacity-40"
             : "h-10 min-w-[168px] px-3.5 text-sm font-semibold tracking-tight shadow-sm [&_svg]:opacity-80 focus:ring-2 focus:ring-offset-1",
-          triggerToneFor(value, size)
+          triggerToneFor(toneValue, size)
         )}
       >
         <span className="flex min-w-0 items-center gap-1.5">

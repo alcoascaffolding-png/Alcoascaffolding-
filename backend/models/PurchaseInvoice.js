@@ -210,9 +210,14 @@ purchaseInvoiceSchema.pre('save', function(next) {
     
     this.total = this.subtotal + this.totalTax + this.shippingCharges + this.adjustments - this.totalDiscount;
     this.balance = this.total - this.paidAmount;
-    
-    // Update payment status
-    if (this.balance <= 0) {
+
+    // Update payment status based on balance.
+    // Guard: never clobber a terminal/explicit document status. Previously this
+    // unconditionally forced 'overdue' when past due, silently overriding a
+    // user's chosen status. Mirrors alcoa-admin/models/SalesInvoice.js.
+    if (this.status === 'paid' || this.status === 'cancelled') {
+      // terminal document status: leave paymentStatus untouched
+    } else if (this.balance <= 0 && this.total > 0) {
       this.paymentStatus = 'paid';
     } else if (this.paidAmount > 0) {
       this.paymentStatus = 'partially_paid';

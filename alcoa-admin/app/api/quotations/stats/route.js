@@ -10,6 +10,20 @@ export const GET = withErrorHandler(async () => {
 
   await connectDB();
 
+  // Server date boundary — start of today. Derived-expiry never rewrites status.
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const isOpenStatus = { $in: ["$status", ["draft", "sent", "viewed"]] };
+  const isDateLapsed = {
+    $and: [{ $ne: ["$validUntil", null] }, { $lt: ["$validUntil", startOfToday] }],
+  };
+  const isDerivedExpired = {
+    $or: [
+      { $eq: ["$status", "expired"] },
+      { $and: [isOpenStatus, isDateLapsed] },
+    ],
+  };
+
   const stats = await Quotation.aggregate([
     {
       $group: {
@@ -17,6 +31,23 @@ export const GET = withErrorHandler(async () => {
         total: { $sum: 1 },
         draft: { $sum: { $cond: [{ $eq: ["$status", "draft"] }, 1, 0] } },
         sent: { $sum: { $cond: [{ $eq: ["$status", "sent"] }, 1, 0] } },
+        // Pending = draft + sent that have NOT lapsed (matches the filter + badges).
+        pending: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $in: ["$status", ["draft", "sent"]] },
+                  { $not: isDateLapsed },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+        // Expired = stored "expired" OR derived-expired open quotes.
+        expired: { $sum: { $cond: [isDerivedExpired, 1, 0] } },
         approved: {
           $sum: {
             $cond: [{ $in: ["$status", ["accepted", "approved"]] }, 1, 0],
@@ -47,5 +78,5 @@ export const GET = withErrorHandler(async () => {
     },
   ]);
 
-  return apiSuccess(stats[0] || { total: 0, draft: 0, sent: 0, approved: 0, converted: 0, rejected: 0, totalValue: 0, approvedValue: 0 });
+  return apiSuccess(stats[0] || { total: 0, draft: 0, sent: 0, pending: 0, expired: 0, approved: 0, converted: 0, rejected: 0, totalValue: 0, approvedValue: 0 });
 });

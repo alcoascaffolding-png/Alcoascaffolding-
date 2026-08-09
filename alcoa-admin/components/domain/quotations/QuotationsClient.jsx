@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency, isLocalCalendarDayBeforeToday } from "@/lib/utils";
+import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
@@ -135,9 +136,9 @@ export function QuotationsClient() {
       qc.invalidateQueries({ queryKey: ["quotations"] });
       qc.invalidateQueries({ queryKey: ["quotations-stats"] });
       setDeleteId(null);
-      toast.success("Quotation deleted");
+      toast.success(TOAST.deleted("Quotation"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
 
   function setUrlFilter(key, value) {
@@ -158,7 +159,7 @@ export function QuotationsClient() {
       { label: "Total", value: stats.total },
       {
         label: "Pending",
-        value: (stats.draft || 0) + (stats.sent || 0),
+        value: stats.pending ?? (stats.draft || 0) + (stats.sent || 0),
         valueClassName: "text-2xl text-chart-2",
       },
       { label: "Accepted", value: stats.approved, valueClassName: "text-2xl text-emerald-500" },
@@ -228,6 +229,7 @@ export function QuotationsClient() {
           <QuotationStatusChanger
             id={String(row.original._id)}
             value={row.original.status}
+            validUntil={row.original.validUntil}
             size="sm"
           />
         </div>

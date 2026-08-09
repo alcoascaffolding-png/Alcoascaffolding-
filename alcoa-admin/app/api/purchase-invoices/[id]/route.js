@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { apiSuccess, apiError } from "@/lib/api-response";
 import { authorizeApi } from "@/lib/api-guard";
@@ -42,6 +43,15 @@ export const PATCH = withErrorHandler(async (request, context) => {
   if (!doc) throw new AppError("Purchase Invoice not found", 404);
 
   if (body.vendorName != null) doc.vendorName = String(body.vendorName).trim();
+  if (body.vendor != null) {
+    const vid = String(body.vendor);
+    doc.vendor = vid && vid !== "__none__" && mongoose.Types.ObjectId.isValid(vid) ? vid : undefined;
+  }
+  if (body.purchaseOrder != null) {
+    const pid = String(body.purchaseOrder);
+    doc.purchaseOrder =
+      pid && pid !== "__none__" && mongoose.Types.ObjectId.isValid(pid) ? pid : undefined;
+  }
   if (body.invoiceDate) doc.invoiceDate = new Date(body.invoiceDate);
   if (body.dueDate) doc.dueDate = new Date(body.dueDate);
   if (body.notes !== undefined) doc.notes = body.notes;

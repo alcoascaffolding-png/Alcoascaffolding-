@@ -6,6 +6,8 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Download, Mail } from "lucide-react";
 import {
   FormTextField,
   FormSelectField,
@@ -15,6 +17,8 @@ import {
   PurchaseLineItemsFields,
   VendorSelectField,
 } from "@/components/shared/PurchaseLineItemsFields";
+import { ExportButton } from "@/components/data-table/ExportButton";
+import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const lineItemSchema = z.object({
@@ -214,10 +218,18 @@ function mapPurchaseInvoiceToForm(item) {
 }
 
 export function PurchaseInvoicesClient() {
+  const { sendingId, downloadPdf, sendEmail } = useDocumentListOutbound({
+    apiBase: "/api/purchase-invoices",
+    listQueryKey: ["purchase-invoices"],
+    statsQueryKey: ["purchase-invoices", "stats"],
+  });
+
   return (
     <GenericCRUDPage
       resource="purchase-invoices"
       title="Purchase Invoices"
+      emptyMessage="No purchase invoices yet."
+      emptyDescription="Record vendor bills here to track what you owe and payment status."
       columns={columns}
       schema={piSchema}
       defaultValues={defaultValues}
@@ -226,8 +238,53 @@ export function PurchaseInvoicesClient() {
       detailPath="/purchase-invoices"
       statCards={(s) => [
         { label: "Total Invoices", value: s.total },
-        { label: "Unpaid", value: s.unpaid || 0 },
+        { label: "Unpaid", value: s.unpaid || 0, valueClassName: "text-2xl text-destructive" },
+        {
+          label: "Total Value",
+          value: formatCurrency(s.totalValue || 0),
+          valueClassName: "text-lg",
+        },
+        {
+          label: "Outstanding",
+          value: formatCurrency(s.totalOutstanding || 0),
+          valueClassName: "text-lg text-destructive",
+        },
       ]}
+      toolbarExtra={<ExportButton resource="purchase-invoices" filename="purchase-invoices" />}
+      extraRowActions={(inv) => {
+        const iid = String(inv._id);
+        const busy = !!sendingId;
+        return (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="Download PDF"
+              disabled={busy}
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadPdf(iid, inv.invoiceNumber);
+              }}
+            >
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="Email vendor"
+              disabled={busy}
+              onClick={(e) => {
+                e.stopPropagation();
+                sendEmail(iid);
+              }}
+            >
+              <Mail className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        );
+      }}
     />
   );
 }

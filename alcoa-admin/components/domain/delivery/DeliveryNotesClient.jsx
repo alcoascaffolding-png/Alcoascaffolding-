@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
+import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
 import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
 import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
@@ -113,9 +114,9 @@ export function DeliveryNotesClient() {
       qc.invalidateQueries({ queryKey: ["delivery-notes"] });
       qc.invalidateQueries({ queryKey: ["delivery-notes-stats"] });
       setDeleteId(null);
-      toast.success("Delivery note deleted");
+      toast.success(TOAST.deleted("Delivery note"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
 
   const statItems =

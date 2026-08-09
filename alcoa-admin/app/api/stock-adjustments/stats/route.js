@@ -1,2 +1,5 @@
 import { createStatsHandler } from "@/lib/crud-factory";
-export const { GET } = createStatsHandler(() => import("@/models/StockAdjustment"));
+export const { GET } = createStatsHandler(
+  () => import("@/models/StockAdjustment"),
+  "stock-adjustments"
+);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -25,6 +25,7 @@ import { ImportButton } from "@/components/data-table/ImportButton";
 import { IMPORTABLE_RESOURCES } from "@/lib/import/schemas";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
+import { formErrorToastMessage } from "@/lib/form-error-summary";
 import { canWriteResource, canDeleteDocuments } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +59,8 @@ export function GenericCRUDPage({
   toolbarExtra,
   /** Custom empty state message */
   emptyMessage,
+  /** Custom empty state description (secondary line under the title) */
+  emptyDescription,
   /** Optional empty state action (defaults to Add button when form is enabled) */
   emptyAction,
   /** Optional row className(row) for highlighting */
@@ -79,6 +82,8 @@ export function GenericCRUDPage({
   defaultSorting,
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const qc = useQueryClient();
   const { data: session } = useSession();
   const user = session?.user;
@@ -170,6 +175,59 @@ export function GenericCRUDPage({
     setEditItem(item);
   }
 
+  // Deep-link support: `?edit=<id>` opens the edit dialog for that row (fetching it
+  // if it isn't on the current page), and `?new=1` opens the create dialog. The param
+  // is cleared once handled so refresh/back doesn't re-trigger it. Lets detail pages
+  // link here to edit (e.g. the PO detail "Edit" button).
+  const editParam = searchParams.get("edit");
+  const newParam = searchParams.get("new");
+  const deepLinkHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!FormFields || !canWrite) return;
+    if (deepLinkHandledRef.current) return;
+    if (!editParam && !newParam) return;
+
+    const clearDeepLink = () => {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("edit");
+      next.delete("new");
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    };
+
+    if (newParam) {
+      deepLinkHandledRef.current = true;
+      openCreate();
+      clearDeepLink();
+      return;
+    }
+
+    const existing = data?.items?.find((it) => String(it._id) === String(editParam));
+    if (existing) {
+      deepLinkHandledRef.current = true;
+      openEdit(existing);
+      clearDeepLink();
+      return;
+    }
+
+    let cancelled = false;
+    deepLinkHandledRef.current = true;
+    fetch(`/api/${resource}/${editParam}`)
+      .then((res) => res.json())
+      .then((d) => {
+        if (!cancelled && d.success && d.data) openEdit(d.data);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) clearDeepLink();
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editParam, newParam, canWrite, data?.items]);
+
   function invalidateAll() {
     qc.invalidateQueries({ queryKey: [resource] });
     qc.invalidateQueries({ queryKey: [resource, "stats"] });
@@ -216,6 +274,10 @@ export function GenericCRUDPage({
   });
 
   const isEditing = !!editItem?._id;
+
+  const handleInvalid = useCallback((errors) => {
+    toast.error(formErrorToastMessage(errors));
+  }, []);
 
   const actionColumn = {
     id: "actions",
@@ -283,13 +345,14 @@ export function GenericCRUDPage({
         isLoading={isLoading}
         searchPlaceholder={`Search ${title.toLowerCase()}…`}
         emptyMessage={emptyMessage || `No ${title.toLowerCase()} found.`}
+        emptyDescription={emptyDescription}
         emptyIcon={resource === "products" ? "products" : resource === "customers" ? "customers" : "default"}
         emptyAction={
           emptyAction ??
           (FormFields && canWrite ? (
             <Button size="sm" onClick={openCreate}>
               <Plus className="h-4 w-4" />
-              Add {singular}
+              New {singular}
             </Button>
           ) : undefined)
         }
@@ -312,7 +375,7 @@ export function GenericCRUDPage({
             {FormFields && canWrite && (
               <Button size="sm" onClick={openCreate}>
                 <Plus className="h-4 w-4" />
-                Add {singular}
+                New {singular}
               </Button>
             )}
             {showImport && canWrite && (
@@ -363,7 +426,7 @@ export function GenericCRUDPage({
             </DialogHeader>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+                onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
                 className="flex min-h-0 flex-1 flex-col"
                 aria-busy={saveMut.isPending}
               >
@@ -386,7 +449,7 @@ export function GenericCRUDPage({
                     type="submit"
                     className="min-w-[120px]"
                     loading={saveMut.isPending}
-                    idleLabel={isEditing ? "Save changes" : `Create ${singular}`}
+                    idleLabel={isEditing ? `Update ${singular}` : `Create ${singular}`}
                     pendingLabel={isEditing ? "Saving…" : "Creating…"}
                   />
                 </DialogFooter>

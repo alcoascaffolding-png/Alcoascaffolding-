@@ -20,9 +20,18 @@ import { assertQuotationSafeToDelete } from "@/lib/sales-document-delete-guards"
 import { parseRequestBody } from "@/lib/validate-request";
 import { quotationPatchSchema } from "@/lib/schemas/quotation";
 
-export const GET = withErrorHandler(async (request, { params }) => {
+async function resolveParams(context) {
+  const params =
+    context.params && typeof context.params.then === "function"
+      ? await context.params
+      : context.params;
+  return params;
+}
+
+export const GET = withErrorHandler(async (request, context) => {
   await authorizeApi("quotations", "read");
 
+  const params = await resolveParams(context);
   await connectDB();
   const q = await Quotation.findById(params.id)
     .populate("customer", QUOTATION_CUSTOMER_POPULATE_FIELDS)
@@ -33,9 +42,10 @@ export const GET = withErrorHandler(async (request, { params }) => {
   return apiSuccess({ ...q, linked, resolvedBankDetails });
 });
 
-export const PATCH = withErrorHandler(async (request, { params }) => {
+export const PATCH = withErrorHandler(async (request, context) => {
   const session = await authorizeApi("quotations", "write");
 
+  const params = await resolveParams(context);
   await connectDB();
   const rawBody = await request.json();
   const body = parseRequestBody(quotationPatchSchema, rawBody);
@@ -141,9 +151,10 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
   return apiSuccess(payload);
 });
 
-export const DELETE = withErrorHandler(async (request, { params }) => {
+export const DELETE = withErrorHandler(async (request, context) => {
   const session = await authorizeApi("quotations", "delete");
 
+  const params = await resolveParams(context);
   await connectDB();
   await assertQuotationSafeToDelete(params.id);
   const q = await Quotation.findByIdAndDelete(params.id);

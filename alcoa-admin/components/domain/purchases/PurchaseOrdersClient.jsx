@@ -7,6 +7,8 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Download, Mail } from "lucide-react";
 import {
   FormTextField,
   FormSelectField,
@@ -16,6 +18,8 @@ import {
   PurchaseLineItemsFields,
   VendorSelectField,
 } from "@/components/shared/PurchaseLineItemsFields";
+import { ExportButton } from "@/components/data-table/ExportButton";
+import { useDocumentListOutbound } from "@/hooks/use-document-list-outbound";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const lineItemSchema = z.object({
@@ -207,6 +211,12 @@ export function PurchaseOrdersClient() {
   const searchParams = useSearchParams();
   const fromLowStock = searchParams.get("from") === "low-stock";
 
+  const { sendingId, downloadPdf, sendEmail } = useDocumentListOutbound({
+    apiBase: "/api/purchase-orders",
+    listQueryKey: ["purchase-orders"],
+    statsQueryKey: ["purchase-orders", "stats"],
+  });
+
   const { data: reorderData, isSuccess: reorderReady } = useQuery({
     queryKey: ["products", "reorder-lines"],
     queryFn: async () => {
@@ -244,6 +254,8 @@ export function PurchaseOrdersClient() {
       resource="purchase-orders"
       title="Purchase Orders"
       resourceSingular="Purchase order"
+      emptyMessage="No purchase orders yet."
+      emptyDescription="Raise a purchase order to record what you're buying from a vendor."
       columns={columns}
       schema={poSchema}
       defaultValues={defaultValues}
@@ -253,9 +265,50 @@ export function PurchaseOrdersClient() {
       presetValues={presetValues}
       statCards={(s) => [
         { label: "Total POs", value: s.total },
-        { label: "Received", value: s.received || 0 },
+        { label: "Received", value: s.received || 0, valueClassName: "text-2xl text-emerald-500" },
+        { label: "Pending", value: s.pending || 0, valueClassName: "text-2xl text-chart-2" },
+        {
+          label: "Total Value",
+          value: formatCurrency(s.totalValue || 0),
+          valueClassName: "text-lg",
+        },
       ]}
       detailPath="/purchase-orders"
+      toolbarExtra={<ExportButton resource="purchase-orders" filename="purchase-orders" />}
+      extraRowActions={(po) => {
+        const pid = String(po._id);
+        const busy = !!sendingId;
+        return (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="Download PDF"
+              disabled={busy}
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadPdf(pid, po.poNumber);
+              }}
+            >
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              title="Email vendor"
+              disabled={busy}
+              onClick={(e) => {
+                e.stopPropagation();
+                sendEmail(pid);
+              }}
+            >
+              <Mail className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        );
+      }}
     />
   );
 }

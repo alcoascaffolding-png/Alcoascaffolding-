@@ -241,6 +241,7 @@ export function CustomerDetail({ id }) {
                       </a>
                     </Button>
                   )}
+                  {/* WhatsApp button hidden per request
                   {(c.primaryWhatsApp || c.primaryPhone) && phoneToWhatsAppDigits(c.primaryWhatsApp || c.primaryPhone) && (
                     <Button variant="outline" size="sm" asChild>
                       <a href={customerWhatsAppHref(c)} target="_blank" rel="noopener noreferrer">
@@ -249,6 +250,7 @@ export function CustomerDetail({ id }) {
                       </a>
                     </Button>
                   )}
+                  */}
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
@@ -392,6 +394,7 @@ export function CustomerDetail({ id }) {
                   <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-sm text-muted-foreground items-center">
                     {cp.email && <a href={`mailto:${cp.email}`} className="flex items-center gap-1 hover:text-primary"><Mail className="h-3.5 w-3.5" />{cp.email}</a>}
                     {cp.phone && <a href={`tel:${cp.phone}`} className="flex items-center gap-1 hover:text-primary"><Phone className="h-3.5 w-3.5" />{cp.phone}</a>}
+                    {/* WhatsApp link hidden per request
                     {cp.phone && phoneToWhatsAppDigits(cp.phone) && (
                       <a
                         href={`https://wa.me/${phoneToWhatsAppDigits(cp.phone)}?text=${encodeURIComponent(`Hello ${cp.name}, `)}`}
@@ -403,6 +406,7 @@ export function CustomerDetail({ id }) {
                         WhatsApp
                       </a>
                     )}
+                    */}
                   </div>
                 </CardContent>
               </Card>

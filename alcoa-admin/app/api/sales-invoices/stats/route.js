@@ -24,9 +24,15 @@ export const GET = withErrorHandler(async () => {
         totalValue: { $sum: "$total" },
         outstanding: {
           $sum: {
-            $subtract: [
-              { $ifNull: ["$total", 0] },
-              { $ifNull: ["$paidAmount", 0] },
+            $cond: [
+              { $eq: ["$paymentStatus", "cancelled"] },
+              0,
+              {
+                $subtract: [
+                  { $ifNull: ["$total", 0] },
+                  { $ifNull: ["$paidAmount", 0] },
+                ],
+              },
             ],
           },
         },

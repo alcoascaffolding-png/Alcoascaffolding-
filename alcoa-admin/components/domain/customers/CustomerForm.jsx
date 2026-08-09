@@ -16,6 +16,7 @@ import { ArrowLeft } from "lucide-react";
 import { BlockingSaveOverlay } from "@/components/loading/loading-kit";
 import { AsyncButton } from "@/components/ui/async-button";
 import { FormEditSkeleton } from "@/components/loading/skeleton-kit";
+import { formErrorToastMessage } from "@/lib/form-error-summary";
 
 // ─── Enum constants (must match Customer model exactly) ───────────────────────
 const BUSINESS_TYPES = [
@@ -341,10 +342,26 @@ function CustomerFormInner({ customerId, isEdit, existing, defaultValues }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const handleInvalid = (errors) => {
+    toast.error(
+      formErrorToastMessage(errors, {
+        labels: {
+          companyName: "Company name",
+          contactName: "Contact name",
+          contactEmail: "Contact email",
+          contactPhone: "Phone number",
+          addressLine1: "Address line 1",
+          city: "City",
+          emirate: "Emirate",
+        },
+      })
+    );
+  };
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+        onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
         className="space-y-6"
         aria-busy={saveMut.isPending}
       >

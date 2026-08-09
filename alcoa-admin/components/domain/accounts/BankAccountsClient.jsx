@@ -6,11 +6,12 @@ import { z } from "zod";
 import { Star, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
-import { FormTextField, FormSwitchField } from "@/components/forms/form-fields";
+import { FormTextField, FormSwitchField, FormNumberField } from "@/components/forms/form-fields";
 import { AsyncButton } from "@/components/ui/async-button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { mutationErrorMessage } from "@/lib/toast-messages";
 import { companyBankAccountFormDefaults } from "@/lib/company-bank-details";
 
 const schema = z.object({
@@ -21,11 +22,13 @@ const schema = z.object({
   swiftCode: z.string().optional(),
   branch: z.string().optional(),
   currency: z.string().default("AED"),
+  openingBalance: z.coerce.number().min(0, "Opening balance cannot be negative").default(0),
   isPrimary: z.boolean().optional().default(false),
 });
 
 const defaultValues = {
   ...companyBankAccountFormDefaults(),
+  openingBalance: 0,
   isPrimary: false,
 };
 
@@ -38,6 +41,7 @@ function mapItemToForm(item) {
     swiftCode: item.swiftCode || "",
     branch: item.branch || "",
     currency: item.currency || "AED",
+    openingBalance: Number(item.openingBalance) || 0,
     isPrimary: !!item.isPrimary,
   };
 }
@@ -53,6 +57,14 @@ function BankAccountFormFields({ control }) {
         <FormTextField control={control} name="swiftCode" label="Swift Code" />
         <FormTextField control={control} name="branch" label="Branch" />
         <FormTextField control={control} name="currency" label="Currency" placeholder="AED" />
+        <FormNumberField
+          control={control}
+          name="openingBalance"
+          label="Opening Balance"
+          min={0}
+          showZero
+          description="Starting balance. Running balance = opening balance + receipts − payments."
+        />
       </div>
       <FormSwitchField
         control={control}
@@ -84,7 +96,7 @@ export function BankAccountsClient() {
       qc.invalidateQueries({ queryKey: ["sales-invoices"] });
       toast.success("Primary account updated — bank details now apply to all modules and PDFs");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(mutationErrorMessage(e)),
     onSettled: () => setSettingPrimaryId(null),
   });
 
@@ -122,6 +134,12 @@ export function BankAccountsClient() {
       size: 110,
     },
     {
+      accessorKey: "openingBalance",
+      header: "Opening Balance",
+      cell: ({ row }) => formatCurrency(row.original.openingBalance || 0),
+      size: 130,
+    },
+    {
       accessorKey: "currentBalance",
       header: "Balance",
       cell: ({ row }) => formatCurrency(row.original.currentBalance || 0),
@@ -134,6 +152,8 @@ export function BankAccountsClient() {
       resource="bank-accounts"
       title="Bank Accounts"
       resourceSingular="Bank Account"
+      emptyMessage="No bank accounts yet."
+      emptyDescription="Add your company bank accounts to show payment details on quotation and invoice PDFs."
       columns={columns}
       schema={schema}
       defaultValues={defaultValues}

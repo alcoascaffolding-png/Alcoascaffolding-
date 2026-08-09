@@ -5,8 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/data-table/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -15,22 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import {
-  MoreHorizontal, Pencil, Trash2, Users, UserCheck, TrendingUp,
-  Eye, Mail, MessageSquare,
-} from "lucide-react";
+import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
 import { InlineSkeleton } from "@/components/loading/skeleton-kit";
+import { StatsCardsGrid } from "@/components/domain/documents/StatsCardsGrid";
+import { DocumentRowActionMenu } from "@/components/domain/documents/DocumentRowActionMenu";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { ImportButton } from "@/components/data-table/ImportButton";
+import { ExportButton } from "@/components/data-table/ExportButton";
 
 const STATUS_FILTERS = [
   { value: "all", label: "All statuses" },
@@ -44,11 +38,6 @@ const STATUS_COLORS = {
   active: "success", inactive: "secondary",
   blocked: "destructive", prospect: "warning",
 };
-
-function digits(phone) {
-  if (!phone) return "";
-  return String(phone).replace(/\D/g, "").replace(/^0+/, "");
-}
 
 async function fetchCustomers(params = {}) {
   const qs = new URLSearchParams(params).toString();
@@ -104,10 +93,23 @@ export function CustomersClient() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["customers"] });
       setDeleteId(null);
-      toast.success("Customer deleted");
+      toast.success(TOAST.deleted("Customer"));
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
+
+  const statItems =
+    stats &&
+    [
+      { label: "Total", value: stats.total },
+      { label: "Active", value: stats.active, valueClassName: "text-2xl text-emerald-500" },
+      { label: "Prospects", value: stats.prospect, valueClassName: "text-2xl text-chart-2" },
+      {
+        label: "Total Revenue",
+        value: formatCurrency(stats.totalRevenue),
+        valueClassName: "text-lg",
+      },
+    ];
 
   const columns = [
     {
@@ -169,87 +171,22 @@ export function CustomersClient() {
       cell: ({ row }) => {
         const c = row.original;
         const cid = String(c._id);
-        const phone = c.primaryWhatsApp || c.primaryPhone || "";
-        const waDigits = digits(phone);
-        const waHref = waDigits
-          ? `https://wa.me/${waDigits}?text=${encodeURIComponent(`Hello ${c.companyName}, `)}`
-          : null;
-
+        const email = c.primaryEmail || "";
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost" size="icon" className="h-7 w-7"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-
-              {/* View */}
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/customers/${cid}`); }}>
-                <Eye className="mr-2 h-4 w-4" /> View
-              </DropdownMenuItem>
-
-              {/* Edit */}
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/customers/${cid}/edit`); }}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              {/* Email */}
-              {c.primaryEmail ? (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`mailto:${c.primaryEmail}?subject=${encodeURIComponent(`Alcoa Scaffolding — ${c.companyName}`)}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Send Email
-                  </a>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem disabled>
-                  <Mail className="mr-2 h-4 w-4 opacity-40" />
-                  <span className="opacity-40">No email</span>
-                </DropdownMenuItem>
-              )}
-
-              {/* WhatsApp */}
-              {waHref ? (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-emerald-600"
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    WhatsApp
-                  </a>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem disabled>
-                  <MessageSquare className="mr-2 h-4 w-4 opacity-40" />
-                  <span className="opacity-40">No phone</span>
-                </DropdownMenuItem>
-              )}
-
-              <DropdownMenuSeparator />
-
-              {/* Delete */}
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={(e) => { e.stopPropagation(); setDeleteId(cid); }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-
-            </DropdownMenuContent>
-          </DropdownMenu>
+          // WhatsApp is intentionally hidden for customers per product request.
+          <DocumentRowActionMenu
+            showWhatsApp={false}
+            hasEmail={!!email}
+            onView={() => router.push(`/customers/${cid}`)}
+            onEdit={() => router.push(`/customers/${cid}/edit`)}
+            onSendEmail={() => {
+              if (!email) return;
+              window.location.href = `mailto:${email}?subject=${encodeURIComponent(
+                `Alcoa Scaffolding — ${c.companyName}`
+              )}`;
+            }}
+            onDelete={() => setDeleteId(cid)}
+          />
         );
       },
       size: 50,
@@ -258,46 +195,7 @@ export function CustomersClient() {
 
   return (
     <>
-      {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-xs text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <UserCheck className="h-5 w-5 text-emerald-500" />
-              <div>
-                <p className="text-xs text-muted-foreground">Active</p>
-                <p className="text-2xl font-bold">{stats.active}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <Users className="h-5 w-5 text-chart-2" />
-              <div>
-                <p className="text-xs text-muted-foreground">Prospects</p>
-                <p className="text-2xl font-bold">{stats.prospect}</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 flex items-center gap-3">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs text-muted-foreground">Total Revenue</p>
-                <p className="text-lg font-bold">{formatCurrency(stats.totalRevenue)}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <StatsCardsGrid items={statItems || []} />
 
       <DataTable
         columns={columns}
@@ -347,6 +245,7 @@ export function CustomersClient() {
               ))}
             </SelectContent>
           </Select>
+          <ExportButton resource="customers" filename="customers" />
           </>
         }
       />

@@ -1,10 +1,26 @@
 "use client";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 import { GenericCRUDPage } from "@/components/domain/GenericCRUDPage";
 import { FormTextField, FormSelectField, FormNumberField, FormTextAreaField } from "@/components/forms/form-fields";
 import { FormSection, FormGrid, FormGridFull } from "@/components/forms/form-layout";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CategorySelectField } from "@/components/shared/CategorySelectField";
+import { ExportButton } from "@/components/data-table/ExportButton";
+
+const STATUS_FILTERS = [
+  { value: "all", label: "All statuses" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "blocked", label: "Blocked" },
+];
 
 const schema = z.object({
   vendorCode: z.string().optional(),
@@ -157,9 +173,19 @@ function VendorFormFields({ control }) {
 }
 
 export function VendorsClient() {
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const extraListParams = useMemo(
+    () => (statusFilter && statusFilter !== "all" ? { status: statusFilter } : {}),
+    [statusFilter]
+  );
+
   return (
     <GenericCRUDPage
       resource="vendors" title="Vendors" columns={columns} schema={schema}
+      emptyMessage="No vendors yet."
+      emptyDescription="Add your suppliers and subcontractors to use them on purchase orders and invoices."
+      extraListParams={extraListParams}
       defaultValues={{
         vendorCode: "", companyName: "", contactPerson: "", email: "", phone: "",
         emirate: "", vatNumber: "", tradeLicenseNumber: "", paymentTerms: "Cash",
@@ -172,6 +198,23 @@ export function VendorsClient() {
         return payload;
       }}
       statCards={(s) => [{ label: "Total Vendors", value: s.total }]}
+      toolbarExtra={
+        <>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-8 w-[160px]">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_FILTERS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <ExportButton resource="vendors" filename="vendors" />
+        </>
+      }
     />
   );
 }

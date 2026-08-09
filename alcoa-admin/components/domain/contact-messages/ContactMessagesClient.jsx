@@ -19,9 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatDate, formatRelativeTime } from "@/lib/utils";
+import { TOAST, mutationErrorMessage } from "@/lib/toast-messages";
 import { MessageSquare, Mail, Phone, Building2, Clock, Trash2, Eye, RefreshCw } from "lucide-react";
 import { ImportButton } from "@/components/data-table/ImportButton";
+import { ExportButton } from "@/components/data-table/ExportButton";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 const STATUS_COLORS = {
   new: "info",
@@ -84,6 +87,9 @@ export function ContactMessagesClient() {
   const openId = searchParams.get("id");
   const [selectedMsg, setSelectedMsg] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 350);
   const perms = usePermissions();
   const canRemove =
     perms.canWrite("contact-messages") && perms.canDelete("contact-messages");
@@ -91,11 +97,19 @@ export function ContactMessagesClient() {
   const filterType = searchParams.get("type") || "all";
 
   const params = useMemo(() => {
-    const next = {};
+    const next = {
+      page: String(pagination.pageIndex + 1),
+      limit: String(pagination.pageSize),
+    };
     if (filterStatus !== "all") next.status = filterStatus;
     if (filterType !== "all") next.type = filterType;
+    if (debouncedSearch.trim()) next.search = debouncedSearch.trim();
     return next;
-  }, [filterStatus, filterType]);
+  }, [pagination.pageIndex, pagination.pageSize, filterStatus, filterType, debouncedSearch]);
+
+  useEffect(() => {
+    setPagination((p) => (p.pageIndex === 0 ? p : { ...p, pageIndex: 0 }));
+  }, [filterStatus, filterType, debouncedSearch]);
 
   function setFilter(key, value) {
     const next = new URLSearchParams(searchParams.toString());
@@ -105,10 +119,11 @@ export function ContactMessagesClient() {
     router.replace(qs ? `/contact-messages?${qs}` : "/contact-messages", { scroll: false });
   }
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["contact-messages", params],
     queryFn: () => fetchMessages(params),
     refetchInterval: 30 * 1000,
+    placeholderData: (prev) => prev,
   });
 
   const { data: stats } = useQuery({ queryKey: ["contact-messages-stats"], queryFn: fetchStats });
@@ -137,14 +152,23 @@ export function ContactMessagesClient() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, ...updates }) => updateMessage(id, updates),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["contact-messages"] }); toast.success("Message updated"); },
-    onError: (e) => toast.error(e.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contact-messages"] });
+      qc.invalidateQueries({ queryKey: ["contact-messages-stats"] });
+      toast.success(TOAST.updated("Message"));
+    },
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteMessage,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["contact-messages"] }); setDeleteId(null); toast.success("Message deleted"); },
-    onError: (e) => toast.error(e.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["contact-messages"] });
+      qc.invalidateQueries({ queryKey: ["contact-messages-stats"] });
+      setDeleteId(null);
+      toast.success(TOAST.deleted("Message"));
+    },
+    onError: (e) => toast.error(mutationErrorMessage(e)),
   });
 
   const columns = [
@@ -229,6 +253,7 @@ export function ContactMessagesClient() {
         label="Contact Messages"
         onSuccess={() => qc.invalidateQueries({ queryKey: ["contact-messages"] })}
       />
+      <ExportButton resource="contact-messages" filename="contact-messages" />
       <Select value={filterType} onValueChange={(v) => setFilter("type", v)}>
         <SelectTrigger className="h-8 w-28">
           <SelectValue placeholder="Type" />
@@ -291,8 +316,17 @@ export function ContactMessagesClient() {
         columns={columns}
         data={data?.items || []}
         isLoading={isLoading}
+        isFetching={isFetching}
         toolbar={toolbar}
         searchPlaceholder="Search messages…"
+        serverSearch
+        searchValue={searchInput}
+        onSearchChange={setSearchInput}
+        manualPagination
+        pageCount={data?.pages || 1}
+        totalRecords={data?.total || 0}
+        paginationState={pagination}
+        onPaginationChange={setPagination}
         onRowClick={setSelectedMsg}
         emptyMessage="No messages found."
         emptyDescription={

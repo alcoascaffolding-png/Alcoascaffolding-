@@ -13,6 +13,7 @@ import {
   FormTextAreaField,
 } from "@/components/forms/form-fields";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { ExportButton } from "@/components/data-table/ExportButton";
 
 const paymentMethodOptions = [
   { value: "Cash", label: "Cash" },
@@ -187,6 +188,8 @@ export function ReceiptsClient() {
     <GenericCRUDPage
       resource="receipts"
       title="Receipts"
+      emptyMessage="No receipts yet."
+      emptyDescription="Record customer payments against invoices to track what's been collected."
       columns={columns}
       schema={receiptSchema}
       defaultValues={defaultValues}
@@ -199,6 +202,7 @@ export function ReceiptsClient() {
         { label: "Total Receipts", value: s.total },
         { label: "Total Received", value: formatCurrency(s.totalAmount || 0) },
       ]}
+      toolbarExtra={<ExportButton resource="receipts" filename="receipts" />}
     />
   );
 }

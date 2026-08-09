@@ -74,25 +74,29 @@ export function DocumentRowActionMenu({
             <Pencil className="mr-2 h-4 w-4" /> Edit
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            onDownloadPdf?.();
-          }}
-          disabled={busy}
-        >
-          <Download className="mr-2 h-4 w-4" /> {busy ? "Generating PDF…" : "Download PDF"}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            onSendEmail?.();
-          }}
-          disabled={busy || !hasEmail}
-        >
-          <Mail className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send Email"}
-        </DropdownMenuItem>
+        {(onDownloadPdf || onSendEmail) && <DropdownMenuSeparator />}
+        {onDownloadPdf ? (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownloadPdf();
+            }}
+            disabled={busy}
+          >
+            <Download className="mr-2 h-4 w-4" /> {busy ? "Generating PDF…" : "Download PDF"}
+          </DropdownMenuItem>
+        ) : null}
+        {onSendEmail ? (
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onSendEmail();
+            }}
+            disabled={busy || !hasEmail}
+          >
+            <Mail className="mr-2 h-4 w-4" /> {busy ? "Sending…" : "Send Email"}
+          </DropdownMenuItem>
+        ) : null}
         {showWhatsApp && (
           <DropdownMenuItem
             onClick={(e) => {

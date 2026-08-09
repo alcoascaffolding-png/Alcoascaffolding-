@@ -31,6 +31,7 @@ const POST = withErrorHandler(async (request) => {
     notes,
     userId: session.user.id,
     sourceType: "manual",
+    rejectBelowZero: true,
   });
 
   logAudit({

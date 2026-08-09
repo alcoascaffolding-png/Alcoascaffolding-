@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
@@ -27,6 +27,7 @@ import { QuotationFormEditSkeleton } from "@/components/loading/skeleton-kit";
 import { customerSnapshotToQuotationFormPatch } from "@/lib/map-customer-to-quotation";
 import { DocumentCustomerCard } from "@/components/domain/documents/DocumentCustomerCard";
 import { ProductPicker } from "@/components/shared/ProductPicker";
+import { formErrorToastMessage } from "@/lib/form-error-summary";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -484,6 +485,20 @@ export function DeliveryNoteFormPage({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const handleInvalid = useCallback((errors) => {
+    toast.error(
+      formErrorToastMessage(errors, {
+        labels: {
+          customerName: "Customer name",
+          customerEmail: "Customer email",
+          deliveryDate: "Delivery date",
+          status: "Status",
+          noteType: "Note type",
+        },
+      })
+    );
+  }, []);
+
   if (isEdit && loadingExisting) {
     return <QuotationFormEditSkeleton />;
   }
@@ -491,7 +506,7 @@ export function DeliveryNoteFormPage({ id }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+        onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
         className="space-y-6 relative"
         aria-busy={saveMut.isPending}
       >
@@ -681,7 +696,7 @@ export function DeliveryNoteFormPage({ id }) {
           <AsyncButton
             type="submit"
             loading={saveMut.isPending}
-            idleLabel={isEdit ? "Save changes" : "Create delivery note"}
+            idleLabel={isEdit ? "Update Delivery Note" : "Create Delivery Note"}
             pendingLabel={isEdit ? "Updating…" : "Creating…"}
           />
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={saveMut.isPending}>

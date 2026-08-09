@@ -1,7 +1,7 @@
 "use client";
 
 import { DocumentStatusChanger } from "@/components/domain/documents/DocumentStatusChanger";
-import { cn } from "@/lib/utils";
+import { cn, isQuotationDerivedExpired } from "@/lib/utils";
 
 /**
  * Statuses staff can set manually.
@@ -78,12 +78,17 @@ function optionsForValue(value) {
 export function QuotationStatusChanger({
   id,
   value,
+  validUntil,
   size,
   detailQueryKey,
   listQueryKey = ["quotations"],
   statsQueryKey = ["quotations-stats"],
 }) {
   const compact = size === "sm";
+
+  // Derived-expired: still-open status (draft/sent/viewed) past its Valid Until
+  // day. Show an "Expired" treatment while keeping the real editable value.
+  const derivedExpired = isQuotationDerivedExpired({ status: value, validUntil });
 
   if (LOCKED_STATUSES.has(value)) {
     const label = compact
@@ -139,6 +144,11 @@ export function QuotationStatusChanger({
       apiBase="/api/quotations"
       options={optionsForValue(value)}
       size={size}
+      displayOverride={
+        derivedExpired
+          ? { label: "Expired", dotClassName: "bg-amber-500", toneValue: "expired" }
+          : undefined
+      }
       detailQueryKey={detailQueryKey}
       listQueryKey={listQueryKey}
       statsQueryKey={statsQueryKey}

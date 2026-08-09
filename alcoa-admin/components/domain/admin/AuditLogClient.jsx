@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 
 const actionColors = {
   create: "success",
@@ -44,10 +44,8 @@ const columns = [
     accessorKey: "createdAt",
     header: "When",
     cell: ({ row }) =>
-      row.original.createdAt
-        ? new Date(row.original.createdAt).toLocaleString("en-GB")
-        : "—",
-    size: 160,
+      row.original.createdAt ? formatDateTime(row.original.createdAt) : "—",
+    size: 170,
   },
   {
     accessorKey: "userEmail",
@@ -104,10 +102,9 @@ export function AuditLogClient() {
     },
   });
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <Select value={resource} onValueChange={setResource}>
+  const filters = (
+    <>
+      <Select value={resource} onValueChange={setResource}>
           <SelectTrigger className={cn(filterTriggerClassName, "sm:w-[12.5rem]")}>
             <SelectValue placeholder="All modules" />
           </SelectTrigger>
@@ -209,14 +206,22 @@ export function AuditLogClient() {
             </SelectItem>
           </SelectContent>
         </Select>
-      </div>
+    </>
+  );
 
-      <DataTable
-        columns={columns}
-        data={data?.items || []}
-        isLoading={isLoading}
-        searchPlaceholder="Filter visible rows…"
-      />
-    </div>
+  return (
+    <DataTable
+      columns={columns}
+      data={data?.items || []}
+      isLoading={isLoading}
+      searchPlaceholder="Filter visible rows…"
+      toolbar={filters}
+      emptyMessage={
+        resource !== "all" || action !== "all"
+          ? "No audit entries match your filters."
+          : "No audit activity yet."
+      }
+      emptyDescription="User actions across the admin panel will be logged here."
+    />
   );
 }

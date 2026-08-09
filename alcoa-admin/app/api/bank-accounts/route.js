@@ -40,7 +40,14 @@ export const POST = withErrorHandler(async (request) => {
 
   await applyPrimaryOnBankAccountSave(BankAccount, patch);
 
-  const doc = await BankAccount.create({ ...patch, createdBy: session.user.id });
+  const openingBalance = Number(patch.openingBalance) || 0;
+
+  const doc = await BankAccount.create({
+    ...patch,
+    openingBalance,
+    currentBalance: openingBalance,
+    createdBy: session.user.id,
+  });
 
   logAudit({
     userId: session.user.id,

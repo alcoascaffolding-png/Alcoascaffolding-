@@ -32,6 +32,7 @@ export async function createStockAdjustment({
   sourceType = "manual",
   sourceId,
   sourceNumber,
+  rejectBelowZero = false,
 }) {
   if (!productId || !mongoose.Types.ObjectId.isValid(String(productId))) {
     throw new AppError("Valid product is required", 400);
@@ -49,6 +50,12 @@ export async function createStockAdjustment({
     newStock = previousStock + qty;
   } else if (adjustmentType === "decrease") {
     if (qty <= 0) throw new AppError("Quantity must be greater than zero", 400);
+    if (rejectBelowZero && qty > previousStock) {
+      throw new AppError(
+        `Cannot remove ${qty} units — only ${previousStock} in stock for ${product.name}.`,
+        400
+      );
+    }
     newStock = Math.max(0, previousStock - qty);
   } else if (adjustmentType === "correction") {
     newStock = Math.max(0, Number(correctionNewStock));

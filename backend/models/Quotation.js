@@ -430,12 +430,12 @@ quotationSchema.pre('save', function(next) {
   if (this.items && this.items.length > 0) {
     this.calculateTotals();
   }
-  
-  // Check if expired
-  if (this.validUntil < new Date() && this.status === 'sent') {
-    this.status = 'expired';
-  }
-  
+
+  // Note: expiry is derived for display (see the `isExpired` virtual). We
+  // intentionally do NOT rewrite `status` here — doing so silently overrode
+  // manual status changes (e.g. setting "sent" on a quote past its valid-until
+  // flipped it to "expired"). Mirrors the fix in alcoa-admin/models/Quotation.js.
+
   next();
 });
 

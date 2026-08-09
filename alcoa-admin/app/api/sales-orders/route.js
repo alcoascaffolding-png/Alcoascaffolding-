@@ -123,7 +123,7 @@ export const POST = withErrorHandler(async (request) => {
 
   if (payload.status === "confirmed") {
     const subtotal = (items || []).reduce((s, row) => s + Number(row.total || 0), 0);
-    const total = subtotal + Number(vatAmount) || 0;
+    const total = subtotal + (Number(vatAmount) || 0);
     await assertCustomerCreditForOrder({ customerId, additionalAmount: total });
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
@@ -34,6 +34,7 @@ import {
 } from "@/lib/sales-line-item-structured";
 import { ProductPicker, StockWarningBadge } from "@/components/shared/ProductPicker";
 import { mapProductToSalesLine } from "@/lib/map-product-to-quotation-line";
+import { formErrorToastMessage } from "@/lib/form-error-summary";
 
 const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
@@ -410,6 +411,21 @@ export function SalesOrderFormPage({ id }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const handleInvalid = useCallback((errors) => {
+    toast.error(
+      formErrorToastMessage(errors, {
+        labels: {
+          customerName: "Customer name",
+          customerEmail: "Customer email",
+          orderDate: "Order date",
+          deliveryDate: "Delivery date",
+          status: "Status",
+          vatPercentage: "VAT %",
+        },
+      })
+    );
+  }, []);
+
   if (isEdit && loadingExisting) {
     return <QuotationFormEditSkeleton />;
   }
@@ -417,7 +433,7 @@ export function SalesOrderFormPage({ id }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((v) => saveMut.mutate(v))}
+        onSubmit={form.handleSubmit((v) => saveMut.mutate(v), handleInvalid)}
         className="space-y-6 relative"
         aria-busy={saveMut.isPending}
       >
@@ -599,7 +615,7 @@ export function SalesOrderFormPage({ id }) {
           <AsyncButton
             type="submit"
             loading={saveMut.isPending}
-            idleLabel={isEdit ? "Save changes" : "Create order"}
+            idleLabel={isEdit ? "Update Sales Order" : "Create Sales Order"}
             pendingLabel={isEdit ? "Updating…" : "Creating…"}
           />
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={saveMut.isPending}>

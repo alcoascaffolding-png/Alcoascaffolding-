@@ -18,7 +18,7 @@ export default function CustomersPage() {
           <Link href="/customers/new">
             <Button size="sm">
               <Plus className="h-4 w-4" />
-              Add Customer
+              New Customer
             </Button>
           </Link>
         }

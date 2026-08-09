@@ -26,6 +26,7 @@ import { isLowStock, isOutOfStock } from "@/lib/inventory-utils";
 import { cn } from "@/lib/utils";
 import { VendorSelectField } from "@/components/shared/PurchaseLineItemsFields";
 import { CategorySelectField } from "@/components/shared/CategorySelectField";
+import { ExportButton } from "@/components/data-table/ExportButton";
 
 const productSchema = z.object({
   itemCode: z.string().min(1, "Item code required"),
@@ -320,6 +321,7 @@ export function ProductsClient() {
               Create PO from low stock
             </Button>
           </Link>
+          <ExportButton resource="products" filename="products" />
         </>
       }
       emptyMessage={

@@ -26,9 +26,20 @@ export const PATCH = withErrorHandler(async (request, { params }) => {
 
   await applyPrimaryOnBankAccountSave(BankAccount, patch, params.id);
 
+  const existing = await BankAccount.findById(params.id).select("openingBalance currentBalance").lean();
+  if (!existing) throw new AppError("Bank Account not found", 404);
+
+  const update = { ...patch, lastModifiedBy: session.user.id };
+  if (patch.openingBalance !== undefined) {
+    const newOpening = Number(patch.openingBalance) || 0;
+    const delta = newOpening - (Number(existing.openingBalance) || 0);
+    update.openingBalance = newOpening;
+    update.currentBalance = (Number(existing.currentBalance) || 0) + delta;
+  }
+
   const doc = await BankAccount.findByIdAndUpdate(
     params.id,
-    { ...patch, lastModifiedBy: session.user.id },
+    update,
     { new: true, runValidators: true }
   );
   if (!doc) throw new AppError("Bank Account not found", 404);

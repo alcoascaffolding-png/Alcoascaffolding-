@@ -198,6 +198,7 @@ export function QuotationDetail({ id }) {
           <QuotationStatusChanger
             id={id}
             value={q.status}
+            validUntil={q.validUntil}
             detailQueryKey={["quotations", "detail", id]}
           />
         </div>

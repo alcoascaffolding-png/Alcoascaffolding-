@@ -148,12 +148,18 @@ export const PATCH = withErrorHandler(async (request, context) => {
     }
   }
 
-  let doc;
+  const doc = await SalesOrder.findById(params.id);
+  if (!doc) throw new AppError("Sales Order not found", 404);
+
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === "orderNumber" && value == null) continue;
+    doc.set(key, value);
+  }
+
+  // save() triggers the pre('save') hook which calls recalculateTotals(),
+  // keeping subtotal/total in sync after line-item edits (findByIdAndUpdate skips it).
   try {
-    doc = await SalesOrder.findByIdAndUpdate(params.id, patch, {
-      new: true,
-      runValidators: true,
-    });
+    await doc.save();
   } catch (err) {
     if (err.name === "ValidationError") {
       const first = Object.values(err.errors || {})[0]?.message;
@@ -161,7 +167,6 @@ export const PATCH = withErrorHandler(async (request, context) => {
     }
     throw err;
   }
-  if (!doc) throw new AppError("Sales Order not found", 404);
 
   await syncQuotationsAfterSalesOrderPatch(prev, doc);
 

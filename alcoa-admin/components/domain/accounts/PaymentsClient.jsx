@@ -12,6 +12,7 @@ import {
   FormTextAreaField,
 } from "@/components/forms/form-fields";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { ExportButton } from "@/components/data-table/ExportButton";
 
 const paymentMethodOptions = [
   { value: "Cash", label: "Cash" },
@@ -156,6 +157,8 @@ export function PaymentsClient() {
     <GenericCRUDPage
       resource="payments"
       title="Payments"
+      emptyMessage="No payments yet."
+      emptyDescription="Record money paid to vendors against purchase invoices here."
       columns={columns}
       schema={paymentSchema}
       defaultValues={defaultValues}
@@ -167,6 +170,7 @@ export function PaymentsClient() {
         { label: "Total Payments", value: s.total },
         { label: "Total Paid", value: formatCurrency(s.totalAmount || 0) },
       ]}
+      toolbarExtra={<ExportButton resource="payments" filename="payments" />}
     />
   );
 }

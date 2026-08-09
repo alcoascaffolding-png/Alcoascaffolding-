@@ -7,12 +7,22 @@ import User from "@/models/User";
 import { validatePasswordForSet } from "@/lib/schemas/password";
 import { sanitizePermissionList } from "@/lib/permission-catalog";
 
-export const GET = withErrorHandler(async () => {
+export const GET = withErrorHandler(async (request) => {
   const session = await requireSession();
   requireManageUsers(session);
 
   await connectDB();
-  const users = await User.find()
+
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
+  const role = searchParams.get("role");
+
+  const filter = {};
+  if (status === "active") filter.isActive = true;
+  else if (status === "inactive") filter.isActive = false;
+  if (role && role !== "all") filter.role = role;
+
+  const users = await User.find(filter)
     .select("-password -refreshToken -passwordResetToken -passwordResetExpires")
     .sort({ createdAt: -1 })
     .lean();

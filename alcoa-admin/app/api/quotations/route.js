@@ -13,16 +13,52 @@ import { buildRegexSearchFilter } from "@/lib/search-utils";
 
 void Customer;
 
+/**
+ * Derived-expiry (read/query-time only — the stored status is never rewritten):
+ * a quote is Expired when its stored status is "expired", OR its stored status
+ * is still open (draft/sent/viewed) and its `validUntil` is before the start of
+ * today (server date boundary).
+ */
+const OPEN_QUOTATION_STATUSES = ["draft", "sent", "viewed"];
+
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function buildQuotationFilter(searchParams) {
   const filter = {};
+  const and = [];
   const status = searchParams.get("status");
 
+  const today = startOfToday();
+  // Draft/sent/viewed quotes whose Valid Until day has passed.
+  const dateExpired = {
+    status: { $in: OPEN_QUOTATION_STATUSES },
+    validUntil: { $lt: today },
+  };
+  // Open quote that has NOT passed its Valid Until day (or has none set).
+  const notDateExpired = {
+    $or: [{ validUntil: { $gte: today } }, { validUntil: null }],
+  };
+
   if (status === "pending") {
-    filter.status = { $in: ["draft", "sent", "viewed"] };
+    // Pending = draft + sent that have NOT lapsed, matching the Pending stat card.
+    filter.status = { $in: ["draft", "sent"] };
+    and.push(notDateExpired);
   } else if (status === "converted") {
     filter.status = { $in: ["converted", "converted_to_sales_order", "converted_to_invoice"] };
   } else if (status === "accepted") {
     filter.status = { $in: ["accepted", "approved"] };
+  } else if (status === "expired") {
+    // Stored "expired" OR derived-expired open quotes.
+    and.push({ $or: [{ status: "expired" }, dateExpired] });
+  } else if (OPEN_QUOTATION_STATUSES.includes(status)) {
+    // A lapsed open quote is shown as Expired everywhere, so exclude it from the
+    // plain draft/sent/viewed filters to avoid double-counting against Expired.
+    filter.status = status;
+    and.push(notDateExpired);
   } else if (status) {
     filter.status = status;
   }
@@ -56,7 +92,10 @@ function buildQuotationFilter(searchParams) {
     "referenceNumber",
     "contactPersonName",
   ]);
-  if (searchFilter) Object.assign(filter, searchFilter);
+  // Combine via $and so the search $or never collides with the expiry $or.
+  if (searchFilter) and.push(searchFilter);
+
+  if (and.length) filter.$and = and;
 
   return filter;
 }

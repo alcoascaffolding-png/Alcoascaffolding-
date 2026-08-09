@@ -18,6 +18,13 @@ export const GET = withErrorHandler(async () => {
   await Promise.all([markOverdueSalesInvoices(), markOverduePurchaseInvoices()]);
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  // Derived-expiry boundary (start of today) — a lapsed draft/sent quote is
+  // shown as Expired, so it should not count towards Pending.
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const isQuoteDateLapsed = {
+    $and: [{ $ne: ["$validUntil", null] }, { $lt: ["$validUntil", startOfToday] }],
+  };
 
   const [customerStats, quotationStats, messageStats, invoiceStats, revenueStats, productStats] = await Promise.all([
     Customer.aggregate([
@@ -34,7 +41,20 @@ export const GET = withErrorHandler(async () => {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          pending: { $sum: { $cond: [{ $in: ["$status", ["draft", "sent"]] }, 1, 0] } },
+          pending: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $in: ["$status", ["draft", "sent"]] },
+                    { $not: isQuoteDateLapsed },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
           approved: {
             $sum: {
               $cond: [{ $in: ["$status", ["accepted", "approved"]] }, 1, 0],
