@@ -1,11 +1,22 @@
 /**
  * Google Analytics 4 tracking utilities
- * Requires GA4 gtag.js loaded in index.html
+ * Requires GA4 gtag.js loaded in index.html (G-ZP0M0V7FRC)
  */
 
 export const trackEvent = (eventName, params = {}) => {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
     window.gtag('event', eventName, params);
+  }
+};
+
+export const trackPageView = (path, title) => {
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag('event', 'page_view', {
+      page_path: path,
+      page_title: title || document.title,
+      page_location: window.location.href,
+      language: path.startsWith('/ar') ? 'ar' : 'en',
+    });
   }
 };
 
@@ -27,6 +38,11 @@ export const trackPhoneClick = (phoneNumber = '+971581375601') => {
 };
 
 export const trackQuoteRequest = (service = '') => {
+  trackEvent('generate_lead', {
+    event_category: 'conversion',
+    event_label: service,
+    page_path: window.location.pathname,
+  });
   trackEvent('quote_request', {
     event_category: 'conversion',
     event_label: service,
@@ -35,6 +51,12 @@ export const trackQuoteRequest = (service = '') => {
 };
 
 export const trackFormSubmit = (params = {}) => {
+  trackEvent('generate_lead', {
+    event_category: 'conversion',
+    event_label: 'contact_form',
+    page_path: window.location.pathname,
+    ...params,
+  });
   trackEvent('form_submit', {
     event_category: 'conversion',
     event_label: 'contact_form',

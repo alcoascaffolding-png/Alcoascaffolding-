@@ -11,6 +11,7 @@ import ScrollToTop from './components/common/ScrollToTop';
 import BackToTop from './components/common/BackToTop';
 import WhatsAppButton from './components/common/WhatsAppButton';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import AnalyticsRouteTracker from './components/common/AnalyticsRouteTracker';
 
 import Home from './pages/Home';
 import ArabicPage from './pages/ArabicPage';
@@ -44,6 +45,7 @@ function App() {
         <Router>
           <div className="min-h-screen flex flex-col bg-white">
             <ScrollToTop />
+            <AnalyticsRouteTracker />
             <Navbar />
             <main className="flex-grow">
               <Suspense fallback={<PageLoader />}>
@@ -53,12 +55,23 @@ function App() {
                   <Route path="/ar/products" element={<ArabicPage pageKey="products" />} />
                   <Route path="/ar/services" element={<ArabicPage pageKey="services" />} />
                   <Route path="/ar/contact-us" element={<ArabicPage pageKey="contact" />} />
+                  <Route path="/ar/scaffolding-rental-abu-dhabi" element={<ArabicPage pageKey="rentalAbuDhabi" />} />
+                  <Route path="/ar/scaffolding-rental-musaffah" element={<ArabicPage pageKey="musaffah" />} />
+                  <Route path="/ar/scaffolding-rental-uae" element={<ArabicPage pageKey="rentalUae" />} />
+                  <Route path="/ar/services/rental" element={<ArabicPage pageKey="rentalService" />} />
+                  <Route path="/ar/products/aluminium-scaffolding" element={<ArabicPage pageKey="aluminiumProducts" />} />
+                  <Route path="/ar/mobile-scaffolding-tower" element={<ArabicPage pageKey="mobileTower" />} />
+                  <Route path="/ar/aluminium-scaffolding-supplier-abu-dhabi" element={<ArabicPage pageKey="supplier" />} />
+                  <Route path="/ar/aluminium-scaffolding-manufacturer-uae" element={<ArabicPage pageKey="manufacturer" />} />
+                  <Route path="/ar/ladders" element={<ArabicPage pageKey="ladders" />} />
                   <Route path="/products" element={<Navigate to="/aluminum-scaffolding-abu-dhabi" replace />} />
                   <Route path="/aluminum-scaffolding-abu-dhabi" element={<Products />} />
                   <Route path="/aluminum-scaffolding-dubai" element={<Navigate to="/aluminum-scaffolding-abu-dhabi" replace />} />
                   <Route path="/products/:productId" element={<ProductDetail />} />
                   <Route path="/services" element={<Navigate to="/construction-scaffolding-uae" replace />} />
                   <Route path="/construction-scaffolding-uae" element={<Services />} />
+                  <Route path="/services/aluminium-scaffolding" element={<Navigate to="/products/aluminium-scaffolding" replace />} />
+                  <Route path="/services/safety-inspections" element={<Navigate to="/services/inspections" replace />} />
                   <Route path="/services/:serviceId" element={<ServiceDetail />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
@@ -74,6 +87,8 @@ function App() {
                   <Route path="/scaffolding-inspection-uae" element={<SeoLandingPage pageKey="inspection" />} />
                   <Route path="/scaffolding-manpower-supply" element={<SeoLandingPage pageKey="manpower" />} />
                   <Route path="/scaffolding-rental-dubai" element={<SeoLandingPage pageKey="dubai" />} />
+                  <Route path="/aluminium-scaffolding-supplier-abu-dhabi" element={<SeoLandingPage pageKey="supplier" />} />
+                  <Route path="/aluminium-scaffolding-manufacturer-uae" element={<SeoLandingPage pageKey="manufacturer" />} />
                   <Route path="/blog/scaffolding-rental-cost-dubai-2026" element={<Navigate to="/blog/scaffolding-rental-cost-abu-dhabi-2026" replace />} />
                   <Route path="/scaffolding-rental-abu-dhabi" element={<LocationPage locationKey="abu-dhabi" />} />
                   <Route path="/scaffolding-rental-musaffah" element={<LocationPage locationKey="musaffah" />} />

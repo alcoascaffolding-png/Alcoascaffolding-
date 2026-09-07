@@ -16,10 +16,10 @@ const SITE = 'https://alcoascaffolding.com'
 const routes = [
   {
     path: '/',
-    title: 'Scaffolding Rental Abu Dhabi & Dubai | Alcoa UAE',
+    title: 'Aluminium Scaffolding Abu Dhabi | Alcoa UAE',
     description:
-      'Rent or buy aluminium & steel scaffolding across UAE. Serving Abu Dhabi, Musaffah 37, Dubai. ISO 9001:2015. Call Alcoa for a free quote!',
-    h1: 'Aluminium Scaffolding Rental in Abu Dhabi, Dubai & UAE',
+      'Aluminium scaffolding Abu Dhabi from Alcoa Musaffah 37 — supplier, rental & towers for UAE projects. ISO 9001:2015. Free quote: +971 58 137 5601.',
+    h1: 'Aluminium Scaffolding Abu Dhabi & United Arab Emirates',
   },
   {
     path: '/scaffolding-rental-dubai',
@@ -37,10 +37,10 @@ const routes = [
   },
   {
     path: '/scaffolding-rental-musaffah',
-    title: 'Scaffolding Rental Musaffah 37 | Walk-In Warehouse | Alcoa',
+    title: 'Aluminium Scaffolding Musaffah | Warehouse | Alcoa',
     description:
-      'Scaffolding Musaffah 37 — Alcoa walk-in warehouse at Ar Rahmah 4 St. Call +971 58 137 5601.',
-    h1: 'Scaffolding Rental Musaffah 37, Abu Dhabi',
+      'Aluminium scaffolding Musaffah — walk-in warehouse at Ar Rahmah 4 St., Musaffah 37. Call +971 58 137 5601.',
+    h1: 'Aluminium Scaffolding Musaffah, Abu Dhabi',
   },
   {
     path: '/scaffolding-for-sale',
@@ -51,10 +51,10 @@ const routes = [
   },
   {
     path: '/scaffolding-rental-uae',
-    title: 'Scaffolding Rental UAE | All Emirates Coverage | Alcoa',
+    title: 'Aluminium Scaffolding UAE | Supplier & Rental | Alcoa',
     description:
-      'Scaffolding rental UAE — Abu Dhabi, Dubai, Sharjah, Ajman, Al Ain, RAK & Fujairah. Free quote.',
-    h1: 'Scaffolding Rental Across the UAE',
+      'Aluminium scaffolding UAE — supply, rental and mobile towers from Musaffah 37, Abu Dhabi. Free quote.',
+    h1: 'Aluminium Scaffolding Across the UAE',
   },
   {
     path: '/faq',
@@ -93,10 +93,66 @@ const routes = [
   },
   {
     path: '/services/rental',
-    title: 'Scaffolding Rental UAE | Daily, Weekly & Monthly | Alcoa',
+    title: 'Aluminium Scaffolding Rental Abu Dhabi | Alcoa',
     description:
-      'Flexible scaffolding hire across UAE. Aluminium & steel delivered from Musaffah 37. Free quote.',
-    h1: 'Scaffolding Rental Services Across UAE',
+      'Aluminium scaffolding rental Abu Dhabi — daily, weekly & monthly hire from Musaffah 37. Free quote.',
+    h1: 'Aluminium Scaffolding Rental Abu Dhabi',
+  },
+  {
+    path: '/products/aluminium-scaffolding',
+    title: 'Aluminium Scaffold Tower Abu Dhabi | Alcoa UAE',
+    description:
+      'Aluminium scaffold towers Abu Dhabi — mobile, folding & stairway systems for rent or sale from Musaffah 37.',
+    h1: 'Aluminium Scaffold Towers Abu Dhabi',
+  },
+  {
+    path: '/products/ladders',
+    title: 'Aluminium Ladder Supplier Abu Dhabi | Alcoa',
+    description:
+      'Aluminium ladder supplier Abu Dhabi — A-type, extension & industrial ladders from Musaffah 37.',
+    h1: 'Aluminium Ladder Supplier Abu Dhabi',
+  },
+  {
+    path: '/services/folding-tower',
+    title: 'Mobile Scaffolding Tower Abu Dhabi | Alcoa',
+    description:
+      'Mobile scaffolding tower Abu Dhabi — folding aluminium towers for rent & sale from Musaffah 37.',
+    h1: 'Mobile Scaffolding Tower Abu Dhabi',
+  },
+  {
+    path: '/services/stairway-scaffolding',
+    title: 'Stairway Scaffolding Abu Dhabi | Alcoa UAE',
+    description:
+      'Stairway scaffolding Abu Dhabi — aluminium stairway towers for hire & sale from Musaffah 37.',
+    h1: 'Stairway Scaffolding Abu Dhabi',
+  },
+  {
+    path: '/services/cantilever-scaffolding',
+    title: 'Cantilever Scaffolding Abu Dhabi | Alcoa UAE',
+    description:
+      'Cantilever scaffolding Abu Dhabi — aluminium systems for rent & sale from Musaffah 37.',
+    h1: 'Cantilever Scaffolding Abu Dhabi',
+  },
+  {
+    path: '/services/aluminium-rolling-platform',
+    title: 'Aluminium Rolling Platform Abu Dhabi | Alcoa',
+    description:
+      'Aluminium rolling platform Abu Dhabi — lightweight mobile platforms for rent & sale.',
+    h1: 'Aluminium Rolling Platform Abu Dhabi',
+  },
+  {
+    path: '/aluminium-scaffolding-supplier-abu-dhabi',
+    title: 'Aluminium Scaffolding Supplier Abu Dhabi | Alcoa',
+    description:
+      'Aluminium scaffolding supplier Abu Dhabi — towers, ladders & access equipment from Musaffah 37.',
+    h1: 'Aluminium Scaffolding Supplier Abu Dhabi',
+  },
+  {
+    path: '/aluminium-scaffolding-manufacturer-uae',
+    title: 'Aluminium Scaffolding Manufacturer UAE | Alcoa',
+    description:
+      'Aluminium scaffolding manufacturer UAE — ISO 9001:2015 scope from Musaffah 37, Abu Dhabi.',
+    h1: 'Aluminium Scaffolding Manufacturer UAE',
   },
   {
     path: '/construction-scaffolding-uae',
@@ -112,6 +168,31 @@ const routes = [
       'Aluminum scaffolding products in Abu Dhabi — towers, ladders, cuplock and couplers from Alcoa.',
     h1: 'Aluminum Scaffolding Products Abu Dhabi',
   },
+  {
+    path: '/ar',
+    title: 'سقالات ألومنيوم أبوظبي | Alcoa الإمارات',
+    description:
+      'سقالات ألومنيوم أبوظبي من Alcoa في المصفح 37 — توريد وتأجير وأبراج متحركة. ISO 9001:2015.',
+    h1: 'سقالات ألومنيوم أبوظبي والإمارات',
+  },
+  {
+    path: '/ar/scaffolding-rental-abu-dhabi',
+    title: 'تأجير سقالات أبوظبي | Alcoa المصفح',
+    description: 'تأجير سقالات أبوظبي — أبراج ألومنيوم وcuplock من المصفح 37.',
+    h1: 'تأجير السقالات في أبوظبي',
+  },
+  {
+    path: '/ar/scaffolding-rental-musaffah',
+    title: 'سقالات ألومنيوم المصفح | مستودع Alcoa',
+    description: 'سقالات ألومنيوم المصفح 37 — مستودع في شارع الرحمة 4.',
+    h1: 'سقالات ألومنيوم في المصفح، أبوظبي',
+  },
+  {
+    path: '/ar/aluminium-scaffolding-supplier-abu-dhabi',
+    title: 'مورد سقالات ألومنيوم أبوظبي | Alcoa',
+    description: 'مورد سقالات ألومنيوم أبوظبي — أبراج وسلالم من المصفح 37.',
+    h1: 'مورد سقالات الألومنيوم في أبوظبي',
+  },
 ]
 
 function ensureDir(dir) {
@@ -122,7 +203,6 @@ function inject(html, route) {
   const canonical = route.path === '/' ? SITE : `${SITE}${route.path}`
   let out = html
 
-  // Remove existing title if present
   out = out.replace(/<title>[^<]*<\/title>/i, `<title>${route.title}</title>`)
   if (!/<title>/i.test(out)) {
     out = out.replace('</head>', `<title>${route.title}</title>\n</head>`)
@@ -174,7 +254,6 @@ for (const route of routes) {
   console.log('wrote', route.path)
 }
 
-// Soft-404 helper page (still SPA-loaded via rewrite for unknown URLs)
 const notFound = inject(baseHtml, {
   path: '/404',
   title: 'Page Not Found | Alcoa Aluminium Scaffolding',

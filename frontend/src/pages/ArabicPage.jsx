@@ -25,12 +25,11 @@ const ArabicPage = ({ pageKey }) => {
         alternates={alternates}
         ogLocale="ar_AE"
         htmlLang="ar"
+        faq={page.faq}
       />
       <section className="section-padding py-12 sm:py-16">
         <div className="container-custom max-w-4xl">
-          <Breadcrumbs
-            items={[{ name: page.h1, path: page.path }]}
-          />
+          <Breadcrumbs items={[{ name: page.h1, path: page.path }]} />
           <Link
             to={page.enPath}
             className="inline-block mb-6 text-sm text-blue-600 hover:underline"
@@ -69,10 +68,27 @@ const ArabicPage = ({ pageKey }) => {
             </ul>
           )}
 
+          {page.faq?.length > 0 && (
+            <div className="mb-8 space-y-3">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">أسئلة شائعة</h2>
+              {page.faq.map((item) => (
+                <details
+                  key={item.q}
+                  className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800"
+                >
+                  <summary className="cursor-pointer font-semibold text-gray-900 dark:text-white">
+                    {item.q}
+                  </summary>
+                  <p className="mt-2 text-gray-700 dark:text-gray-300">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          )}
+
           {(page.phone || page.email || page.cta) && (
-            <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-wrap items-center gap-4">
               {page.cta && (
-                <Link to="/contact-us" className="btn-primary">
+                <Link to="/ar/contact-us" className="btn-primary">
                   {page.cta}
                 </Link>
               )}

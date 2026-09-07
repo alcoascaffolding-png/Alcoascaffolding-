@@ -36,6 +36,16 @@
       "permanent": true
     },
     {
+      "source": "/services/aluminium-scaffolding",
+      "destination": "/products/aluminium-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/safety-inspections",
+      "destination": "/services/inspections",
+      "permanent": true
+    },
+    {
       "source": "/blog/scaffolding-rental-cost-dubai-2026",
       "destination": "/blog/scaffolding-rental-cost-abu-dhabi-2026",
       "permanent": true

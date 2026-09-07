@@ -32,13 +32,13 @@ export const locationPages = {
   musaffah: {
     slug: 'scaffolding-rental-musaffah',
     city: 'Musaffah',
-    title: 'Scaffolding Rental Musaffah 37 | Walk-In Warehouse | Alcoa',
-    h1: 'Scaffolding Rental Musaffah 37, Abu Dhabi',
+    title: 'Aluminium Scaffolding Musaffah | Warehouse | Alcoa',
+    h1: 'Aluminium Scaffolding Musaffah, Abu Dhabi',
     description:
-      'Scaffolding Musaffah 37 — Alcoa walk-in warehouse at Ar Rahmah 4 St. Aluminium towers, cuplock & ladders. Call +971 58 137 5601.',
+      'Aluminium scaffolding Musaffah — walk-in warehouse at Ar Rahmah 4 St., Musaffah 37. Rental, supply & towers. Call +971 58 137 5601.',
     keywords:
-      'scaffolding Musaffah, scaffolding rental Musaffah, scaffolding Musaffah 37, scaffolding musaffah industrial area, scaffolding near musaffah 37, scaffolding warehouse Abu Dhabi, industrial scaffolding musaffah',
-    intro: `Searching for scaffolding in Musaffah or Musaffah industrial area? Alcoa’s walk-in warehouse is at ${STREET_ADDRESS}. Fabricators, mechanical contractors, and facility teams collect aluminium towers, cuplock components, couplers, and ladders directly — or schedule local delivery within Musaffah 37 and nearby zones.`,
+      'aluminium scaffolding Musaffah, scaffolding Musaffah, scaffolding rental Musaffah, scaffolding supplier Musaffah, scaffolding Musaffah 37, scaffolding company Musaffah, Mussafah scaffolding',
+    intro: `Looking for aluminium scaffolding in Musaffah (also spelled Mussafah)? Alcoa’s walk-in warehouse is at ${STREET_ADDRESS}. Fabricators, mechanical contractors, and facility teams collect aluminium towers, cuplock components, couplers, and ladders — or schedule local delivery within Musaffah 37 and nearby zones.`,
     body: [
       'Being based inside Musaffah 37 means fewer inter-depot transfers for local jobs. Stock covers single-width aluminium towers, cuplock sets, GI/MS pipe, prop jacks, and planks. Ask for daily, weekly, or monthly hire when you call.',
       `Visit during ${OPENING_HOURS_SUMMARY}. Phone / WhatsApp: ${PHONE_PRIMARY}. Bring your site requirements — height, quantity, and duration — for a same-visit quote whenever stock allows.`,

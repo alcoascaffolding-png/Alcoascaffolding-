@@ -1,8 +1,9 @@
 /** Shared product category config for ProductDetail and sitemap generation. */
 export const productCategories = {
   'aluminium-scaffolding': {
-    title: 'Aluminium Scaffolding Products',
-    description: 'Explore our complete range of lightweight, durable aluminium scaffolding systems',
+    title: 'Aluminium Scaffold Towers',
+    description:
+      'Lightweight aluminium scaffold towers and mobile systems for construction and maintenance across Abu Dhabi and the UAE',
     category: 'Aluminium Scaffolding',
     serviceKeys: [
       'single-width-scaffolding',
@@ -15,8 +16,9 @@ export const productCategories = {
     ],
   },
   ladders: {
-    title: 'Professional Ladders',
-    description: 'High-quality aluminium and fiberglass ladders for industrial and commercial applications',
+    title: 'Aluminium Ladders',
+    description:
+      'Aluminium and fiberglass ladders for industrial and commercial access in Abu Dhabi and the UAE',
     category: 'Ladders',
     serviceKeys: [
       'aluminium-a-type-dual',

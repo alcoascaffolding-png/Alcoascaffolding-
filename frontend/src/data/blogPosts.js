@@ -329,6 +329,74 @@ export const blogPosts = [
       },
     ],
   },
+  {
+    slug: 'complete-guide-aluminium-scaffolding-abu-dhabi',
+    title: 'Complete Guide to Aluminium Scaffolding in Abu Dhabi',
+    excerpt:
+      'How aluminium scaffolding works for Abu Dhabi projects — tower types, rental vs buy, Musaffah warehouse pickup, and how to choose a supplier.',
+    date: '2026-09-01',
+    readTime: '10 min',
+    keywords:
+      'aluminium scaffolding Abu Dhabi, aluminium scaffolding guide UAE, aluminium scaffold tower Abu Dhabi',
+    faq: [
+      {
+        q: 'Where can I get aluminium scaffolding in Abu Dhabi?',
+        a: 'Alcoa supplies aluminium scaffolding from Musaffah 37 for rent or sale, with delivery across Abu Dhabi and the UAE.',
+      },
+      {
+        q: 'Is aluminium scaffolding suitable for outdoor UAE work?',
+        a: 'Yes for many access and maintenance tasks. Confirm height, load and site wind exposure with your supplier before erecting.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Why aluminium scaffolding is popular in Abu Dhabi',
+        body: 'Aluminium towers are lighter than steel tube systems, which speeds setup on commercial and residential sites. Corrosion resistance helps in coastal Abu Dhabi conditions. Contractors use them for MEP, painting, facade access and facility maintenance.',
+      },
+      {
+        heading: 'Common aluminium systems available locally',
+        body: 'Single- and double-width mobile towers, folding towers, stairway towers, bridgeway units, rolling platforms and cantilever setups cover most access needs. Browse Alcoa’s aluminium product range or request a mixed package with ladders and accessories.',
+      },
+      {
+        heading: 'Rent or buy from Musaffah',
+        body: 'Short projects usually favour rental; repeating weekly access often favours purchase. Alcoa’s warehouse at Ar Rahmah 4 St., Musaffah 37 supports walk-in pickup and UAE delivery. Link rental, supplier and manufacturer pages when comparing options.',
+      },
+    ],
+  },
+  {
+    slug: 'how-to-choose-aluminium-scaffold-tower',
+    title: 'How to Choose an Aluminium Scaffold Tower',
+    excerpt:
+      'Practical checklist for choosing aluminium scaffold towers in Abu Dhabi — width, height, castors, outriggers, and when to hire mobile towers.',
+    date: '2026-09-02',
+    readTime: '7 min',
+    keywords:
+      'aluminium scaffold tower, mobile scaffolding tower Abu Dhabi, how to choose scaffold tower UAE',
+    faq: [
+      {
+        q: 'What size aluminium scaffold tower do I need?',
+        a: 'Match platform width and working height to the task. Narrow corridors suit single-width towers; facade work often needs double-width platforms.',
+      },
+      {
+        q: 'Should I rent a folding mobile tower?',
+        a: 'Folding towers suit teams that move equipment between sites frequently. Confirm packed size and assembly time with your supplier.',
+      },
+    ],
+    sections: [
+      {
+        heading: 'Start with the workface',
+        body: 'Measure access width, required platform height and whether two workers need to stand side by side. Indoor corridors, atrium voids and outdoor facades each push you toward different tower formats.',
+      },
+      {
+        heading: 'Mobile vs fixed intent',
+        body: 'If you relocate the tower every few hours, prioritise castors, brakes and outriggers. For longer stays at one elevation, stairway towers improve safe vertical access. Alcoa’s mobile scaffolding tower page covers folding tower hire from Musaffah.',
+      },
+      {
+        heading: 'Confirm compliance and quote details',
+        body: 'Ask for manufacturer guidance on height limits, ballast and guardrails. Share site address, duration and quantity when requesting an AED quote so delivery and hire terms are clear.',
+      },
+    ],
+  },
 ];
 
 export const getPostBySlug = (slug) => blogPosts.find((p) => p.slug === slug);

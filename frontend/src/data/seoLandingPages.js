@@ -49,7 +49,7 @@ export const seoLandingPages = {
           'Popular Dubai rental combinations include single- and double-width aluminium towers, stairway towers, folding/mobile towers, aluminium rolling platforms, steel cuplock standards and ledgers, prop jacks, and right-angle or swivel couplers. Ladder hire (aluminium A-type and fiberglass) is available for electrical and light access work.',
         ],
         links: [
-          { label: 'Aluminium scaffolding', path: '/services/aluminium-scaffolding' },
+          { label: 'Aluminium scaffolding', path: '/products/aluminium-scaffolding' },
           { label: 'Cantilever scaffolding', path: '/services/cantilever-scaffolding' },
           { label: 'Scaffolding rental hub', path: '/services/rental' },
           { label: 'Scaffolding for sale', path: '/scaffolding-for-sale' },
@@ -93,12 +93,12 @@ export const seoLandingPages = {
 
   'for-sale': {
     slug: 'scaffolding-for-sale',
-    title: 'Scaffolding for Sale UAE | Aluminium & Cuplock | Alcoa',
-    h1: 'Scaffolding for Sale in UAE',
+    title: 'Buy Aluminium Scaffolding Abu Dhabi | For Sale | Alcoa',
+    h1: 'Buy Aluminium Scaffolding in Abu Dhabi & UAE',
     description:
-      'Buy aluminium & steel scaffolding in UAE from Alcoa Musaffah 37. Towers, cuplock, ladders & accessories. New stock — request a sales quote.',
+      'Buy aluminium scaffolding Abu Dhabi — towers, cuplock & ladders for sale from Musaffah 37. Request a sales quote from Alcoa.',
     keywords:
-      'scaffolding for sale uae, buy used scaffolding abu dhabi, second hand scaffolding uae, aluminium scaffolding supplier uae, scaffolding supplier abu dhabi',
+      'buy aluminium scaffolding abu dhabi, scaffolding for sale uae, aluminium scaffolding supplier uae, scaffolding supplier abu dhabi',
     intro: `Looking to buy scaffolding in the UAE instead of long-term hire? Alcoa Aluminium Scaffolding sells aluminium mobile towers, steel cuplock systems, ladders, couplers, prop jacks, and related accessories from our Musaffah 37 warehouse in Abu Dhabi. Purchase suits contractors with repeating access needs; hire still makes sense for short projects — we help you compare both.`,
     sections: [
       {
@@ -150,13 +150,13 @@ export const seoLandingPages = {
 
   'rental-uae': {
     slug: 'scaffolding-rental-uae',
-    title: 'Scaffolding Rental UAE | All Emirates Coverage | Alcoa',
-    h1: 'Scaffolding Rental Across the UAE',
+    title: 'Aluminium Scaffolding UAE | Supplier & Rental | Alcoa',
+    h1: 'Aluminium Scaffolding Across the UAE',
     description:
-      'Scaffolding rental UAE — Abu Dhabi, Dubai, Sharjah, Ajman, Al Ain, RAK & Fujairah. Aluminium & cuplock from Musaffah 37. Free quote.',
+      'Aluminium scaffolding UAE — supply, rental and mobile towers from Musaffah 37, Abu Dhabi. Coverage across emirates. Free quote from Alcoa.',
     keywords:
-      'scaffolding rental uae, scaffolding hire uae, scaffolding company uae, scaffolding rental sharjah, scaffolding ajman, scaffolding ras al khaimah, scaffolding al ain, scaffolding fujairah uae',
-    intro: `Alcoa Aluminium Scaffolding provides scaffolding rental across the United Arab Emirates from our Musaffah 37 headquarters in Abu Dhabi. One supplier can cover aluminium towers, steel cuplock, ladders, and erection support for projects in every emirate — with quotes tailored to delivery distance and duration.`,
+      'aluminium scaffolding UAE, aluminium scaffolding supplier UAE, aluminium scaffolding rental UAE, mobile scaffolding UAE, scaffolding company uae, scaffolding rental sharjah',
+    intro: `Alcoa Aluminium Scaffolding supplies aluminium scaffolding across the United Arab Emirates from our Musaffah 37 headquarters in Abu Dhabi. One supplier can cover aluminium towers, steel cuplock, ladders, and erection support for projects in every emirate — with quotes tailored to delivery distance and duration.`,
     sections: [
       {
         h2: 'Emirates coverage overview',
@@ -368,6 +368,113 @@ export const seoLandingPages = {
       {
         q: 'Can you erect scaffolding in Dubai?',
         a: 'Yes — erection services can be arranged for Dubai sites together with equipment delivery from Musaffah 37.',
+      },
+    ],
+  },
+
+  supplier: {
+    slug: 'aluminium-scaffolding-supplier-abu-dhabi',
+    title: 'Aluminium Scaffolding Supplier Abu Dhabi | Alcoa',
+    h1: 'Aluminium Scaffolding Supplier Abu Dhabi',
+    description:
+      'Aluminium scaffolding supplier Abu Dhabi — towers, ladders & access equipment from Musaffah 37. Rent or buy. ISO 9001:2015. Free quote.',
+    keywords:
+      'aluminium scaffolding supplier Abu Dhabi, scaffolding supplier Abu Dhabi, aluminium scaffolding supplier Musaffah, scaffolding equipment supplier Abu Dhabi, scaffolding supplier UAE',
+    intro: `Alcoa Aluminium Scaffolding L.L.C - S.P.C is an aluminium scaffolding supplier based at Ar Rahmah 4 St., Musaffah 37, Abu Dhabi. Contractors and facility teams source mobile towers, ladders, cuplock components, and accessories for purchase or hire — with delivery across Abu Dhabi and the UAE.`,
+    sections: [
+      {
+        h2: 'What we supply',
+        bullets: [
+          'Aluminium mobile scaffold towers — single width, double width, folding, stairway',
+          'Aluminium and fiberglass ladders',
+          'Rolling platforms and cantilever configurations',
+          'Steel cuplock systems, couplers, jacks and planks',
+          'Optional erection, dismantling and inspection support',
+        ],
+      },
+      {
+        h2: 'Why choose Alcoa as your scaffolding supplier',
+        paragraphs: [
+          'We operate from a walk-in Musaffah 37 warehouse with ISO 9001:2015 certified processes covering manufacturing, supply, erection, dismantling, rental and maintenance. Quotes are project-specific in AED — share height, quantity, duration and delivery zone for a clear offer.',
+        ],
+      },
+      {
+        h2: 'Related pages',
+        links: [
+          { label: 'Aluminium scaffold towers', path: '/products/aluminium-scaffolding' },
+          { label: 'Scaffolding rental Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
+          { label: 'Scaffolding for sale', path: '/scaffolding-for-sale' },
+          { label: 'Manufacturer UAE', path: '/aluminium-scaffolding-manufacturer-uae' },
+          { label: 'Musaffah warehouse', path: '/scaffolding-rental-musaffah' },
+        ],
+      },
+    ],
+    zones: ['Musaffah 37', 'Abu Dhabi', 'Dubai', 'KIZAD', 'Yas Island'],
+    mapEmbed: true,
+    showEnquiry: true,
+    faq: [
+      {
+        q: 'Are you a scaffolding supplier in Musaffah?',
+        a: 'Yes. Our warehouse is at Ar Rahmah 4 St., Musaffah 37, Abu Dhabi. Walk-in pickup and local delivery are available during business hours.',
+      },
+      {
+        q: 'Do you supply scaffolding equipment for purchase and rental?',
+        a: 'Yes. We supply for both sale and hire. Tell us your project duration and we will recommend the more cost-effective option.',
+      },
+      {
+        q: 'Which areas do you deliver to?',
+        a: 'Abu Dhabi, Musaffah, Yas Island, KIZAD, Dubai and wider UAE — confirm lead times when you request a quote.',
+      },
+    ],
+  },
+
+  manufacturer: {
+    slug: 'aluminium-scaffolding-manufacturer-uae',
+    title: 'Aluminium Scaffolding Manufacturer UAE | Alcoa',
+    h1: 'Aluminium Scaffolding Manufacturer UAE',
+    description:
+      'Aluminium scaffolding manufacturer UAE — Alcoa Musaffah 37, Abu Dhabi. ISO 9001:2015 scope includes manufacturing, supply, rental & maintenance.',
+    keywords:
+      'aluminium scaffolding manufacturer UAE, aluminium scaffolding manufacturer Abu Dhabi, aluminium scaffolding manufacturer Musaffah, scaffolding manufacturer UAE',
+    intro: `Alcoa Aluminium Scaffolding L.L.C - S.P.C operates under ISO 9001:2015 certification covering manufacturing, supply, erection, dismantling, rental and maintenance of aluminium and steel scaffolding and ladders. Our base is Musaffah 37, Abu Dhabi — we do not claim separate factory offices in other emirates.`,
+    sections: [
+      {
+        h2: 'Manufacturing and supply scope',
+        paragraphs: [
+          'Our certified scope includes manufacturing and supply of aluminium/steel scaffolding and ladders. Customers in Abu Dhabi and across the UAE source systems for construction, industrial maintenance and commercial access from our Musaffah warehouse.',
+        ],
+      },
+      {
+        h2: 'Products associated with our manufacturing scope',
+        bullets: [
+          'Aluminium scaffold towers and mobile systems',
+          'Ladders (aluminium and fiberglass ranges)',
+          'Related access components supplied with scaffolding packages',
+        ],
+        links: [
+          { label: 'Aluminium scaffolding products', path: '/products/aluminium-scaffolding' },
+          { label: 'Supplier page', path: '/aluminium-scaffolding-supplier-abu-dhabi' },
+          { label: 'About Alcoa', path: '/about-us' },
+        ],
+      },
+      {
+        h2: 'Service area',
+        paragraphs: [
+          'Equipment and support are dispatched from Musaffah, Abu Dhabi to projects across the UAE. Contact us for manufacturing/supply and rental combinations on the same order.',
+        ],
+      },
+    ],
+    zones: ['Musaffah 37, Abu Dhabi', 'UAE project delivery'],
+    mapEmbed: true,
+    showEnquiry: true,
+    faq: [
+      {
+        q: 'Is Alcoa an aluminium scaffolding manufacturer in the UAE?',
+        a: 'Yes. Our ISO 9001:2015 certificate scope includes manufacturing of aluminium/steel scaffolding and ladders, alongside supply, erection, dismantling, rental and maintenance.',
+      },
+      {
+        q: 'Where is the manufacturer based?',
+        a: 'Ar Rahmah 4 St., Musaffah 37, Office 11, 1st Floor, Abu Dhabi, UAE.',
       },
     ],
   },

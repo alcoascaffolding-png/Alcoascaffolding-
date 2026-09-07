@@ -35,6 +35,7 @@ const Footer = () => {
         { name: 'Blog', path: '/blog' },
         { name: 'FAQ', path: '/faq' },
         { name: 'Contact', path: '/contact-us' },
+        // { name: 'العربية', path: '/ar' },
       ],
     },
     {
@@ -42,19 +43,29 @@ const Footer = () => {
       links: [
         { name: 'Scaffolding Rental', path: '/services/rental' },
         { name: 'Scaffolding for Sale', path: '/scaffolding-for-sale' },
+        { name: 'Supplier Abu Dhabi', path: '/aluminium-scaffolding-supplier-abu-dhabi' },
+        { name: 'Manufacturer UAE', path: '/aluminium-scaffolding-manufacturer-uae' },
         { name: 'Installation', path: '/services/installation' },
         { name: 'Inspections', path: '/scaffolding-inspection-uae' },
-        { name: 'Manpower Supply', path: '/scaffolding-manpower-supply' },
         { name: 'All Services', path: '/construction-scaffolding-uae' },
+      ],
+    },
+    {
+      title: 'Locations',
+      links: [
+        { name: 'Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
+        { name: 'Musaffah', path: '/scaffolding-rental-musaffah' },
+        { name: 'Dubai', path: '/scaffolding-rental-dubai' },
+        { name: 'UAE Coverage', path: '/scaffolding-rental-uae' },
       ],
     },
     {
       title: 'Products',
       links: [
         { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
+        { name: 'Mobile Towers', path: '/services/folding-tower' },
         { name: 'Ladders', path: '/products/ladders' },
         { name: 'Steel Cuplock', path: '/products/steel-cuplock-scaffolding' },
-        { name: 'Couplers', path: '/products/couplers' },
         { name: 'All Products', path: '/aluminum-scaffolding-abu-dhabi' },
       ],
     },
@@ -99,7 +110,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
             {footerSections.map((section) => (
               <div key={section.title}>
                 <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wide">

@@ -79,7 +79,7 @@ const Navbar = () => {
       dropdownItems: [
         { name: 'Scaffolding Rental', path: '/services/rental' },
         { name: 'Scaffolding Delivery', path: '/services/scaffolding-delivery' },
-        { name: 'Aluminium Scaffolding', path: '/services/aluminium-scaffolding' },
+        { name: 'Aluminium Scaffolding', path: '/products/aluminium-scaffolding' },
         { name: 'Cantilever Scaffolding', path: '/services/cantilever-scaffolding' },
         { name: 'Fiberglass Ladder', path: '/services/fiberglass-ladder' },
         { name: 'A Type Ladder', path: '/services/a-type-ladder' },

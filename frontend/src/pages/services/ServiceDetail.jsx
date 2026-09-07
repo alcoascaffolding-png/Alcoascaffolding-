@@ -43,46 +43,64 @@ const ServiceDetail = () => {
 
   const SERVICE_SEO = {
     'cantilever-scaffolding': {
-      title: 'Cantilever Scaffolding Rental & Sale UAE | Alcoa Abu Dhabi',
+      title: 'Cantilever Scaffolding Abu Dhabi | Alcoa UAE',
       description:
-        'Hire cantilever scaffolding in Abu Dhabi & Dubai UAE. Certified aluminium systems, delivery from Musaffah 37. Call Alcoa today!',
-      h1: 'Cantilever Scaffolding for Rent & Sale in UAE',
+        'Cantilever scaffolding Abu Dhabi — aluminium systems for rent & sale from Musaffah 37. Delivery across UAE. Free quote from Alcoa.',
+      h1: 'Cantilever Scaffolding Abu Dhabi',
     },
     'intermediate-transom': {
-      title: 'Intermediate Transom Scaffolding UAE | Supplier | Alcoa',
+      title: 'Intermediate Transom Scaffolding UAE | Alcoa',
       description:
-        'Quality intermediate transom scaffolding for sale & rental in Abu Dhabi and Dubai UAE. Fast supply from Musaffah 37. Call Alcoa!',
-      h1: 'Intermediate Transom Scaffolding — UAE Supplier & Hire',
+        'Intermediate transom scaffolding for sale & rental in Abu Dhabi and Dubai. Fast supply from Musaffah 37.',
+      h1: 'Intermediate Transom Scaffolding — UAE',
     },
     'aluminium-rolling-platform': {
-      title: 'Aluminium Rolling Platform Rental UAE | Alcoa Scaffolding',
+      title: 'Aluminium Rolling Platform Abu Dhabi | Alcoa',
       description:
-        'Rent aluminium rolling platforms across Abu Dhabi & Dubai UAE. Lightweight, mobile, certified. Daily & monthly rates on request.',
-      h1: 'Aluminium Rolling Platform — Rental & Sale UAE',
+        'Aluminium rolling platform Abu Dhabi — lightweight mobile platforms for rent & sale. UAE delivery from Musaffah 37.',
+      h1: 'Aluminium Rolling Platform Abu Dhabi',
     },
     'stairway-scaffolding': {
-      title: 'Stairway Scaffolding Rental UAE | Abu Dhabi | Alcoa',
+      title: 'Stairway Scaffolding Abu Dhabi | Alcoa UAE',
       description:
-        'Hire stairway scaffolding across UAE. Certified, safe access solutions for all heights. Abu Dhabi & Dubai delivery.',
-      h1: 'Stairway Scaffolding for Rent in UAE',
+        'Stairway scaffolding Abu Dhabi — aluminium stairway towers for hire & sale. Delivery from Musaffah 37 across UAE.',
+      h1: 'Stairway Scaffolding Abu Dhabi',
     },
     rental: {
-      title: 'Scaffolding Rental UAE | Daily, Weekly & Monthly | Alcoa',
+      title: 'Aluminium Scaffolding Rental Abu Dhabi | Alcoa',
       description:
-        'Flexible scaffolding hire across UAE. Short & long-term rental. Aluminium & steel delivered from Musaffah 37. Free quote.',
-      h1: 'Scaffolding Rental Services Across UAE',
-    },
-    'aluminium-scaffolding': {
-      title: 'Aluminium Scaffolding UAE | Rental & Sale | Alcoa Abu Dhabi',
-      description:
-        'Buy or rent aluminium scaffolding in UAE. Lightweight, ISO-backed supplier. Abu Dhabi, Dubai & Musaffah delivery.',
-      h1: 'Aluminium Scaffolding — Buy or Rent in UAE',
+        'Aluminium scaffolding rental Abu Dhabi — daily, weekly & monthly hire from Musaffah 37. Towers, cuplock & ladders. Free quote.',
+      h1: 'Aluminium Scaffolding Rental Abu Dhabi',
     },
     'folding-tower': {
-      title: 'Mobile Scaffolding Tower UAE | Folding Tower | Alcoa',
+      title: 'Mobile Scaffolding Tower Abu Dhabi | Alcoa',
       description:
-        'Mobile scaffold tower rental Abu Dhabi & Dubai. Folding towers from Musaffah 37 warehouse. Request a free quote.',
-      h1: 'Mobile & Folding Scaffolding Towers UAE',
+        'Mobile scaffolding tower Abu Dhabi — folding aluminium towers for rent & sale from Musaffah 37. Request a free quote.',
+      h1: 'Mobile Scaffolding Tower Abu Dhabi',
+    },
+    'folding-mobile-towers': {
+      title: 'Folding Mobile Scaffold Towers | Product Specs | Alcoa',
+      description:
+        'Folding mobile scaffold tower specifications and hire options from Alcoa Musaffah 37, Abu Dhabi.',
+      h1: 'Folding Mobile Scaffold Towers',
+    },
+    'single-width-mobile-towers': {
+      title: 'Single Width Mobile Scaffold Towers | Alcoa Abu Dhabi',
+      description:
+        'Single-width mobile scaffold towers for hire and sale from Alcoa Musaffah 37, Abu Dhabi.',
+      h1: 'Single Width Mobile Scaffold Towers',
+    },
+    'double-width-mobile-towers': {
+      title: 'Double Width Mobile Scaffold Towers | Alcoa Abu Dhabi',
+      description:
+        'Double-width mobile scaffold towers for hire and sale from Alcoa Musaffah 37, Abu Dhabi.',
+      h1: 'Double Width Mobile Scaffold Towers',
+    },
+    'stairway-mobile-towers': {
+      title: 'Stairway Mobile Scaffold Towers | Product | Alcoa',
+      description:
+        'Stairway mobile scaffold tower product details — hire and sale from Musaffah 37, Abu Dhabi.',
+      h1: 'Stairway Mobile Scaffold Towers',
     },
     'cuplock-standard': {
       title: 'Cuplock Scaffolding Rental UAE | Abu Dhabi | Alcoa',

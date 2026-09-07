@@ -51,14 +51,16 @@ const ProductDetail = () => {
 
   const PRODUCT_SEO = {
     'aluminium-scaffolding': {
-      title: 'Aluminium Scaffolding UAE | Rental & Sale | Alcoa Abu Dhabi',
+      title: 'Aluminium Scaffold Tower Abu Dhabi | Alcoa UAE',
       description:
-        'Buy or rent aluminium scaffolding in UAE. Lightweight systems from Musaffah 37. Abu Dhabi, Dubai & Musaffah delivery.',
+        'Aluminium scaffold towers Abu Dhabi — mobile, folding & stairway systems for rent or sale from Musaffah 37. Browse Alcoa product range.',
+      h1: 'Aluminium Scaffold Towers Abu Dhabi',
     },
     ladders: {
-      title: 'Aluminium Ladder UAE | Ladder Rental Abu Dhabi | Alcoa',
+      title: 'Aluminium Ladder Supplier Abu Dhabi | Alcoa',
       description:
-        'Aluminium and fiberglass ladder rental and sale in Abu Dhabi UAE. A-type, extension & platform ladders. Free quote.',
+        'Aluminium ladder supplier Abu Dhabi — A-type, extension & industrial ladders for rent and sale from Musaffah 37.',
+      h1: 'Aluminium Ladder Supplier Abu Dhabi',
     },
   };
   const productSeo = PRODUCT_SEO[productId] || {
@@ -109,7 +111,11 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
-              {productCategory.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
+              {productSeo.h1 || (
+                <>
+                  {productCategory.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
+                </>
+              )}
             </h1>
             <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
               {productCategory.description} {categoryPricing.note}

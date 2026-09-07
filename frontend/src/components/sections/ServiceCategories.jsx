@@ -5,7 +5,7 @@ import { FiMapPin, FiTool } from 'react-icons/fi';
 
 const ServiceCategories = () => {
   const categories = [
-    { title: 'Aluminium Scaffolding', link: '/services/aluminium-scaffolding', type: 'service' },
+    { title: 'Aluminium Scaffolding', link: '/products/aluminium-scaffolding', type: 'service' },
     { title: 'Aluminium Scaffolding Abu Dhabi', link: '/aluminum-scaffolding-abu-dhabi', type: 'location' },
     { title: 'Aluminium Scaffolding Musaffah', link: '/scaffolding-rental-musaffah', type: 'location' },
     { title: 'Aluminium Scaffolding UAE', link: '/products/aluminium-scaffolding', type: 'service' },
