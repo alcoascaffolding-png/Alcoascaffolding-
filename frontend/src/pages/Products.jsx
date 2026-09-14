@@ -173,9 +173,9 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Aluminum Scaffolding Abu Dhabi | Steel Scaffolding UAE | Alcoa Scaffold"
-        description="Browse aluminum scaffolding Abu Dhabi, United Arab Emirates and steel scaffolding UAE products from Alcoa Scaffolding. Buy or rent ladders, mobile towers, fiberglass ladders, and cuplock systems."
-        keywords="aluminum scaffolding abu dhabi, steel scaffolding uae, mobile scaffolding tower uae, scaffolding supplier abu dhabi, scaffolding equipment uae"
+        title="Scaffolding Products UAE | Towers, Ladders & Cuplock | Alcoa"
+        description="Browse Alcoa scaffolding products from Musaffah 37 — aluminium towers, ladders, steel cuplock and couplers for rent or sale across Abu Dhabi and the UAE."
+        keywords="scaffolding products UAE, aluminium towers UAE, steel cuplock UAE, ladder rental Abu Dhabi, scaffolding equipment Musaffah"
         canonical="/aluminum-scaffolding-abu-dhabi"
       />
       {/* Hero Section */}
@@ -188,19 +188,27 @@ const Products = () => {
             className="text-center max-w-3xl sm:max-w-4xl mx-auto px-2"
           >
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-4 sm:mb-6">
-              Aluminum Scaffolding 
-              <span className="text-gradient">Abu Dhabi</span>
+              Scaffolding Products
+              <span className="text-gradient"> UAE</span>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-6 sm:mb-8">
-              Discover our comprehensive range of professional-grade aluminum scaffolding systems designed for safety, efficiency, and versatility.
-              We also supply steel scaffolding UAE, mobile scaffolding tower UAE, and ladder solutions for construction projects.
+              Browse aluminium towers, ladders, steel cuplock and couplers from our Musaffah 37 warehouse.
+              For aluminium scaffolding in Abu Dhabi overview, see our{' '}
+              <Link to="/" className="text-blue-600 underline">
+                homepage
+              </Link>
+              {' '}or{' '}
+              <Link to="/products/aluminium-scaffolding" className="text-blue-600 underline">
+                aluminium scaffold towers
+              </Link>
+              .
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link to="/contact-us" className="btn-primary">
                 Request Quote
               </Link>
-              <Link to="/contact-us" className="btn-secondary">
-                Product Consultation
+              <Link to="/products/aluminium-scaffolding" className="btn-secondary">
+                Aluminium Towers
               </Link>
             </div>
           </motion.div>

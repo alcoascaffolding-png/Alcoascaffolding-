@@ -8,6 +8,7 @@ import {
   ADDRESS_REGION,
   ADDRESS_COUNTRY,
   GEO,
+  DEFAULT_OG_IMAGE,
 } from '../data/businessFacts';
 
 /** Quote-based pricing — specific AED bands are unconfirmed and not emitted in schema. */
@@ -169,6 +170,10 @@ export const buildFaqSchema = (faq) => ({
   })),
 });
 
+/**
+ * Product JSON-LD without Offer/price — Alcoa quotes AED per project.
+ * Incomplete Offer blocks caused GSC Product snippet / Merchant listing invalids.
+ */
 export const buildProductSchema = (serviceId, service) => ({
   '@context': 'https://schema.org',
   '@type': 'Product',
@@ -176,18 +181,13 @@ export const buildProductSchema = (serviceId, service) => ({
   description: service.description,
   category: service.category,
   brand: { '@type': 'Brand', name: SITE_NAME },
-  offers: {
-    '@type': 'Offer',
-    priceCurrency: 'AED',
-    availability: 'https://schema.org/InStock',
-    url: `${SITE_URL}/contact-us`,
-    description: 'Request a free quote for rental or sale pricing',
-    seller: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-    },
-  },
+  image: DEFAULT_OG_IMAGE,
   url: `${SITE_URL}/services/${serviceId}`,
+  seller: {
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+  },
 });
 
 export const buildEnhancedServiceSchema = (serviceId, service) => ({

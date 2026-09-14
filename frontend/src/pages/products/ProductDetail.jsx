@@ -80,6 +80,7 @@ const ProductDetail = () => {
           description: productCategory.description,
           url: `${SITE_URL}/products/${productId}`,
           category: productCategory.category,
+          image: `${SITE_URL}/logo.jpeg`,
         })}
         faq={categoryFaq}
         breadcrumbs={[

@@ -163,10 +163,10 @@ const routes = [
   },
   {
     path: '/aluminum-scaffolding-abu-dhabi',
-    title: 'Aluminum Scaffolding Abu Dhabi | Products | Alcoa',
+    title: 'Scaffolding Products UAE | Towers, Ladders & Cuplock | Alcoa',
     description:
-      'Aluminum scaffolding products in Abu Dhabi — towers, ladders, cuplock and couplers from Alcoa.',
-    h1: 'Aluminum Scaffolding Products Abu Dhabi',
+      'Browse Alcoa scaffolding products from Musaffah 37 — aluminium towers, ladders, steel cuplock and couplers for rent or sale.',
+    h1: 'Scaffolding Products UAE',
   },
   {
     path: '/ar',

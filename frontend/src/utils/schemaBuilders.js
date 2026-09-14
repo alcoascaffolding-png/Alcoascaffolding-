@@ -62,6 +62,11 @@ export const buildLocalBusinessSchema = (overrides = {}) => ({
   ],
   sameAs: Object.values(SOCIAL).filter(Boolean),
   knowsAbout: [
+    'Aluminium scaffolding Abu Dhabi',
+    'Aluminium scaffolding Musaffah',
+    'Aluminium scaffolding rental Abu Dhabi',
+    'Aluminium scaffolding supplier Abu Dhabi',
+    'Mobile scaffolding tower Abu Dhabi',
     'Aluminium scaffolding rental',
     'Steel cuplock scaffolding',
     'Scaffolding erection and dismantling',
@@ -116,7 +121,9 @@ export const buildServiceSchema = ({
 });
 
 /**
- * Product schema without AggregateOffer prices (quote-based until price list confirmed).
+ * Product schema for quote-based catalogue pages.
+ * Do NOT emit Offer without a real AED price — Google Product/Merchant
+ * listings require price and will mark incomplete Offers as invalid.
  */
 export const buildProductSchema = ({ name, description, url, image, category }) => ({
   '@context': 'https://schema.org',
@@ -127,12 +134,10 @@ export const buildProductSchema = ({ name, description, url, image, category }) 
   image: image || DEFAULT_OG_IMAGE,
   brand: { '@type': 'Brand', name: SITE_NAME },
   category,
-  offers: {
-    '@type': 'Offer',
-    availability: 'https://schema.org/InStock',
-    priceCurrency: 'AED',
-    url: url || `${SITE_URL}/contact-us`,
-    description: 'Request a free quote for rental or sale pricing',
+  seller: {
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
   },
 });
 

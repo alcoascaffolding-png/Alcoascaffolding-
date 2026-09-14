@@ -9,7 +9,6 @@ import {
   getServiceIntro,
   getServiceFaq,
   getServiceProcess,
-  buildProductSchema,
   buildEnhancedServiceSchema,
   buildHowToSchema,
   isHowToService,
@@ -35,7 +34,8 @@ const ServiceDetail = () => {
   const productCategoryPath = getRelatedProductCategory(service.category);
 
   const jsonLdExtra = [
-    buildProductSchema(serviceId, service),
+    // Service schema is primary for hire/sale quote pages.
+    // Product+Offer without price caused 48 GSC Product/Merchant invalids — omit Product Offers.
     isHowToService(serviceId) ? buildHowToSchema(serviceId, service) : null,
   ].filter(Boolean);
 

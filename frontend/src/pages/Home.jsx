@@ -82,6 +82,58 @@ const Home = () => {
       />
       <Hero />
       <Features />
+
+      <section className="section-padding py-12 bg-white dark:bg-surface-dark">
+        <div className="container-custom max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            Aluminium scaffolding in Abu Dhabi — supplier, rental & towers
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+            Alcoa Aluminium Scaffolding L.L.C - S.P.C provides aluminium scaffolding in Abu Dhabi from our
+            warehouse in Musaffah 37. Contractors hire or buy mobile towers, ladders and access equipment for
+            construction, building maintenance, industrial sites and facility work across Abu Dhabi and the UAE.
+          </p>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+            Looking for aluminium scaffolding near Musaffah, Yas Island, KIZAD or Dubai delivery? We quote by
+            tower type, height, quantity and duration — daily, weekly or monthly. ISO 9001:2015 processes cover
+            manufacturing, supply, erection, dismantling, rental and maintenance.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300 mb-6">
+            <li>
+              <Link to="/products/aluminium-scaffolding" className="text-blue-600 hover:underline">
+                Aluminium scaffold towers
+              </Link>{' '}
+              — single width, double width, folding and stairway systems
+            </li>
+            <li>
+              <Link to="/services/rental" className="text-blue-600 hover:underline">
+                Aluminium scaffolding rental Abu Dhabi
+              </Link>{' '}
+              — hire from Musaffah 37 with optional delivery
+            </li>
+            <li>
+              <Link to="/aluminium-scaffolding-supplier-abu-dhabi" className="text-blue-600 hover:underline">
+                Aluminium scaffolding supplier Abu Dhabi
+              </Link>{' '}
+              — rent or buy equipment packages
+            </li>
+            <li>
+              <Link to="/scaffolding-rental-musaffah" className="text-blue-600 hover:underline">
+                Aluminium scaffolding Musaffah
+              </Link>{' '}
+              — walk-in warehouse pickup
+            </li>
+          </ul>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            Call {PHONE_PRIMARY} or{' '}
+            <Link to="/contact-us" className="text-blue-600 hover:underline">
+              request a free quote
+            </Link>
+            . Address: {STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi, UAE.
+          </p>
+        </div>
+      </section>
+
       <About />
       <Services />
       <Projects />
