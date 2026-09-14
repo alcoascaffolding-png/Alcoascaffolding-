@@ -9,7 +9,7 @@ import Breadcrumbs from '../../components/common/Breadcrumbs';
 import { getCategoryIcon } from '../../data/productImageMap';
 import { getServicePricing } from '../../utils/serviceRichContent';
 import SEOHead from '../../components/common/SEOHead';
-import { buildProductSchema } from '../../utils/schemaBuilders';
+import { buildServiceSchema } from '../../utils/schemaBuilders';
 import { SITE_URL } from '../../data/businessFacts';
 
 const ProductDetail = () => {
@@ -75,12 +75,11 @@ const ProductDetail = () => {
         description={productSeo.description}
         keywords={`${productCategory.category} UAE, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
         canonical={`/products/${productId}`}
-        jsonLd={buildProductSchema({
+        jsonLd={buildServiceSchema({
           name: productCategory.title,
           description: productCategory.description,
           url: `${SITE_URL}/products/${productId}`,
-          category: productCategory.category,
-          image: `${SITE_URL}/logo.jpeg`,
+          serviceType: `${productCategory.category} Rental and Sale`,
         })}
         faq={categoryFaq}
         breadcrumbs={[
