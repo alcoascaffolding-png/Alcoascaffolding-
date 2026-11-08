@@ -10,26 +10,27 @@ const stats = [
 
 const trustPoints = ['ISO 9001:2015', 'Musaffah 37 warehouse', 'UAE-wide delivery'];
 
-const LEVELS = [8, 16, 24, 32, 40, 48, 56];
+const LEVELS = [12.5, 25, 37.5, 50, 62.5, 75, 87.5];
 
+/** Percentage-based so the drawing scales with the card on every screen size. */
 const ScaffoldIllustration = () => (
   <div
     aria-hidden="true"
-    className="relative aspect-[4/3] w-full max-w-lg rounded-3xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+    className="relative aspect-[4/3] w-full max-w-xs rounded-3xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 sm:max-w-md lg:max-w-lg"
   >
     <div className="absolute inset-0 flex items-center justify-center">
-      <div className="relative h-64 w-48">
-        <div className="absolute bottom-0 left-8 top-0 w-2 rounded-sm bg-gray-400" />
-        <div className="absolute bottom-0 right-8 top-0 w-2 rounded-sm bg-gray-400" />
+      <div className="relative h-3/4 aspect-[3/4]">
+        <div className="absolute inset-y-0 left-[16%] w-[4%] rounded-sm bg-gray-400" />
+        <div className="absolute inset-y-0 right-[16%] w-[4%] rounded-sm bg-gray-400" />
         {LEVELS.map((top, i) => (
           <div
             key={top}
-            className={`absolute left-8 right-8 h-1 rounded-sm ${i === 2 || i === 3 ? 'bg-blue-300' : 'bg-gray-400'}`}
-            style={{ top: `${top * 4}px` }}
+            className={`absolute left-[16%] right-[16%] h-[1.5%] min-h-[3px] rounded-sm ${i === 2 || i === 3 ? 'bg-blue-300' : 'bg-gray-400'}`}
+            style={{ top: `${top}%` }}
           />
         ))}
-        <div className="absolute -bottom-2 left-6 h-2 w-4 rounded-sm bg-gray-900 dark:bg-gray-200" />
-        <div className="absolute -bottom-2 right-6 h-2 w-4 rounded-sm bg-gray-900 dark:bg-gray-200" />
+        <div className="absolute -bottom-[3%] left-[12%] h-[3%] w-[10%] rounded-sm bg-gray-900 dark:bg-gray-200" />
+        <div className="absolute -bottom-[3%] right-[12%] h-[3%] w-[10%] rounded-sm bg-gray-900 dark:bg-gray-200" />
       </div>
     </div>
   </div>
@@ -92,7 +93,7 @@ const Hero = () => (
           </dl>
         </div>
 
-        <div className="hidden justify-end lg:flex">
+        <div className="flex justify-center lg:justify-end">
           <ScaffoldIllustration />
         </div>
       </div>
