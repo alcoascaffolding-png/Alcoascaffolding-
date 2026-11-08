@@ -6,9 +6,59 @@
 
 ---
 
-## 0. Executive summary
+## LAUNCH UPDATE — 9 Nov 2026 (supersedes the "not deployed" statuses below)
 
-> **The November SEO, AEO and homepage work is complete in the codebase, but it is not live.** The live site still serves the September build. None of the improvements below will reach Google or ChatGPT until you commit, push and deploy.
+**The site is live with all code work deployed.** Commits `1751356` (SEO/AEO overhaul, homepage redesign and launch fixes) and `e32b60d` (root `vercel.json`: real 404s and 301s) were pushed to `main` and deployed by Vercel.
+
+**Verified on https://alcoascaffolding.com after deploy:**
+
+| Check | Result |
+|---|---|
+| All 115 sitemap URLs | ✅ HTTP 200 with a self-referencing canonical (0 problems) |
+| Unique title, quick answer and JSON-LD in raw HTML (GPTBot user agent) | ✅ Home, cuplock, KIZAD, new blog, mobile tower, About, Arabic Musaffah |
+| Unknown URLs (`/this-page-does-not-exist-xyz`, `/services/not-a-real-service`) | ✅ HTTP 404, "Page Not Found" page, `noindex` |
+| Alias URLs | ✅ 308 permanent redirects (`steel-cup-lock-scaffolding`, `folding-mobile-towers`, `single-width-mobile-towers`, `installation-setup`, `aluminium-scaffolding`, `/products`, trailing slash) |
+| `sitemap.xml` | ✅ 115 URLs; no aliases, no project pages |
+| `robots.txt` | ✅ includes OAI-SearchBot and ChatGPT-User |
+| `llms.txt` | ✅ new version |
+| `og-default.jpg`, IndexNow key | ✅ served (image/jpeg, text/plain) |
+| IndexNow | ✅ 115 URLs submitted — HTTP 202 Accepted |
+| Project gallery and detail pages | ✅ `noindex` (sample copy), out of sitemap |
+| Homepage in a browser | ✅ 8 sections, 1 H1, 1 canonical, gtag loads on idle |
+
+**Additional fixes made before launch (from §3 and §4):**
+
+| Fix | Result (Lighthouse, local production build) |
+|---|---|
+| Fonts: CSS `@import` of 18 weights → preconnected `<link>` with 6 weights | Faster first render |
+| gtag loaded on browser idle; duplicate first `page_view` removed | Less main-thread blocking |
+| Hero no longer fades in (LCP not delayed) | Faster LCP |
+| `react-toastify` moved into the Contact page chunk | Main JS 364 KB → 333 KB; CSS 88 KB → 74 KB |
+| Static shell hidden for JS browsers; full-height route loader | CLS 0 on all tested pages |
+| Descriptive link text (no "Learn more") | SEO 100 |
+| Button contrast (`brand-primary-700`, green-700), tap targets, heading order, select labels, inline link underline | Accessibility 100 |
+| Arabic pages: quick answers + 2 FAQs each | All 115 indexable pages have a quick answer |
+| Hub pages (products, blog, location, safety): quick answers | Same as above |
+
+**Lighthouse after fixes (mobile, local build):** SEO **100**, Accessibility **100**, Best Practices **100**, CLS **0** on home, service, blog, location, contact, About, cuplock, FAQ and Arabic pages. Performance **62–83** depending on the page and run (was 52); desktop 99.
+
+**Still open (cannot be done in code):**
+- GSC: sitemap resubmit, indexing requests, Performance export
+- GA4: admin cleanup and key events
+- Bing Webmaster import
+- GBP: updates and reviews
+- Directory citations
+- LinkedIn URL
+- Real project content (to re-enable indexing of project pages: set `PROJECT_DETAILS_NOINDEX = false` in `src/data/routeMeta.js`)
+- Further mobile LCP gains (would need server-side rendering/hydration; optional)
+
+Start with §5.2–§5.3 (GSC) today.
+
+---
+
+## 0. Executive summary (pre-launch audit, 9 Nov 2026 — historical)
+
+> At audit time, the November SEO, AEO and homepage work was complete in the codebase but not live. **Resolved — see the Launch update above.**
 
 | Question | Answer | Evidence |
 |---|---|---|
