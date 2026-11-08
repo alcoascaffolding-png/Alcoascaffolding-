@@ -16,7 +16,7 @@ const LEVELS = [12.5, 25, 37.5, 50, 62.5, 75, 87.5];
 const ScaffoldIllustration = () => (
   <div
     aria-hidden="true"
-    className="relative aspect-[4/3] w-full max-w-xs rounded-3xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 sm:max-w-md lg:max-w-lg"
+    className="relative aspect-[4/3] w-full max-w-[240px] rounded-3xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900 sm:max-w-xs lg:max-w-lg"
   >
     <div className="absolute inset-0 flex items-center justify-center">
       <div className="relative h-3/4 aspect-[3/4]">
@@ -38,8 +38,8 @@ const ScaffoldIllustration = () => (
 
 const Hero = () => (
   <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-gray-900 dark:via-slate-900 dark:to-gray-900">
-    <div className="container-custom relative py-12 sm:py-16 lg:py-20">
-      <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+    <div className="container-custom relative py-8 sm:py-12 lg:py-20">
+      <div className="grid grid-cols-1 items-center gap-6 sm:gap-8 lg:grid-cols-2 lg:gap-16">
         <div className="text-center lg:text-left">
           <p className="mb-4 inline-block rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300 sm:text-sm">
             Alcoa Scaffolding UAE
@@ -93,7 +93,7 @@ const Hero = () => (
           </dl>
         </div>
 
-        <div className="flex justify-center lg:justify-end">
+        <div className="order-first flex justify-center lg:order-none lg:justify-end">
           <ScaffoldIllustration />
         </div>
       </div>
