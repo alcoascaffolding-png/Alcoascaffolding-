@@ -221,10 +221,18 @@ for (const match of appSource.matchAll(/<Route path="([^"]+)" element=\{<(\w+)/g
   if (!modelPaths.has(routePath)) errors.push(`App route ${routePath} has no prerendered page`)
 }
 
-const vercel = JSON.parse(fs.readFileSync(path.join(rootDir, 'vercel.json'), 'utf8'))
-const vercelSources = new Set((vercel.redirects || []).map((r) => r.source))
-for (const source of redirectSources) {
-  if (!vercelSources.has(source)) errors.push(`redirect ${source} missing from vercel.json`)
+// Vercel deploys from the repo-root vercel.json; frontend/vercel.json is kept in sync for standalone deploys.
+for (const configPath of [path.join(rootDir, 'vercel.json'), path.join(rootDir, '..', 'vercel.json')]) {
+  if (!fs.existsSync(configPath)) continue
+  const vercel = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+  const label = path.relative(path.join(rootDir, '..'), configPath)
+  const vercelSources = new Set((vercel.redirects || []).map((r) => r.source))
+  for (const source of redirectSources) {
+    if (!vercelSources.has(source)) errors.push(`redirect ${source} missing from ${label}`)
+  }
+  if ((vercel.rewrites || []).some((r) => r.destination === '/index.html')) {
+    errors.push(`${label} has a catch-all rewrite to /index.html — unknown URLs would return 200 instead of 404`)
+  }
 }
 
 // ---------- write ----------

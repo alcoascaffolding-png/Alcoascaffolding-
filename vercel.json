@@ -3,17 +3,12 @@
   "outputDirectory": "frontend/dist",
   "installCommand": "npm install --prefix frontend",
   "framework": null,
+  "trailingSlash": false,
   "build": {
     "env": {
       "NODE_OPTIONS": "--max-old-space-size=8192"
     }
   },
-  "rewrites": [
-    {
-      "source": "/((?!sitemap\\.xml|robots\\.txt|llms\\.txt|llms-full\\.txt|logo\\.jpeg|assets/).*)",
-      "destination": "/index.html"
-    }
-  ],
   "redirects": [
     {
       "source": "/alcoa-scaffolding",
@@ -36,21 +31,57 @@
       "permanent": true
     },
     {
+      "source": "/services/aluminium-scaffolding",
+      "destination": "/products/aluminium-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/safety-inspections",
+      "destination": "/services/inspections",
+      "permanent": true
+    },
+    {
+      "source": "/services/installation-setup",
+      "destination": "/services/installation",
+      "permanent": true
+    },
+    {
+      "source": "/services/steel-cup-lock-scaffolding",
+      "destination": "/products/steel-cuplock-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/single-width-mobile-towers",
+      "destination": "/services/single-width-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/double-width-mobile-towers",
+      "destination": "/services/double-width-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/bridgeway-mobile-towers",
+      "destination": "/services/bridge-scaffolding",
+      "permanent": true
+    },
+    {
+      "source": "/services/folding-mobile-towers",
+      "destination": "/services/folding-tower",
+      "permanent": true
+    },
+    {
+      "source": "/services/stairway-mobile-towers",
+      "destination": "/services/stairway-scaffolding",
+      "permanent": true
+    },
+    {
       "source": "/blog/scaffolding-rental-cost-dubai-2026",
       "destination": "/blog/scaffolding-rental-cost-abu-dhabi-2026",
       "permanent": true
     }
   ],
   "headers": [
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
     {
       "source": "/assets/(.*)",
       "headers": [
