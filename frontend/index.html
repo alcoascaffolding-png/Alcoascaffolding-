@@ -4,16 +4,32 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/jpeg" href="/logo.jpeg" />
-  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZP0M0V7FRC"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" />
+
+  <!-- Google tag (gtag.js): queued immediately, script loaded when the page is idle -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-ZP0M0V7FRC');
+    gtag('config', 'G-ZP0M0V7FRC', { send_page_view: false });
+    (function () {
+      var load = function () {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-ZP0M0V7FRC';
+        document.head.appendChild(s);
+      };
+      var schedule = function () {
+        if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 4000 });
+        else setTimeout(load, 2000);
+      };
+      if (document.readyState === 'complete') schedule();
+      else window.addEventListener('load', schedule);
+    })();
   </script>
 
   <!-- Google Search Console Verification -->

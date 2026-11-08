@@ -5,7 +5,7 @@ export const locationPages = {
     slug: 'scaffolding-rental-abu-dhabi',
     city: 'Abu Dhabi',
     title: 'Scaffolding Rental Abu Dhabi | Musaffah 37 | Alcoa UAE',
-    h1: 'Scaffolding Rental in Abu Dhabi, UAE',
+    h1: 'Scaffolding Rental Abu Dhabi, UAE',
     description:
       'Scaffolding rental Abu Dhabi — aluminium towers, cuplock & erection crews from Musaffah 37. Industrial & commercial access. Free quote from Alcoa.',
     keywords:
@@ -28,6 +28,30 @@ export const locationPages = {
     delivery: `Musaffah pickup available ${OPENING_HOURS_SUMMARY}. Abu Dhabi island and industrial deliveries arranged from Musaffah 37 — confirm ETA on your quote.`,
     testimonial:
       'Gulf Build contractors Abu Dhabi: "We hire cuplock and props from Alcoa — Musaffah warehouse stock means predictable turnaround and documentation when we need it."',
+    primaryKeyword: 'Scaffolding Rental Abu Dhabi',
+    quickAnswer: `Alcoa rents scaffolding across Abu Dhabi from its warehouse at ${STREET_ADDRESS_SHORT}: aluminium mobile towers, steel cuplock, ladders and accessories on daily, weekly or monthly hire, with optional erection and inspection. Delivery covers the islands, mainland, KIZAD and the western region.`,
+    faq: [
+      {
+        q: 'Where can I rent scaffolding in Abu Dhabi?',
+        a: `From Alcoa's Musaffah 37 warehouse (${STREET_ADDRESS_SHORT}) with collection or delivery to sites across Abu Dhabi. Call ${PHONE_PRIMARY}.`,
+      },
+      {
+        q: 'Do you deliver scaffolding to Yas, Saadiyat and Reem Island?',
+        a: 'Yes. Island deliveries are scheduled from Musaffah 37; share your site access and unloading window when you book.',
+      },
+      {
+        q: 'Can you deliver to Ruwais and the western region?',
+        a: 'Yes, with a quoted lead time. Longer-distance deliveries are planned as consolidated loads.',
+      },
+      {
+        q: 'Which scaffolding is most rented in Abu Dhabi?',
+        a: 'Single- and double-width aluminium towers for MEP and facade access, steel cuplock for industrial decks, and ladders for short jobs.',
+      },
+      {
+        q: 'Is erection included with scaffolding rental in Abu Dhabi?',
+        a: 'Erection and dismantling are optional and quoted separately, so you can hire equipment only or a full-service package.',
+      },
+    ],
   },
   musaffah: {
     slug: 'scaffolding-rental-musaffah',
@@ -54,6 +78,26 @@ export const locationPages = {
     delivery: `Walk-in warehouse pickup, ${OPENING_HOURS_SUMMARY}. Musaffah 37 local delivery arranged on confirmed orders.`,
     testimonial:
       'Musaffah workshop owner: "We pick up ladders and base jacks from Alcoa the same morning — local Musaffah 37 warehouse, straightforward process."',
+    primaryKeyword: 'Aluminium Scaffolding Musaffah',
+    quickAnswer: `Alcoa's aluminium scaffolding warehouse is inside Musaffah 37 at ${STREET_ADDRESS}. Musaffah contractors can walk in ${OPENING_HOURS_SUMMARY} to collect aluminium towers, cuplock components, couplers and ladders, or book local delivery. Phone / WhatsApp ${PHONE_PRIMARY}.`,
+    faq: [
+      {
+        q: 'Where is the scaffolding warehouse in Musaffah?',
+        a: `${STREET_ADDRESS}, Abu Dhabi. Search "Alcoa Aluminium Scaffolding Musaffah" on Google Maps for directions.`,
+      },
+      {
+        q: 'Can I collect scaffolding from Musaffah myself?',
+        a: `Yes. Walk-in collection is available ${OPENING_HOURS_SUMMARY}. Call ahead so items are prepared.`,
+      },
+      {
+        q: 'Do you deliver within Musaffah and to ICAD?',
+        a: 'Yes. Local Musaffah, ICAD and KIZAD deliveries are arranged on confirmed orders.',
+      },
+      {
+        q: 'Is it Musaffah or Mussafah?',
+        a: 'Both spellings refer to the same Abu Dhabi industrial area. Alcoa is in Musaffah 37.',
+      },
+    ],
   },
   kizad: {
     slug: 'scaffolding-rental-kizad',
@@ -79,6 +123,23 @@ export const locationPages = {
     delivery: 'Musaffah 37 to KIZAD deliveries arranged for confirmed in-stock orders — confirm cut-off times when booking.',
     testimonial:
       'KIZAD site manager: "Alcoa delivered cuplock and towers to our KIZAD site with the documentation we needed for site access."',
+    primaryKeyword: 'Scaffolding Rental KIZAD',
+    quickAnswer:
+      'Alcoa provides scaffolding rental in KIZAD (Khalifa Industrial Zone Abu Dhabi) from its nearby Musaffah 37 warehouse — steel cuplock, aluminium towers, prop jacks and pipe, with erection crews and inspection support for industrial sites.',
+    faq: [
+      {
+        q: 'Do you deliver scaffolding to KIZAD?',
+        a: 'Yes. KIZAD is served directly from Musaffah 37. Share your plot, gate pass and unloading rules when you book.',
+      },
+      {
+        q: 'What documents do KIZAD sites usually ask for?',
+        a: 'Commonly a delivery note and load list, erection completion and inspection records, and crew details for site induction. Confirm your tenant or main-contractor requirements.',
+      },
+      {
+        q: 'Which scaffolding suits KIZAD industrial work?',
+        a: 'Steel cuplock for heavy decks and shutdown access; aluminium towers for lighter MEP and maintenance tasks.',
+      },
+    ],
   },
   'yas-island': {
     slug: 'scaffolding-hire-yas-island',
@@ -103,6 +164,23 @@ export const locationPages = {
     delivery: 'Yas Island deliveries from Musaffah 37 — confirm slot when you place the order.',
     testimonial:
       'Yas Island fit-out contractor: "Towers arrived ready for our MEP access window — coordination from Musaffah was simple."',
+    primaryKeyword: 'Scaffolding Hire Yas Island',
+    quickAnswer:
+      'Alcoa provides scaffolding hire on Yas Island for construction, facade, MEP and hospitality fit-out — mainly lightweight aluminium mobile towers, plus cuplock and ladders — delivered from Musaffah 37 with optional erection crews.',
+    faq: [
+      {
+        q: 'Can you deliver scaffolding to Yas Island hotels and venues?',
+        a: 'Yes. Deliveries are booked into the site access window; aluminium towers are often preferred indoors because they move easily between workfaces.',
+      },
+      {
+        q: 'Can Saadiyat Island be served on the same delivery?',
+        a: 'Often yes, when schedules align — ask when you request a Yas Island quote.',
+      },
+      {
+        q: 'Do you have fiberglass ladders for electrical work on Yas?',
+        a: 'Yes. Non-conductive fiberglass ladders are available for hire or sale.',
+      },
+    ],
   },
   'near-me': {
     slug: 'scaffolding-near-me-uae',
@@ -122,6 +200,22 @@ export const locationPages = {
     delivery: 'Nearest practical depot: Musaffah 37, Abu Dhabi. Delivery ETAs quoted per location.',
     testimonial:
       'Abu Dhabi facility team: "WhatsApp quote with our pin — clear options for towers and ladders the same day we enquired."',
+    primaryKeyword: 'Scaffolding Near Me',
+    quickAnswer: `If you are searching for scaffolding near you in the UAE, Alcoa's only warehouse is in Musaffah 37, Abu Dhabi (${STREET_ADDRESS_SHORT}). Send your map pin on WhatsApp ${PHONE_PRIMARY} for stock and a delivery estimate to your site anywhere in the UAE.`,
+    faq: [
+      {
+        q: 'Where is the nearest Alcoa scaffolding depot?',
+        a: `Alcoa has one warehouse: ${STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi. Deliveries to other emirates are dispatched from there.`,
+      },
+      {
+        q: 'How do I find scaffolding near me quickly?',
+        a: `WhatsApp your location pin, equipment type, height and duration to ${PHONE_PRIMARY}. The team confirms stock and delivery timing.`,
+      },
+      {
+        q: 'Do you have branches in Dubai or Sharjah?',
+        a: 'No. Alcoa serves Dubai, Sharjah and the other emirates by delivery from Musaffah 37.',
+      },
+    ],
   },
 };
 

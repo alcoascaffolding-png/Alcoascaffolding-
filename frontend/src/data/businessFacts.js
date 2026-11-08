@@ -92,7 +92,9 @@ export const AREA_SERVED = [
   'United Arab Emirates',
 ];
 
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/logo.jpeg`;
+export const LOGO_URL = `${SITE_URL}/logo.jpeg`;
+/** 1200x630 share card built from the logo by scripts/generate-og-image.mjs */
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
 
 /**
  * Fields that must NOT be published as facts until ops confirms.

@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import { ROUTE_META } from '../data/routeMeta';
 
 const ProjectGallery = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -170,10 +171,11 @@ const ProjectGallery = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Projects Gallery — UAE Construction Projects by Alcoa"
-        description="View Alcoa's portfolio of successful scaffolding projects across UAE. Heritage buildings, commercial towers, industrial facilities, and residential projects in Abu Dhabi, United Arab Emirates and Musaffah."
-        keywords="scaffolding projects UAE, scaffolding portfolio Abu Dhabi, scaffolding case studies Abu Dhabi, construction scaffolding gallery UAE, Alcoa projects UAE"
+        title={ROUTE_META['/projects'].title}
+        description={ROUTE_META['/projects'].description}
         canonical="/projects"
+        pageType="CollectionPage"
+        noindex={ROUTE_META['/projects'].noindex}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
@@ -196,7 +198,7 @@ const ProjectGallery = () => {
               <Link to="/contact-us" className="btn-primary">
                 Start Your Project
               </Link>
-              <Link to="/services" className="btn-secondary">
+              <Link to="/construction-scaffolding-uae" className="btn-secondary">
                 Our Services
               </Link>
             </div>
@@ -469,7 +471,7 @@ const ProjectGallery = () => {
               <Link to="/contact-us" className="btn-secondary bg-white text-primary-600 hover:bg-gray-100 border-primary-600 hover:border-primary-700">
                 Start Your Project
               </Link>
-              <Link to="/services" className="btn-secondary border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white hover:border-primary-700">
+              <Link to="/construction-scaffolding-uae" className="btn-secondary border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white hover:border-primary-700">
                 Explore Services
               </Link>
             </div>

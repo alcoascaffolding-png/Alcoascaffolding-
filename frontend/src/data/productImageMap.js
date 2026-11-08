@@ -12,7 +12,7 @@ import msPipe from '../assets/product images/MS-Pipe.jpg.jpeg';
 import uHeadJack from '../assets/product images/adjustable-u-head-jacks.jpg.jpeg';
 import swivelBaseJack from '../assets/product images/rocking or swvivwl base plate jack.webp';
 import woodenPlanks from '../assets/product images/wooden plank.webp';
-import doubleCoupler from '../assets/product images/doubal clamp.png';
+import doubleCoupler from '../assets/product images/doubal clamp.png?w=800&format=webp';
 import boardRetainingCoupler from '../assets/product images/brc clamp.webp';
 import swivelCoupler from '../assets/product images/swivel clamp.jpg.jpeg';
 import putlogCoupler from '../assets/product images/singal clamp.jpg.jpeg';

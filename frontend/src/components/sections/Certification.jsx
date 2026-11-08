@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FiAward, FiCheck, FiShield, FiExternalLink } from 'react-icons/fi';
-import certificateImg from '../../assets/certificate.jpg';
+import certificateImg from '../../assets/certificate.jpg?w=900&format=webp';
 
 const Certification = () => {
   const highlights = [
@@ -167,6 +167,9 @@ const Certification = () => {
                   alt="ISO 9001:2015 Certificate of Registration for Alcoa Aluminium Scaffolding L.L.C - S.P.C"
                   className="w-full h-auto object-contain"
                   loading="lazy"
+                  decoding="async"
+                  width={900}
+                  height={1274}
                 />
               </motion.div>
               <div className="absolute -bottom-3 -right-3 w-full h-full rounded-xl bg-brand-primary-500/10 dark:bg-brand-primary-400/10 -z-10" />

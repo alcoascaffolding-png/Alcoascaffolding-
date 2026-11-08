@@ -1,196 +1,118 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { FiAward, FiRepeat, FiTool, FiTruck, FiArrowRight, FiPlus } from 'react-icons/fi';
 import Hero from '../components/sections/Hero';
-import Features from '../components/sections/Features';
-import About from '../components/sections/About';
-import Services from '../components/sections/Services';
-import Certification from '../components/sections/Certification';
-import ServiceCategories from '../components/sections/ServiceCategories';
-import Projects from '../components/sections/Projects';
+import ProductCategoryCards from '../components/sections/ProductCategoryCards';
+import ServiceHighlights from '../components/sections/ServiceHighlights';
+import ServiceAreas from '../components/sections/ServiceAreas';
 import Testimonials from '../components/sections/Testimonials';
 import ContactCTA from '../components/sections/ContactCTA';
 import SEOHead from '../components/common/SEOHead';
+import QuickAnswer from '../components/common/QuickAnswer';
 import {
   buildLocalBusinessSchema,
   buildOrganizationSchema,
   buildWebSiteSchema,
 } from '../utils/schemaBuilders';
-import { SITE_URL, PHONE_PRIMARY, STREET_ADDRESS_SHORT, ISO_CERT } from '../data/businessFacts';
-import { Link } from 'react-router-dom';
+import { SITE_URL } from '../data/businessFacts';
+import { ROUTE_META, HOME_FAQ } from '../data/routeMeta';
 
-const homeFaq = [
-  {
-    q: 'Who supplies aluminium scaffolding in Abu Dhabi?',
-    a: `Alcoa Aluminium Scaffolding L.L.C - S.P.C supplies aluminium scaffolding from ${STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi. Call ${PHONE_PRIMARY} for rental or purchase quotes.`,
-  },
-  {
-    q: 'Where can I rent aluminium scaffolding in Abu Dhabi?',
-    a: `Rent aluminium towers and access equipment from our Musaffah 37 warehouse, or request delivery across Abu Dhabi. See our scaffolding rental page or call ${PHONE_PRIMARY}.`,
-  },
-  {
-    q: 'Where can I buy aluminium scaffolding in Abu Dhabi?',
-    a: 'Alcoa sells aluminium scaffolding systems, ladders, and accessories from Musaffah. Visit our supplier page or scaffolding for sale page for purchase options.',
-  },
-  {
-    q: 'What types of aluminium scaffolding are available?',
-    a: 'Single- and double-width mobile towers, folding towers, stairway towers, bridgeway systems, rolling platforms, cantilever configurations, plus ladders and related accessories — for rent or sale.',
-  },
-  {
-    q: 'How much does scaffolding rental cost in Abu Dhabi?',
-    a: `Scaffolding rental is quoted per equipment type, height, quantity, and hire duration (daily, weekly, or monthly). Contact Alcoa at ${PHONE_PRIMARY} for a free site-specific AED quote.`,
-  },
-  {
-    q: 'Is Alcoa an ISO certified scaffolding company?',
-    a: `Yes. Alcoa is ${ISO_CERT.standard} certified (certificate ${ISO_CERT.number}) for manufacturing, supply, erection, dismantling, rental and maintenance of aluminium/steel scaffolding and ladders.`,
-  },
-  {
-    q: 'Do you deliver scaffolding from Musaffah?',
-    a: `Yes. Our Musaffah 37 warehouse (${STREET_ADDRESS_SHORT}) dispatches across Abu Dhabi industrial zones, Yas Island, Saadiyat, KIZAD, Reem Island, and Dubai. Warehouse pickup is available Mon–Sat 8am–6pm.`,
-  },
-  {
-    q: 'Where is Alcoa Scaffolding located?',
-    a: `Alcoa Aluminium Scaffolding LLC is based at ${STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi, UAE. Call ${PHONE_PRIMARY} or visit our contact page for maps and directions.`,
-  },
+const meta = ROUTE_META['/'];
+
+const hreflang = [
+  { hrefLang: 'en-AE', href: `${SITE_URL}/` },
+  { hrefLang: 'ar-AE', href: `${SITE_URL}/ar` },
+  { hrefLang: 'x-default', href: `${SITE_URL}/` },
 ];
 
-const Home = () => {
-  const hreflang = [
-    { hrefLang: 'en-AE', href: `${SITE_URL}/` },
-    { hrefLang: 'ar-AE', href: `${SITE_URL}/ar` },
-    { hrefLang: 'x-default', href: `${SITE_URL}/` },
-  ];
+const homeJsonLd = [buildOrganizationSchema(), buildLocalBusinessSchema(), buildWebSiteSchema()];
 
-  const homeJsonLd = [
-    buildOrganizationSchema(),
-    buildLocalBusinessSchema({
-      description:
-        'Aluminium scaffolding manufacturer, supplier, rental and access equipment company in Musaffah 37, Abu Dhabi — serving Dubai and the UAE. ISO 9001:2015 certified.',
-      serviceType: 'Aluminium Scaffolding Supplier',
-    }),
-    buildWebSiteSchema(),
-  ];
+const TRUST_POINTS = [
+  { icon: FiAward, title: 'ISO 9001:2015 certified', text: 'Manufacturing, supply, rental and erection scope.' },
+  { icon: FiRepeat, title: 'Rent or buy', text: 'Daily, weekly and monthly hire, or outright purchase.' },
+  { icon: FiTool, title: 'Installation crews', text: 'Erection, modification and dismantling on site.' },
+  { icon: FiTruck, title: 'UAE-wide delivery', text: 'From Musaffah 37 to Abu Dhabi, Dubai and beyond.' },
+];
 
-  return (
-    <div className="min-h-screen">
-      <SEOHead
-        title="Aluminium Scaffolding Abu Dhabi | Alcoa UAE"
-        description="Aluminium scaffolding Abu Dhabi from Alcoa Musaffah 37 — supplier, rental & towers for UAE projects. ISO 9001:2015. Free quote: +971 58 137 5601."
-        keywords="aluminium scaffolding Abu Dhabi, aluminium scaffolding UAE, scaffolding company Abu Dhabi, aluminium scaffolding supplier Abu Dhabi, scaffolding Musaffah, aluminium scaffold tower Abu Dhabi"
-        canonical="/"
-        jsonLd={homeJsonLd}
-        faq={homeFaq}
-        alternates={hreflang}
-      />
-      <Hero />
-      <Features />
+const Home = () => (
+  <div className="min-h-screen">
+    <SEOHead
+      title={meta.title}
+      description={meta.description}
+      canonical="/"
+      jsonLd={homeJsonLd}
+      faq={HOME_FAQ}
+      alternates={hreflang}
+    />
 
-      <section className="section-padding py-12 bg-white dark:bg-surface-dark">
-        <div className="container-custom max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Aluminium scaffolding in Abu Dhabi — supplier, rental & towers
-          </h2>
-          <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-            Alcoa Aluminium Scaffolding L.L.C - S.P.C provides aluminium scaffolding in Abu Dhabi from our
-            warehouse in Musaffah 37. Contractors hire or buy mobile towers, ladders and access equipment for
-            construction, building maintenance, industrial sites and facility work across Abu Dhabi and the UAE.
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-            Looking for aluminium scaffolding near Musaffah, Yas Island, KIZAD or Dubai delivery? We quote by
-            tower type, height, quantity and duration — daily, weekly or monthly. ISO 9001:2015 processes cover
-            manufacturing, supply, erection, dismantling, rental and maintenance.
-          </p>
-          <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300 mb-6">
-            <li>
-              <Link to="/products/aluminium-scaffolding" className="text-blue-600 hover:underline">
-                Aluminium scaffold towers
-              </Link>{' '}
-              — single width, double width, folding and stairway systems
-            </li>
-            <li>
-              <Link to="/services/rental" className="text-blue-600 hover:underline">
-                Aluminium scaffolding rental Abu Dhabi
-              </Link>{' '}
-              — hire from Musaffah 37 with optional delivery
-            </li>
-            <li>
-              <Link to="/aluminium-scaffolding-supplier-abu-dhabi" className="text-blue-600 hover:underline">
-                Aluminium scaffolding supplier Abu Dhabi
-              </Link>{' '}
-              — rent or buy equipment packages
-            </li>
-            <li>
-              <Link to="/scaffolding-rental-musaffah" className="text-blue-600 hover:underline">
-                Aluminium scaffolding Musaffah
-              </Link>{' '}
-              — walk-in warehouse pickup
-            </li>
-          </ul>
-          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-            Call {PHONE_PRIMARY} or{' '}
-            <Link to="/contact-us" className="text-blue-600 hover:underline">
-              request a free quote
-            </Link>
-            . Address: {STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi, UAE.
-          </p>
-        </div>
-      </section>
+    <Hero />
 
-      <About />
-      <Services />
-      <Projects />
-      <Testimonials />
-      <Certification />
-      <ServiceCategories />
-
-      <section className="section-padding py-12 bg-gray-50 dark:bg-gray-900">
-        <div className="container-custom max-w-4xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
-            Aluminium scaffolding FAQ — Abu Dhabi & UAE
-          </h2>
-          <div className="space-y-4">
-            {homeFaq.map((item) => (
-              <details
-                key={item.q}
-                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm group"
+    <section className="bg-white py-14 dark:bg-surface-dark sm:py-16">
+      <div className="container-custom">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Who we are</h2>
+            <QuickAnswer text={meta.quickAnswer} className="mt-5" />
+            <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold">
+              <Link to="/about-us" className="inline-flex items-center text-blue-600 hover:underline dark:text-blue-400">
+                About Alcoa
+                <FiArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+              <Link
+                to="/aluminium-scaffolding-supplier-abu-dhabi"
+                className="text-blue-600 hover:underline dark:text-blue-400"
               >
-                <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer list-none flex justify-between items-center">
-                  {item.q}
-                  <span className="text-blue-600 group-open:rotate-45 transition-transform text-xl leading-none">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
-              </details>
-            ))}
+                Aluminium scaffolding supplier Abu Dhabi
+              </Link>
+            </div>
           </div>
-          <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-            Explore{' '}
-            <Link to="/products/aluminium-scaffolding" className="text-blue-600 hover:underline">
-              aluminium scaffolding products
-            </Link>
-            ,{' '}
-            <Link to="/scaffolding-rental-abu-dhabi" className="text-blue-600 hover:underline">
-              scaffolding rental Abu Dhabi
-            </Link>
-            ,{' '}
-            <Link to="/aluminium-scaffolding-supplier-abu-dhabi" className="text-blue-600 hover:underline">
-              aluminium scaffolding supplier
-            </Link>
-            ,{' '}
-            <Link to="/scaffolding-rental-musaffah" className="text-blue-600 hover:underline">
-              Musaffah warehouse
-            </Link>
-            , and our{' '}
-            <Link to="/faq" className="text-blue-600 hover:underline">
-              FAQ page
-            </Link>
-            .
-          </p>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {TRUST_POINTS.map((point) => (
+              <li
+                key={point.title}
+                className="rounded-xl border border-gray-200 p-5 dark:border-gray-700 dark:bg-gray-800"
+              >
+                <point.icon className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+                <p className="mt-3 font-semibold text-gray-900 dark:text-white">{point.title}</p>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{point.text}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <ContactCTA />
-    </div>
-  );
-};
+    <ProductCategoryCards />
+    <ServiceHighlights />
+    <ServiceAreas />
+    <Testimonials />
+
+    <section className="bg-gray-50 py-14 dark:bg-gray-900 sm:py-16">
+      <div className="container-custom max-w-3xl">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">Frequently asked questions</h2>
+        <div className="mt-8 divide-y divide-gray-200 rounded-xl border border-gray-200 bg-white dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800">
+          {HOME_FAQ.map((item) => (
+            <details key={item.q} className="group p-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-gray-900 dark:text-white">
+                {item.q}
+                <FiPlus className="h-5 w-5 flex-shrink-0 text-blue-600 transition-transform group-open:rotate-45" aria-hidden="true" />
+              </summary>
+              <p className="mt-3 leading-relaxed text-gray-600 dark:text-gray-300">{item.a}</p>
+            </details>
+          ))}
+        </div>
+        <Link
+          to="/faq"
+          className="mt-6 inline-flex items-center text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
+        >
+          See all FAQs
+          <FiArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
+    </section>
+
+    <ContactCTA />
+  </div>
+);
 
 export default Home;

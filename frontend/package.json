@@ -11,9 +11,9 @@
     "dev:local": "vite --mode development",
     "dev:prod": "vite --mode production",
     "build": "vite build && node scripts/inject-prerender-meta.mjs",
-    "build:prerender": "vite build --mode prerender && node scripts/inject-prerender-meta.mjs",
+    "indexnow": "node scripts/indexnow-submit.mjs",
     "lighthouse": "npm run build && npx @lhci/cli autorun",
-    "build:dev": "vite build --mode development",
+    "build:dev": "vite build --mode development && node scripts/inject-prerender-meta.mjs",
     "build:prod": "vite build --mode production && node scripts/inject-prerender-meta.mjs",
     "lint": "eslint .",
     "preview": "vite preview"

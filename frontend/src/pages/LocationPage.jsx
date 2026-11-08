@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import { FiMapPin, FiCheck, FiPhone, FiMessageCircle } from 'react-icons/fi';
 import SEOHead from '../components/common/SEOHead';
 import Breadcrumbs from '../components/common/Breadcrumbs';
-import Services from '../components/sections/Services';
+import QuickAnswer from '../components/common/QuickAnswer';
+import ProductCategoryCards from '../components/sections/ProductCategoryCards';
 import ContactCTA from '../components/sections/ContactCTA';
 import { getLocationByKey } from '../data/locationPages';
+import { hreflangPairs } from '../data/arabicContent';
 import {
   PHONE_PRIMARY,
   PHONE_PRIMARY_E164,
@@ -16,44 +18,28 @@ import {
   SITE_URL,
   whatsappUrl,
 } from '../data/businessFacts';
-import { buildLocalBusinessSchema } from '../utils/schemaBuilders';
+import { buildServiceSchema } from '../utils/schemaBuilders';
 
 const LocationPage = ({ locationKey }) => {
   const page = getLocationByKey(locationKey);
 
   if (!page) return null;
 
-  const faq = [
-    {
-      q: `How much is scaffolding rental in ${page.city}?`,
-      a: `Scaffolding hire in ${page.city} is quoted per equipment type, height, quantity, and duration. Contact Alcoa at ${PHONE_PRIMARY} for a free AED quote including delivery.`,
-    },
-    {
-      q: `How fast can you deliver scaffolding to ${page.city}?`,
-      a: page.delivery,
-    },
-    {
-      q: `Which scaffolding types are available in ${page.city}?`,
-      a: 'Aluminium mobile towers, steel cuplock systems, ladders, couplers, prop jacks, wooden/steel planks, and GI/MS pipe. Sale and rental both available.',
-    },
-    {
-      q: `How do I get a quote for ${page.city}?`,
-      a: `Call ${PHONE_PRIMARY}, WhatsApp us, or use the contact form. Share location, tower height, quantity, and rental duration.`,
-    },
-    {
-      q: 'Where is the Alcoa warehouse?',
-      a: `${STREET_ADDRESS_SHORT}, Musaffah, Abu Dhabi. ${MAPS_SEARCH_URL}`,
-    },
-  ];
+  const path = `/${page.slug}`;
+  const pair = hreflangPairs[path];
+  const alternates = pair
+    ? [
+        { hrefLang: 'en-AE', href: pair.en },
+        { hrefLang: 'ar-AE', href: pair.ar },
+        { hrefLang: 'x-default', href: pair.en },
+      ]
+    : [];
 
-  const jsonLd = buildLocalBusinessSchema({
-    name: `Alcoa Scaffolding — ${page.city}`,
+  const jsonLd = buildServiceSchema({
+    name: page.h1,
     description: page.description,
-    url: `${SITE_URL}/${page.slug}`,
-    areaServed: [
-      { '@type': 'Place', name: page.city },
-      { '@type': 'Country', name: 'United Arab Emirates' },
-    ],
+    url: `${SITE_URL}${path}`,
+    areaServed: [page.city, 'United Arab Emirates'],
   });
 
   return (
@@ -61,19 +47,19 @@ const LocationPage = ({ locationKey }) => {
       <SEOHead
         title={page.title}
         description={page.description}
-        keywords={page.keywords}
-        canonical={`/${page.slug}`}
+        canonical={path}
         jsonLd={jsonLd}
-        faq={faq}
+        faq={page.faq}
+        alternates={alternates}
         breadcrumbs={[
           { name: 'Home', path: '/' },
-          { name: page.title, path: `/${page.slug}` },
+          { name: page.h1, path },
         ]}
       />
 
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16">
         <div className="container-custom max-w-4xl">
-          <Breadcrumbs items={[{ name: page.title, path: `/${page.slug}` }]} />
+          <Breadcrumbs items={[{ name: page.h1, path }]} />
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm mb-4">
               <FiMapPin className="w-4 h-4" />
@@ -82,6 +68,7 @@ const LocationPage = ({ locationKey }) => {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               {page.h1}
             </h1>
+            <QuickAnswer text={page.quickAnswer} className="mb-6" />
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
               {page.intro}
             </p>
@@ -154,13 +141,16 @@ const LocationPage = ({ locationKey }) => {
             </dl>
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               <Link to="/faq" className="text-blue-600 hover:underline">
-                FAQ
+                Scaffolding FAQ
               </Link>
               <Link to="/scaffolding-rental-uae" className="text-blue-600 hover:underline">
-                UAE coverage
+                Aluminium scaffolding UAE
               </Link>
               <Link to="/services/rental" className="text-blue-600 hover:underline">
-                Rental hub
+                Aluminium scaffolding rental
+              </Link>
+              <Link to="/services/folding-tower" className="text-blue-600 hover:underline">
+                Mobile scaffolding towers
               </Link>
             </div>
           </article>
@@ -174,7 +164,7 @@ const LocationPage = ({ locationKey }) => {
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             {STREET_ADDRESS_SHORT}.{' '}
-            <a href={MAPS_SEARCH_URL} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            <a href={MAPS_SEARCH_URL} target="_blank" rel="noopener noreferrer" className="text-blue-700 underline underline-offset-2 hover:text-blue-800">
               Open in Google Maps
             </a>
           </p>
@@ -195,7 +185,7 @@ const LocationPage = ({ locationKey }) => {
         <div className="container-custom max-w-4xl">
           <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">FAQ — {page.city}</h2>
           <div className="space-y-3 mb-8">
-            {faq.map((item) => (
+            {page.faq.map((item) => (
               <details
                 key={item.q}
                 className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
@@ -213,7 +203,10 @@ const LocationPage = ({ locationKey }) => {
         </div>
       </section>
 
-      <Services />
+      <ProductCategoryCards
+        title={`Scaffolding available in ${page.city}`}
+        subtitle="Rent or buy — delivered from our Musaffah 37 warehouse."
+      />
       <ContactCTA />
     </div>
   );

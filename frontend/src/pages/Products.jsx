@@ -13,6 +13,11 @@ import {
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import { ROUTE_META } from '../data/routeMeta';
+import QuickAnswer from '../components/common/QuickAnswer';
+import { SITE_URL } from '../data/businessFacts';
+
+const productsMeta = ROUTE_META['/aluminum-scaffolding-abu-dhabi'];
 
 const Products = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -173,10 +178,19 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Products UAE | Towers, Ladders & Cuplock | Alcoa"
-        description="Browse Alcoa scaffolding products from Musaffah 37 — aluminium towers, ladders, steel cuplock and couplers for rent or sale across Abu Dhabi and the UAE."
-        keywords="scaffolding products UAE, aluminium towers UAE, steel cuplock UAE, ladder rental Abu Dhabi, scaffolding equipment Musaffah"
+        title={productsMeta.title}
+        description={productsMeta.description}
         canonical="/aluminum-scaffolding-abu-dhabi"
+        pageType="CollectionPage"
+        alternates={[
+          { hrefLang: 'en-AE', href: `${SITE_URL}/aluminum-scaffolding-abu-dhabi` },
+          { hrefLang: 'ar-AE', href: `${SITE_URL}/ar/products` },
+          { hrefLang: 'x-default', href: `${SITE_URL}/aluminum-scaffolding-abu-dhabi` },
+        ]}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Products', path: '/aluminum-scaffolding-abu-dhabi' },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-24 transition-theme">
@@ -191,6 +205,7 @@ const Products = () => {
               Scaffolding Products
               <span className="text-gradient"> UAE</span>
             </h1>
+            <QuickAnswer text={productsMeta.quickAnswer} className="mb-6" />
             <p className="text-base sm:text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-6 sm:mb-8">
               Browse aluminium towers, ladders, steel cuplock and couplers from our Musaffah 37 warehouse.
               For aluminium scaffolding in Abu Dhabi overview, see our{' '}

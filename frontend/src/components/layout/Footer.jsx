@@ -29,7 +29,7 @@ const Footer = () => {
       title: 'Company',
       links: [
         { name: 'About Us', path: '/about-us' },
-        { name: 'Branches', path: '/branches' },
+        { name: 'Location', path: '/branches' },
         { name: 'Projects', path: '/projects' },
         { name: 'Safety', path: '/safety' },
         { name: 'Blog', path: '/blog' },
@@ -113,9 +113,9 @@ const Footer = () => {
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
             {footerSections.map((section) => (
               <div key={section.title}>
-                <h4 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wide">
+                <h2 className="font-bold text-gray-900 dark:text-white mb-4 text-sm uppercase tracking-wide">
                   {section.title}
-                </h4>
+                </h2>
                 <div className="space-y-2">
                   {section.links.map((link) => (
                     <Link
@@ -136,11 +136,11 @@ const Footer = () => {
           <div className="flex items-start space-x-3">
             <FiPhone className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <a href={`tel:${PHONE_PRIMARY_E164}`} className="font-medium hover:text-blue-600">
+              <a href={`tel:${PHONE_PRIMARY_E164}`} className="inline-block py-1.5 font-medium hover:text-blue-600">
                 {PHONE_PRIMARY}
               </a>
               <br />
-              <a href={`tel:${PHONE_SECONDARY_E164}`} className="font-medium hover:text-blue-600">
+              <a href={`tel:${PHONE_SECONDARY_E164}`} className="inline-block py-1.5 font-medium hover:text-blue-600">
                 {PHONE_SECONDARY}
               </a>
               <p className="text-xs text-gray-500 mt-1">{OPENING_HOURS_SUMMARY}</p>
@@ -149,11 +149,11 @@ const Footer = () => {
           <div className="flex items-start space-x-3">
             <FiMail className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <a href={`mailto:${EMAIL_SALES}`} className="font-medium hover:text-blue-600 break-all">
+              <a href={`mailto:${EMAIL_SALES}`} className="inline-block py-1.5 font-medium hover:text-blue-600 break-all">
                 {EMAIL_SALES}
               </a>
               <br />
-              <a href={`mailto:${EMAIL_INFO}`} className="font-medium hover:text-blue-600 break-all">
+              <a href={`mailto:${EMAIL_INFO}`} className="inline-block py-1.5 font-medium hover:text-blue-600 break-all">
                 {EMAIL_INFO}
               </a>
             </div>
@@ -165,7 +165,7 @@ const Footer = () => {
                 href={MAPS_SEARCH_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium hover:text-blue-600"
+                className="inline-block py-1.5 font-medium hover:text-blue-600"
               >
                 {STREET_ADDRESS_SHORT}
               </a>

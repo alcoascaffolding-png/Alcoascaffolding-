@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FiStar, 
-  FiChevronLeft, 
-  FiChevronRight,
-  FiMessageCircle,
-  FiAward,
-  FiUsers,
-  FiTrendingUp,
-  FiClock
-} from 'react-icons/fi';
+import { FiStar, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 const Testimonials = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -76,7 +67,7 @@ const Testimonials = () => {
       rating: 5,
       quote: "As a homeowner, I was initially concerned about having scaffolding installed. The Alcoa team was incredibly professional and respectful of our property. They explained everything clearly and completed the work efficiently.",
       project: 'Residential Renovation - Abu Dhabi',
-      projectValue: '$45K project',
+      projectValue: 'AED 165K project',
       avatar: 'LR',
       color: 'from-pink-400 to-pink-600'
     }
@@ -116,21 +107,12 @@ const Testimonials = () => {
   const current = testimonials[currentTestimonial];
 
   return (
-    <section className="section-padding bg-gray-50 dark:bg-gray-900 transition-theme">
+    <section className="bg-white py-14 dark:bg-surface-dark sm:py-16">
       <div className="container-custom">
-        {/* Section Header */}
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-          <div className="inline-flex items-center space-x-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full px-4 py-2 text-sm font-medium mb-4">
-            <FiMessageCircle className="w-4 h-4" />
-            <span>Client Testimonials</span>
-          </div>
-          
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-            What Our Clients Say
-          </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Don't just take our word for it. Here's what our valued clients 
-            have to say about their experience with Alcoa Scaffolding.
+        <div className="mb-10 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">What Our Clients Say</h2>
+          <p className="mx-auto mt-2 max-w-xl text-gray-600 dark:text-gray-300">
+            Feedback from contractors and facility teams we supply.
           </p>
         </div>
 
@@ -143,7 +125,7 @@ const Testimonials = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 lg:p-12 shadow-lg"
+              className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6 sm:p-8 lg:p-10 border border-gray-200 dark:border-gray-700"
             >
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-center">
                 {/* Client Info */}
@@ -217,42 +199,26 @@ const Testimonials = () => {
         </div>
 
         {/* Testimonial Indicators */}
-        <div className="flex justify-center space-x-2 mt-8">
+        <div className="flex justify-center gap-1 mt-6">
           {testimonials.map((_, index) => (
             <button
               key={index}
               onClick={() => goToTestimonial(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentTestimonial
-                  ? 'bg-blue-500'
-                  : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
-              }`}
+              className="flex h-8 w-8 items-center justify-center rounded-full"
               aria-label={`Go to testimonial ${index + 1}`}
-            />
+              aria-current={index === currentTestimonial ? 'true' : undefined}
+            >
+              <span
+                className={`block h-3 w-3 rounded-full transition-colors ${
+                  index === currentTestimonial
+                    ? 'bg-blue-600'
+                    : 'bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500'
+                }`}
+              />
+            </button>
           ))}
         </div>
 
-        {/* Statistics Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mt-12 sm:mt-16 pt-12 sm:pt-16 border-t border-gray-200 dark:border-gray-700">
-          {[
-            { number: '500+', label: 'Happy Clients', description: 'Satisfied customers' },
-            { number: '98%', label: 'Success Rate', description: 'Project completion' },
-            { number: '4.9/5', label: 'Average Rating', description: 'Client feedback' },
-            { number: '24/7', label: 'Support', description: 'Always available' }
-          ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1 sm:mb-2">
-                {stat.number}
-              </div>
-              <div className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                {stat.label}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                {stat.description}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );

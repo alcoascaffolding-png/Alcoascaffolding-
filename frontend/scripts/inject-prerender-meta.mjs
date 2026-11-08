@@ -1,269 +1,273 @@
 /**
- * Post-build: write per-route HTML shells with unique title/description/canonical
- * so crawlers see route-specific meta without Puppeteer.
- * Vercel serves these files when present (filesystem before SPA rewrite).
+ * Post-build: write a static HTML file for every indexable URL so crawlers and AI bots
+ * that do not run JavaScript get the real title, canonical, hreflang, JSON-LD and page
+ * content. Also writes sitemap.xml and a noindex 404.html, then runs SEO guards that
+ * fail the build on missing routes, homepage canonicals, keyword gaps or broken links.
+ *
+ * Head tags carry `data-prerender`; src/main.jsx removes them before React mounts so
+ * react-helmet-async (React 19 native hoisting) never produces duplicates.
  */
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { createServer } from 'vite'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const distDir = path.join(__dirname, '..', 'dist')
+const rootDir = path.join(__dirname, '..')
+const distDir = path.join(rootDir, 'dist')
 const indexPath = path.join(distDir, 'index.html')
 
-const SITE = 'https://alcoascaffolding.com'
-
-const routes = [
-  {
-    path: '/',
-    title: 'Aluminium Scaffolding Abu Dhabi | Alcoa UAE',
-    description:
-      'Aluminium scaffolding Abu Dhabi from Alcoa Musaffah 37 — supplier, rental & towers for UAE projects. ISO 9001:2015. Free quote: +971 58 137 5601.',
-    h1: 'Aluminium Scaffolding Abu Dhabi & United Arab Emirates',
-  },
-  {
-    path: '/scaffolding-rental-dubai',
-    title: 'Scaffolding Rental Dubai | Aluminium & Cuplock | Alcoa',
-    description:
-      'Scaffolding rental Dubai — aluminium towers, cuplock & ladders delivered from Musaffah 37. Free quote from Alcoa.',
-    h1: 'Scaffolding Rental in Dubai, UAE',
-  },
-  {
-    path: '/scaffolding-rental-abu-dhabi',
-    title: 'Scaffolding Rental Abu Dhabi | Musaffah 37 | Alcoa UAE',
-    description:
-      'Scaffolding rental Abu Dhabi — aluminium towers, cuplock & erection crews from Musaffah 37. Free quote from Alcoa.',
-    h1: 'Scaffolding Rental in Abu Dhabi, UAE',
-  },
-  {
-    path: '/scaffolding-rental-musaffah',
-    title: 'Aluminium Scaffolding Musaffah | Warehouse | Alcoa',
-    description:
-      'Aluminium scaffolding Musaffah — walk-in warehouse at Ar Rahmah 4 St., Musaffah 37. Call +971 58 137 5601.',
-    h1: 'Aluminium Scaffolding Musaffah, Abu Dhabi',
-  },
-  {
-    path: '/scaffolding-for-sale',
-    title: 'Scaffolding for Sale UAE | Aluminium & Cuplock | Alcoa',
-    description:
-      'Buy aluminium & steel scaffolding in UAE from Alcoa Musaffah 37. Request a sales quote.',
-    h1: 'Scaffolding for Sale in UAE',
-  },
-  {
-    path: '/scaffolding-rental-uae',
-    title: 'Aluminium Scaffolding UAE | Supplier & Rental | Alcoa',
-    description:
-      'Aluminium scaffolding UAE — supply, rental and mobile towers from Musaffah 37, Abu Dhabi. Free quote.',
-    h1: 'Aluminium Scaffolding Across the UAE',
-  },
-  {
-    path: '/faq',
-    title: 'Scaffolding FAQ UAE | Prices, Delivery & Hire | Alcoa',
-    description:
-      'Answers on scaffolding rental cost, delivery, 1-day hire, and how to book Alcoa from Musaffah 37.',
-    h1: 'Scaffolding Rental FAQ — Abu Dhabi, Dubai & UAE',
-  },
-  {
-    path: '/scaffolding-inspection-uae',
-    title: 'Scaffolding Inspection Abu Dhabi | UAE | Alcoa',
-    description:
-      'Scaffolding inspection Abu Dhabi — pre-use, periodic & post-alteration checks with written reports.',
-    h1: 'Scaffolding Inspection Services in Abu Dhabi & UAE',
-  },
-  {
-    path: '/scaffolding-manpower-supply',
-    title: 'Scaffolding Manpower Supply Abu Dhabi | Alcoa UAE',
-    description:
-      'Scaffolding manpower supply Abu Dhabi — erection & dismantling crews. Request a crew quote.',
-    h1: 'Scaffolding Manpower Supply in Abu Dhabi & UAE',
-  },
-  {
-    path: '/about-us',
-    title: 'About Alcoa Aluminium Scaffolding | Abu Dhabi UAE',
-    description:
-      'Alcoa Aluminium Scaffolding LLC — ISO 9001:2015 scaffolding supplier in Musaffah 37, Abu Dhabi.',
-    h1: 'About Alcoa Aluminium Scaffolding — Musaffah, Abu Dhabi',
-  },
-  {
-    path: '/contact-us',
-    title: 'Contact Alcoa Scaffolding | Abu Dhabi +971 58 137 5601',
-    description:
-      'Contact Alcoa Scaffolding in Musaffah 37, Abu Dhabi UAE. Call, WhatsApp, or visit our warehouse.',
-    h1: 'Contact Alcoa Scaffolding UAE',
-  },
-  {
-    path: '/services/rental',
-    title: 'Aluminium Scaffolding Rental Abu Dhabi | Alcoa',
-    description:
-      'Aluminium scaffolding rental Abu Dhabi — daily, weekly & monthly hire from Musaffah 37. Free quote.',
-    h1: 'Aluminium Scaffolding Rental Abu Dhabi',
-  },
-  {
-    path: '/products/aluminium-scaffolding',
-    title: 'Aluminium Scaffold Tower Abu Dhabi | Alcoa UAE',
-    description:
-      'Aluminium scaffold towers Abu Dhabi — mobile, folding & stairway systems for rent or sale from Musaffah 37.',
-    h1: 'Aluminium Scaffold Towers Abu Dhabi',
-  },
-  {
-    path: '/products/ladders',
-    title: 'Aluminium Ladder Supplier Abu Dhabi | Alcoa',
-    description:
-      'Aluminium ladder supplier Abu Dhabi — A-type, extension & industrial ladders from Musaffah 37.',
-    h1: 'Aluminium Ladder Supplier Abu Dhabi',
-  },
-  {
-    path: '/services/folding-tower',
-    title: 'Mobile Scaffolding Tower Abu Dhabi | Alcoa',
-    description:
-      'Mobile scaffolding tower Abu Dhabi — folding aluminium towers for rent & sale from Musaffah 37.',
-    h1: 'Mobile Scaffolding Tower Abu Dhabi',
-  },
-  {
-    path: '/services/stairway-scaffolding',
-    title: 'Stairway Scaffolding Abu Dhabi | Alcoa UAE',
-    description:
-      'Stairway scaffolding Abu Dhabi — aluminium stairway towers for hire & sale from Musaffah 37.',
-    h1: 'Stairway Scaffolding Abu Dhabi',
-  },
-  {
-    path: '/services/cantilever-scaffolding',
-    title: 'Cantilever Scaffolding Abu Dhabi | Alcoa UAE',
-    description:
-      'Cantilever scaffolding Abu Dhabi — aluminium systems for rent & sale from Musaffah 37.',
-    h1: 'Cantilever Scaffolding Abu Dhabi',
-  },
-  {
-    path: '/services/aluminium-rolling-platform',
-    title: 'Aluminium Rolling Platform Abu Dhabi | Alcoa',
-    description:
-      'Aluminium rolling platform Abu Dhabi — lightweight mobile platforms for rent & sale.',
-    h1: 'Aluminium Rolling Platform Abu Dhabi',
-  },
-  {
-    path: '/aluminium-scaffolding-supplier-abu-dhabi',
-    title: 'Aluminium Scaffolding Supplier Abu Dhabi | Alcoa',
-    description:
-      'Aluminium scaffolding supplier Abu Dhabi — towers, ladders & access equipment from Musaffah 37.',
-    h1: 'Aluminium Scaffolding Supplier Abu Dhabi',
-  },
-  {
-    path: '/aluminium-scaffolding-manufacturer-uae',
-    title: 'Aluminium Scaffolding Manufacturer UAE | Alcoa',
-    description:
-      'Aluminium scaffolding manufacturer UAE — ISO 9001:2015 scope from Musaffah 37, Abu Dhabi.',
-    h1: 'Aluminium Scaffolding Manufacturer UAE',
-  },
-  {
-    path: '/construction-scaffolding-uae',
-    title: 'Construction Scaffolding UAE | Rental & Erection | Alcoa',
-    description:
-      'Construction scaffolding UAE — rental, installation and delivery from Musaffah 37, Abu Dhabi.',
-    h1: 'Construction Scaffolding Services in UAE',
-  },
-  {
-    path: '/aluminum-scaffolding-abu-dhabi',
-    title: 'Scaffolding Products UAE | Towers, Ladders & Cuplock | Alcoa',
-    description:
-      'Browse Alcoa scaffolding products from Musaffah 37 — aluminium towers, ladders, steel cuplock and couplers for rent or sale.',
-    h1: 'Scaffolding Products UAE',
-  },
-  {
-    path: '/ar',
-    title: 'سقالات ألومنيوم أبوظبي | Alcoa الإمارات',
-    description:
-      'سقالات ألومنيوم أبوظبي من Alcoa في المصفح 37 — توريد وتأجير وأبراج متحركة. ISO 9001:2015.',
-    h1: 'سقالات ألومنيوم أبوظبي والإمارات',
-  },
-  {
-    path: '/ar/scaffolding-rental-abu-dhabi',
-    title: 'تأجير سقالات أبوظبي | Alcoa المصفح',
-    description: 'تأجير سقالات أبوظبي — أبراج ألومنيوم وcuplock من المصفح 37.',
-    h1: 'تأجير السقالات في أبوظبي',
-  },
-  {
-    path: '/ar/scaffolding-rental-musaffah',
-    title: 'سقالات ألومنيوم المصفح | مستودع Alcoa',
-    description: 'سقالات ألومنيوم المصفح 37 — مستودع في شارع الرحمة 4.',
-    h1: 'سقالات ألومنيوم في المصفح، أبوظبي',
-  },
-  {
-    path: '/ar/aluminium-scaffolding-supplier-abu-dhabi',
-    title: 'مورد سقالات ألومنيوم أبوظبي | Alcoa',
-    description: 'مورد سقالات ألومنيوم أبوظبي — أبراج وسلالم من المصفح 37.',
-    h1: 'مورد سقالات الألومنيوم في أبوظبي',
-  },
-]
-
-function ensureDir(dir) {
-  fs.mkdirSync(dir, { recursive: true })
-}
-
-function inject(html, route) {
-  const canonical = route.path === '/' ? SITE : `${SITE}${route.path}`
-  let out = html
-
-  out = out.replace(/<title>[^<]*<\/title>/i, `<title>${route.title}</title>`)
-  if (!/<title>/i.test(out)) {
-    out = out.replace('</head>', `<title>${route.title}</title>\n</head>`)
-  }
-
-  const metaBlock = `
-    <meta name="description" content="${route.description.replace(/"/g, '&quot;')}" />
-    <link rel="canonical" href="${canonical}" />
-    <meta property="og:title" content="${route.title.replace(/"/g, '&quot;')}" />
-    <meta property="og:description" content="${route.description.replace(/"/g, '&quot;')}" />
-    <meta property="og:url" content="${canonical}" />
-    <meta property="og:type" content="website" />
-  `
-
-  out = out.replace('</head>', `${metaBlock}</head>`)
-
-  const noscript = `
-    <noscript>
-      <main style="font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem">
-        <h1>${route.h1}</h1>
-        <p>${route.description}</p>
-        <p>Alcoa Aluminium Scaffolding LLC — Musaffah 37, Abu Dhabi, UAE. Call +971 58 137 5601.</p>
-        <p><a href="${SITE}/contact-us">Contact us</a> · <a href="${SITE}/faq">FAQ</a></p>
-      </main>
-    </noscript>
-  `
-  out = out.replace('<div id="root"></div>', `<div id="root"></div>${noscript}`)
-
-  return out
-}
+const MAX_TITLE = 60
+const MAX_DESCRIPTION = 160
 
 if (!fs.existsSync(indexPath)) {
   console.error('dist/index.html missing — run vite build first')
   process.exit(1)
 }
 
-const baseHtml = fs.readFileSync(indexPath, 'utf8')
+const server = await createServer({
+  root: rootDir,
+  configFile: path.join(rootDir, 'vite.config.js'),
+  server: { middlewareMode: true, hmr: false, watch: null },
+  appType: 'custom',
+  logLevel: 'error',
+  optimizeDeps: { noDiscovery: true, include: [] },
+})
 
-for (const route of routes) {
-  const html = inject(baseHtml, route)
-  if (route.path === '/') {
-    fs.writeFileSync(indexPath, html)
-    console.log('updated /')
-    continue
-  }
-  const dir = path.join(distDir, route.path.replace(/^\//, ''))
-  ensureDir(dir)
-  fs.writeFileSync(path.join(dir, 'index.html'), html)
-  console.log('wrote', route.path)
+let models
+let facts
+let redirects
+try {
+  ;({ getAllPageModels: models } = await server.ssrLoadModule('/src/seo/pageRegistry.js'))
+  models = models()
+  facts = await server.ssrLoadModule('/src/data/businessFacts.js')
+  ;({ SERVICE_REDIRECTS: redirects } = await server.ssrLoadModule('/src/seo/redirects.js'))
+} finally {
+  await server.close()
 }
 
-const notFound = inject(baseHtml, {
+const { SITE_URL, SITE_NAME, LEGAL_NAME, PHONE_PRIMARY, PHONE_PRIMARY_E164, EMAIL_SALES, FULL_ADDRESS, OPENING_HOURS_SUMMARY, ISO_CERT, DEFAULT_OG_IMAGE } = facts
+
+const esc = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+const jsonLd = (data) => JSON.stringify(data).replace(/</g, '\\u003c')
+
+const NAV_LINKS = [
+  { label: 'Home', path: '/' },
+  { label: 'Aluminium scaffold towers', path: '/products/aluminium-scaffolding' },
+  { label: 'Mobile scaffolding towers', path: '/services/folding-tower' },
+  { label: 'Steel cuplock scaffolding', path: '/products/steel-cuplock-scaffolding' },
+  { label: 'Aluminium ladders', path: '/products/ladders' },
+  { label: 'Scaffolding rental Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
+  { label: 'Installation & dismantling', path: '/services/installation' },
+  { label: 'About', path: '/about-us' },
+  { label: 'Blog', path: '/blog' },
+  { label: 'FAQ', path: '/faq' },
+  { label: 'Contact', path: '/contact-us' },
+  { label: 'العربية', path: '/ar' },
+]
+
+const SHELL_CSS = `.prerender-shell{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111827;line-height:1.6;max-width:960px;margin:0 auto;padding:1rem}.prerender-shell a{color:#1d4ed8}.prerender-shell nav ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:.5rem 1rem;font-size:.9rem}.prerender-shell .qa{border-left:4px solid #2563eb;background:#eff6ff;padding:.75rem 1rem;margin:1rem 0}.prerender-shell footer{border-top:1px solid #e5e7eb;margin-top:2rem;padding-top:1rem;font-size:.9rem}`
+
+const renderLinks = (links = []) =>
+  links.length
+    ? `<ul>${links.map((l) => `<li><a href="${esc(l.path)}">${esc(l.label)}</a></li>`).join('')}</ul>`
+    : ''
+
+const renderSection = (s) =>
+  [
+    s.h2 ? `<h2>${esc(s.h2)}</h2>` : '',
+    ...(s.paragraphs || []).map((p) => `<p>${esc(p)}</p>`),
+    s.bullets?.length ? `<ul>${s.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : '',
+    renderLinks(s.links),
+  ].join('')
+
+const renderBody = (m) => {
+  const isAr = m.lang === 'ar'
+  const crumbs = m.breadcrumbs?.length
+    ? `<nav aria-label="Breadcrumb"><ol>${m.breadcrumbs
+        .map((c) => `<li><a href="${esc(c.path)}">${esc(c.name)}</a></li>`)
+        .join('')}</ol></nav>`
+    : ''
+  const faq = m.faq?.length
+    ? `<section><h2>${isAr ? 'أسئلة شائعة' : 'Frequently asked questions'}</h2>${m.faq
+        .map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`)
+        .join('')}</section>`
+    : ''
+  return `<div class="prerender-shell"${isAr ? ' dir="rtl"' : ''}>
+<header><a href="/"><strong>${esc(SITE_NAME)}</strong></a><nav aria-label="Main">${renderLinks(NAV_LINKS)}</nav></header>
+<main>${crumbs}
+<h1>${esc(m.h1)}</h1>
+${m.quickAnswer ? `<p class="qa"><strong>${isAr ? 'إجابة سريعة:' : 'Quick answer:'}</strong> ${esc(m.quickAnswer)}</p>` : ''}
+${(m.intro || []).map((p) => `<p>${esc(p)}</p>`).join('')}
+${(m.sections || []).map(renderSection).join('\n')}
+${faq}
+${m.links?.length ? `<section><h2>${isAr ? 'روابط' : 'Related pages'}</h2>${renderLinks(m.links)}</section>` : ''}
+<p><a href="/contact-us">Get a free quote</a> · <a href="tel:${esc(PHONE_PRIMARY_E164)}">${esc(PHONE_PRIMARY)}</a></p>
+</main>
+<footer><p><strong>${esc(LEGAL_NAME)}</strong><br>${esc(FULL_ADDRESS)}<br>Phone / WhatsApp: <a href="tel:${esc(PHONE_PRIMARY_E164)}">${esc(PHONE_PRIMARY)}</a> · Email: <a href="mailto:${esc(EMAIL_SALES)}">${esc(EMAIL_SALES)}</a><br>Hours: ${esc(OPENING_HOURS_SUMMARY)} · ${esc(ISO_CERT.standard)} certified (${esc(ISO_CERT.number)})</p></footer>
+</div>`
+}
+
+const renderHead = (m, { noindex = false } = {}) => {
+  const tags = [
+    `<title data-prerender>${esc(m.title)}</title>`,
+    `<meta data-prerender name="description" content="${esc(m.description)}" />`,
+    noindex ? '' : `<link data-prerender rel="canonical" href="${esc(m.canonicalUrl)}" />`,
+    ...(m.alternates || []).map(
+      (a) => `<link data-prerender rel="alternate" hreflang="${esc(a.hrefLang)}" href="${esc(a.href)}" />`
+    ),
+    `<meta data-prerender name="robots" content="${noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1'}" />`,
+    `<meta data-prerender property="og:type" content="${esc(m.ogType || 'website')}" />`,
+    noindex ? '' : `<meta data-prerender property="og:url" content="${esc(m.canonicalUrl)}" />`,
+    `<meta data-prerender property="og:title" content="${esc(m.title)}" />`,
+    `<meta data-prerender property="og:description" content="${esc(m.description)}" />`,
+    `<meta data-prerender property="og:image" content="${esc(DEFAULT_OG_IMAGE)}" />`,
+    `<meta data-prerender property="og:image:width" content="1200" />`,
+    `<meta data-prerender property="og:image:height" content="630" />`,
+    `<meta data-prerender property="og:site_name" content="${esc(SITE_NAME)}" />`,
+    `<meta data-prerender property="og:locale" content="${m.lang === 'ar' ? 'ar_AE' : 'en_AE'}" />`,
+    `<meta data-prerender name="twitter:card" content="summary_large_image" />`,
+    `<meta data-prerender name="twitter:title" content="${esc(m.title)}" />`,
+    `<meta data-prerender name="twitter:description" content="${esc(m.description)}" />`,
+    `<meta data-prerender name="twitter:image" content="${esc(DEFAULT_OG_IMAGE)}" />`,
+    ...(m.schemas || []).map((s) => `<script data-prerender type="application/ld+json">${jsonLd(s)}</script>`),
+    // JS browsers get the identical content from React; hiding the static copy avoids a layout shift on swap.
+    `<script data-prerender>document.documentElement.classList.add('js')</script>`,
+    `<style data-prerender-shell>${SHELL_CSS}.js .prerender-shell{display:none}</style>`,
+  ]
+  return tags.filter(Boolean).join('\n    ')
+}
+
+const baseHtml = fs.readFileSync(indexPath, 'utf8')
+
+const renderPage = (m, opts) =>
+  baseHtml
+    .replace(/<html[^>]*>/i, `<html lang="${m.lang === 'ar' ? 'ar' : 'en'}" dir="${m.lang === 'ar' ? 'rtl' : 'ltr'}">`)
+    .replace('</head>', `    ${renderHead(m, opts)}\n  </head>`)
+    .replace('<div id="root"></div>', `<div id="root">${renderBody(m)}</div>`)
+
+// ---------- guards ----------
+const errors = []
+const warnings = []
+const normalize = (s = '') => s.toLowerCase().replace(/aluminum/g, 'aluminium').replace(/\s+/g, ' ')
+const modelPaths = new Set(models.map((m) => m.path))
+const redirectSources = new Set([
+  ...Object.keys(redirects).map((k) => `/services/${k}`),
+  '/products',
+  '/services',
+  '/aluminum-scaffolding-dubai',
+  '/alcoa-scaffolding',
+  '/blog/scaffolding-rental-cost-dubai-2026',
+])
+
+const seen = { title: new Map(), description: new Map(), keyword: new Map() }
+for (const m of models) {
+  if (!m.title) errors.push(`${m.path}: missing title`)
+  if (!m.h1) errors.push(`${m.path}: missing H1`)
+  if (!m.description) errors.push(`${m.path}: missing description`)
+  if (m.title.length > MAX_TITLE) errors.push(`${m.path}: title ${m.title.length} chars > ${MAX_TITLE} — "${m.title}"`)
+  if (m.description.length > MAX_DESCRIPTION)
+    errors.push(`${m.path}: description ${m.description.length} chars > ${MAX_DESCRIPTION}`)
+  if (m.path !== '/' && m.canonicalUrl === SITE_URL) errors.push(`${m.path}: canonical points to homepage`)
+
+  if (seen.title.has(m.title)) errors.push(`duplicate title "${m.title}" on ${seen.title.get(m.title)} and ${m.path}`)
+  seen.title.set(m.title, m.path)
+  if (seen.description.has(m.description)) warnings.push(`duplicate description on ${seen.description.get(m.description)} and ${m.path}`)
+  seen.description.set(m.description, m.path)
+
+  if (m.primaryKeyword) {
+    const kw = normalize(m.primaryKeyword)
+    for (const [field, value] of [['title', m.title], ['H1', m.h1], ['description', m.description]]) {
+      if (!normalize(value).includes(kw)) errors.push(`${m.path}: primary keyword "${m.primaryKeyword}" missing from ${field}`)
+    }
+    if (seen.keyword.has(kw)) errors.push(`primary keyword "${m.primaryKeyword}" used by ${seen.keyword.get(kw)} and ${m.path}`)
+    seen.keyword.set(kw, m.path)
+  }
+
+  if (m.money && (!m.quickAnswer || !m.faq?.length)) errors.push(`${m.path}: money page needs a quick answer and a visible FAQ`)
+
+  const links = [
+    ...(m.links || []),
+    ...(m.sections || []).flatMap((s) => s.links || []),
+    ...(m.breadcrumbs || []).map((c) => ({ path: c.path })),
+  ]
+  for (const link of links) {
+    const target = link.path.split(/[?#]/)[0]
+    if (!target.startsWith('/')) continue
+    if (redirectSources.has(target)) errors.push(`${m.path}: links to redirecting URL ${target}`)
+    else if (!modelPaths.has(target)) errors.push(`${m.path}: broken internal link ${target}`)
+  }
+}
+
+for (const m of models.filter((x) => x.money && x.primaryKeyword)) {
+  const kw = normalize(m.primaryKeyword)
+  for (const other of models) {
+    if (other.path !== m.path && other.kind !== 'blog' && normalize(other.h1).startsWith(kw)) {
+      warnings.push(`H1 of ${other.path} starts with "${m.primaryKeyword}" (primary for ${m.path})`)
+    }
+  }
+}
+
+const appSource = fs.readFileSync(path.join(rootDir, 'src', 'App.jsx'), 'utf8')
+for (const match of appSource.matchAll(/<Route path="([^"]+)" element=\{<(\w+)/g)) {
+  const [, routePath, element] = match
+  if (element === 'Navigate' || routePath.includes(':') || routePath === '*' || routePath === '/404') continue
+  if (!modelPaths.has(routePath)) errors.push(`App route ${routePath} has no prerendered page`)
+}
+
+const vercel = JSON.parse(fs.readFileSync(path.join(rootDir, 'vercel.json'), 'utf8'))
+const vercelSources = new Set((vercel.redirects || []).map((r) => r.source))
+for (const source of redirectSources) {
+  if (!vercelSources.has(source)) errors.push(`redirect ${source} missing from vercel.json`)
+}
+
+// ---------- write ----------
+for (const m of models) {
+  const html = renderPage(m, { noindex: m.noindex })
+  const file = m.path === '/' ? indexPath : path.join(distDir, m.path.replace(/^\//, ''), 'index.html')
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, html)
+  const written = fs.readFileSync(file, 'utf8')
+  if (!m.noindex && !written.includes(`rel="canonical" href="${esc(m.canonicalUrl)}"`)) errors.push(`${m.path}: canonical not written`)
+  if (!written.includes(`<h1>${esc(m.h1)}</h1>`)) errors.push(`${m.path}: H1 not written`)
+}
+
+const notFoundModel = {
   path: '/404',
+  lang: 'en',
   title: 'Page Not Found | Alcoa Aluminium Scaffolding',
   description: 'The page you requested was not found on alcoascaffolding.com.',
   h1: '404 — Page Not Found',
-})
-ensureDir(path.join(distDir, '404'))
-fs.writeFileSync(path.join(distDir, '404', 'index.html'), notFound.replace(
-  'name="robots" content="index, follow',
-  'name="robots" content="noindex, nofollow'
-))
+  intro: ['The page may have moved. Try one of the main pages below.'],
+  links: NAV_LINKS,
+}
+fs.writeFileSync(path.join(distDir, '404.html'), renderPage(notFoundModel, { noindex: true }))
+fs.rmSync(path.join(distDir, '404'), { recursive: true, force: true })
 
-console.log('Prerender meta injection complete:', routes.length, 'routes')
+const today = new Date().toISOString().slice(0, 10)
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${models
+  .filter((m) => !m.noindex)
+  .map((m) => `  <url><loc>${esc(m.canonicalUrl === SITE_URL ? `${SITE_URL}/` : m.canonicalUrl)}</loc><lastmod>${m.lastmod || today}</lastmod></url>`)
+  .join('\n')}
+</urlset>
+`
+fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemap)
+
+warnings.forEach((w) => console.warn('SEO warning:', w))
+if (errors.length) {
+  errors.forEach((e) => console.error('SEO error:', e))
+  console.error(`\nSEO guard failed with ${errors.length} error(s).`)
+  process.exit(1)
+}
+const indexable = models.filter((m) => !m.noindex).length
+console.log(
+  `Prerendered ${models.length} pages (${indexable} indexable, ${models.length - indexable} noindex) + 404.html + sitemap.xml (${warnings.length} warnings)`
+)

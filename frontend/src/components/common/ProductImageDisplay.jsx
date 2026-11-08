@@ -17,6 +17,7 @@ const ProductImageDisplay = ({
   width = 640,
   height = 480,
   loading = 'lazy',
+  priority = false,
 }) => {
   const src = getProductImage(productId);
   const [imageError, setImageError] = useState(false);
@@ -45,7 +46,8 @@ const ProductImageDisplay = ({
     <img
       src={src}
       alt={alt}
-      loading={loading}
+      loading={priority ? 'eager' : loading}
+      fetchPriority={priority ? 'high' : undefined}
       decoding="async"
       width={width}
       height={height}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   FiPhone,
   FiMail,
@@ -26,6 +27,12 @@ import {
 import ENV_CONFIG, { getContactFormApiUrls } from '../config/env';
 import { trackFormSubmit, trackQuoteRequest } from '../utils/analytics';
 import { EMAIL_SALES, EMAIL_INFO } from '../data/contactInfo';
+import QuickAnswer from '../components/common/QuickAnswer';
+import { ROUTE_META } from '../data/routeMeta';
+import { SITE_URL } from '../data/businessFacts';
+import { buildLocalBusinessSchema } from '../utils/schemaBuilders';
+
+const contactMeta = ROUTE_META['/contact-us'];
 
 // Contact Form Component - Moved outside to prevent re-creation on each render
 const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
@@ -109,6 +116,7 @@ const ContactForm = ({ contactForm, handleInputChange, handleSubmit }) => (
         Project Type
       </label>
       <select
+        aria-label="Project type"
         value={contactForm.projectType}
         onChange={(e) => handleInputChange('projectType', e.target.value)}
         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -391,6 +399,7 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
               Project Duration
             </label>
             <select
+              aria-label="Project duration"
               value={quoteData.duration}
               onChange={(e) => setQuoteData({ ...quoteData, duration: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-1 focus:ring-primary-500"
@@ -492,6 +501,7 @@ const QuoteForm = ({ contactForm, handleInputChange, dispatch }) => {
           Project Type
         </label>
         <select
+          aria-label="Project type"
           value={contactForm.projectType}
           onChange={(e) => handleInputChange('projectType', e.target.value)}
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -801,11 +811,32 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        className="mt-16"
+      />
       <SEOHead
-        title="Contact Alcoa Scaffolding | Abu Dhabi +971 58 137 5601"
-        description="Contact Alcoa Scaffolding in Musaffah 37, Abu Dhabi UAE. Call, WhatsApp, or visit our warehouse. Fast response during business hours."
-        keywords="scaffolding quote abu dhabi, contact alcoa scaffolding, scaffolding supplier Musaffah 37, scaffolding rental service abu dhabi, scaffolding near me uae, scaffolding hire abu dhabi, Alcoa Aluminium Scaffolding LLC contact"
+        title={contactMeta.title}
+        description={contactMeta.description}
         canonical="/contact-us"
+        pageType="ContactPage"
+        jsonLd={buildLocalBusinessSchema()}
+        faq={contactMeta.faq}
+        alternates={[
+          { hrefLang: 'en-AE', href: `${SITE_URL}/contact-us` },
+          { hrefLang: 'ar-AE', href: `${SITE_URL}/ar/contact-us` },
+          { hrefLang: 'x-default', href: `${SITE_URL}/contact-us` },
+        ]}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Contact Us', path: '/contact-us' },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
@@ -817,13 +848,14 @@ const ContactUs = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Scaffolding Near Me 
-              <span className="text-gradient">UAE</span>
+              Contact Alcoa Scaffolding{' '}
+              <span className="text-gradient">Musaffah, Abu Dhabi</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Ready to start your project? Contact our expert team for a free consultation
               and customized scaffolding solution.
             </p>
+            <QuickAnswer text={contactMeta.quickAnswer} className="max-w-3xl mx-auto" />
           </motion.div>
         </div>
       </section>
@@ -844,9 +876,9 @@ const ContactUs = () => {
                 <div className="w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center mx-auto mb-4">
                   <info.icon className="w-8 h-8 text-primary-600 dark:text-primary-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {info.title}
-                </h3>
+                </h2>
                 <div className="space-y-1 mb-3 px-2">
                   <p className="font-medium text-gray-900 dark:text-gray-100 break-words text-sm leading-tight">{info.primary}</p>
                   <p className="text-gray-600 dark:text-gray-300 break-words text-sm leading-tight">{info.secondary}</p>
@@ -1028,6 +1060,23 @@ const ContactUs = () => {
                 </a>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-16">
+        <div className="container-custom max-w-4xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Contact FAQ</h2>
+          <div className="space-y-3">
+            {contactMeta.faq.map((item) => (
+              <details
+                key={item.q}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+              >
+                <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer">{item.q}</summary>
+                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>

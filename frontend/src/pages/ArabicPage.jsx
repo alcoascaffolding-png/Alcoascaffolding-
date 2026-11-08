@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import SEOHead from '../components/common/SEOHead';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import QuickAnswer from '../components/common/QuickAnswer';
 import { arabicPages } from '../data/arabicContent';
 
 const ArabicPage = ({ pageKey }) => {
@@ -40,6 +41,7 @@ const ArabicPage = ({ pageKey }) => {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-6">
             {page.h1}
           </h1>
+          <QuickAnswer text={page.quickAnswer} label="إجابة سريعة" dir="rtl" className="mb-6 text-right" />
           <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
             {page.intro}
           </p>

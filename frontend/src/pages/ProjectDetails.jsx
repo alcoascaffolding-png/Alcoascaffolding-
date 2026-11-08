@@ -15,6 +15,7 @@ import {
   FiTrendingUp
 } from 'react-icons/fi';
 import SEOHead from '../components/common/SEOHead';
+import { getProjectMeta, PROJECT_DETAILS_NOINDEX } from '../data/routeMeta';
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -283,9 +284,9 @@ const ProjectDetails = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title={`${project.title} | Scaffolding Case Study UAE | Alcoa`}
-        description={`See how Alcoa Scaffolding delivered ${project.title} in ${project.location}. Safe and efficient access solutions across UAE. Contact us for similar projects!`}
-        keywords={`${project.title}, ${project.category} scaffolding UAE, ${project.location} scaffolding project, Alcoa scaffolding projects, construction case study UAE`}
+        title={getProjectMeta(id, project.title).title}
+        description={getProjectMeta(id, project.title).description}
+        noindex={PROJECT_DETAILS_NOINDEX}
         canonical={`/project-details/${id}`}
         breadcrumbs={[
           { name: 'Home', path: '/' },

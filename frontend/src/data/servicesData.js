@@ -1,6 +1,6 @@
 // Import all service images
-import singleWidthScaffolding from '../assets/73-121-1659x2048.png?format=webp';
-import doubleWidthScaffolding from '../assets/double-width-scaled-e1582796620310-ols0stmu1sfa9psr6uka5r5bi.jpg?format=webp';
+import singleWidthScaffolding from '../assets/73-121-1659x2048.png?format=webp&w=900';
+import doubleWidthScaffolding from '../assets/double-width-scaled-e1582796620310-ols0stmu1sfa9psr6uka5r5bi.jpg?format=webp&w=900';
 import stairwayScaffolding from '../assets/STAIRWAY-681x1024.jpg?format=webp';
 import foldingTower from '../assets/FOLDING-TOWER.png?format=webp';
 import combinationScaffolding from '../assets/COMBINED-SCAFFOLDING.png?format=webp';
@@ -10,7 +10,7 @@ import cantileverScaffolding from '../assets/CANTILEVER SCAFFOLDING.png?format=w
 // Ladders
 import aluminiumATypeDual from '../assets/aluminium a type dual purpose.jpg?format=webp';
 import aluminiumAType2Way from '../assets/WARE-HOUSE-LADDER.png?format=webp';
-import aluminiumStraight from '../assets/fiberglass-straight-scaled.jpg?format=webp';
+import aluminiumStraight from '../assets/fiberglass-straight-scaled.jpg?format=webp&w=900';
 import aluminiumExtension from '../assets/fiberglass-extension-200x300.jpg?format=webp';
 import aluminiumMultiPurpose from '../assets/ALUMINIUM-PLATFORM-LADDER-.jpg?format=webp';
 import aluminiumCombination from '../assets/ware house ladder.png?format=webp';
@@ -31,22 +31,22 @@ import beamAluminium from '../assets/beam-aluminium.jpg?format=webp';
 
 // Additional Service Images
 import msScaffoldingImg from '../assets/steel-transfom-img.jpg?format=webp';
-import installationImg from '../assets/DSC_4691--1-scaled.jpg?format=webp';
-import maintenanceImg from '../assets/DSC_4730-2-scaled.jpg?format=webp';
+import installationImg from '../assets/DSC_4691--1-scaled.jpg?format=webp&w=900';
+import maintenanceImg from '../assets/DSC_4730-2-scaled.jpg?format=webp&w=900';
 import safetyImg from '../assets/DSC_4738-200x300.jpg?format=webp';
 import trainingImg from '../assets/DSC_4753-copy-200x300.jpg?format=webp';
 import deliveryImg from '../assets/scaffolding delivery.jpg?format=webp';
 import aluminiumImg from '../assets/ALUMINIUM-PLATFORM-LADDER-.jpg?format=webp';
 
 // Couplers
-import doubleCoupler from '../assets/double-coupler-2048x1363.jpg?format=webp';
+import doubleCoupler from '../assets/double-coupler-2048x1363.jpg?format=webp&w=900';
 import doubleCouplerPressed from '../assets/fixed-coupler-pressed-300x200.jpg?format=webp';
-import boardRetainingCoupler from '../assets/board-retaining-clamp-2048x1363.jpg?format=webp';
+import boardRetainingCoupler from '../assets/board-retaining-clamp-2048x1363.jpg?format=webp&w=900';
 import swivelCoupler from '../assets/swivel-coupler-300x200.jpg?format=webp';
 import swivelCouplerPressed from '../assets/swivel-coupler-pressed-300x200.jpg?format=webp';
-import putlogCoupler from '../assets/putlog-coupler-1536x1022.jpg?format=webp';
-import ladderClamp from '../assets/ladder-clamp-scaled.jpg?format=webp';
-import beamCoupler from '../assets/beam-coupler-2048x1363.jpg?format=webp';
+import putlogCoupler from '../assets/putlog-coupler-1536x1022.jpg?format=webp&w=900';
+import ladderClamp from '../assets/ladder-clamp-scaled.jpg?format=webp&w=900';
+import beamCoupler from '../assets/beam-coupler-2048x1363.jpg?format=webp&w=900';
 import toeBoardClamp from '../assets/toe-board-clamp-300x200.jpg?format=webp';
 import universalClamp from '../assets/universal-clamp-1024x681.jpg?format=webp';
 import sleeveCoupler from '../assets/sleeve-coupler-200x300.jpg?format=webp';

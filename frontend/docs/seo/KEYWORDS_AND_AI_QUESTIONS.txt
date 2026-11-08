@@ -1,0 +1,403 @@
+================================================================================
+ALCOA SCAFFOLDING — ALL KEYWORDS + AI QUESTIONS + RANKING CHECK GUIDE
+================================================================================
+Site:    https://alcoascaffolding.com
+Company: ALCOA ALUMINIUM SCAFFOLDING - L.L.C - S.P.C
+Address: Ar Rahmah 4 St., Musaffah 37, Abu Dhabi, UAE
+Phone:   +971 58 137 5601
+Updated: 14 Sep 2026
+
+IMPORTANT:
+- Do NOT expect #1 on Google or ChatGPT overnight.
+- Check weekly for 4–8 weeks.
+- Always use Google Incognito / Private window.
+- Prefer UAE / Abu Dhabi location when searching.
+
+
+================================================================================
+PART 1 — HOW TO MANAGE & CHECK RANKINGS (GOOGLE)
+================================================================================
+
+A) Weekly routine (every Monday — 20–30 minutes)
+------------------------------------------------
+1. Open Google Incognito.
+2. Search each Tier 1 keyword below (copy-paste exactly).
+3. Note: Did alcoascaffolding.com appear? Which page number? Which URL?
+4. Open Google Search Console (GSC):
+   - Performance → Queries → look for impressions/clicks on these keywords
+   - Performance → Pages → check money page impressions
+5. Open Google Business Profile:
+   - Check calls, direction requests, reviews
+6. Open Google Analytics (GA4):
+   - Organic traffic + generate_lead / form / WhatsApp events
+7. Fill the tracker at the bottom of this file.
+
+
+B) How to search Google correctly
+---------------------------------
+1. Incognito / Private window
+2. google.com (not Google Ads preview)
+3. Paste ONE keyword
+4. Scroll page 1–5 if needed
+5. Write result: Found YES/NO · Page # · Exact URL shown
+
+
+C) Quick Google checks (do first every time)
+--------------------------------------------
+site:alcoascaffolding.com
+site:alcoascaffolding.com aluminium scaffolding
+Alcoa scaffolding Abu Dhabi
+Alcoa scaffolding Musaffah
+
+
+D) Where to track officially (best source of truth)
+---------------------------------------------------
+Google Search Console → Performance → Queries
+  = real impressions + clicks + average position for keywords
+
+Google alone (incognito) = visual spot-check only
+ChatGPT alone = AI visibility check only (not Google rank)
+
+
+================================================================================
+PART 2 — ALL GOOGLE KEYWORDS (COPY-PASTE TO SEARCH)
+================================================================================
+Updated 8 Nov 2026: keyword 7 restored (it was blank) and Tier 1B added for
+the brief's new keywords. Your (NA) / (not appears) notes are kept as you wrote them.
+
+----- TIER 1 — MONEY KEYWORDS (CHECK THESE FIRST EVERY WEEK) -----
+
+1. aluminium scaffolding Abu Dhabi
+   Target page: https://alcoascaffolding.com/
+
+2. scaffolding rental Abu Dhabi (not appears)
+   Target page: https://alcoascaffolding.com/scaffolding-rental-abu-dhabi
+
+3. aluminium scaffolding rental Abu Dhabi
+   Target page: https://alcoascaffolding.com/services/rental
+
+4. aluminium scaffolding Musaffah
+   Target page: https://alcoascaffolding.com/scaffolding-rental-musaffah
+
+5. aluminium scaffolding supplier Abu Dhabi
+   Target page: https://alcoascaffolding.com/aluminium-scaffolding-supplier-abu-dhabi
+
+6. mobile scaffolding tower Abu Dhabi
+   Target page: https://alcoascaffolding.com/services/folding-tower
+
+7. aluminium scaffold tower Abu Dhabi
+   Target page: https://alcoascaffolding.com/products/aluminium-scaffolding
+
+8. scaffolding company Abu Dhabi (NA)  
+   Target page: https://alcoascaffolding.com/about-us  OR  homepage
+
+
+----- TIER 2 — SUPPORTING KEYWORDS -----
+
+9. aluminium scaffolding UAE
+   Target: https://alcoascaffolding.com/scaffolding-rental-uae
+
+10. aluminium scaffolding manufacturer UAE (NA)
+    Target: https://alcoascaffolding.com/aluminium-scaffolding-manufacturer-uae
+
+11. scaffolding rental Musaffah
+    Target: https://alcoascaffolding.com/scaffolding-rental-musaffah
+
+12. aluminium ladder supplier Abu Dhabi
+    Target: https://alcoascaffolding.com/products/ladders
+
+13. aluminium rolling platform Abu Dhabi
+    Target: https://alcoascaffolding.com/services/aluminium-rolling-platform
+
+14. stairway scaffolding Abu Dhabi
+    Target: https://alcoascaffolding.com/services/stairway-scaffolding
+
+15. cantilever scaffolding Abu Dhabi
+    Target: https://alcoascaffolding.com/services/cantilever-scaffolding
+
+16. scaffolding near me Abu Dhabi (NA)
+    Target: Musaffah / contact / Maps pack
+
+17. scaffolding for sale Abu Dhabi (NA)
+    Target: for-sale page (if live)
+
+18. aluminium scaffolding warehouse Musaffah
+    Target: Musaffah page
+
+
+----- TIER 1B — BRIEF KEYWORDS ADDED NOV 2026 (pages retitled for these) -----
+
+18a. scaffolding supplier UAE
+     Target: https://alcoascaffolding.com/scaffolding-rental-uae
+
+18b. mobile scaffolding towers UAE
+     Target: https://alcoascaffolding.com/services/folding-tower
+
+18c. mobile scaffolding rental UAE
+     Target: https://alcoascaffolding.com/services/folding-tower
+
+18d. aluminium ladder supplier UAE
+     Target: https://alcoascaffolding.com/products/ladders
+
+18e. steel cuplock scaffolding UAE
+     Target: https://alcoascaffolding.com/products/steel-cuplock-scaffolding
+
+18f. scaffolding installation Abu Dhabi
+     Target: https://alcoascaffolding.com/services/installation
+
+18g. scaffolding dismantling UAE
+     Target: https://alcoascaffolding.com/services/installation-disassembly
+
+18h. industrial scaffolding Abu Dhabi
+     Target: https://alcoascaffolding.com/construction-scaffolding-uae
+
+18i. scaffolding rental Dubai
+     Target: https://alcoascaffolding.com/scaffolding-rental-dubai
+
+18j. scaffolding rental KIZAD
+     Target: https://alcoascaffolding.com/scaffolding-rental-kizad
+
+Full map with every page's title / H1: docs/seo/KEYWORD_MAP.md
+
+
+----- BRAND KEYWORDS (SHOULD SHOW SOONER) -----
+
+19. Alcoa scaffolding
+20. Alcoa aluminium scaffolding
+21. Alcoa scaffolding Abu Dhabi
+22. Alcoa scaffolding Musaffah
+23. Alcoa Aluminium Scaffolding L.L.C
+24. alcoascaffolding.com
+
+
+----- ARABIC KEYWORDS (GOOGLE.COM / GOOGLE.AE) -----
+
+25. سقالات ألومنيوم أبوظبي
+26. تأجير سقالات أبوظبي (NA)
+27. سقالات المصفح
+28. مورد سقالات أبوظبي (NA)
+29. شركة سقالات أبوظبي
+30. سقالات ألومنيوم الإمارات
+31. مصنع سقالات ألومنيوم الإمارات
+32. برج سقالات متحرك أبوظبي
+
+
+----- EXTRA VARIATIONS (OPTIONAL MONTHLY) -----
+
+33. aluminium scaffolding hire Abu Dhabi
+34. aluminium scaffold hire UAE
+35. buy aluminium scaffolding Abu Dhabi
+36. scaffolding supplier Musaffah
+37. scaffolding manufacturer Abu Dhabi
+38. ISO scaffolding company Abu Dhabi
+39. aluminium tower scaffold Abu Dhabi
+40. folding scaffold tower Abu Dhabi
+
+
+================================================================================
+PART 3 — QUESTIONS TO ASK CHATGPT / GEMINI / PERPLEXITY
+================================================================================
+Use these to check if AI engines know / recommend Alcoa.
+Ask in a NEW chat. Do not mention your company first (fair test).
+
+----- A) DISCOVERY QUESTIONS (AI SHOULD FIND YOU WITHOUT YOU NAMING ALCOA) -----
+
+1. Who supplies aluminium scaffolding in Abu Dhabi?
+2. Where can I rent aluminium scaffolding in Abu Dhabi?
+3. Best aluminium scaffolding supplier in Musaffah Abu Dhabi?
+4. Scaffolding rental near Musaffah 37 Abu Dhabi?
+5. Aluminium scaffolding manufacturer in UAE — who are the main companies?
+6. Mobile scaffolding tower rental Abu Dhabi — who provides it?
+7. Who sells aluminium scaffold towers in Abu Dhabi?
+8. Aluminium ladder supplier Abu Dhabi?
+9. Scaffolding company in Musaffah industrial area?
+10. Where can I get aluminium scaffolding for construction in Abu Dhabi UAE?
+11. Recommend a scaffolding rental company in Abu Dhabi with warehouse in Musaffah.
+12. Who provides aluminium rolling platform in Abu Dhabi?
+13. Stairway scaffolding suppliers Abu Dhabi?
+14. Cantilever scaffolding Abu Dhabi suppliers?
+15. List aluminium scaffolding companies in Abu Dhabi UAE.
+15a. Who supplies steel cuplock scaffolding in the UAE?
+15b. Who installs and dismantles scaffolding in Abu Dhabi?
+15c. Industrial scaffolding company in Abu Dhabi for plant maintenance?
+15d. Where can I rent a mobile scaffolding tower anywhere in the UAE?
+15e. Who sells aluminium ladders in the UAE?
+15f. Scaffolding rental in Dubai delivered from Abu Dhabi?
+15g. Should I rent or buy scaffolding in the UAE?
+15h. Aluminium or steel scaffolding — which is better for a UAE project?
+
+
+----- B) RANKING / VISIBILITY QUESTIONS (ASK GPT TO HELP YOU CHECK) -----
+
+16. Is alcoascaffolding.com ranking for aluminium scaffolding Abu Dhabi?
+17. Search the web and tell me if Alcoa Aluminium Scaffolding appears for scaffolding rental Abu Dhabi.
+18. Does https://alcoascaffolding.com appear in search results for aluminium scaffolding supplier Abu Dhabi?
+19. Based on current web results, which companies rank for aluminium scaffolding Abu Dhabi?
+20. Is Alcoa Scaffolding Musaffah listed as a local scaffolding supplier in Abu Dhabi?
+21. Can you find the official website of Alcoa Aluminium Scaffolding in Abu Dhabi?
+22. Compare top scaffolding suppliers in Abu Dhabi and tell me if Alcoa is mentioned.
+23. Check if alcoascaffolding.com is indexed and active for UAE aluminium scaffolding keywords.
+24. What pages on alcoascaffolding.com look strongest for SEO right now?
+25. According to current public web data, does Alcoa Scaffolding Abu Dhabi have good local visibility?
+
+
+----- C) NAP / FACT CHECK QUESTIONS (AI SHOULD GET DETAILS RIGHT) -----
+
+26. What is the address and phone number of Alcoa Aluminium Scaffolding in Abu Dhabi?
+27. Where is Alcoa Scaffolding warehouse located in Musaffah?
+28. What is the website of ALCOA ALUMINIUM SCAFFOLDING L.L.C S.P.C?
+29. Does Alcoa Aluminium Scaffolding offer rental and supply in Abu Dhabi?
+30. Is Alcoa Scaffolding based in Musaffah 37 Abu Dhabi?
+
+CORRECT ANSWERS TO COMPARE:
+  Name:    ALCOA ALUMINIUM SCAFFOLDING - L.L.C - S.P.C
+  Address: Ar Rahmah 4 St., Musaffah 37, Abu Dhabi, UAE
+  Phone:   +971 58 137 5601
+  Website: https://alcoascaffolding.com
+
+
+----- D) ARABIC AI QUESTIONS -----
+
+31. من يورد سقالات الألومنيوم في أبوظبي؟
+32. أين يمكنني استئجار سقالات في أبوظبي؟
+33. أفضل مورد سقالات في المصفح أبوظبي؟
+34. ما عنوان ورقم هاتف شركة ألكوا للسقالات في أبوظبي؟
+35. هل موقع alcoascaffolding.com يظهر لسقالات ألومنيوم أبوظبي؟
+
+
+----- E) COPY-PASTE PROMPT (ONE MESSAGE — FULL WEEKLY AI AUDIT) -----
+
+Copy everything below into ChatGPT / Gemini / Perplexity:
+
+---
+I need a local SEO + AI visibility check for this UAE business.
+
+Business:
+- Name: ALCOA ALUMINIUM SCAFFOLDING - L.L.C - S.P.C
+- Website: https://alcoascaffolding.com
+- Location: Musaffah 37, Abu Dhabi, UAE
+- Phone: +971 58 137 5601
+
+Please do the following:
+1) Using current web browsing/search if available, check whether alcoascaffolding.com appears for these keywords:
+   - aluminium scaffolding Abu Dhabi
+   - scaffolding rental Abu Dhabi
+   - aluminium scaffolding Musaffah
+   - aluminium scaffolding supplier Abu Dhabi
+   - mobile scaffolding tower Abu Dhabi
+   - aluminium scaffolding manufacturer UAE
+2) For each keyword, tell me:
+   - Are they mentioned? Yes/No
+   - Rough position if known (page 1 / later / unknown)
+   - Which URL is shown
+   - Top 3 competitors you see
+3) Answer as a buyer: Who supplies aluminium scaffolding in Abu Dhabi?
+4) Answer as a buyer: Where can I rent scaffolding near Musaffah?
+5) Confirm if you know Alcoa’s correct website, phone, and Musaffah address.
+6) Give a short action list to improve Google + AI visibility in Abu Dhabi.
+---
+
+
+================================================================================
+PART 4 — HOW TO JUDGE RESULTS
+================================================================================
+
+GOOGLE
+------
+Brand search shows Alcoa              = GOOD (foundation works)
+site: shows many pages                = GOOD (indexed)
+Money keyword on page 2–5             = EARLY PROGRESS
+Money keyword not visible yet         = NORMAL early stage
+Money keyword page 1                  = STRONG win
+
+AI (ChatGPT / Gemini / Perplexity)
+----------------------------------
+Mentions Alcoa without you naming it  = GOOD AI visibility
+Mentions wrong phone/address          = FIX GBP + directories
+Does not mention Alcoa yet            = NORMAL early — grow reviews/citations
+Links to alcoascaffolding.com         = VERY GOOD
+
+
+================================================================================
+PART 5 — WEEKLY TRACKER (FILL THIS IN)
+================================================================================
+
+Date: ______________
+Tester: ____________
+Google location used: UAE / Abu Dhabi / Other: ______
+
+GOOGLE KEYWORDS
+---------------
+1. aluminium scaffolding Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+2. scaffolding rental Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+3. aluminium scaffolding rental Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+4. aluminium scaffolding Musaffah
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+5. aluminium scaffolding supplier Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+6. mobile scaffolding tower Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+7. aluminium scaffold tower Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+8. scaffolding company Abu Dhabi
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+9. aluminium scaffolding UAE
+   Found? Y/N   Page #: ___   URL: ______________________________
+
+10. aluminium scaffolding manufacturer UAE
+    Found? Y/N   Page #: ___   URL: ______________________________
+
+BRAND
+-----
+Alcoa scaffolding Abu Dhabi → Found? Y/N   Notes: _______________
+site:alcoascaffolding.com → Pages shown? Y/N
+
+AI ENGINES
+----------
+ChatGPT mentioned Alcoa? Y/N   Correct NAP? Y/N   Linked site? Y/N
+Gemini mentioned Alcoa?  Y/N   Correct NAP? Y/N   Linked site? Y/N
+Perplexity mentioned Alcoa? Y/N Correct NAP? Y/N   Linked site? Y/N
+
+GSC NOTES
+---------
+Top impressions keywords this week:
+1. ______________________
+2. ______________________
+3. ______________________
+
+Notes / competitors seen:
+________________________________________________________________
+________________________________________________________________
+
+
+================================================================================
+PART 6 — FIRST RUN TODAY (MINIMUM CHECKLIST)
+================================================================================
+
+[ ] site:alcoascaffolding.com
+[ ] aluminium scaffolding Abu Dhabi
+[ ] scaffolding rental Abu Dhabi
+[ ] aluminium scaffolding Musaffah
+[ ] aluminium scaffolding supplier Abu Dhabi
+[ ] mobile scaffolding tower Abu Dhabi
+[ ] Alcoa scaffolding Abu Dhabi
+[ ] ChatGPT: Who supplies aluminium scaffolding in Abu Dhabi?
+[ ] ChatGPT: paste the FULL WEEKLY AI AUDIT prompt from Part 3-E
+
+Write first-test date: __________
+
+
+================================================================================
+END OF FILE
+================================================================================

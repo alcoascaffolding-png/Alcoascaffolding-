@@ -16,6 +16,10 @@ import {
 import { branchesData, getBranchesWithService, getBranchesWithSpecialty } from '../data/branches';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import { ROUTE_META } from '../data/routeMeta';
+import QuickAnswer from '../components/common/QuickAnswer';
+
+const branchesMeta = ROUTE_META['/branches'];
 
 const Branches = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -275,10 +279,13 @@ const Branches = () => {
    
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Alcoa Scaffolding Locations UAE | Abu Dhabi, Dubai & More"
-        description="Alcoa Scaffolding locations UAE — main warehouse Musaffah 37, Abu Dhabi. Delivery to Dubai, Sharjah & emirates. Walk-in Mon–Sat 8am–6pm."
-        keywords="scaffolding warehouse Musaffah 37, alcoa scaffolding address abu dhabi, alcoa scaffolding Musaffah, scaffolding supplier Musaffah 37, scaffolding near me Musaffah, scaffolding contractor abu dhabi, alcoa scaffolding branches"
+        title={branchesMeta.title}
+        description={branchesMeta.description}
         canonical="/branches"
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Location', path: '/branches' },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 section-padding-sm transition-theme">
@@ -290,13 +297,14 @@ const Branches = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Scaffolding Rental Abu Dhabi 
-              <span className="text-gradient"> & Musaffah</span>
+              Our Location{' '}
+              <span className="text-gradient">& Service Areas</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
-              Find your nearest Alcoa Scaffolding branch across Abu Dhabi and UAE.
-              We support scaffolding contractor Abu Dhabi requests, scaffolding near me UAE searches, and fast local service.
+              Alcoa operates from one warehouse and office in Musaffah 37, Abu Dhabi, and delivers
+              scaffolding to Dubai, Sharjah and every other emirate from there.
             </p>
+            <QuickAnswer text={branchesMeta.quickAnswer} className="max-w-3xl mx-auto" />
           </motion.div>
         </div>
       </section>
@@ -370,7 +378,7 @@ const Branches = () => {
           {/* Results Count */}
           <div className="mt-4">
             <p className="text-sm text-text-muted dark:text-text-muted-dark">
-              Showing {filteredBranches.length} of {branchesData.length} branches
+              Showing {filteredBranches.length} of {branchesData.length} locations
             </p>
           </div>
         </div>
@@ -439,11 +447,11 @@ const Branches = () => {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Can't Find a Branch Near You?
+              Outside Abu Dhabi?
             </h2>
             <p className="text-lg text-brand-primary-100 mb-8 max-w-2xl mx-auto">
-              We're expanding across UAE. Contact us to discuss service 
-              in your area or mobile scaffolding solutions.
+              We deliver from Musaffah 37 to projects across the UAE. Contact us
+              for delivery timing to your site.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="btn-secondary bg-white text-brand-primary-600 hover:bg-gray-50 border-white">

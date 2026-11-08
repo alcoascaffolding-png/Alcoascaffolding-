@@ -3,6 +3,7 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import { servicesData } from '../../data/servicesData';
 import ProductImageDisplay from '../../components/common/ProductImageDisplay';
 import Breadcrumbs from '../../components/common/Breadcrumbs';
+import QuickAnswer from '../../components/common/QuickAnswer';
 import { getCategoryIcon } from '../../data/productImageMap';
 import {
   getServicePricing,
@@ -10,22 +11,75 @@ import {
   getServiceFaq,
   getServiceProcess,
   buildEnhancedServiceSchema,
-  buildHowToSchema,
-  isHowToService,
 } from '../../utils/serviceRichContent';
 import { getRelatedServices, getRelatedProductCategory } from '../../utils/serviceRelatedLinks';
+import { getServiceSeo, getServiceQuickAnswer } from '../../seo/serviceSeo';
+import { SERVICE_REDIRECTS } from '../../seo/redirects';
 import { FiCheck, FiPhone, FiMail, FiChevronDown } from 'react-icons/fi';
 import SEOHead from '../../components/common/SEOHead';
 import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
 
+const SECONDARY_SECTIONS = {
+  'folding-tower': {
+    h2: 'Mobile Scaffolding Rental in the UAE',
+    body: 'Mobile scaffolding towers are delivered from our Musaffah 37 warehouse to Abu Dhabi, Dubai, Sharjah and the other emirates on daily, weekly or monthly hire. Choose folding towers for quick moves between sites, single-width towers for corridors and double-width towers for facades and two-person work.',
+    links: [
+      { label: 'Single width mobile scaffold tower', path: '/services/single-width-scaffolding' },
+      { label: 'Double width mobile scaffold tower', path: '/services/double-width-scaffolding' },
+      { label: 'Stairway scaffolding Abu Dhabi', path: '/services/stairway-scaffolding' },
+      { label: 'Aluminium scaffolding rental Abu Dhabi', path: '/services/rental' },
+      { label: 'Mobile tower setup guide', path: '/blog/mobile-scaffolding-tower-setup-guide' },
+      { label: 'Benefits of mobile scaffolding towers', path: '/blog/benefits-of-mobile-scaffolding-towers' },
+    ],
+  },
+  rental: {
+    h2: 'What you can rent from Musaffah 37',
+    body: 'Aluminium mobile scaffold towers, stairway and cantilever configurations, rolling platforms, steel cuplock systems, ladders, couplers, jacks and planks. Combine hire with installation and dismantling crews when your site needs a full-service package.',
+    links: [
+      { label: 'Mobile scaffolding tower rental', path: '/services/folding-tower' },
+      { label: 'Steel cuplock scaffolding UAE', path: '/products/steel-cuplock-scaffolding' },
+      { label: 'Scaffolding rental Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
+      { label: 'Scaffolding rental Dubai', path: '/scaffolding-rental-dubai' },
+      { label: 'Rental vs buying scaffolding', path: '/blog/scaffolding-rental-vs-purchase-uae' },
+    ],
+  },
+  installation: {
+    h2: 'Scaffolding erection for construction and industrial sites',
+    body: 'Crews erect aluminium mobile towers, stairway towers and steel cuplock scaffolding for construction, facade, MEP and industrial maintenance work in Abu Dhabi, Musaffah, KIZAD and across the UAE. Work follows the manufacturer instructions and your site permit and HSE requirements.',
+    links: [
+      { label: 'Scaffolding dismantling UAE', path: '/services/installation-disassembly' },
+      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
+      { label: 'Industrial scaffolding Abu Dhabi', path: '/construction-scaffolding-uae' },
+      { label: 'Why professional installation matters', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
+    ],
+  },
+  'installation-disassembly': {
+    h2: 'Safe scaffolding dismantling and removal',
+    body: 'Dismantling reverses the erection sequence from the top down, keeps guardrails in place as long as possible, lowers components instead of dropping them and controls the area below. Alcoa crews dismantle, sort and load out equipment for return or removal across Abu Dhabi, Dubai and the UAE.',
+    links: [
+      { label: 'Scaffolding installation Abu Dhabi', path: '/services/installation' },
+      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
+      { label: 'Why professional installation and dismantling matter', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
+    ],
+  },
+};
+
 const ServiceDetail = () => {
   const { serviceId } = useParams();
+
+  if (SERVICE_REDIRECTS[serviceId]) {
+    return <Navigate to={SERVICE_REDIRECTS[serviceId]} replace />;
+  }
+
   const service = servicesData[serviceId];
 
   if (!service) {
-    return <Navigate to="/services" replace />;
+    return <Navigate to="/construction-scaffolding-uae" replace />;
   }
 
+  const seo = getServiceSeo(serviceId, service);
+  const quickAnswer = getServiceQuickAnswer(serviceId, service);
+  const secondary = SECONDARY_SECTIONS[serviceId];
   const pricing = getServicePricing(service);
   const intro = getServiceIntro(serviceId, service);
   const faq = getServiceFaq(serviceId, service);
@@ -33,88 +87,7 @@ const ServiceDetail = () => {
   const related = getRelatedServices(serviceId);
   const productCategoryPath = getRelatedProductCategory(service.category);
 
-  const jsonLdExtra = [
-    // Service schema is primary for hire/sale quote pages.
-    // Product+Offer without price caused 48 GSC Product/Merchant invalids — omit Product Offers.
-    isHowToService(serviceId) ? buildHowToSchema(serviceId, service) : null,
-  ].filter(Boolean);
-
-  const serviceJsonLd = buildEnhancedServiceSchema(serviceId, service);
-
-  const SERVICE_SEO = {
-    'cantilever-scaffolding': {
-      title: 'Cantilever Scaffolding Abu Dhabi | Alcoa UAE',
-      description:
-        'Cantilever scaffolding Abu Dhabi — aluminium systems for rent & sale from Musaffah 37. Delivery across UAE. Free quote from Alcoa.',
-      h1: 'Cantilever Scaffolding Abu Dhabi',
-    },
-    'intermediate-transom': {
-      title: 'Intermediate Transom Scaffolding UAE | Alcoa',
-      description:
-        'Intermediate transom scaffolding for sale & rental in Abu Dhabi and Dubai. Fast supply from Musaffah 37.',
-      h1: 'Intermediate Transom Scaffolding — UAE',
-    },
-    'aluminium-rolling-platform': {
-      title: 'Aluminium Rolling Platform Abu Dhabi | Alcoa',
-      description:
-        'Aluminium rolling platform Abu Dhabi — lightweight mobile platforms for rent & sale. UAE delivery from Musaffah 37.',
-      h1: 'Aluminium Rolling Platform Abu Dhabi',
-    },
-    'stairway-scaffolding': {
-      title: 'Stairway Scaffolding Abu Dhabi | Alcoa UAE',
-      description:
-        'Stairway scaffolding Abu Dhabi — aluminium stairway towers for hire & sale. Delivery from Musaffah 37 across UAE.',
-      h1: 'Stairway Scaffolding Abu Dhabi',
-    },
-    rental: {
-      title: 'Aluminium Scaffolding Rental Abu Dhabi | Alcoa',
-      description:
-        'Aluminium scaffolding rental Abu Dhabi — daily, weekly & monthly hire from Musaffah 37. Towers, cuplock & ladders. Free quote.',
-      h1: 'Aluminium Scaffolding Rental Abu Dhabi',
-    },
-    'folding-tower': {
-      title: 'Mobile Scaffolding Tower Abu Dhabi | Alcoa',
-      description:
-        'Mobile scaffolding tower Abu Dhabi — folding aluminium towers for rent & sale from Musaffah 37. Request a free quote.',
-      h1: 'Mobile Scaffolding Tower Abu Dhabi',
-    },
-    'folding-mobile-towers': {
-      title: 'Folding Mobile Scaffold Towers | Product Specs | Alcoa',
-      description:
-        'Folding mobile scaffold tower specifications and hire options from Alcoa Musaffah 37, Abu Dhabi.',
-      h1: 'Folding Mobile Scaffold Towers',
-    },
-    'single-width-mobile-towers': {
-      title: 'Single Width Mobile Scaffold Towers | Alcoa Abu Dhabi',
-      description:
-        'Single-width mobile scaffold towers for hire and sale from Alcoa Musaffah 37, Abu Dhabi.',
-      h1: 'Single Width Mobile Scaffold Towers',
-    },
-    'double-width-mobile-towers': {
-      title: 'Double Width Mobile Scaffold Towers | Alcoa Abu Dhabi',
-      description:
-        'Double-width mobile scaffold towers for hire and sale from Alcoa Musaffah 37, Abu Dhabi.',
-      h1: 'Double Width Mobile Scaffold Towers',
-    },
-    'stairway-mobile-towers': {
-      title: 'Stairway Mobile Scaffold Towers | Product | Alcoa',
-      description:
-        'Stairway mobile scaffold tower product details — hire and sale from Musaffah 37, Abu Dhabi.',
-      h1: 'Stairway Mobile Scaffold Towers',
-    },
-    'cuplock-standard': {
-      title: 'Cuplock Scaffolding Rental UAE | Abu Dhabi | Alcoa',
-      description:
-        'Cuplock scaffolding rental and sale in Abu Dhabi & UAE. Standards, ledgers & bays from Musaffah 37. Call Alcoa.',
-      h1: 'Cuplock Scaffolding Rental & Sale in UAE',
-    },
-  };
-
-  const seo = SERVICE_SEO[serviceId] || {
-    title: `${service.title} UAE | Rental & Sale | Alcoa`,
-    description: `Rent or buy ${service.title} in Abu Dhabi & Dubai UAE. ${service.category} from Musaffah 37. Free quote from Alcoa.`,
-    h1: `${service.title} for Rent & Sale in UAE`,
-  };
+  const serviceJsonLd = buildEnhancedServiceSchema(serviceId, service, seo.h1);
 
   const breadcrumbItems = [
     { name: 'Services', path: '/construction-scaffolding-uae' },
@@ -126,10 +99,8 @@ const ServiceDetail = () => {
       <SEOHead
         title={seo.title}
         description={seo.description}
-        keywords={`${service.title} UAE, ${service.title} Abu Dhabi, ${service.category} UAE, scaffolding ${service.title.toLowerCase()} Musaffah, ${service.title} Dubai`}
         canonical={`/services/${serviceId}`}
         jsonLd={serviceJsonLd}
-        jsonLdExtra={jsonLdExtra}
         faq={faq}
         breadcrumbs={[
           { name: 'Home', path: '/' },
@@ -163,14 +134,17 @@ const ServiceDetail = () => {
       <section className="section-padding py-12 sm:py-16">
         <div className="container-custom grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           <div className="lg:col-span-2 space-y-8">
+            <QuickAnswer text={quickAnswer} />
+
             <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md flex items-center justify-center py-8 px-4">
               <ProductImageDisplay
                 productId={serviceId}
-                alt={`${service.title} for rent and sale in Abu Dhabi, United Arab Emirates`}
+                alt={`${seo.h1} — ${service.title} from Alcoa Musaffah 37, Abu Dhabi`}
                 className="max-h-96 w-full object-contain"
                 fallbackEmoji={getCategoryIcon(service.category)}
                 emojiClassName="text-8xl sm:text-9xl select-none"
                 iconWrapperClassName="bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-full p-8"
+                priority
               />
             </div>
 
@@ -180,6 +154,27 @@ const ServiceDetail = () => {
               </h2>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{intro}</p>
             </section>
+
+            {secondary && (
+              <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                  {secondary.h2}
+                </h2>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">{secondary.body}</p>
+                <ul className="flex flex-wrap gap-3">
+                  {secondary.links.map((link) => (
+                    <li key={link.path}>
+                      <Link
+                        to={link.path}
+                        className="text-sm px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:underline inline-block"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
               <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-900 dark:text-white">
@@ -211,7 +206,7 @@ const ServiceDetail = () => {
                   Pricing FAQ
                 </Link>
                 <Link to="/services/rental" className="text-sm text-blue-700 dark:text-blue-300 underline self-center">
-                  Scaffolding rental hub
+                  Aluminium scaffolding rental Abu Dhabi
                 </Link>
               </div>
             </section>
@@ -285,9 +280,9 @@ const ServiceDetail = () => {
 
           <aside className="lg:col-span-1 space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md sticky top-24">
-              <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                 Specifications
-              </h3>
+              </h2>
               <dl className="space-y-3 text-sm">
                 {Object.entries(service.quickDetails).map(([key, value]) => (
                   <div
@@ -308,7 +303,7 @@ const ServiceDetail = () => {
                 </Link>
                 <a
                   href="tel:+971581375601"
-                  className="block w-full rounded-lg bg-green-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-green-700"
+                  className="block w-full rounded-lg bg-green-700 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-green-800"
                 >
                   Call Now
                 </a>
@@ -316,7 +311,7 @@ const ServiceDetail = () => {
             </div>
 
             <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-lg p-6 shadow-md">
-              <h3 className="text-xl font-bold mb-4">Need Help?</h3>
+              <h2 className="text-xl font-bold mb-4">Need Help?</h2>
               <p className="text-sm mb-4 text-blue-100">
                 Quotes within 30 minutes during business hours.
               </p>
@@ -331,8 +326,8 @@ const ServiceDetail = () => {
                 <div className="flex items-start space-x-3">
                   <FiMail className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <a href={`mailto:${EMAIL_SALES}`} className="block hover:underline">{EMAIL_SALES}</a>
-                    <a href={`mailto:${EMAIL_INFO}`} className="block hover:underline">{EMAIL_INFO}</a>
+                    <a href={`mailto:${EMAIL_SALES}`} className="block py-1 hover:underline">{EMAIL_SALES}</a>
+                    <a href={`mailto:${EMAIL_INFO}`} className="block py-1 hover:underline">{EMAIL_INFO}</a>
                   </div>
                 </div>
               </div>
@@ -344,7 +339,7 @@ const ServiceDetail = () => {
       <section className="pb-12 sm:pb-16">
         <div className="container-custom text-center">
           <Link
-            to="/services"
+            to="/construction-scaffolding-uae"
             className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 font-semibold"
           >
             ← Back to All Services

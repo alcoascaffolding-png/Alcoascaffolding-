@@ -73,7 +73,10 @@ export const trackEmailClick = () => {
   });
 };
 
-/** Delegated click tracking for tel: and mailto: links sitewide */
+/**
+ * Delegated click tracking for tel:, WhatsApp and mailto: links sitewide.
+ * The floating WhatsAppButton opens WhatsApp via window.open and tracks itself.
+ */
 export const initAnalyticsClickTracking = () => {
   if (typeof document === 'undefined') return;
 
@@ -81,6 +84,14 @@ export const initAnalyticsClickTracking = () => {
     const telLink = event.target.closest('a[href^="tel:"]');
     if (telLink) {
       trackPhoneClick(telLink.getAttribute('href')?.replace('tel:', '') || '');
+      return;
+    }
+
+    const whatsappLink = event.target.closest(
+      'a[href*="wa.me/"], a[href*="api.whatsapp.com"], a[href*="whatsapp.com/send"]'
+    );
+    if (whatsappLink) {
+      trackWhatsAppClick();
       return;
     }
 

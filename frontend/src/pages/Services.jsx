@@ -15,6 +15,13 @@ import {
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import QuickAnswer from '../components/common/QuickAnswer';
+import { ROUTE_META } from '../data/routeMeta';
+import { SITE_URL } from '../data/businessFacts';
+import { buildServiceSchema } from '../utils/schemaBuilders';
+import { serviceHref } from '../seo/redirects';
+
+const meta = ROUTE_META['/construction-scaffolding-uae'];
 
 const ServicesPage = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -470,10 +477,25 @@ const ServicesPage = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Construction Scaffolding UAE | Rental, Installation & Erection Abu Dhabi | Alcoa"
-        description="Construction scaffolding UAE — rental, installation, erection, and delivery in Abu Dhabi, Musaffah 37 & Dubai. ISO 9001:2015. Free quote from Alcoa."
-        keywords="construction scaffolding UAE, scaffolding equipment UAE, scaffolding installation Abu Dhabi, scaffolding erection Abu Dhabi, scaffolding erection crew UAE, scaffold rental price Abu Dhabi, industrial scaffolding Abu Dhabi, MEP scaffolding Abu Dhabi, scaffolding for construction Abu Dhabi, scaffolding supplier Abu Dhabi"
+        title={meta.title}
+        description={meta.description}
         canonical="/construction-scaffolding-uae"
+        jsonLd={buildServiceSchema({
+          name: meta.h1,
+          description: meta.description,
+          url: `${SITE_URL}/construction-scaffolding-uae`,
+          serviceType: 'Industrial and construction scaffolding',
+        })}
+        faq={meta.faq}
+        alternates={[
+          { hrefLang: 'en-AE', href: `${SITE_URL}/construction-scaffolding-uae` },
+          { hrefLang: 'ar-AE', href: `${SITE_URL}/ar/services` },
+          { hrefLang: 'x-default', href: `${SITE_URL}/construction-scaffolding-uae` },
+        ]}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Services', path: '/construction-scaffolding-uae' },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
@@ -485,13 +507,14 @@ const ServicesPage = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-               Construction Scaffolding UAE for
-              <span className="text-gradient"> Abu Dhabi, UAE</span>
+              Industrial Scaffolding Abu Dhabi{' '}
+              <span className="text-gradient">& Construction Scaffolding UAE</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Construction scaffolding UAE from Alcoa Scaffolding covers rental, sale, installation, delivery, and maintenance.
               From installation to maintenance, we provide comprehensive scaffolding services designed to meet your project needs and exceed safety standards.
             </p>
+            <QuickAnswer text={meta.quickAnswer} className="max-w-3xl mx-auto mb-8" />
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/contact-us" className="btn-primary">
                 Get Service Quote
@@ -624,7 +647,7 @@ const ServicesPage = () => {
                     Get Quote
                   </Link>
                   <Link 
-                    to={`/services/${service.id}`}
+                    to={serviceHref(service.id)}
                     className="btn-secondary flex-1"
                   >
                     Learn More
@@ -632,6 +655,56 @@ const ServicesPage = () => {
                   </Link>
                 </div>
               </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {meta.sections.map((section) => (
+        <section key={section.h2} className="py-12 border-t border-gray-100 dark:border-gray-800">
+          <div className="container-custom max-w-4xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">{section.h2}</h2>
+            {section.paragraphs?.map((p) => (
+              <p key={p.slice(0, 40)} className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                {p}
+              </p>
+            ))}
+            {section.bullets?.length > 0 && (
+              <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                {section.bullets.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+            {section.links?.length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-2">
+                {section.links.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="text-sm px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      ))}
+
+      <section className="py-12 bg-gray-50 dark:bg-gray-900">
+        <div className="container-custom max-w-4xl">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Industrial scaffolding FAQ</h2>
+          <div className="space-y-3">
+            {meta.faq.map((item) => (
+              <details
+                key={item.q}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+              >
+                <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer">{item.q}</summary>
+                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
+              </details>
             ))}
           </div>
         </div>

@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { FiMapPin, FiPhone, FiCheck, FiMessageCircle } from 'react-icons/fi';
 import SEOHead from '../components/common/SEOHead';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import QuickAnswer from '../components/common/QuickAnswer';
 import ContactCTA from '../components/sections/ContactCTA';
 import { getSeoLandingPage } from '../data/seoLandingPages';
+import { hreflangPairs } from '../data/arabicContent';
 import {
   PHONE_PRIMARY,
   PHONE_PRIMARY_E164,
@@ -15,43 +17,52 @@ import {
   whatsappUrl,
   SITE_URL,
 } from '../data/businessFacts';
-import { buildLocalBusinessSchema, buildServiceSchema } from '../utils/schemaBuilders';
+import { buildServiceSchema } from '../utils/schemaBuilders';
 
 const SeoLandingPage = ({ pageKey }) => {
   const page = getSeoLandingPage(pageKey);
   if (!page) return null;
 
-  const jsonLd = [
-    buildLocalBusinessSchema({
-      name: `Alcoa Scaffolding — ${page.h1}`,
-      url: `${SITE_URL}/${page.slug}`,
-      description: page.description,
-    }),
-    buildServiceSchema({
-      name: page.h1,
-      description: page.description,
-      url: `${SITE_URL}/${page.slug}`,
-    }),
-  ];
+  const path = `/${page.slug}`;
+  const pair = hreflangPairs[path];
+  const alternates = pair
+    ? [
+        { hrefLang: 'en-AE', href: pair.en },
+        { hrefLang: 'ar-AE', href: pair.ar },
+        { hrefLang: 'x-default', href: pair.en },
+      ]
+    : [];
+
+  const jsonLd =
+    pageKey === 'faq'
+      ? []
+      : [
+          buildServiceSchema({
+            name: page.h1,
+            description: page.description,
+            url: `${SITE_URL}${path}`,
+            ...(page.areaServed ? { areaServed: page.areaServed } : {}),
+          }),
+        ];
 
   return (
     <div className="min-h-screen">
       <SEOHead
         title={page.title}
         description={page.description}
-        keywords={page.keywords}
-        canonical={`/${page.slug}`}
+        canonical={path}
         jsonLd={jsonLd}
         faq={page.faq}
+        alternates={alternates}
         breadcrumbs={[
           { name: 'Home', path: '/' },
-          { name: page.h1, path: `/${page.slug}` },
+          { name: page.h1, path },
         ]}
       />
 
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16">
         <div className="container-custom max-w-4xl">
-          <Breadcrumbs items={[{ name: page.h1, path: `/${page.slug}` }]} />
+          <Breadcrumbs items={[{ name: page.h1, path }]} />
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm mb-4">
               <FiMapPin className="w-4 h-4" />
@@ -60,6 +71,7 @@ const SeoLandingPage = ({ pageKey }) => {
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
               {page.h1}
             </h1>
+            <QuickAnswer text={page.quickAnswer} className="mb-6" />
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
               {page.intro}
             </p>
@@ -152,7 +164,7 @@ const SeoLandingPage = ({ pageKey }) => {
                 href={MAPS_SEARCH_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-700 underline underline-offset-2 hover:text-blue-800"
               >
                 Open in Google Maps
               </a>

@@ -2,9 +2,6 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -33,7 +30,7 @@ const ServiceDetail = lazy(() => import('./pages/services/ServiceDetail'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PageLoader = () => (
-  <div className="min-h-[50vh] flex items-center justify-center">
+  <div className="min-h-screen flex items-center justify-center">
     <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
   </div>
 );
@@ -105,19 +102,6 @@ function App() {
             <WhatsAppButton />
             <BackToTop />
           </div>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-            className="mt-16"
-          />
         </Router>
       </ErrorBoundary>
     </Provider>

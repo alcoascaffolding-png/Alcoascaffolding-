@@ -1,15 +1,6 @@
-import {
-  SITE_URL,
-  SITE_NAME,
-  LEGAL_NAME,
-  PHONE_PRIMARY_E164,
-  STREET_ADDRESS,
-  ADDRESS_LOCALITY,
-  ADDRESS_REGION,
-  ADDRESS_COUNTRY,
-  GEO,
-  DEFAULT_OG_IMAGE,
-} from '../data/businessFacts';
+import { SITE_URL, SITE_NAME } from '../data/businessFacts';
+import { SERVICE_FAQ } from '../seo/serviceSeo';
+import { buildServiceSchema } from './schemaBuilders';
 
 /** Quote-based pricing — specific AED bands are unconfirmed and not emitted in schema. */
 const CATEGORY_PRICING = {
@@ -34,12 +25,6 @@ const CATEGORY_PRICING = {
     note: 'Installation, inspection, and training quoted per site visit, tower count, and access complexity.',
   },
 };
-
-const INSTALL_SERVICE_IDS = new Set([
-  'installation',
-  'installation-disassembly',
-  'installation-setup',
-]);
 
 const hash = (str) => [...str].reduce((acc, c) => acc + c.charCodeAt(0), 0);
 
@@ -101,6 +86,7 @@ export const getServiceIntro = (serviceId, service) => {
 };
 
 export const getServiceFaq = (serviceId, service) => {
+  if (SERVICE_FAQ[serviceId]) return SERVICE_FAQ[serviceId];
   const pricing = getServicePricing(service);
   const title = service.title;
   const cat = service.category;
@@ -150,85 +136,11 @@ export const getServiceProcess = (service) => {
   ];
 };
 
-export const isHowToService = (serviceId) => INSTALL_SERVICE_IDS.has(serviceId);
+export const buildEnhancedServiceSchema = (serviceId, service, name = service.title) =>
+  buildServiceSchema({
+    name,
+    description: service.description,
+    url: `${SITE_URL}/services/${serviceId}`,
+    serviceType: service.category,
+  });
 
-export const getHowToSteps = (service) =>
-  getServiceProcess(service).map((text, i) => ({
-    '@type': 'HowToStep',
-    position: i + 1,
-    name: `Step ${i + 1}`,
-    text,
-  }));
-
-export const buildFaqSchema = (faq) => ({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faq.map(({ q, a }) => ({
-    '@type': 'Question',
-    name: q,
-    acceptedAnswer: { '@type': 'Answer', text: a },
-  })),
-});
-
-/**
- * Product JSON-LD without Offer/price — Alcoa quotes AED per project.
- * Incomplete Offer blocks caused GSC Product snippet / Merchant listing invalids.
- */
-export const buildProductSchema = (serviceId, service) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: service.title,
-  description: service.description,
-  category: service.category,
-  brand: { '@type': 'Brand', name: SITE_NAME },
-  image: DEFAULT_OG_IMAGE,
-  url: `${SITE_URL}/services/${serviceId}`,
-  seller: {
-    '@type': 'Organization',
-    name: SITE_NAME,
-    url: SITE_URL,
-  },
-});
-
-export const buildEnhancedServiceSchema = (serviceId, service) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Service',
-  name: service.title,
-  description: service.description,
-  provider: {
-    '@type': 'LocalBusiness',
-    name: SITE_NAME,
-    legalName: LEGAL_NAME,
-    url: SITE_URL,
-    telephone: PHONE_PRIMARY_E164,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: STREET_ADDRESS,
-      addressLocality: ADDRESS_LOCALITY,
-      addressRegion: ADDRESS_REGION,
-      addressCountry: ADDRESS_COUNTRY,
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: GEO.latitude,
-      longitude: GEO.longitude,
-    },
-  },
-  areaServed: [
-    { '@type': 'City', name: 'Abu Dhabi' },
-    { '@type': 'Place', name: 'Musaffah' },
-    { '@type': 'City', name: 'Dubai' },
-    { '@type': 'Country', name: 'United Arab Emirates' },
-  ],
-  serviceType: service.category,
-  url: `${SITE_URL}/services/${serviceId}`,
-});
-
-export const buildHowToSchema = (serviceId, service) => ({
-  '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: `How to order and install ${service.title} in UAE`,
-  description: `Step-by-step process for hiring ${service.title.toLowerCase()} from Alcoa Scaffolding in Abu Dhabi, United Arab Emirates.`,
-  step: getHowToSteps(service),
-  url: `${SITE_URL}/services/${serviceId}`,
-});

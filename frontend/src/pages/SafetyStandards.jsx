@@ -14,6 +14,8 @@ import {
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import { ROUTE_META } from '../data/routeMeta';
+import QuickAnswer from '../components/common/QuickAnswer';
 
 const SafetyStandards = () => {
 const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -176,9 +178,8 @@ const [showUnderConstruction, setShowUnderConstruction] = useState(false);
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Safety Standards & Compliance UAE — Alcoa"
-        description="Learn about Alcoa's comprehensive scaffolding safety standards and UAE compliance. Zero major incidents since 2008. Safety training programs, inspections and certifications across Abu Dhabi, United Arab Emirates and Musaffah."
-        keywords="scaffolding safety UAE, scaffolding compliance UAE, scaffolding safety standards Abu Dhabi, scaffolding safety inspector Abu Dhabi, scaffolding training UAE, AS NZS 1576 scaffolding UAE"
+        title={ROUTE_META['/safety'].title}
+        description={ROUTE_META['/safety'].description}
         canonical="/safety"
       />
       {/* Hero Section */}
@@ -202,6 +203,7 @@ const [showUnderConstruction, setShowUnderConstruction] = useState(false);
               At Alcoa Scaffolding, safety isn't just a priority—it's our foundation. 
               Learn about our comprehensive safety standards and commitment to zero incidents.
             </p>
+            <QuickAnswer text={ROUTE_META['/safety'].quickAnswer} className="max-w-3xl mx-auto mb-8" />
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/contact-us" className="btn-primary">
                 Safety Consultation

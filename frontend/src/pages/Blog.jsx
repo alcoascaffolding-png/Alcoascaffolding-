@@ -2,16 +2,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SEOHead from '../components/common/SEOHead';
+import { ROUTE_META } from '../data/routeMeta';
+import QuickAnswer from '../components/common/QuickAnswer';
 import Breadcrumbs from '../components/common/Breadcrumbs';
-import { blogPosts } from '../data/blogPosts';
+import { getSortedPosts, getReadTime } from '../data/blogPosts';
+
+const posts = getSortedPosts();
 
 const Blog = () => (
   <div className="min-h-screen bg-surface-light dark:bg-surface-dark">
     <SEOHead
-      title="Scaffolding Blog UAE — Guides, Pricing & Safety"
-      description="Expert scaffolding guides for Abu Dhabi, United Arab Emirates contractors. Rental pricing, equipment comparisons, and UAE safety tips from Alcoa Scaffolding."
-      keywords="scaffolding blog UAE, scaffolding guide Abu Dhabi, scaffolding rental tips"
+      title={ROUTE_META['/blog'].title}
+      description={ROUTE_META['/blog'].description}
       canonical="/blog"
+      pageType="CollectionPage"
     />
     <section className="section-padding py-12 sm:py-16">
       <div className="container-custom max-w-4xl">
@@ -19,11 +23,12 @@ const Blog = () => (
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
           Scaffolding Guides & Resources
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-10">
+        <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
           Practical UAE scaffolding advice — pricing, equipment, and site safety.
         </p>
+        <QuickAnswer text={ROUTE_META['/blog'].quickAnswer} className="mb-10" />
         <div className="space-y-6">
-          {blogPosts.map((post, index) => (
+          {posts.map((post, index) => (
             <motion.article
               key={post.slug}
               initial={{ opacity: 0, y: 20 }}
@@ -32,7 +37,9 @@ const Blog = () => (
               transition={{ delay: index * 0.1 }}
               className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md border border-gray-200 dark:border-gray-700"
             >
-              <time className="text-sm text-gray-500 dark:text-gray-400">{post.date} · {post.readTime}</time>
+              <time dateTime={post.updated || post.date} className="text-sm text-gray-500 dark:text-gray-400">
+                {post.updated || post.date} · {getReadTime(post)} read
+              </time>
               <h2 className="text-xl font-bold mt-2 mb-2">
                 <Link
                   to={`/blog/${post.slug}`}

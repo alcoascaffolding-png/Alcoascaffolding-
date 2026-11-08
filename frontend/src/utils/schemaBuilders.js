@@ -9,6 +9,7 @@ import {
   SOCIAL,
   AREA_SERVED,
   DEFAULT_OG_IMAGE,
+  LOGO_URL,
   ISO_CERT,
   MAPS_SEARCH_URL,
   postalAddressSchema,
@@ -16,24 +17,35 @@ import {
   openingHoursSchema,
 } from '../data/businessFacts';
 
-const areaServedSchema = () =>
-  AREA_SERVED.map((name) =>
+export const BUSINESS_ID = `${SITE_URL}/#business`;
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
+
+const businessRef = { '@id': BUSINESS_ID };
+
+const areaServedSchema = (areas = AREA_SERVED) =>
+  areas.map((name) =>
     name === 'United Arab Emirates'
       ? { '@type': 'Country', name }
       : { '@type': 'Place', name }
   );
 
 /**
- * LocalBusiness schema without unverified aggregateRating or invented priceRange.
+ * The one local business entity. Emitted in full on home, about and contact only;
+ * every other page references it by @id so the name and NAP never diverge.
+ * No aggregateRating or priceRange until verified.
  */
 export const buildLocalBusinessSchema = (overrides = {}) => ({
   '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  '@id': `${SITE_URL}/#business`,
+  '@type': 'HomeAndConstructionBusiness',
+  '@id': BUSINESS_ID,
   name: SITE_NAME,
   legalName: LEGAL_NAME,
   alternateName: BRAND_ALIASES,
+  description:
+    'Aluminium scaffolding manufacturer, supplier and rental company in Musaffah 37, Abu Dhabi — mobile scaffolding towers, steel cuplock, ladders, installation and dismantling across the UAE.',
   image: DEFAULT_OG_IMAGE,
+  logo: LOGO_URL,
   url: SITE_URL,
   telephone: PHONE_PRIMARY_E164,
   email: EMAIL_SALES,
@@ -44,6 +56,7 @@ export const buildLocalBusinessSchema = (overrides = {}) => ({
   geo: geoSchema(),
   openingHoursSpecification: openingHoursSchema(),
   areaServed: areaServedSchema(),
+  parentOrganization: { '@id': ORGANIZATION_ID },
   contactPoint: [
     {
       '@type': 'ContactPoint',
@@ -62,45 +75,62 @@ export const buildLocalBusinessSchema = (overrides = {}) => ({
   ],
   sameAs: Object.values(SOCIAL).filter(Boolean),
   knowsAbout: [
-    'Aluminium scaffolding Abu Dhabi',
-    'Aluminium scaffolding Musaffah',
-    'Aluminium scaffolding rental Abu Dhabi',
-    'Aluminium scaffolding supplier Abu Dhabi',
-    'Mobile scaffolding tower Abu Dhabi',
-    'Aluminium scaffolding rental',
+    'Aluminium scaffolding',
+    'Mobile scaffolding towers',
     'Steel cuplock scaffolding',
-    'Scaffolding erection and dismantling',
+    'Aluminium ladders',
+    'Scaffolding rental',
+    'Scaffolding installation',
+    'Scaffolding dismantling',
     'Scaffolding inspection',
     ISO_CERT.standard,
   ],
+  hasCredential: {
+    '@type': 'EducationalOccupationalCredential',
+    credentialCategory: 'certification',
+    name: `${ISO_CERT.standard} — certificate ${ISO_CERT.number}`,
+    recognizedBy: { '@type': 'Organization', name: ISO_CERT.issuer },
+  },
   ...overrides,
 });
 
-export const buildOrganizationSchema = (overrides = {}) => ({
+export const buildOrganizationSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  '@id': `${SITE_URL}/#organization`,
+  '@id': ORGANIZATION_ID,
   name: SITE_NAME,
   legalName: LEGAL_NAME,
   alternateName: BRAND_ALIASES,
   url: SITE_URL,
-  logo: DEFAULT_OG_IMAGE,
+  logo: LOGO_URL,
   email: EMAIL_SALES,
   telephone: PHONE_PRIMARY_E164,
   address: postalAddressSchema(),
   sameAs: Object.values(SOCIAL).filter(Boolean),
-  ...overrides,
 });
 
 /** WebSite schema — no fake SearchAction */
 export const buildWebSiteSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  '@id': `${SITE_URL}/#website`,
+  '@id': WEBSITE_ID,
   name: SITE_NAME,
   url: SITE_URL,
-  publisher: { '@id': `${SITE_URL}/#organization` },
+  publisher: { '@id': ORGANIZATION_ID },
   inLanguage: ['en-AE', 'ar-AE'],
+});
+
+export const buildWebPageSchema = ({ url, name, description, lang = 'en', type = 'WebPage', hasBreadcrumb }) => ({
+  '@context': 'https://schema.org',
+  '@type': type,
+  '@id': `${url}#webpage`,
+  url,
+  name,
+  description,
+  inLanguage: lang === 'ar' ? 'ar-AE' : 'en-AE',
+  isPartOf: { '@id': WEBSITE_ID },
+  about: businessRef,
+  ...(hasBreadcrumb ? { breadcrumb: { '@id': `${url}#breadcrumb` } } : {}),
 });
 
 export const buildServiceSchema = ({
@@ -108,7 +138,7 @@ export const buildServiceSchema = ({
   description,
   url,
   serviceType = 'Scaffolding Rental Service',
-  areaServed = AREA_SERVED,
+  areaServed = ['Abu Dhabi', 'Musaffah', 'Dubai', 'United Arab Emirates'],
 }) => ({
   '@context': 'https://schema.org',
   '@type': 'Service',
@@ -116,32 +146,11 @@ export const buildServiceSchema = ({
   description,
   url,
   serviceType,
-  provider: { '@id': `${SITE_URL}/#business` },
-  areaServed: areaServed.map((n) => ({ '@type': 'Place', name: n })),
+  provider: businessRef,
+  areaServed: areaServedSchema(areaServed),
 });
 
-/**
- * Product schema for quote-based catalogue pages.
- * Do NOT emit Offer without a real AED price — Google Product/Merchant
- * listings require price and will mark incomplete Offers as invalid.
- */
-export const buildProductSchema = ({ name, description, url, image, category }) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name,
-  description,
-  url,
-  image: image || DEFAULT_OG_IMAGE,
-  brand: { '@type': 'Brand', name: SITE_NAME },
-  category,
-  seller: {
-    '@type': 'Organization',
-    name: SITE_NAME,
-    url: SITE_URL,
-  },
-});
-
-export const buildArticleSchema = ({
+export const buildBlogPostingSchema = ({
   headline,
   description,
   url,
@@ -150,30 +159,43 @@ export const buildArticleSchema = ({
   image,
 }) => ({
   '@context': 'https://schema.org',
-  '@type': 'Article',
+  '@type': 'BlogPosting',
   headline,
   description,
   url,
-  mainEntityOfPage: url,
+  mainEntityOfPage: { '@id': `${url}#webpage` },
   image: image || DEFAULT_OG_IMAGE,
   datePublished,
   dateModified: dateModified || datePublished,
-  author: {
-    '@type': 'Organization',
-    name: SITE_NAME,
-  },
+  inLanguage: 'en-AE',
+  author: { '@id': ORGANIZATION_ID, '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
   publisher: {
+    '@id': ORGANIZATION_ID,
     '@type': 'Organization',
     name: SITE_NAME,
-    logo: {
-      '@type': 'ImageObject',
-      url: DEFAULT_OG_IMAGE,
-    },
+    logo: { '@type': 'ImageObject', url: LOGO_URL },
   },
+  about: businessRef,
 });
 
+export const buildBreadcrumbSchema = (breadcrumbs = [], url) => {
+  if (!breadcrumbs.length) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    ...(url ? { '@id': `${url}#breadcrumb` } : {}),
+    itemListElement: breadcrumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: `${SITE_URL}${crumb.path === '/' ? '' : crumb.path}`,
+    })),
+  };
+};
+
+/** Only pass FAQs that are visibly rendered on the same page. */
 export const buildFaqSchema = (faq = []) => {
-  if (!faq.length) return null;
+  if (!faq?.length) return null;
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -183,4 +205,26 @@ export const buildFaqSchema = (faq = []) => {
       acceptedAnswer: { '@type': 'Answer', text: a },
     })),
   };
+};
+
+/** Full JSON-LD set for a page; shared by SEOHead and the build-time prerender. */
+export const buildPageSchemas = ({
+  canonicalUrl,
+  title,
+  description,
+  lang,
+  pageType,
+  jsonLd,
+  breadcrumbs,
+  faq,
+  noindex,
+}) => {
+  if (noindex) return [];
+  const hasBreadcrumb = Boolean(breadcrumbs?.length);
+  return [
+    buildWebPageSchema({ url: canonicalUrl, name: title, description, lang, type: pageType, hasBreadcrumb }),
+    ...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []),
+    hasBreadcrumb ? buildBreadcrumbSchema(breadcrumbs, canonicalUrl) : null,
+    buildFaqSchema(faq),
+  ].filter(Boolean);
 };

@@ -1,11 +1,12 @@
 import { servicesData } from '../data/servicesData';
+import { SERVICE_REDIRECTS } from '../seo/redirects';
 
 const CATEGORY_PRODUCT_MAP = {
   'Aluminium Scaffolding': '/products/aluminium-scaffolding',
   Ladders: '/products/ladders',
   'Steel Cuplock Scaffolding': '/products/steel-cuplock-scaffolding',
-  Couplers: '/products/steel-cuplock-scaffolding',
-  Services: '/services',
+  Couplers: '/products/couplers',
+  Services: '/construction-scaffolding-uae',
 };
 
 export const getRelatedServices = (serviceId, limit = 4) => {
@@ -16,6 +17,7 @@ export const getRelatedServices = (serviceId, limit = 4) => {
     .filter(
       ([id, s]) =>
         id !== serviceId &&
+        !SERVICE_REDIRECTS[id] &&
         s.category === current.category &&
         s.title
     )
@@ -24,4 +26,4 @@ export const getRelatedServices = (serviceId, limit = 4) => {
 };
 
 export const getRelatedProductCategory = (category) =>
-  CATEGORY_PRODUCT_MAP[category] ?? '/products';
+  CATEGORY_PRODUCT_MAP[category] ?? '/aluminum-scaffolding-abu-dhabi';

@@ -13,6 +13,12 @@ import {
 } from 'react-icons/fi';
 import UnderConstruction from '../components/common/UnderConstruction';
 import SEOHead from '../components/common/SEOHead';
+import QuickAnswer from '../components/common/QuickAnswer';
+import Certification from '../components/sections/Certification';
+import { ROUTE_META } from '../data/routeMeta';
+import { buildLocalBusinessSchema } from '../utils/schemaBuilders';
+
+const meta = ROUTE_META['/about-us'];
 
 const AboutUs = () => {
   const [showUnderConstruction, setShowUnderConstruction] = useState(false);
@@ -54,8 +60,8 @@ const AboutUs = () => {
     },
     {
       year: '2018',
-      title: 'National Expansion',
-      description: 'Expanded operations across UAE with offices in major cities.'
+      title: 'UAE-wide Delivery',
+      description: 'Extended delivery from our Musaffah 37 base to projects across all emirates.'
     },
     {
       year: '2023',
@@ -119,10 +125,16 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
-        title="Scaffolding Company Abu Dhabi | Alcoa Aluminium"
-        description="Alcoa Aluminium Scaffolding LLC — ISO 9001:2015 scaffolding company in Musaffah 37, Abu Dhabi. Manufacturer, supplier, rental & erection across UAE."
-        keywords="scaffolding company Abu Dhabi, scaffolding company uae, Alcoa Aluminium Scaffolding LLC, scaffolding Musaffah 37, aluminium scaffolding manufacturer uae"
+        title={meta.title}
+        description={meta.description}
         canonical="/about-us"
+        pageType="AboutPage"
+        jsonLd={buildLocalBusinessSchema()}
+        faq={meta.faq}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'About Us', path: '/about-us' },
+        ]}
       />
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-16 lg:py-24 transition-theme">
@@ -134,13 +146,14 @@ const AboutUs = () => {
             className="text-center max-w-4xl mx-auto"
           >
             <h1 className="text-4xl lg:text-6xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
-              Alcoa Scaffolding 
-              <span className="text-gradient">Company in UAE</span>
+              Scaffolding Company Abu Dhabi{' '}
+              <span className="text-gradient block text-2xl lg:text-4xl mt-2">Alcoa Aluminium Scaffolding</span>
             </h1>
             <p className="text-lg lg:text-xl text-text-secondary dark:text-text-secondary-dark mb-8">
               Building UAE's future, one scaffold at a time. Since 2008, we've been 
               the trusted partner for construction professionals across the nation.
             </p>
+            <QuickAnswer text={meta.quickAnswer} className="max-w-3xl mx-auto" />
           </motion.div>
 
           {/* Stats */}
@@ -383,6 +396,46 @@ const AboutUs = () => {
         </div>
       </section>
 
+
+      <Certification />
+
+      <section className="py-12 bg-gray-50 dark:bg-gray-900">
+        <div className="container-custom max-w-4xl">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">
+            About Alcoa — common questions
+          </h2>
+          <div className="space-y-3">
+            {meta.faq.map((item) => (
+              <details
+                key={item.q}
+                className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+              >
+                <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer">{item.q}</summary>
+                <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+          <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+            Explore{' '}
+            <Link to="/aluminium-scaffolding-supplier-abu-dhabi" className="text-blue-600 hover:underline">
+              aluminium scaffolding supplier Abu Dhabi
+            </Link>
+            ,{' '}
+            <Link to="/aluminium-scaffolding-manufacturer-uae" className="text-blue-600 hover:underline">
+              aluminium scaffolding manufacturer UAE
+            </Link>
+            ,{' '}
+            <Link to="/services/installation" className="text-blue-600 hover:underline">
+              scaffolding installation
+            </Link>{' '}
+            and{' '}
+            <Link to="/contact-us" className="text-blue-600 hover:underline">
+              contact details
+            </Link>
+            .
+          </p>
+        </div>
+      </section>
 
       {/* CTA */}
       <section className="bg-gradient-to-r from-primary-600 to-accent-600 text-white py-16">

@@ -1,16 +1,21 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiCheck, FiInfo, FiPackage } from 'react-icons/fi';
 import { productCategories } from '../../data/productCategories';
 import { servicesData } from '../../data/servicesData';
 import ProductImageDisplay from '../../components/common/ProductImageDisplay';
 import Breadcrumbs from '../../components/common/Breadcrumbs';
+import QuickAnswer from '../../components/common/QuickAnswer';
 import { getCategoryIcon } from '../../data/productImageMap';
 import { getServicePricing } from '../../utils/serviceRichContent';
 import SEOHead from '../../components/common/SEOHead';
 import { buildServiceSchema } from '../../utils/schemaBuilders';
 import { SITE_URL } from '../../data/businessFacts';
+import { getProductSeo } from '../../seo/productSeo';
+import { serviceHref } from '../../seo/redirects';
+
+const PRODUCTS_HUB = '/aluminum-scaffolding-abu-dhabi';
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -18,87 +23,41 @@ const ProductDetail = () => {
   const productCategory = productCategories[productId];
 
   if (!productCategory) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-light dark:bg-surface-dark">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Product Not Found</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">The product category you're looking for doesn't exist.</p>
-          <Link to="/products" className="btn-primary">
-            <FiArrowLeft className="inline mr-2" />
-            Back to Products
-          </Link>
-        </div>
-      </div>
-    );
+    return <Navigate to={PRODUCTS_HUB} replace />;
   }
 
-  // Get all products in this category (with keys for product-image lookup)
   const categoryItems = productCategory.serviceKeys
     .map((key) => ({ key, product: servicesData[key] }))
     .filter((item) => item.product !== undefined);
 
   const categoryPricing = getServicePricing({ category: productCategory.category });
-  const categoryFaq = [
-    {
-      q: `How much does ${productCategory.category.toLowerCase()} cost in Abu Dhabi?`,
-      a: `${productCategory.category} is quoted per ${categoryPricing.unit} based on quantity and hire duration. Contact Alcoa for a free AED quote from Musaffah 37.`,
-    },
-    {
-      q: `Do you deliver ${productCategory.category.toLowerCase()} across UAE?`,
-      a: 'Yes — Abu Dhabi, Dubai, Musaffah 37 and wider UAE. Warehouse pickup available Mon–Sat 8am–6pm.',
-    },
-  ];
+  const productSeo = getProductSeo(productId, productCategory);
 
-  const PRODUCT_SEO = {
-    'aluminium-scaffolding': {
-      title: 'Aluminium Scaffold Tower Abu Dhabi | Alcoa UAE',
-      description:
-        'Aluminium scaffold towers Abu Dhabi — mobile, folding & stairway systems for rent or sale from Musaffah 37. Browse Alcoa product range.',
-      h1: 'Aluminium Scaffold Towers Abu Dhabi',
-    },
-    ladders: {
-      title: 'Aluminium Ladder Supplier Abu Dhabi | Alcoa',
-      description:
-        'Aluminium ladder supplier Abu Dhabi — A-type, extension & industrial ladders for rent and sale from Musaffah 37.',
-      h1: 'Aluminium Ladder Supplier Abu Dhabi',
-    },
-  };
-  const productSeo = PRODUCT_SEO[productId] || {
-    title: `${productCategory.title} | Buy or Rent in UAE | Alcoa`,
-    description: `Buy or rent ${productCategory.category.toLowerCase()} in Abu Dhabi & Dubai UAE. Fast supply from Musaffah 37. Contact Alcoa today!`,
-  };
+  const breadcrumbItems = [
+    { name: 'Products', path: PRODUCTS_HUB },
+    { name: productCategory.title, path: `/products/${productId}` },
+  ];
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark transition-theme">
       <SEOHead
         title={productSeo.title}
         description={productSeo.description}
-        keywords={`${productCategory.category} UAE, ${productCategory.category} Abu Dhabi, scaffolding products UAE, buy scaffolding UAE, rent scaffolding UAE`}
         canonical={`/products/${productId}`}
         jsonLd={buildServiceSchema({
-          name: productCategory.title,
-          description: productCategory.description,
+          name: productSeo.h1,
+          description: productSeo.description,
           url: `${SITE_URL}/products/${productId}`,
           serviceType: `${productCategory.category} Rental and Sale`,
         })}
-        faq={categoryFaq}
-        breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Products', path: '/aluminum-scaffolding-abu-dhabi' },
-          { name: productCategory.title, path: `/products/${productId}` },
-        ]}
+        faq={productSeo.faq}
+        breadcrumbs={[{ name: 'Home', path: '/' }, ...breadcrumbItems]}
       />
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-brand-primary-50 to-brand-accent-50 dark:from-brand-primary-950 dark:to-brand-accent-950 py-12 sm:py-16 lg:py-20 transition-theme">
         <div className="container-custom">
-          <Breadcrumbs
-            items={[
-              { name: 'Products', path: '/products' },
-              { name: productCategory.title, path: `/products/${productId}` },
-            ]}
-          />
+          <Breadcrumbs items={breadcrumbItems} />
           <Link
-            to="/products"
+            to={PRODUCTS_HUB}
             className="inline-flex items-center text-brand-primary-600 dark:text-brand-primary-400 hover:text-brand-primary-700 dark:hover:text-brand-primary-300 mb-6 transition-colors"
           >
             <FiArrowLeft className="mr-2" />
@@ -111,25 +70,23 @@ const ProductDetail = () => {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary dark:text-text-primary-dark mb-4">
-              {productSeo.h1 || (
-                <>
-                  {productCategory.title} in <span className="text-gradient">Abu Dhabi, UAE</span>
-                </>
-              )}
+              {productSeo.h1}
             </h1>
-            <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl">
+            <p className="text-lg sm:text-xl text-text-secondary dark:text-text-secondary-dark max-w-3xl mb-6">
               {productCategory.description} {categoryPricing.note}
             </p>
+            <QuickAnswer text={productSeo.quickAnswer} className="max-w-3xl" />
           </motion.div>
         </div>
       </section>
 
-      {/* Products Grid */}
       <section className="section-padding">
         <div className="container-custom">
+          <h2 className="text-2xl sm:text-3xl font-bold text-text-primary dark:text-text-primary-dark mb-6">
+            {productCategory.title} range
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categoryItems.map(({ key, product }, index) => {
-              return (
+            {categoryItems.map(({ key, product }, index) => (
               <motion.div
                 key={key}
                 initial={{ opacity: 0, y: 30 }}
@@ -138,26 +95,25 @@ const ProductDetail = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="card overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                {/* Product Image — only when a photo exists in product images folder */}
                 <div className="aspect-video bg-gradient-to-br from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
                   <ProductImageDisplay
                     productId={key}
-                    alt={`${product.title} for rent and sale in Abu Dhabi, United Arab Emirates`}
+                    alt={`${product.title} — ${productCategory.category.toLowerCase()} for rent and sale in Abu Dhabi`}
                     fallbackEmoji={getCategoryIcon(product.category)}
                   />
                 </div>
 
-                {/* Content */}
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    {product.title}
+                    <Link to={serviceHref(key)} className="hover:underline">
+                      {product.title}
+                    </Link>
                   </h3>
 
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
                     {product.description}
                   </p>
 
-                  {/* Highlights */}
                   <div className="mb-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center text-sm">
                       <FiCheck className="w-4 h-4 text-green-500 mr-1" />
@@ -173,24 +129,28 @@ const ProductDetail = () => {
                     </ul>
                   </div>
 
-                  {/* Quick Details */}
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 mb-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center text-sm">
                       <FiInfo className="w-4 h-4 text-blue-500 mr-1" />
                       Quick Details
                     </h4>
                     <dl className="space-y-1">
-                      {Object.entries(product.quickDetails).slice(0, 2).map(([key, value]) => (
-                        <div key={key} className="flex items-start justify-between gap-3 text-xs">
-                          <dt className="min-w-0 text-gray-600 dark:text-gray-400">{key}:</dt>
+                      {Object.entries(product.quickDetails).slice(0, 2).map(([detailKey, value]) => (
+                        <div key={detailKey} className="flex items-start justify-between gap-3 text-xs">
+                          <dt className="min-w-0 text-gray-600 dark:text-gray-400">{detailKey}:</dt>
                           <dd className="min-w-0 break-words text-right font-medium text-gray-900 dark:text-white">{value}</dd>
                         </div>
                       ))}
                     </dl>
                   </div>
 
-                  {/* CTA */}
                   <div className="flex gap-2">
+                    <Link
+                      to={serviceHref(key)}
+                      className="btn-secondary flex-1 text-sm py-2"
+                    >
+                      Details
+                    </Link>
                     <Link
                       to={`/contact-us?product=${product.title}`}
                       className="btn-primary flex-1 text-sm py-2"
@@ -200,13 +160,67 @@ const ProductDetail = () => {
                   </div>
                 </div>
               </motion.div>
-              );
-            })}
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {productSeo.sections?.map((section) => (
+        <section key={section.h2} className="py-10 border-t border-gray-100 dark:border-gray-800">
+          <div className="container-custom max-w-4xl">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{section.h2}</h2>
+            {section.paragraphs?.map((p) => (
+              <p key={p.slice(0, 40)} className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                {p}
+              </p>
+            ))}
+            {section.bullets?.length > 0 && (
+              <ul className="list-disc pl-5 space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                {section.bullets.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+            {section.links?.length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-2">
+                {section.links.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="text-sm px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      ))}
+
+      {productSeo.faq?.length > 0 && (
+        <section className="py-12 border-t border-gray-100 dark:border-gray-800">
+          <div className="container-custom max-w-4xl">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              {productCategory.title} — FAQ
+            </h2>
+            <div className="space-y-3">
+              {productSeo.faq.map((item) => (
+                <details
+                  key={item.q}
+                  className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700"
+                >
+                  <summary className="font-semibold text-gray-900 dark:text-white cursor-pointer">
+                    {item.q}
+                  </summary>
+                  <p className="mt-3 text-gray-700 dark:text-gray-300 leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="bg-surface-muted dark:bg-surface-muted-dark py-12 sm:py-16 transition-theme">
         <div className="container-custom text-center">
           <motion.div
@@ -238,4 +252,3 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
-
