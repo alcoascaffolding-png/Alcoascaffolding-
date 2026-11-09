@@ -117,7 +117,11 @@ Each answer is a visible quick answer or FAQ on the page, present in the static 
 
 The plan called for checking GSC clicks before redirecting the cuplock alias. No Performance export was available, so the redirect was applied anyway. A 301 passes the existing signals to the hub. If GSC later shows the old URL had meaningful clicks, nothing is lost.
 
-## 6. GSC query opportunities — pending data
+## 6. GSC query opportunities
+
+**Done:** the 3-month export (8 Aug – 7 Nov 2026) is analysed in [GSC_PERFORMANCE_ANALYSIS_2026-11.md](./GSC_PERFORMANCE_ANALYSIS_2026-11.md). The template below is kept for the next export.
+
+### Template
 
 **Needed:** GSC → Performance → Search results → last 3 months → Export → CSV (Queries and Pages tabs). The CSVs supplied so far were the Page Indexing report, which has no query data.
 

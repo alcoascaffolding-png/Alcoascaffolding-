@@ -12,7 +12,7 @@ import { locationPages } from '../data/locationPages';
 import { blogPosts } from '../data/blogPosts';
 import { arabicPages, hreflangPairs } from '../data/arabicContent';
 import { SERVICE_REDIRECTS, serviceHref } from './redirects';
-import { getServiceSeo, getServiceQuickAnswer } from './serviceSeo';
+import { getServiceSeo, getServiceQuickAnswer, SERVICE_SECONDARY_SECTIONS } from './serviceSeo';
 import { getProductSeo } from './productSeo';
 import { formatTitle } from './formatTitle';
 import {
@@ -170,6 +170,15 @@ const serviceModels = () =>
         intro: [service.description],
         sections: [
           { h2: `About ${service.title}`, paragraphs: [getServiceIntro(id, service)] },
+          ...(SERVICE_SECONDARY_SECTIONS[id]
+            ? [
+                {
+                  h2: SERVICE_SECONDARY_SECTIONS[id].h2,
+                  paragraphs: [SERVICE_SECONDARY_SECTIONS[id].body],
+                  links: SERVICE_SECONDARY_SECTIONS[id].links,
+                },
+              ]
+            : []),
           { h2: 'Key Features & Highlights', bullets: service.highlights || [] },
           {
             h2: 'Specifications',

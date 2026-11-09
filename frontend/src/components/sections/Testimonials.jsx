@@ -15,7 +15,6 @@ const Testimonials = () => {
       rating: 5,
       quote: "Alcoa delivered cuplock and mobile towers to our Yas Island site within four hours. Pricing was transparent in AED and every unit passed our HSE checklist.",
       project: 'High-Rise Façade — Yas Island, Abu Dhabi',
-      projectValue: 'AED 12M project',
       avatar: 'AR',
       color: 'from-blue-400 to-blue-600'
     },
@@ -28,7 +27,6 @@ const Testimonials = () => {
       rating: 5,
       quote: "We rent cuplock and prop jacks monthly from Alcoa's Musaffah warehouse. Stock is always available and their team responds on WhatsApp within minutes.",
       project: 'Industrial Warehouse — Musaffah M-45',
-      projectValue: 'AED 8M project',
       avatar: 'RK',
       color: 'from-green-400 to-green-600'
     },
@@ -41,7 +39,6 @@ const Testimonials = () => {
       rating: 5,
       quote: "For our Yas Island façade project we needed fast tower delivery without compromising HSE standards. Alcoa's aluminium systems were inspection-ready and their Musaffah team coordinated perfectly with our schedule.",
       project: 'Commercial Façade — Yas Island, Abu Dhabi',
-      projectValue: 'AED 6M project',
       avatar: 'FH',
       color: 'from-purple-400 to-purple-600'
     },
@@ -54,7 +51,6 @@ const Testimonials = () => {
       rating: 5,
       quote: "In industrial maintenance, safety is non-negotiable. Alcoa's cuplock systems and inspection documentation satisfied our ADNOC-zone requirements without delays.",
       project: 'Plant Maintenance — KIZAD, Abu Dhabi',
-      projectValue: 'AED 18M project',
       avatar: 'KM',
       color: 'from-orange-400 to-orange-600'
     },
@@ -67,7 +63,6 @@ const Testimonials = () => {
       rating: 5,
       quote: "As a homeowner, I was initially concerned about having scaffolding installed. The Alcoa team was incredibly professional and respectful of our property. They explained everything clearly and completed the work efficiently.",
       project: 'Residential Renovation - Abu Dhabi',
-      projectValue: 'AED 165K project',
       avatar: 'LR',
       color: 'from-pink-400 to-pink-600'
     }
@@ -155,12 +150,9 @@ const Testimonials = () => {
 
                   {/* Project Info */}
                   <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4">
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm mb-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm">
                       {current.project}
                     </h4>
-                    <p className="text-blue-600 dark:text-blue-400 text-xs sm:text-sm font-medium">
-                      {current.projectValue}
-                    </p>
                   </div>
                 </div>
 

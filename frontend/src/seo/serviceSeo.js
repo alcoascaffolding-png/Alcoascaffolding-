@@ -46,7 +46,7 @@ export const SERVICE_SEO = {
   'cantilever-scaffolding': {
     title: 'Cantilever Scaffolding Abu Dhabi | Alcoa UAE',
     description:
-      'Cantilever scaffolding Abu Dhabi — aluminium systems for rent & sale from Musaffah 37. Delivery across UAE. Free quote from Alcoa.',
+      'Cantilever scaffolding Abu Dhabi — platforms that project over obstructions where standards cannot stand below. Rent or buy from Musaffah 37.',
     h1: 'Cantilever Scaffolding Abu Dhabi',
     primaryKeyword: 'Cantilever Scaffolding Abu Dhabi',
     money: true,
@@ -60,10 +60,17 @@ export const SERVICE_SEO = {
     money: true,
   },
   'intermediate-transom': {
-    title: 'Intermediate Transom Scaffolding UAE | Alcoa',
+    title: 'Transom Scaffolding | Intermediate Transoms UAE | Alcoa',
     description:
-      'Intermediate transom scaffolding for sale & rental in Abu Dhabi and Dubai. Fast supply from Musaffah 37.',
-    h1: 'Intermediate Transom Scaffolding — UAE',
+      'Transom scaffolding components — intermediate transoms that support deck boards on cuplock bays. Rent or buy in Abu Dhabi and the UAE from Musaffah 37.',
+    h1: 'Transom Scaffolding — Intermediate Transoms UAE',
+    primaryKeyword: 'Transom Scaffolding',
+  },
+  'fiberglass-ladder': {
+    title: 'Fiberglass Ladder for Electrical Work UAE | Alcoa',
+    description:
+      'Fiberglass ladders for electrical and MEP work in Abu Dhabi and the UAE — non-conductive A-type and straight ladders to rent or buy from Musaffah 37.',
+    h1: 'Fiberglass Ladder for Rent & Sale in UAE',
   },
   'cuplock-standard': {
     title: 'Cuplock Standard (Vertical) Specs | Alcoa',
@@ -204,6 +211,10 @@ export const SERVICE_FAQ = {
   ],
   'cantilever-scaffolding': [
     {
+      q: 'What is cantilever scaffolding?',
+      a: 'Cantilever scaffolding is a scaffold whose working platform extends out beyond its supported base, carried by braced or tied members, so work can be done above an area where standards cannot be placed on the ground.',
+    },
+    {
       q: 'When is cantilever scaffolding needed?',
       a: 'When the ground below the work area is blocked — for example by a canopy, roadway or plant — so the platform must extend out from a supported section.',
     },
@@ -254,16 +265,86 @@ export const SERVICE_FAQ = {
   ],
 };
 
+const COMPONENT_CATEGORIES = new Set(['Couplers', 'Steel Cuplock Scaffolding']);
+
+const firstThatFits = (candidates, max) => candidates.find((c) => c.length <= max) || candidates[candidates.length - 1];
+
 export const getServiceSeo = (serviceId, service) => {
   if (SERVICE_SEO[serviceId]) return SERVICE_SEO[serviceId];
-  const longTitle = `${service.title} UAE | Rental & Sale | Alcoa`;
-  return {
-    title: longTitle.length <= 60 ? longTitle : `${service.title} UAE | Alcoa`,
-    description: `Rent or buy ${service.title} in Abu Dhabi & Dubai UAE. ${service.category} from Musaffah 37. Free quote from Alcoa.`,
-    h1: `${service.title} for Rent & Sale in UAE`,
-  };
+  const name = service.title;
+  // Component searches usually include "scaffolding" (e.g. "scaffolding ladder clamp").
+  const prefixed =
+    COMPONENT_CATEGORIES.has(service.category) && !/scaffold/i.test(name) ? `Scaffolding ${name}` : name;
+  const title = firstThatFits(
+    [`${prefixed} | Sale & Rent UAE | Alcoa`, `${name} | Sale & Rent UAE | Alcoa`, `${name} UAE | Alcoa`, name],
+    60
+  );
+  const description = firstThatFits(
+    [
+      `${service.description} Rent or buy in Abu Dhabi and across the UAE from Alcoa, Musaffah 37.`,
+      `${service.description} Rent or buy from Alcoa, Musaffah 37.`,
+    ],
+    160
+  );
+  return { title, description, h1: `${name} for Rent & Sale in UAE` };
 };
 
 export const getServiceQuickAnswer = (serviceId, service) =>
   SERVICE_QUICK_ANSWERS[serviceId] ||
   `${service.title} is available for rent and sale from Alcoa Aluminium Scaffolding in Musaffah 37, Abu Dhabi, with delivery across the UAE. ${service.description} Call ${PHONE_PRIMARY} for a free quote.`;
+
+/** Extra keyword section shown on priority service pages (also rendered into static HTML). */
+export const SERVICE_SECONDARY_SECTIONS = {
+  'folding-tower': {
+    h2: 'Mobile Scaffolding Rental in the UAE',
+    body: 'Mobile scaffolding towers are delivered from our Musaffah 37 warehouse to Abu Dhabi, Dubai, Sharjah and the other emirates on daily, weekly or monthly hire. Choose folding towers for quick moves between sites, single-width towers for corridors and double-width towers for facades and two-person work.',
+    links: [
+      { label: 'Single width mobile scaffold tower', path: '/services/single-width-scaffolding' },
+      { label: 'Double width mobile scaffold tower', path: '/services/double-width-scaffolding' },
+      { label: 'Stairway scaffolding Abu Dhabi', path: '/services/stairway-scaffolding' },
+      { label: 'Aluminium scaffolding rental Abu Dhabi', path: '/services/rental' },
+      { label: 'Mobile tower setup guide', path: '/blog/mobile-scaffolding-tower-setup-guide' },
+      { label: 'Benefits of mobile scaffolding towers', path: '/blog/benefits-of-mobile-scaffolding-towers' },
+    ],
+  },
+  rental: {
+    h2: 'What you can rent from Musaffah 37',
+    body: 'Aluminium mobile scaffold towers, stairway and cantilever configurations, rolling platforms, steel cuplock systems, ladders, couplers, jacks and planks. Combine hire with installation and dismantling crews when your site needs a full-service package.',
+    links: [
+      { label: 'Mobile scaffolding tower rental', path: '/services/folding-tower' },
+      { label: 'Steel cuplock scaffolding UAE', path: '/products/steel-cuplock-scaffolding' },
+      { label: 'Scaffolding rental Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
+      { label: 'Scaffolding rental Dubai', path: '/scaffolding-rental-dubai' },
+      { label: 'Rental vs buying scaffolding', path: '/blog/scaffolding-rental-vs-purchase-uae' },
+    ],
+  },
+  installation: {
+    h2: 'Scaffolding erection for construction and industrial sites',
+    body: 'Crews erect aluminium mobile towers, stairway towers and steel cuplock scaffolding for construction, facade, MEP and industrial maintenance work in Abu Dhabi, Musaffah, KIZAD and across the UAE. Work follows the manufacturer instructions and your site permit and HSE requirements.',
+    links: [
+      { label: 'Scaffolding dismantling UAE', path: '/services/installation-disassembly' },
+      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
+      { label: 'Industrial scaffolding Abu Dhabi', path: '/construction-scaffolding-uae' },
+      { label: 'Why professional installation matters', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
+    ],
+  },
+  'cantilever-scaffolding': {
+    h2: 'What is cantilever scaffolding?',
+    body: 'Cantilever scaffolding carries a working platform out beyond its supported base. It is used where standards cannot stand directly below the work — over canopies, entrances, roads, roofs, plant or atrium voids. The projecting section is supported by braced, tied or counterweighted members designed for the load. Alcoa supplies aluminium cantilever configurations for rent or sale from Musaffah 37, with erection crews on request.',
+    links: [
+      { label: 'Types of scaffolding systems', path: '/blog/types-of-scaffolding-uae-construction' },
+      { label: 'Bridge scaffolding', path: '/services/bridge-scaffolding' },
+      { label: 'Scaffolding installation Abu Dhabi', path: '/services/installation' },
+      { label: 'Aluminium scaffold towers', path: '/products/aluminium-scaffolding' },
+    ],
+  },
+  'installation-disassembly': {
+    h2: 'Safe scaffolding dismantling and removal',
+    body: 'Dismantling reverses the erection sequence from the top down, keeps guardrails in place as long as possible, lowers components instead of dropping them and controls the area below. Alcoa crews dismantle, sort and load out equipment for return or removal across Abu Dhabi, Dubai and the UAE.',
+    links: [
+      { label: 'Scaffolding installation Abu Dhabi', path: '/services/installation' },
+      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
+      { label: 'Why professional installation and dismantling matter', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
+    ],
+  },
+};

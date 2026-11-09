@@ -23,7 +23,7 @@ export const seoLandingPages = {
     quickAnswer:
       'Alcoa provides scaffolding rental in Dubai — aluminium mobile towers, steel cuplock and ladders — delivered from its warehouse in Musaffah 37, Abu Dhabi. Alcoa has no Dubai depot; Dubai orders are quoted with delivery to Al Quoz, Jebel Ali, Deira, Business Bay and villa communities.',
     description:
-      'Scaffolding rental Dubai — aluminium towers, cuplock & ladders delivered from Musaffah 37. Hire for Al Quoz, Jebel Ali, Deira & villa projects. Free quote.',
+      'Scaffolding rental Dubai — aluminium towers, cuplock & ladders delivered to Al Quoz, Jebel Ali, Deira & villas from Musaffah 37. Erection crews available.',
     keywords:
       'scaffolding rental dubai, aluminium scaffolding dubai, scaffolding company dubai, scaffolding supplier dubai, scaffold hire al quoz dubai, scaffolding jebel ali dubai, mobile scaffold tower rental dubai',
     intro: `Alcoa Aluminium Scaffolding supplies scaffolding rental to Dubai contractors, facility managers, and villa renovation teams from our Musaffah 37 warehouse in Abu Dhabi. Whether you need aluminium mobile towers for painting and MEP, steel cuplock for industrial access, or ladders for short-duration work, we quote clear AED hire terms and arrange delivery into Dubai zones including Al Quoz, Jebel Ali, Deira, Business Bay, and surrounding districts.`,
@@ -46,6 +46,19 @@ export const seoLandingPages = {
           'Deira, Bur Dubai, and older commercial corridors needing facade or MEP access',
           'Business Bay and Downtown-adjacent renovation and maintenance',
           'Villa communities across Dubai for painting, waterproofing, and renovation scaffolding',
+        ],
+      },
+      {
+        h2: 'Scaffolding rental in Al Quoz and Jebel Ali',
+        paragraphs: [
+          'Al Quoz and Al Quoz Industrial are among the most frequent Dubai delivery areas for scaffolding hire — workshops, warehouse fit-outs, showroom refurbishments and contractor yards typically need aluminium mobile towers, rolling platforms and ladders for short access jobs, plus cuplock for larger internal decks.',
+          'For Jebel Ali and the surrounding industrial and logistics zones, plan deliveries around gate passes, delivery-vehicle entry rules and unloading times. Send the site location, contact person, access requirements and the equipment list with your enquiry so the delivery slot can be confirmed with the quote.',
+        ],
+        links: [
+          { label: 'Mobile scaffolding towers', path: '/services/folding-tower' },
+          { label: 'Aluminium rolling platform', path: '/services/aluminium-rolling-platform' },
+          { label: 'Steel cuplock scaffolding UAE', path: '/products/steel-cuplock-scaffolding' },
+          { label: 'Scaffolding installation', path: '/services/installation' },
         ],
       },
       {
@@ -80,6 +93,18 @@ export const seoLandingPages = {
       {
         q: 'Do you deliver scaffolding rental to Dubai?',
         a: 'Yes. Alcoa delivers scaffolding to Dubai from Musaffah 37, Abu Dhabi. Delivery timing depends on stock and site access — confirm when you request a quote.',
+      },
+      {
+        q: 'Do you deliver scaffolding rental to Al Quoz?',
+        a: 'Yes. Al Quoz and Al Quoz Industrial are regular delivery areas from our Musaffah 37 warehouse. Share your site location and access times when you request a quote.',
+      },
+      {
+        q: 'Can you supply scaffolding to Jebel Ali sites with gate-pass rules?',
+        a: 'Yes. Send the site contact, gate-pass and vehicle-entry requirements with your order so the delivery can be planned to the site rules.',
+      },
+      {
+        q: 'Do you provide scaffolding erection in Dubai?',
+        a: 'Yes. Erection and dismantling crews can be arranged for Dubai sites together with equipment delivery from Musaffah 37.',
       },
       {
         q: 'Can I hire scaffolding for villa painting in Dubai?',
@@ -363,14 +388,14 @@ export const seoLandingPages = {
 
   manpower: {
     slug: 'scaffolding-manpower-supply',
-    title: 'Scaffolding Manpower Supply Abu Dhabi | Alcoa UAE',
+    title: 'Scaffolding Manpower Supply Abu Dhabi | Scaffolders | Alcoa',
     h1: 'Scaffolding Manpower Supply Abu Dhabi & UAE',
     primaryKeyword: 'Scaffolding Manpower Supply',
     money: true,
     quickAnswer:
-      'Alcoa supplies scaffolding manpower in Abu Dhabi and the UAE — erection, modification and dismantling crews for aluminium towers and steel cuplock — coordinated with equipment from Musaffah 37. Share site, scaffold type, height, shifts and duration for a crew quote.',
+      'Alcoa supplies scaffolding manpower in Abu Dhabi and the UAE — trained scaffolders for erection, modification and dismantling of aluminium towers and steel cuplock — coordinated with equipment from Musaffah 37. Share site, scaffold type, height, shifts and duration for a crew quote.',
     description:
-      'Scaffolding manpower supply Abu Dhabi — erection & dismantling crews for aluminium and cuplock. Scaffolding with operator options. Request a crew quote.',
+      'Scaffolding manpower supply Abu Dhabi — trained scaffolders for erection and dismantling of aluminium and cuplock scaffolding. Request a crew quote.',
     keywords:
       'scaffolding manpower supply abu dhabi, scaffolding with operator uae, scaffolding erection service dubai, certified scaffolders abu dhabi',
     intro: `Need scaffolding with a crew, not only equipment? Alcoa arranges scaffolding manpower for erection and dismantling on Abu Dhabi and UAE sites — aluminium towers and steel cuplock systems — coordinated with equipment from Musaffah 37.`,

@@ -88,9 +88,9 @@ export const INDUSTRIAL_FAQ = [
 
 export const ROUTE_META = {
   '/': {
-    title: 'Aluminium Scaffolding Abu Dhabi | Alcoa UAE',
+    title: 'Aluminium Scaffolding Abu Dhabi | Supplier & Rental | Alcoa',
     description:
-      'Aluminium scaffolding Abu Dhabi from Alcoa Musaffah 37 — supplier, rental & towers for UAE projects. ISO 9001:2015. Free quote: +971 58 137 5601.',
+      'Aluminium scaffolding Abu Dhabi — scaffolding supplier and rental company in Musaffah 37 for towers, cuplock and ladders. ISO 9001:2015. Call +971 58 137 5601.',
     h1: 'Aluminium Scaffolding Abu Dhabi & United Arab Emirates',
     primaryKeyword: 'Aluminium Scaffolding Abu Dhabi',
     money: true,
@@ -198,7 +198,7 @@ export const ROUTE_META = {
   '/aluminum-scaffolding-abu-dhabi': {
     title: 'Scaffolding Products UAE | Towers, Ladders & Cuplock | Alcoa',
     description:
-      'Scaffolding products UAE from Alcoa Musaffah 37 — aluminium towers, ladders, steel cuplock and couplers for rent or sale across Abu Dhabi and the UAE.',
+      'Scaffolding products UAE from Alcoa Musaffah 37 — aluminium towers, ladders, steel cuplock, couplers and scaffolding parts for rent or sale.',
     h1: 'Scaffolding Products UAE',
     primaryKeyword: 'Scaffolding Products UAE',
     quickAnswer:

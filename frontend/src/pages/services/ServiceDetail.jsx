@@ -13,56 +13,11 @@ import {
   buildEnhancedServiceSchema,
 } from '../../utils/serviceRichContent';
 import { getRelatedServices, getRelatedProductCategory } from '../../utils/serviceRelatedLinks';
-import { getServiceSeo, getServiceQuickAnswer } from '../../seo/serviceSeo';
+import { getServiceSeo, getServiceQuickAnswer, SERVICE_SECONDARY_SECTIONS } from '../../seo/serviceSeo';
 import { SERVICE_REDIRECTS } from '../../seo/redirects';
 import { FiCheck, FiPhone, FiMail, FiChevronDown } from 'react-icons/fi';
 import SEOHead from '../../components/common/SEOHead';
 import { EMAIL_SALES, EMAIL_INFO } from '../../data/contactInfo';
-
-const SECONDARY_SECTIONS = {
-  'folding-tower': {
-    h2: 'Mobile Scaffolding Rental in the UAE',
-    body: 'Mobile scaffolding towers are delivered from our Musaffah 37 warehouse to Abu Dhabi, Dubai, Sharjah and the other emirates on daily, weekly or monthly hire. Choose folding towers for quick moves between sites, single-width towers for corridors and double-width towers for facades and two-person work.',
-    links: [
-      { label: 'Single width mobile scaffold tower', path: '/services/single-width-scaffolding' },
-      { label: 'Double width mobile scaffold tower', path: '/services/double-width-scaffolding' },
-      { label: 'Stairway scaffolding Abu Dhabi', path: '/services/stairway-scaffolding' },
-      { label: 'Aluminium scaffolding rental Abu Dhabi', path: '/services/rental' },
-      { label: 'Mobile tower setup guide', path: '/blog/mobile-scaffolding-tower-setup-guide' },
-      { label: 'Benefits of mobile scaffolding towers', path: '/blog/benefits-of-mobile-scaffolding-towers' },
-    ],
-  },
-  rental: {
-    h2: 'What you can rent from Musaffah 37',
-    body: 'Aluminium mobile scaffold towers, stairway and cantilever configurations, rolling platforms, steel cuplock systems, ladders, couplers, jacks and planks. Combine hire with installation and dismantling crews when your site needs a full-service package.',
-    links: [
-      { label: 'Mobile scaffolding tower rental', path: '/services/folding-tower' },
-      { label: 'Steel cuplock scaffolding UAE', path: '/products/steel-cuplock-scaffolding' },
-      { label: 'Scaffolding rental Abu Dhabi', path: '/scaffolding-rental-abu-dhabi' },
-      { label: 'Scaffolding rental Dubai', path: '/scaffolding-rental-dubai' },
-      { label: 'Rental vs buying scaffolding', path: '/blog/scaffolding-rental-vs-purchase-uae' },
-    ],
-  },
-  installation: {
-    h2: 'Scaffolding erection for construction and industrial sites',
-    body: 'Crews erect aluminium mobile towers, stairway towers and steel cuplock scaffolding for construction, facade, MEP and industrial maintenance work in Abu Dhabi, Musaffah, KIZAD and across the UAE. Work follows the manufacturer instructions and your site permit and HSE requirements.',
-    links: [
-      { label: 'Scaffolding dismantling UAE', path: '/services/installation-disassembly' },
-      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
-      { label: 'Industrial scaffolding Abu Dhabi', path: '/construction-scaffolding-uae' },
-      { label: 'Why professional installation matters', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
-    ],
-  },
-  'installation-disassembly': {
-    h2: 'Safe scaffolding dismantling and removal',
-    body: 'Dismantling reverses the erection sequence from the top down, keeps guardrails in place as long as possible, lowers components instead of dropping them and controls the area below. Alcoa crews dismantle, sort and load out equipment for return or removal across Abu Dhabi, Dubai and the UAE.',
-    links: [
-      { label: 'Scaffolding installation Abu Dhabi', path: '/services/installation' },
-      { label: 'Scaffolding manpower supply', path: '/scaffolding-manpower-supply' },
-      { label: 'Why professional installation and dismantling matter', path: '/blog/professional-scaffolding-installation-dismantling-uae' },
-    ],
-  },
-};
 
 const ServiceDetail = () => {
   const { serviceId } = useParams();
@@ -79,7 +34,7 @@ const ServiceDetail = () => {
 
   const seo = getServiceSeo(serviceId, service);
   const quickAnswer = getServiceQuickAnswer(serviceId, service);
-  const secondary = SECONDARY_SECTIONS[serviceId];
+  const secondary = SERVICE_SECONDARY_SECTIONS[serviceId];
   const pricing = getServicePricing(service);
   const intro = getServiceIntro(serviceId, service);
   const faq = getServiceFaq(serviceId, service);

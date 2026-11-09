@@ -357,7 +357,7 @@ const ServicesPage = () => {
         'Professional installation',
         'Quality inspection and handover'
       ],
-      pricing: 'Starting from $150/day',
+      pricing: 'Quoted per site visit',
       duration: '2-6 hours depending on complexity'
     },
     {
@@ -402,7 +402,7 @@ const ServicesPage = () => {
         'Preventive maintenance work',
         'Performance monitoring'
       ],
-      pricing: 'From $120/hour',
+      pricing: 'Quoted per scope',
       duration: 'Scheduled or on-demand'
     },
     {
@@ -424,7 +424,7 @@ const ServicesPage = () => {
         'Compliance report generation',
         'Certification and recommendations'
       ],
-      pricing: 'From $85 per inspection',
+      pricing: 'Quoted per inspection visit',
       duration: '1-2 hours per inspection'
     },
     {
@@ -446,7 +446,7 @@ const ServicesPage = () => {
         'Practical and theoretical training',
         'Assessment and certification'
       ],
-      pricing: 'From $195 per person',
+      pricing: 'Quoted per group or person',
       duration: 'Half-day to 3-day programs'
     }
   ];

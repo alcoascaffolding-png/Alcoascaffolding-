@@ -30,7 +30,7 @@ GBP: 4.8★ from 4 reviews · about 2.4k monthly views.
 | 14 | Medium | Bing / Copilot / ChatGPT Search not addressed. | **Done.** IndexNow key file and `npm run indexnow`; Bing Webmaster steps in `GA4_MEASUREMENT_CHECKLIST.md`. robots.txt allows OAI-SearchBot and ChatGPT-User. |
 | 15 | Medium | GA4 receiving foreign hits ("RIVer Live Browser"). | **Documented.** Hostname and unwanted-referral steps added. Requires your GA4 admin. |
 | 16 | Low | `sameAs` lists only Facebook and Instagram. | **Open.** Send the confirmed LinkedIn URL. |
-| 17 | Kept, per your decision | UI stats (15+ years, 500+ projects, 4.9/5, testimonials, USD prices, cuplock AED bands). | Unchanged in the UI and **not** added to schema. The 4.9/5 on the site differs from GBP's 4.8 from 4 reviews. |
+| 17 | Kept, per your decision | UI stats (15+ years, 500+ projects, 4.9/5, testimonials). | Unchanged in the UI and **not** added to schema. The 4.9/5 on the site differs from GBP's 4.8 from 4 reviews. **Prices removed (9 Nov 2026):** USD rates on the services hub, AED project values in testimonials and cuplock AED rate bands in the blog are gone; the site shows no price figures. |
 | 18 | Note | Project detail pages contain sample-style copy (awards, Opera House reference). | Not changed (out of scope). Recommend replacing with real projects. |
 
 ## 3. Implementation summary (code)

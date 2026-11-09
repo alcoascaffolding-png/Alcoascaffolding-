@@ -5,7 +5,7 @@ All 8 articles from the brief are **already published** (4 expanded, 4 new) so t
 Accuracy rules used:
 - Safety content points to the Abu Dhabi OSHAD system framework, local authority / site HSE rules and manufacturer instructions, and states that it is general guidance — no invented clause numbers or legal limits.
 - Technical facts are limited to well-established ones (e.g. aluminium is roughly one-third the density of steel; EN 1004 is the European mobile tower standard; fiberglass ladders near live electricity).
-- Pricing is quote-based. The only AED figures are the existing cuplock rate bands you chose to keep.
+- Pricing is quote-based. **No price figures anywhere on the website** (owner decision, 9 Nov 2026): no AED or USD amounts, rates or project values.
 
 ## Monthly calendar
 

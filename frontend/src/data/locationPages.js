@@ -56,10 +56,10 @@ export const locationPages = {
   musaffah: {
     slug: 'scaffolding-rental-musaffah',
     city: 'Musaffah',
-    title: 'Aluminium Scaffolding Musaffah | Warehouse | Alcoa',
+    title: 'Aluminium Scaffolding Musaffah | Rental & Warehouse | Alcoa',
     h1: 'Aluminium Scaffolding Musaffah, Abu Dhabi',
     description:
-      'Aluminium scaffolding Musaffah — walk-in warehouse at Ar Rahmah 4 St., Musaffah 37. Rental, supply & towers. Call +971 58 137 5601.',
+      'Aluminium scaffolding Musaffah (Mussafah) — scaffolding rental and supply from our walk-in warehouse at Ar Rahmah 4 St., Musaffah 37. Call +971 58 137 5601.',
     keywords:
       'aluminium scaffolding Musaffah, scaffolding Musaffah, scaffolding rental Musaffah, scaffolding supplier Musaffah, scaffolding Musaffah 37, scaffolding company Musaffah, Mussafah scaffolding',
     intro: `Looking for aluminium scaffolding in Musaffah (also spelled Mussafah)? Alcoa’s walk-in warehouse is at ${STREET_ADDRESS}. Fabricators, mechanical contractors, and facility teams collect aluminium towers, cuplock components, couplers, and ladders — or schedule local delivery within Musaffah 37 and nearby zones.`,

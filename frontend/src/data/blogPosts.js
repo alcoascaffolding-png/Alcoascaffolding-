@@ -563,7 +563,7 @@ export const blogPosts = [
       },
       {
         q: 'How much does cuplock scaffolding cost per day in UAE?',
-        a: 'Individual standards AED 8–15/day; full bay sets AED 40–75/day. Musaffah pickup available from Alcoa warehouse.',
+        a: 'Cuplock hire is quoted per project from the number of standards, ledgers and bays, the hire period and the delivery zone. Share your bay list or drawings for a written quote; Musaffah pickup is available.',
       },
       {
         q: 'Can cuplock and tube-and-fitting be used together?',
@@ -637,17 +637,17 @@ export const blogPosts = [
   },
   {
     slug: 'scaffolding-rental-cost-abu-dhabi-2026',
-    title: 'Scaffolding Rental Prices in UAE 2026 (Complete Guide)',
-    seoTitle: 'Scaffolding Rental Prices UAE 2026 | Cost Guide',
+    title: 'Scaffolding Price in UAE 2026 — What Affects Rental and Purchase Cost',
+    seoTitle: 'Scaffolding Price in UAE 2026: Rental Cost Factors',
     description:
-      'How scaffolding rental prices work in Abu Dhabi and the UAE in 2026 — daily, weekly and monthly hire, what drives your quote and how to get AED pricing.',
+      'Scaffolding price in UAE explained — what affects rental and purchase cost in Abu Dhabi and Dubai: equipment, height, hire period, delivery and erection.',
     excerpt:
       'How scaffolding rental pricing works in Abu Dhabi and the UAE — daily, weekly, and monthly hire, what drives your quote, and how to request accurate AED pricing from Musaffah 37.',
     date: '2026-06-01',
     keywords: 'scaffolding rental price uae, scaffolding rental price abu dhabi, scaffolding cost UAE, scaffolding hire rates',
-    primaryKeyword: 'Scaffolding Rental Prices',
+    primaryKeyword: 'Scaffolding Price in UAE',
     quickAnswer:
-      'Scaffolding rental prices in the UAE are quoted per project, based on the equipment type, height and quantity, the hire period (daily, weekly or monthly), delivery distance and whether erection and dismantling are included. Longer hire periods usually lower the effective daily rate. Share these details with Alcoa for a written AED quote.',
+      'The scaffolding price in the UAE is quoted per project, based on the equipment type, height and quantity, the hire period (daily, weekly or monthly), delivery distance and whether erection and dismantling are included. Longer hire periods usually lower the effective daily cost. Share these details with Alcoa for a written quote.',
     faq: [
       {
         q: 'How much does scaffolding rental cost per day in Abu Dhabi?',
@@ -666,6 +666,10 @@ export const blogPosts = [
       {
         heading: 'What affects your scaffolding quote in Abu Dhabi?',
         body: 'Height and deck area drive the base rate. Access constraints (high-rise vs ground-level industrial sites) affect erection labour. Duration discounts typically improve after multi-day and monthly commitments. Yas Island, KIZAD, Dubai, and Northern Emirates may have different delivery line items than central Musaffah. Optional services — erection, inspection, weekend dispatch — are quoted as separate lines.',
+      },
+      {
+        heading: 'Scaffolding price factors at a glance',
+        body: 'Equipment type: aluminium towers, steel cuplock, ladders and couplers are each priced differently.\nHeight and quantity: more lifts, bays or towers increase the total.\nHire period: daily, weekly or monthly; longer periods usually lower the effective daily cost.\nRent or buy: purchase is a one-off cost; hire is a recurring cost with no storage or maintenance.\nDelivery zone: Musaffah, Abu Dhabi island, KIZAD, Dubai and other emirates are quoted separately.\nLabour: erection, modification, dismantling and inspection are optional extra lines.\nSite access: night work, restricted access or high-rise logistics can add to the quote.',
       },
       {
         heading: 'Daily vs weekly vs monthly scaffolding hire',
